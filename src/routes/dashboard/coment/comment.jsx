@@ -45,7 +45,15 @@ export const Comment = () => {
                         image={comment.image}
                     />
                 </section>
+                
+                <section>
+                    comments and reply section here
+                </section>
             </section>
+
+
+
+            {/* right section */}
             <section className="hidden md:flex w-2/6 flex-col overflow-y-auto no-scrollbar h-[93dvh] min-h-[93dvh]">
                 <p>Left section</p>
             </section>

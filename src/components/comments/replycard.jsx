@@ -1,4 +1,4 @@
-import { TrashIcon, UploadGifIcon, UploadImageIcon } from "../../assets/icons/generated"
+import { TrashIcon, UploadGifIcon } from "../../assets/icons/generated"
 import { downVariants } from "../../helpers/cardanimation"
 import { Button } from "../forms/button"
 import { Input } from "../forms/input"
