@@ -5,11 +5,11 @@ import { RouterProvider, createBrowserRouter, redirect } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { Toaster } from 'sonner'
 import { store } from './app/store';
-import ErrorPage from './routes/error/error';
-import Protected from './utils/protected';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AnimatePresence } from 'framer-motion';
 import { MainAppLayout } from './components/layout/mainapp';
+import ErrorPage from './routes/error/error';
+import Protected from './utils/protected';
 
 const router =  createBrowserRouter([
   {
@@ -23,32 +23,32 @@ const router =  createBrowserRouter([
       },
       {
         path: 'home',
-        async lazy(){
+        lazy: async () => {
           let { Home } = await import("./routes/dashboard/home/home");
           return { Component: Home };
         },
         children: [
           {
             index: true,
-            loader: () => redirect('featured'),
+            loader: () => redirect('featured')
           },
           {
             path: 'featured',
-            async lazy(){
+            lazy: async () => {
               let { Featured } = await import("./routes/dashboard/home/featured");
               return { Component: Featured };
             }
           },
           {
             path: 'trending',
-            async lazy(){
+            lazy: async () => {
               let { Trending } = await import("./routes/dashboard/home/trending");
               return { Component: Trending };
             }
           },
           {
             path: 'new',
-            async lazy(){
+            lazy: async () => {
               let { New } = await import("./routes/dashboard/home/new");
               return { Component: New };
             }
@@ -57,14 +57,14 @@ const router =  createBrowserRouter([
       },
       {
         path: 'create-post',
-        async lazy(){
+        lazy: async () => {
           let { CreatePost } = await import("./routes/dashboard/create post/createpost");
           return { Component: CreatePost };
         }
       },
       {
         path: 'comment/:commentId',
-        async lazy(){
+        lazy: async () => {
           let { Comment } = await import("./routes/dashboard/coment/comment");
           return { Component: Comment };
         }
@@ -73,56 +73,56 @@ const router =  createBrowserRouter([
   },
   { 
     path: 'login',
-    async lazy() {
+    lazy: async () => {
       let { Login } = await import("./routes/auth/login/login");
       return { Component: Login };
     },
   },
   {
     path: 'recover-password',
-    async lazy() {
+    lazy: async () => {
       let { Recovery } = await import("./routes/auth/recovery/recovery");
       return { Component: Recovery };
     }
   },
   {
     path: 'recover-password/mail',
-    async lazy() {
+    lazy: async () => {
       let { MailSuccess } = await import("./routes/auth/recovery/mailsuccess");
       return { Component: MailSuccess };
     }
   },
   {
     path: 'password-reset',
-    async lazy() {
+    lazy: async () => {
       let { PasswordReset } = await import("./routes/auth/recovery/passwordreset");
       return { Component: PasswordReset };
     }
   },
   {
     path: 'sign-up',
-    async lazy() {
+    lazy: async () => {
       let { SignUp } = await import("./routes/auth/signup/signup");
       return { Component: SignUp };
     },
   },
   {
     path: 'email-verification',
-    async lazy() {
+    lazy: async () => {
       let { Verification } = await import("./routes/auth/signup/verification");
       return { Component: Verification };
     }
   },
   {
     path: '/get-started/interests',
-    async lazy() {
+    lazy: async () => {
       let { Interests } = await import("./routes/onboarding/interests");
       return { Component: Interests };
     },
   },
   {
     path: '/get-started/save-profile',
-    async lazy() {
+    lazy: async () => {
       let { SaveProfile } = await import("./routes/onboarding/saveprofile");
       return { Component: SaveProfile };
     },
