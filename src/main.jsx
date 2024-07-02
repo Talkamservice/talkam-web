@@ -25,32 +25,32 @@ const router =  createBrowserRouter([
         path: 'home',
         async lazy(){
           let { Home } = await import("./routes/dashboard/home/home");
-          return { Component: Home }
+          return { Component: Home };
         },
         children: [
           {
-            index:true,
-            loader: () => redirect('featured')
+            index: true,
+            loader: () => redirect('featured'),
           },
           {
             path: 'featured',
             async lazy(){
               let { Featured } = await import("./routes/dashboard/home/featured");
-              return { Component: Featured }
+              return { Component: Featured };
             }
           },
           {
             path: 'trending',
             async lazy(){
               let { Trending } = await import("./routes/dashboard/home/trending");
-              return { Component: Trending }
+              return { Component: Trending };
             }
           },
           {
             path: 'new',
             async lazy(){
               let { New } = await import("./routes/dashboard/home/new");
-              return { Component: New }
+              return { Component: New };
             }
           }
         ]
@@ -59,14 +59,14 @@ const router =  createBrowserRouter([
         path: 'create-post',
         async lazy(){
           let { CreatePost } = await import("./routes/dashboard/create post/createpost");
-          return { Component: CreatePost }
+          return { Component: CreatePost };
         }
       },
       {
         path: 'comment/:commentId',
         async lazy(){
           let { Comment } = await import("./routes/dashboard/coment/comment");
-          return { Component: Comment }
+          return { Component: Comment };
         }
       }
     ]

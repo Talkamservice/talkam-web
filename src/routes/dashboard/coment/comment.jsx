@@ -3,6 +3,7 @@ import { PostCard } from "../../../components/posts/postcard"
 import { getPost } from "../../../fakedata/posts"
 import { ReplyCard } from "../../../components/comments/replycard"
 import { useState } from "react"
+import { CommentCard } from "../../../components/comments/commentcard"
 
 export const Comment = () => {
 
@@ -46,8 +47,8 @@ export const Comment = () => {
                     />
                 </section>
                 
-                <section>
-                    comments and reply section here
+                <section className="w-full">
+                   <CommentCard />
                 </section>
             </section>
 
