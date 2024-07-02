@@ -5,17 +5,14 @@ import { SelectPill } from '../../components/forms/selectpill';
 import { useGetCategoriesQuery, useUpdateProfileMutation } from '../../services/userApiSlice';
 import { toast } from 'sonner';
 import { ColoredLoader } from '../../components/global/loader';
-import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../../services/authSlice';
 import { CardVariants } from '../../helpers/cardanimation';
 import { motion } from 'framer-motion';
-import Protected from '../../utils/protected';
 import { useNavigate } from 'react-router-dom';
+import Protected from '../../utils/protected';
 
 export const Interests = () => {
 
     const navigate = useNavigate();
-    const user = useSelector(selectCurrentUser)
     const [ selectedItems, setSelectedItems ] = useState([]);
 
     const { data: categories, isLoading } = useGetCategoriesQuery();
@@ -32,7 +29,7 @@ export const Interests = () => {
         try {
             await updateProfile({ interests: selectedItems }).unwrap();
             toast.success("Your interests have been saved")
-            navigate('/get-started/save-profile')
+            navigate('/get-started/save-profile', { replace: true })
         } catch(err){
             toast.error(err?.data?.message)
         }
@@ -48,12 +45,12 @@ export const Interests = () => {
                     animate="animate"
                     exit="exit"
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                    className='w-full h-full md:h-fit max-w-screen-2xl flex items-center justify-center md:w-2/3 xl:w-5/12 bg-twhite-100 rounded-2xl flex-col gap-8 rounded-2xl md:shadow-box'
+                    className='w-full h-full md:h-fit max-w-screen-2xl flex items-center justify-center md:w-2/3 xl:w-5/12 bg-twhite-100 flex-col gap-8 rounded-2xl md:shadow-box'
                 >
                     <header className='w-full flex items-center justify-center flex-col gap-12 pt-4 px-4 md:pt-9 md:px-9'>
                         <div className='flex items-center gap-2'>
                             <TalkamLogo />
-                            <p className='flex items-center text-xl'><span className='font-extrabold'>talk</span>AM</p>
+                            <p className='flex items-center text-xl font-regularNunito'><span className='font-extraboldNunito'>talk</span>AM</p>
                         </div>
                         <div className="flex items-center justify-center flex-col w-full gap-2 text-center">
                             <p className='text-lg font-bold text-tblack-100'>What are some of your interests</p>

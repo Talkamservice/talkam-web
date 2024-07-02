@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @layer utilities {
-  @variants responsive {
+  @layer responsive {
     /* Hide scrollbar for Chrome, Safari and Opera */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -17,6 +17,50 @@
   }
 }
 
-body {
-  font-family: 'DM Sans', sans-serif;
+
+/* Dm-sans */
+@font-face {
+  font-family: "regular";
+  src: url("./assets/fonts/DMSans_18pt-Regular.ttf");
+}
+@font-face {
+  font-family: "medium";
+  src: url("./assets/fonts/DMSans_18pt-Medium.ttf");
+}
+@font-face {
+  font-family: "semibold";
+  src: url("./assets/fonts/DMSans_18pt-SemiBold.ttf");
+}
+@font-face {
+  font-family: "bold";
+  src: url("./assets/fonts/DMSans_18pt-Bold.ttf");
+}
+
+
+/* Nunito */
+@font-face {
+  font-family: "regular-nunito";
+  src: url("./assets/fonts/Nunito-Regular.ttf");
+}
+@font-face {
+  font-family: "semibold-nunito";
+  src: url("./assets/fonts/Nunito-SemiBold.ttf");
+}
+@font-face {
+  font-family: "bold-nunito";
+  src: url("./assets/fonts/Nunito-Bold.ttf");
+}
+@font-face {
+  font-family: "extrabold-nunito";
+  src: url("./assets/fonts/Nunito-ExtraBold.ttf");
+}
+@font-face {
+  font-family: "light-nunito";
+  src: url("./assets/fonts/Nunito-Light.ttf");
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }

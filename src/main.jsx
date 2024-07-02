@@ -9,21 +9,64 @@ import ErrorPage from './routes/error/error';
 import Protected from './utils/protected';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AnimatePresence } from 'framer-motion';
+import { MainAppLayout } from './components/layout/mainapp';
 
 const router =  createBrowserRouter([
   {
     path: '/',
     errorElement: <ErrorPage />,
+    element: <MainAppLayout />,
     children: [
-      { 
+      {
         index: true,
         loader: () => redirect('home'),
       },
       {
         path: 'home',
         async lazy(){
-          let { Home } = await import("./routes/dashboard/home");
+          let { Home } = await import("./routes/dashboard/home/home");
           return { Component: Home }
+        },
+        children: [
+          {
+            index:true,
+            loader: () => redirect('featured')
+          },
+          {
+            path: 'featured',
+            async lazy(){
+              let { Featured } = await import("./routes/dashboard/home/featured");
+              return { Component: Featured }
+            }
+          },
+          {
+            path: 'trending',
+            async lazy(){
+              let { Trending } = await import("./routes/dashboard/home/trending");
+              return { Component: Trending }
+            }
+          },
+          {
+            path: 'new',
+            async lazy(){
+              let { New } = await import("./routes/dashboard/home/new");
+              return { Component: New }
+            }
+          }
+        ]
+      },
+      {
+        path: 'create-post',
+        async lazy(){
+          let { CreatePost } = await import("./routes/dashboard/create post/createpost");
+          return { Component: CreatePost }
+        }
+      },
+      {
+        path: 'comment/:commentId',
+        async lazy(){
+          let { Comment } = await import("./routes/dashboard/coment/comment");
+          return { Component: Comment }
         }
       }
     ]

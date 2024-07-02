@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import { Button } from '../../components/forms/button';
 import { TalkamLogo, UploadAvatarIcon } from '../../assets/icons/generated';
@@ -37,7 +36,7 @@ export const SaveProfile = () => {
         try {
             const res = await updateProfile({ username: userNameValue }).unwrap();
             toast.success(res?.message);
-            navigate('/home', { replace: true })
+            navigate('/', { replace: true })
         } catch(err) {
             toast.error(err?.data?.message)
         }
@@ -60,12 +59,12 @@ export const SaveProfile = () => {
                     animate="animate"
                     exit="exit"
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                    className='w-full h-full md:h-fit max-w-screen-2xl flex items-center justify-center md:w-2/3 xl:w-5/12 p-4 md:p-12 bg-twhite-100 rounded-2xl flex-col gap-8 rounded-2xl md:shadow-box'
+                    className='w-full h-full md:h-fit max-w-screen-2xl flex items-center justify-center md:w-2/3 xl:w-5/12 p-4 md:p-12 bg-twhite-100 flex-col gap-8 rounded-2xl md:shadow-box'
                 >
                     <header className='w-full flex items-center justify-center flex-col gap-8 pt-4 px-4'>
                         <div className='flex items-center gap-2'>
                             <TalkamLogo />
-                            <p className='flex items-center text-xl'><span className='font-extrabold'>talk</span>AM</p>
+                            <p className='flex items-center text-xl font-regularNunito'><span className='font-extraboldNunito'>talk</span>AM</p>
                         </div>
                         <div className="flex items-center justify-center flex-col w-full gap-2 text-center">
                             <p className='text-lg font-bold text-tblack-100'>Profile</p>

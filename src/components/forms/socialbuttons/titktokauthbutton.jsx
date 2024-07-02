@@ -4,7 +4,8 @@ import { Button } from "../button"
 
 export const TiktokAuthButton = ({ onClick }) => {
     return (
-        <Button 
+        <Button
+            type="button"
             children="Continue with TikTok"
             fullWidth
             // leftIcon={<AppleIcon />}

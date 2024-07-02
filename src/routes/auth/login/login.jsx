@@ -62,7 +62,7 @@ export const Login = () => {
                 }),
             )
             toast.success("Logged in successfully!");
-            navigate("/home")
+            navigate("/", { replace: true })
         } catch(error){
             toast.error(error?.data?.message);
         }
@@ -85,7 +85,7 @@ export const Login = () => {
                     }),
                 )
                 toast.success("Logged in successfully!");
-                navigate("/home")
+                navigate("/", { replace: true })
             } catch(error){
                 toast.error(error?.data?.message);
             }
@@ -105,22 +105,21 @@ export const Login = () => {
                 }),
             )
             toast.success("Logged in successfully!");
-            navigate("/home")
+            navigate("/", { replace: true })
         } catch(error){
             toast.error(error?.data?.message);
         }
     }
 
-    // const handleTikTokLogin = () => {
-    //     const clientKey = import.meta.env.VITE_TIKTOK_CLIENT_ID;
-    //     const redirectUri = encodeURIComponent('https://yourapp.com/login/tiktok-callback');
+    const handleTikTokLogin = () => {
+        const clientKey = import.meta.env.VITE_TIKTOK_CLIENT_ID;
+        const redirectUri = encodeURIComponent('https://localhost:5173/login/tiktok-callback');
+        // random state token for CSRF protection
+        const state = Math.random().toString(36).substring(2);
     
-    //     // random state token for CSRF protection
-    //     const state = Math.random().toString(36).substring(2);
-    
-    //     const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${clientKey}&response_type=code&scope=${scope}&redirect_uri=${redirectUri}&state=${state}`;
-    //     window.location.href = authUrl
-    // };
+        const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${clientKey}&response_type=code&redirect_uri=${redirectUri}&state=${state}`;
+        window.location.href = authUrl
+    };
 
     return (
         <main className='w-full h-[100dvh] flex items-center justify-center m-auto bg-twhite-100 p-2 sm:p-12 no-scrollbar'>
@@ -131,12 +130,12 @@ export const Login = () => {
                 animate="animate"
                 exit="exit"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                className='w-full h-full md:h-fit max-w-screen-2xl flex items-center justify-center md:w-2/3 xl:w-5/12 bg-twhite-100 p-4 md:p-12 rounded-2xl flex-col gap-6 rounded-2xl md:shadow-box'
+                className='w-full h-full md:h-fit max-w-screen-2xl flex items-center justify-center md:w-2/3 xl:w-5/12 bg-twhite-100 p-4 md:p-12 rounded-2xl flex-col gap-6 md:shadow-box'
             >
                 <header className='w-full flex items-center justify-center flex-col gap-4'>
                     <div className='flex items-center gap-2'>
                         <TalkamLogo />
-                        <p className='flex items-center text-xl'><span className='font-extrabold'>talk</span>AM</p>
+                        <p className='flex items-center text-xl font-regularNunito'><span className='font-extraboldNunito'>talk</span>AM</p>
                     </div>
                     <div className="flex items-center justify-center flex-col w-full gap-2 text-center">
                         <p className='text-lg font-bold text-tblack-100'>Login</p>
@@ -200,8 +199,8 @@ export const Login = () => {
                                 <FacebookAuthButton onClick={renderProps.onClick} />
                             )}
                         />
-                        {/* <AppleAuthButton />
-                        <TiktokAuthButton onClick={() => {}} /> */}
+                        {/* <AppleAuthButton /> */}
+                        {/* <TiktokAuthButton onClick={handleTikTokLogin} /> */}
                     </section>
                 </form>
             </motion.div>

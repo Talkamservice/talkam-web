@@ -7,6 +7,8 @@ export const Input = (props) => {
     id,
     eye,
     icon,
+    rounded,
+    name,
     wrapperClassName = '',
     placeholder = '',
     label = '',
@@ -33,14 +35,15 @@ export const Input = (props) => {
           {label} {required && <span className='text-error-100'>*</span>}
         </label>
         <input
+          name={name}
           onFocus={onFocus}
           readOnly={readOnly}
           ref={inputRef}
           type={type}
           className={`
             ${error ? 'border border-error-100 focus:ring-error-100 focus:ring-opacity-10 focus:border focus:border-error-100': 'focus:ring-tblue-100 focus:border-tprimary-100'}
-            border ${error ? "border-error-100" : "border-tgray-50" } placeholder:text-tgray-250 relative
-            py-3.5 px-4 placeholder:text-sm focus:ring-4 focus:outline-none rounded-xl w-full text-xs text-tblack-100`}
+            border ${error ? "border-error-100" : "border-tgray-50" } placeholder:text-tgray-250 relative ${ rounded ? rounded : "rounded-xl" }
+            py-3.5 px-4 placeholder:text-sm focus:ring-4 focus:outline-none w-full text-xs text-tblack-100`}
           id={id}
           placeholder={placeholder}
           {...rest}

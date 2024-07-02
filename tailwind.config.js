@@ -3,7 +3,15 @@ export const content = ['./src/**/*.{js,jsx,ts,tsx}'];
 export const theme = {
   fontFamily: {
     //font family here
-    sans: ['DM Sans', 'sans-serif'],
+    normal: ['regular'],
+    medium: ['medium'],
+    semibold: ['semibold'],
+    bold: ['bold'],
+    regularNunito: ['regular-nunito'],
+    lightNunito: ['light-nunito'],
+    semiboldNunito: ['semibold-nunito'],
+    boldNunito: ['bold-nunito'],
+    extraboldNunito: ['extrabold-nunito'],
   },
   extend: {
     colors: {
@@ -15,16 +23,17 @@ export const theme = {
         100: "#FFFFFF"
       },
       tblack: {
+        50: "#444444",
         100: "#212121"
       },
       tgray: {
-        xlight: '#F9FAFB',
-        light: "#90909A",
+        xlight: '#F2F2F2',
+        light: "#EEEEEE",
         50: "#DDDDDD",
         75: '#C0C0C0',
         100: "#1C1C1C",
         150: "#1B1B1B",
-        200: "#fff4d",
+        200: "#DCDCDC",
         250: "#b3b3b3",
         300: "#00000080",
         hov: "#F6F6F6",
@@ -67,6 +76,6 @@ export const theme = {
     // require('@tailwindcss/typography'),
     // require('@tailwindcss/forms'),
     // require('flowbite/plugin'),
-    // require('@tailwindcss/line-clamp'),
+    require('@tailwindcss/line-clamp'),
     // require("daisyui"),
   ];

@@ -49,12 +49,12 @@ export const Recovery = () => {
                 animate="animate"
                 exit="exit"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                className='w-full h-full md:h-fit max-w-screen-2xl flex items-center justify-center md:w-2/3 xl:w-5/12 bg-twhite-100 p-4 md:p-12 rounded-2xl flex-col gap-6 rounded-2xl md:shadow-box'
+                className='w-full h-full md:h-fit max-w-screen-2xl flex items-center justify-center md:w-2/3 xl:w-5/12 bg-twhite-100 p-4 md:p-12 flex-col gap-6 rounded-2xl md:shadow-box'
             >
                 <header className='w-full flex items-center justify-center flex-col gap-4'>
                     <div className='flex items-center gap-2'>
                         <TalkamLogo />
-                        <p className='flex items-center text-xl'><span className='font-extrabold'>talk</span>AM</p>
+                        <p className='flex items-center text-xl font-regularNunito'><span className='font-extraboldNunito'>talk</span>AM</p>
                     </div>
                     <div className="flex items-center justify-center flex-col w-full gap-2">
                         <p className='text-lg font-bold text-tblack-100'>Password Recovery</p>

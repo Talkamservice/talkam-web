@@ -29,15 +29,15 @@ export const Button = ({
   let isMonitor = useMediaQuery("(min-width: 2560px)");
 
     const baseClass = (
-      `md:text-base text-xs cursor-pointer select-none [outline:none] disabled:cursor-not-allowed space-x-2 ${ variant === 'icon' ? '' : 'px-6 py-3.5' }
+      `md:text-sm text-xs cursor-pointer select-none [outline:none] disabled:cursor-not-allowed space-x-2 ${ variant === 'icon' ? '' : 'px-6 py-3.5' }
       disabled:bg-opacity-40 ${fullWidth ? "w-full text-center flex items-center justify-center" : "flex items-center justify-between"}
       transition-all ease-in-out duration-300`
     )
-    const primaryClass = (` bg-tprimary-100 focus:ring-blue-300 text-twhite-100`)
+    const primaryClass = (` bg-tprimary-50 focus:ring-blue-300 text-twhite-100`)
     const defaultClass = (` bg-tgray-75 text-tblack-100`)
     const successClass = (` bg-success-150 text-twhite-100`)
     const errorClass = (` bg-error-500 text-twhite-100`)
-    const linkClass = (`bg-none text-tblack-100 border-none px-0 space-x-2`)
+    const linkClass = (`bg-none text-tblack-100 border-none !px-0 !py-0 space-x-2`)
     const outlineClass = (`bg-none text-tblack-100 border border border-tgray-50`)
     const iconClass = (`p-0! ${color ? color : 'bg-none'} ${radius} ${tColor ? tColor : "black"} flex items-center justify-center space-y-0 space-x-0 m-0!`)
 
