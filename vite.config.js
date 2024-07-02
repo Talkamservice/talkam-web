@@ -10,4 +10,9 @@ export default defineConfig({
       svgrOptions: {}
     }),
   ],
+  build: {
+    rollupOptions: {
+      input: './src/main.jsx',
+    },
+  },
 })
