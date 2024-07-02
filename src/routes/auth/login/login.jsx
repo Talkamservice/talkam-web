@@ -15,9 +15,10 @@ import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../../services/authSlice';
 import { useGoogleLogin } from '@react-oauth/google';
 import { TiktokAuthButton } from '../../../components/forms/socialbuttons/titktokauthbutton';
-import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props';
-import * as Icon from 'react-feather'
+// import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props';
 import { CardVariants } from '../../../helpers/cardanimation';
+import FacebookLogin from '@greatsumini/react-facebook-login';
+import * as Icon from 'react-feather'
 
 export const Login = () => {
 
@@ -194,8 +195,10 @@ export const Login = () => {
                         <GoogleAuthButton onClick={() => googleLogin()} />
                         <FacebookLogin
                             appId={import.meta.env.VITE_FACEBOOK_CLIENT_ID}
-                            callback={responseFacebook}
-                            render={renderProps => (
+                            onSuccess={(response) => {
+                                responseFacebook(response)
+                            }}
+                            render={(renderProps) => (
                                 <FacebookAuthButton onClick={renderProps.onClick} />
                             )}
                         />
