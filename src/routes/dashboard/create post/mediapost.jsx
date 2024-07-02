@@ -19,8 +19,8 @@ export const MediaPost = ({ image, onChange, setPost, post }) => {
                 rounded="rounded-[4px]"
                 placeholder = 'A sharp title for your post works best.'
                 label = 'Post title'
-                value={''}
-                onChange={''}
+                // value={''}
+                // onChange={''}
                 required
             />
             <section className="relative">
