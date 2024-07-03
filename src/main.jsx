@@ -11,6 +11,8 @@ import { MainAppLayout } from './components/layout/mainapp';
 import ErrorPage from './routes/error/error';
 import Protected from './utils/protected';
 
+console.log("env:", import.meta.env.VITE_GOOGLE_CLIENT_ID, "baseUrl:", import.meta.env.VITE_BASE_API_URL )
+
 const router =  createBrowserRouter([
   {
     path: '/',
