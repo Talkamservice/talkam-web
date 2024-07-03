@@ -44,12 +44,14 @@ export const TabButton = ({ text, onClick, type, icon }) => {
                 flex items-center justify-center transition-all ease-linear duration-150`
             }
         >
-            <div className='flex items-center gap-1'>
-                {icon && icon}
-                <span className='w-full text-sm font-medium py-2 pt-4 z-10 whitespace-nowrap'>{text}</span>
+            <div className='flex items-center justify-center gap-1 py-2 pt-4'>
+                <span>
+                    {icon && icon}
+                </span>
+                <span className='w-full text-sm font-medium z-10 whitespace-nowrap'>{text}</span>
             </div>
             { 
-                    type !== 'text' ? 
+                    type !== 'text' ?
                     <motion.div 
                         layoutId='active-pill' 
                         className='border-b-4 border-tprimary-50 absolute inset-0 p-3 w-full' 

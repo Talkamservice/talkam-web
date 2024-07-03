@@ -13,7 +13,7 @@ import { useLoginMutation, useOauthLoginMutation } from '../../../services/authA
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../../services/authSlice';
-import { useGoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { TiktokAuthButton } from '../../../components/forms/socialbuttons/titktokauthbutton';
 // import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props';
 import { CardVariants } from '../../../helpers/cardanimation';
@@ -192,7 +192,9 @@ export const Login = () => {
                     />
 
                     <section className='w-full flex flex-col gap-3 pt-6'>
-                        <GoogleAuthButton onClick={() => googleLogin()} />
+                        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+                            <GoogleAuthButton onClick={() => googleLogin()} />
+                        </GoogleOAuthProvider>
                         <FacebookLogin
                             appId={import.meta.env.VITE_FACEBOOK_CLIENT_ID}
                             onSuccess={(response) => {
