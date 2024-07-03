@@ -7,7 +7,7 @@ import { Avatar } from "../global/avatar"
 import { motion } from "framer-motion"
 import * as Icon from 'react-feather'
 
-export const ReplyCard = ({ anonChecked, setAnonChecked, comment, setComment, onChange, image }) => {
+export const ReplyCard = ({ anonChecked, setAnonChecked, commentBody, setCommentBody, onChange, handleCommentChange, submitComment, image, setIsReplying, cancel }) => {
 
     return (
         <>
@@ -24,6 +24,8 @@ export const ReplyCard = ({ anonChecked, setAnonChecked, comment, setComment, on
                         rows={2}
                         className="text-base w-full no-scrollbar"
                         placeholder="Leave a comment..."
+                        value={commentBody?.comment}
+                        onChange={handleCommentChange}
                     />
                     {/* Image here */}
                     { image ? 
@@ -38,7 +40,7 @@ export const ReplyCard = ({ anonChecked, setAnonChecked, comment, setComment, on
                                 }}
                             />
                                 <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
-                                    <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" onClick={() => setComment({...comment, image: null })}>
+                                    <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" onClick={() => setCommentBody({...commentBody, image: null })}>
                                         <TrashIcon className=""  style={{paddingLeft: '2px', color:"#FF0000"}} />
                                     </span>
                                 </span>
@@ -62,10 +64,24 @@ export const ReplyCard = ({ anonChecked, setAnonChecked, comment, setComment, on
                         <AnonToggleButton checked={anonChecked} onChange={(event) => setAnonChecked(event.target.checked)} />
                     </div>
                 </section>
-                <Button 
-                    children="Comment"
-                    className="!rounded-full !py-2 !px-3 self-end"
-                />
+                <section className=" flex items-center gap-2 self-end">
+                    {cancel ? 
+                        <Button
+                            type="button"
+                            variant="link"
+                            children="Cancel"
+                            className="!rounded-full !py-2 !px-3 self-end font-bold !text-error-500"
+                            onClick={() => setIsReplying(false)}
+                        /> 
+                        : 
+                        null
+                    }
+                    <Button 
+                        children="Comment"
+                        className="!rounded-full !py-2 !px-3"
+                        onClick={submitComment}
+                    />
+                </section>
             </div>
             {
                 anonChecked && 
