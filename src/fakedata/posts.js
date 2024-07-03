@@ -11,7 +11,8 @@ let posts = [
         time: '12hrs',
         tag: ['Sports', 'Premier League', 'Champions League'],
         commentcount: 23,
-        likes: 23
+        likes: 23,
+        comments: []
     },
     {
         id: randomId(),
@@ -22,7 +23,8 @@ let posts = [
         time: '1hr',
         tag: ['Love', 'Dating', 'Relationships'],
         commentcount: 300,
-        likes: 700
+        likes: 700,
+        comments: []
     },
     {
         id: randomId(),
@@ -33,7 +35,8 @@ let posts = [
         time: '3hrs',
         tag: ['Action', 'Movies', 'Oscars'],
         commentcount: 80,
-        likes: 400
+        likes: 400,
+        comments: []
     },
     {
         id: randomId(),
@@ -44,7 +47,8 @@ let posts = [
         time: '12hrs',
         tag: ['Sports', 'Premier League', 'La Liga'],
         commentcount: 203,
-        likes: 823
+        likes: 823,
+        comments: []
     },
     {
         id: randomId(),
@@ -55,7 +59,8 @@ let posts = [
         time: '15hrs',
         tag: ['Lifestyle', 'Bants', 'Life'],
         commentcount: 203,
-        likes: 823
+        likes: 823,
+        comments: []
     },
     {
         id: randomId(),
@@ -66,7 +71,8 @@ let posts = [
         time: '12hrs',
         tag: ['Gists', 'Blogs'],
         commentcount: 193,
-        likes: 965
+        likes: 965,
+        comments: []
     },
 ]
 
@@ -80,7 +86,8 @@ let trending = [
         time: '12hrs',
         tag: ['Gists', 'Blogs'],
         commentcount: 193,
-        likes: 965
+        likes: 965,
+        comments: []
     },
     {
         id: randomId(),
@@ -102,7 +109,8 @@ let trending = [
         time: '1hr',
         tag: ['Love', 'Dating', 'Relationships'],
         commentcount: 300,
-        likes: 700
+        likes: 700,
+        comments: []
     },
     {
         id: randomId(),
@@ -113,7 +121,8 @@ let trending = [
         time: '15hrs',
         tag: ['Lifestyle', 'Bants', 'Life'],
         commentcount: 203,
-        likes: 823
+        likes: 823,
+        comments: []
     },
     {
         id: randomId(),
@@ -125,7 +134,8 @@ let trending = [
         time: '12hrs',
         tag: ['Sports', 'Premier League', 'Champions League'],
         commentcount: 23,
-        likes: 23
+        likes: 23,
+        comments: []
     },
     {
         id: randomId(),
@@ -136,7 +146,8 @@ let trending = [
         time: '12hrs',
         tag: ['Sports', 'Premier League', 'La Liga'],
         commentcount: 203,
-        likes: 823
+        likes: 823,
+        comments: []
     },
 ]
 

@@ -10,9 +10,14 @@ export default defineConfig({
       svgrOptions: {}
     }),
   ],
+  resolve: {
+  },
   build: {
+    sourcemap: true, // Ensure source maps are enabled
+    manifest: true,
+    outDir: 'dist',
     rollupOptions: {
-      input: './src/main.jsx',
+      input: ['./index.html'],
     },
   },
 })

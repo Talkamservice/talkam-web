@@ -4,23 +4,42 @@ import { getPost } from "../../../fakedata/posts"
 import { ReplyCard } from "../../../components/comments/replycard"
 import { useState } from "react"
 import { CommentCard } from "../../../components/comments/commentcard"
+import { randomId } from "../../../helpers/randomid"
 
 export const Comment = () => {
 
-    const { commentId } = useParams()
+    const { commentId } = useParams();
+    const postDetails = getPost(commentId);
     const [ anonChecked, setAnonChecked ] = useState(false);
-    const [ comment, setComment ] = useState({
+    const [ allComments, setAllComments ] =  useState(postDetails?.comments);
+    const [ commentBody, setCommentBody ] = useState({
+        id: randomId(),
         image: "",
-        comment: ""
+        comment: "",
+        comments: []
     });
+    
+    const handleAddNewComment = (event) => {
+        setCommentBody({...commentBody, comment: event.target.value });
+    }
 
     const handleFileUpload = (event) => {
         event.preventDefault()
         const { files } = event.target;
         if(!files[0]) return;
-        setComment({...comment, image: URL.createObjectURL(files[0])})
+        setCommentBody({...commentBody, image: URL.createObjectURL(files[0])})
     };
-    const postDetails = getPost(commentId);
+
+    const submitComment = () => {
+        setAllComments((prev) => [ commentBody, ...prev ]);
+        setCommentBody({
+            id: randomId(),
+            image: "",
+            comment: "",
+            comments: []
+        })
+    }
+    console.log(allComments)
 
     return (
         <main className="w-full flex">
@@ -40,18 +59,29 @@ export const Comment = () => {
                     <ReplyCard
                         anonChecked={anonChecked}
                         setAnonChecked={setAnonChecked}
-                        comment={comment}
-                        setComment={setComment}
+                        commentBody={commentBody}
+                        setCommentBody={setCommentBody}
                         onChange={handleFileUpload}
-                        image={comment.image}
+                        handleCommentChange={handleAddNewComment}
+                        image={commentBody?.image}
+                        submitComment={submitComment}
                     />
                 </section>
                 
-                <section className="w-full">
-                   <CommentCard />
+                <section className="w-full flex flex-col gap-4">
+                   {
+                        allComments?.map((comment) => (
+                            <CommentCard
+                                key={comment.id}
+                                parentComment={comment}
+                                setAllComments={setAllComments}
+                                allComments={allComments}
+                                setComment={setAllComments}
+                            />
+                        ))
+                    }
                 </section>
             </section>
-
 
 
             {/* right section */}
