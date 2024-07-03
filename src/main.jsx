@@ -5,6 +5,7 @@ import { RouterProvider, createBrowserRouter, redirect } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { Toaster } from 'sonner'
 import { store } from './app/store';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AnimatePresence } from 'framer-motion';
 import { MainAppLayout } from './components/layout/mainapp';
 import ErrorPage from './routes/error/error';
@@ -130,11 +131,13 @@ const router =  createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <Provider store={store}>
         <AnimatePresence mode='wait'>
           <RouterProvider router={router} />
         </AnimatePresence>
       </Provider>
+    </GoogleOAuthProvider>
     <Toaster richColors position="bottom-center" />
   </React.StrictMode>,
 )
