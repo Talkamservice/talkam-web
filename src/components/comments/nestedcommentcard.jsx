@@ -4,15 +4,12 @@ import { Avatar } from "../global/avatar"
 import { CommentInput } from "./commentinput"
 import { motion } from "framer-motion"
 import { randomId } from "../../helpers/randomid"
-import { NestedCommentCard } from "./nestedcommentcard"
 import * as Icon from "react-feather"
 
-export const CommentCard = ({ parentComment }) => {
+export const NestedCommentCard = ({ parentComment, allComments, setAllComments }) => {
 
     const [ isReplying, setIsReplying ] = useState();
-    const [ showMore, setShowMore ] = useState(false);
     const [ anonChecked, setAnonChecked ] = useState(false);
-    const [ allComments, setAllComments ] = useState(parentComment.comments)
     const [ comment, setComment ] = useState({
         id: randomId(),
         image: "",
@@ -90,13 +87,6 @@ export const CommentCard = ({ parentComment }) => {
                                 <Icon.ThumbsDown size={20} />
                             </div>
                         </section>
-                        {   allComments?.length > 0 ?
-                            <span onClick={() => setShowMore(prev => !prev)} className="text-tprimary-50 font-boldNunito text-sm cursor-pointer">
-                                {` ${ showMore ? 'Hide' : 'Show' } ${ allComments.length } ${ allComments?.length === 1 ? 'Reply' : 'Replies' } `}
-                            </span> 
-                            : 
-                            null
-                        }
                     </section>
                 </section>
                 {    isReplying ?
@@ -116,25 +106,6 @@ export const CommentCard = ({ parentComment }) => {
                     </motion.section>
                     :
                     null
-                }
-                {
-                    showMore ?
-                        <section className="w-full flex flex-col gap-4">
-                            {
-                                allComments?.map((comment) => (
-                                    <NestedCommentCard
-                                        key={comment.id}
-                                        parentComment={comment}
-                                        setAllComments={setAllComments}
-                                        allComments={allComments}
-                                        comment={comment}
-                                        setComment={setAllComments}
-                                    />
-                                ))
-                            }
-                        </section>
-                        :
-                        null
                 }
             </div>
         </>

@@ -62,8 +62,8 @@ export const MainAppLayout = ({ children }) => {
                         <TalkamLogo width={35} height={40} />
                         <p className={` ${ !isLogoMobile ? 'block' : 'hidden' } flex items-center text-xl font-regularNunito` }><span className='font-extraboldNunito'>talk</span>AM</p>
                     </div>
-                    <section className='w-9/12 flex items-center justify-end gap-3 sm:gap-5 md:gap-8'>
-                        <section className={`${isMobile ? "" : "flex-1"} flex items-center gap-4 md:gap-8`}>
+                    <section className='w-10/12 md:w-9/12 flex items-center justify-between md:justify-end gap-3 sm:gap-5 md:gap-8'>
+                        <section className={`${isMobile ? "" : "flex-1"} flex items-center gap-8 md:gap-8`}>
                             { isMobile ? <Icon.Search /> : <NavSearch /> }
                             <NotificationIcon className = "cursor-pointer w-6 h-6 md:w-8 md:h-8" />
                             <InboxIcon className = "cursor-pointer w-6 h-6 md:w-8 md:h-8" />
@@ -74,7 +74,7 @@ export const MainAppLayout = ({ children }) => {
                             className={ isMobile ? "!rounded-full !text-base bg-tprimary-50 !p-1" : "!rounded-full !text-base bg-tprimary-50 !px-4 !py-2.5" }
                             onClick={() => navigate('/create-post')}
                         />
-                        <ProfileIcon className = "cursor-pointer" />
+                        <ProfileIcon className = "cursor-pointer w-7 h-7" />
                         <Icon.Menu
                             className={`${ isMobile ? 'block' : 'hidden' }`}
                             width={24}
