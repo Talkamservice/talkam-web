@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom"
 import { PostCard } from "../../../components/posts/postcard"
 import { getPost } from "../../../fakedata/posts"
-import { ReplyCard } from "../../../components/comments/replycard"
+import { CommentInput } from "../../../components/comments/commentinput"
 import { useState } from "react"
 import { CommentCard } from "../../../components/comments/commentcard"
 import { randomId } from "../../../helpers/randomid"
@@ -55,8 +55,8 @@ export const Comment = () => {
                     time={postDetails.time}
                     id={postDetails.id}
                 />
-                <section className="w-full">
-                    <ReplyCard
+                <section className="w-full flex flex-col gap-3">
+                    <CommentInput
                         anonChecked={anonChecked}
                         setAnonChecked={setAnonChecked}
                         commentBody={commentBody}
@@ -66,6 +66,9 @@ export const Comment = () => {
                         image={commentBody?.image}
                         submitComment={submitComment}
                     />
+                    <p className="text-xs text-[#676767] border-b border-tgray-50 py-1">
+                        Please be respectful and follow the <span className="text-tprimary-50 font-bold">Community Guidelines</span>
+                    </p>
                 </section>
                 
                 <section className="w-full flex flex-col gap-4">
@@ -74,9 +77,8 @@ export const Comment = () => {
                             <CommentCard
                                 key={comment.id}
                                 parentComment={comment}
-                                setAllComments={setAllComments}
-                                allComments={allComments}
-                                setComment={setAllComments}
+                                commentBody={commentBody}
+                                setCommentBody={setCommentBody}
                             />
                         ))
                     }
