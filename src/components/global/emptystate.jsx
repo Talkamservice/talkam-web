@@ -24,8 +24,8 @@ export const EmptyState = ({iconNode, icon, text, subtext, node, color, height, 
             alt="profile"
         /> : null
       }
-      <p className={`${color ? color : "text-tblack-100"} text-center text-xl font-extrabold`}>{text}</p>
-      <span className={`${color ? color : "text-tgray-150"} w-2/3 text-sm text-center font-normal`}>{subtext}</span>
+      <p className={`${color ? color : "text-tblack-100"} text-center text-base font-extrabold`}>{text}</p>
+      <span className={`${color ? color : "text-tgray-150"} w-2/3 text-xs text-center font-normal`}>{subtext}</span>
       {!!node && node}
     </div>
   )

@@ -10,6 +10,7 @@ import { AnimatePresence } from 'framer-motion';
 import { MainAppLayout } from './components/layout/mainapp';
 import ErrorPage from './routes/error/error';
 import Protected from './utils/protected';
+import { GroupIndex } from './routes/dashboard/groups/groupindex';
 
 const router =  createBrowserRouter([
   {
@@ -68,6 +69,60 @@ const router =  createBrowserRouter([
           let { Comment } = await import("./routes/dashboard/coment/comment");
           return { Component: Comment };
         }
+      },
+      {
+        path: 'groups',
+        element: <GroupIndex />,
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              let { Groups } = await import("./routes/dashboard/groups/groups");
+              return { Component: Groups };
+            },
+          },
+          {
+            path: 'create',
+            lazy: async () => {
+              let { CreateGroup } = await import("./routes/dashboard/groups/creategroup");
+              return { Component: CreateGroup };
+            },
+          }
+        ]
+      },
+      {
+        path: "search",
+        lazy: async () => {
+          let { Search } = await import("./routes/dashboard/search/search");
+          return { Component: Search };
+        },
+        children: [
+          {
+            index: true,
+            loader: () => redirect('posts-results'),
+          },
+          {
+            path: "posts-results",
+            lazy: async () => {
+              let { SearchPosts } = await import("./routes/dashboard/search/searchposts");
+              return { Component: SearchPosts };
+            },
+          },
+          {
+            path: "groups-results",
+            lazy: async () => {
+              let { SearchGroup } = await import("./routes/dashboard/search/searchgroups");
+              return { Component: SearchGroup };
+            },
+          },
+          {
+            path: "media-results",
+            lazy: async () => {
+              let { SearchMedia } = await import("./routes/dashboard/search/searchmedia");
+              return { Component: SearchMedia };
+            },
+          }
+        ]
       }
     ]
   },
