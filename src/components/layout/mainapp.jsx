@@ -65,9 +65,9 @@ export const MainAppLayout = ({ children }) => {
                     <section className='w-10/12 md:w-9/12 flex items-center justify-end gap-6 md:gap-8 no-scrollbar'>
                         <section className={`${isMobile ? "" : "flex-1"} flex items-center gap-6 md:gap-8`}>
                             { isMobile ?
-                                <Icon.Search onClick={() => {navigate('/search'); toggleShowPanel();}} />
+                                <Icon.Search onClick={() => {navigate('/search')}} />
                                 :
-                                <span onClick={() => {navigate('/search'); toggleShowPanel();}} className='w-full'><NavSearch /></span>
+                                <span onClick={() => {navigate('/search')}} className='w-full'><NavSearch /></span>
                             }
                             <NotificationIcon className = "cursor-pointer w-7 h-7" />
                             <InboxIcon className = "cursor-pointer w-7 h-7" />
