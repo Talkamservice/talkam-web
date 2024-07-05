@@ -34,7 +34,7 @@ export const Button = ({
       transition-all ease-in-out duration-300`
     )
     const primaryClass = (` bg-tprimary-50 focus:ring-blue-300 text-twhite-100`)
-    const defaultClass = (` bg-tgray-75 text-tblack-100`)
+    const defaultClass = (` bg-twhite-100 text-tblack-100`)
     const successClass = (` bg-success-150 text-twhite-100`)
     const errorClass = (` bg-error-500 text-twhite-100`)
     const linkClass = (`bg-none text-tblack-100 border-none !px-0 !py-0 space-x-2`)

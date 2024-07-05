@@ -5,6 +5,7 @@ import { CommentInput } from "./commentinput"
 import { motion } from "framer-motion"
 import { randomId } from "../../helpers/randomid"
 import { NestedCommentCard } from "./nestedcommentcard"
+import { downVariants } from "../../helpers/cardanimation"
 import * as Icon from "react-feather"
 
 export const CommentCard = ({ parentComment }) => {
@@ -91,8 +92,8 @@ export const CommentCard = ({ parentComment }) => {
                             </div>
                         </section>
                         {   allComments?.length > 0 ?
-                            <span onClick={() => setShowMore(prev => !prev)} className="text-tprimary-50 font-boldNunito text-sm cursor-pointer">
-                                {` ${ showMore ? 'Hide' : 'Show' } ${ allComments.length } ${ allComments?.length === 1 ? 'Reply' : 'Replies' } `}
+                            <span onClick={() => setShowMore(prev => !prev)} className="text-tprimary-50 font-bold text-sm cursor-pointer">
+                                {` ${ showMore ? 'Hide' : 'View' } ${ allComments.length } ${ allComments?.length === 1 ? 'Reply' : 'Replies' } `}
                             </span> 
                             : 
                             null
@@ -100,7 +101,14 @@ export const CommentCard = ({ parentComment }) => {
                     </section>
                 </section>
                 {    isReplying ?
-                    <motion.section className="w-full">
+                    <motion.section
+                        key="chatbox"
+                        variants={downVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                        className="w-full">
                         <CommentInput
                             anonChecked={anonChecked}
                             setAnonChecked={setAnonChecked}
@@ -119,7 +127,14 @@ export const CommentCard = ({ parentComment }) => {
                 }
                 {
                     showMore ?
-                        <section className="w-full flex flex-col gap-4">
+                        <motion.section
+                            key="chatbox"
+                            variants={downVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                            className="w-full flex flex-col gap-4">
                             {
                                 allComments?.map((comment) => (
                                     <NestedCommentCard
@@ -132,7 +147,7 @@ export const CommentCard = ({ parentComment }) => {
                                     />
                                 ))
                             }
-                        </section>
+                        </motion.section>
                         :
                         null
                 }

@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import * as React from 'react';
+import { Zoom } from 'react-awesome-reveal';
 // import { Zoom } from 'react-awesome-reveal';
 import { createPortal } from 'react-dom';
 
@@ -98,13 +99,13 @@ export const Modal = ({
       className={modalOverlayClass}
       onClick={handleOverlayClick}
     >
-      <div onClose={onClose} className={modalContentClass} onClick={(e) => e.stopPropagation()}>
+      <Zoom duration={300} onClose={onClose} className={modalContentClass} onClick={(e) => e.stopPropagation()}>
         <div className=''>
           <div className={`w-full ${headpadding}`}>{headFragment}</div>
           <div className={`w-full ${bodypadding}`}>{children}</div>
           <div className="w-full">{footerFragment}</div>
         </div>
-      </div>
+      </Zoom>
     </div>,
     containerId
   );

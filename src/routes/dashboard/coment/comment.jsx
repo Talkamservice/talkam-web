@@ -43,7 +43,7 @@ export const Comment = () => {
 
     return (
         <main className="w-full flex">
-            <section className="w-full md:w-4/6 overflow-y-auto no-scrollbar p-6 flex flex-col items-center gap-3 h-[93dvh] min-h-[93dvh]">
+            <section className="w-full md:w-4/6 overflow-auto no-scrollbar px-6 py-3 flex flex-col items-center gap-3">
                 <PostCard 
                     category={postDetails.category}
                     author={postDetails.author}
@@ -87,8 +87,7 @@ export const Comment = () => {
 
 
             {/* right section */}
-            <section className="hidden md:flex w-2/6 flex-col overflow-y-auto no-scrollbar h-[93dvh] min-h-[93dvh]">
-                <p>Left section</p>
+            <section className="hidden md:flex w-2/6 flex-col overflow-auto no-scrollbar">
             </section>
         </main>
     )

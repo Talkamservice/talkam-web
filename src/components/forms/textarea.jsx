@@ -9,6 +9,7 @@ export const TextArea = (props) => {
     cols = 50,
     value,
     limit,
+    limitPosition = "bottom",
     onChange,
     rounded,
     wrapperClassName = '',
@@ -39,13 +40,15 @@ export const TextArea = (props) => {
       <div className={`transition duration-150 ease-in-out space-y-1`}
         onClick={() => inputRef.current.focus()}
       >
-        <label
-          htmlFor={id}
-          className='text-xs text-doc-gray4 font-normal pt-1.5'
-        >
-          {label} {required && <span className='text-error-500'>*</span>}
-        </label>
-
+        <header className='flex items-center justify-between gap-4'>
+          <label
+            htmlFor={id}
+            className='text-sm text-doc-gray4 font-normal'
+          >
+            {label} {required && <span className='text-error-500'>*</span>}
+          </label>
+          { limit && limitPosition === "top" ? <p className={`${isLimit ? 'text-error-500' : "text-tgray-75"} text-xs`}>{`${value?.length ?? 0}/${limit}`}</p> : null}
+        </header>
         <> 
           <textarea
             onChange={onChange}
@@ -57,12 +60,12 @@ export const TextArea = (props) => {
             className={`
               ${error ? 'border border-error-100 focus:ring-error-100 focus:ring-opacity-10 focus:border focus:border-error-100': 'focus:ring-tblue-100 focus:border-tprimary-100'}
               border border-tgray-50 placeholder:text-tgray-250 ${ rounded ? rounded : "rounded-xl" }
-              p-3 focus:ring-4 focus:outline-none w-full text-xs text-tblack-100`}
+              p-3 focus:ring-4 focus:outline-none w-full text-xs text-tblack-100 no-scrollbar`}
             id={id}
             placeholder={placeholder}
             {...rest}
           />
-          <p className={`${isLimit ? 'text-error-500' : "text-tgray-75"} text-xs`}>{`${value?.length ?? 0}/${limit} characters`}</p>
+          { limit && limitPosition === "bottom" ? <p className={`${isLimit ? 'text-error-500' : "text-tgray-75"} text-xs`}>{`${value?.length ?? 0}/${limit}`}</p> : null}
         </>
       </div>
       {errorText && (

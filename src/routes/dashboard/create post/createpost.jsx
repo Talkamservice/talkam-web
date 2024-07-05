@@ -116,15 +116,17 @@ export const CreatePost = () => {
 
     return (
         <div className="w-full flex divide-x divide-tgray-light relative">
-            <section className=" w-full h-[93dvh] min-h-[93dvh] md:w-4/6 overflow-y-auto no-scrollbar px-6 py-0 sm:py-6">
+            <section className=" w-full h-[93dvh] min-h-[93dvh] md:w-4/6 overflow-auto no-scrollbar px-6 py-0 sm:py-6">
             {/*left side card here */}
                 <main className={`flex flex-col  gap-3 py-3 px-0 sm:px-6 sm:border border-tgray-xlight rounded-tr-xl rounded-tl-xl ${ !isChecked && "rounded-xl" } pb-6 transition-all duration-300 ease-out`}>
                     <header className="w-full flex flex-col items-start md:flex-row gap-4 md:items-center justify-between">
                         <h2 className="font-bold text-2xl">Create post</h2>
-                        <DropDownSelect
-                            node={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
-                            defaultValue="Select group or category"
-                        />
+                        <div className="w-3/7">
+                            <DropDownSelect
+                                node={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
+                                defaultValue="Select group or category"
+                            />
+                        </div>
                     </header>
                     
                     <section className="relative">
