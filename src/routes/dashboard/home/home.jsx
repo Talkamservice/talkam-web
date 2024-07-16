@@ -28,7 +28,7 @@ const tabs = [
     },
 ];
 
-const trending = [ "BBN", "Arsenal", "Champions League", "Dating", "Gaming PC", "PS6", "Programming" ];
+// const trending = [ "BBN", "Arsenal", "Champions League", "Dating", "Gaming PC", "PS6", "Programming" ];
 
 export const Home = () => {
 
@@ -76,7 +76,7 @@ export const Home = () => {
                                     polls={post.polls}
                                     avatar={post.user.avatar}
                                     category={post.category?.name}
-                                    author={post.user.name}
+                                    author={post.user.username ?? post.user.name}
                                     title={post.title}
                                     comment={post.body}
                                     image={post.attachments?.[0]?.url}
