@@ -22,6 +22,7 @@ import DisableUserIcon from "../icons/disableuser.svg?react";
 import EnableUserIcon from "../icons/enableuser.svg?react";
 import UploadGifIcon from "../icons/gif.svg?react";
 import LockIcon from "../icons/keylock.svg?react";
+import NewNotificationIcon from "../icons/bell-plus.svg?react";
 
 export {
     TalkamLogo,
@@ -48,4 +49,5 @@ export {
     EnableUserIcon,
     UploadGifIcon,
     LockIcon,
+    NewNotificationIcon,
 }

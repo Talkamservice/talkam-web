@@ -7,14 +7,21 @@ import { CardVariants } from '../../helpers/cardanimation';
 import { motion } from 'framer-motion';
 import { useForm } from '../../hooks/useForm';
 import { isNotEmpty } from '../../utils/formValidations';
-import { useUpdateProfileMutation } from '../../services/userApiSlice';
+import { useGetAvatarsQuery, useUpdateProfileMutation } from '../../services/userApiSlice';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { Modal } from '../../components/global/modal';
+import { ChooseAvatarModal } from './avatarmodal';
+import { selectCurrentUser, setCredentials } from '../../services/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
 import Protected from '../../utils/protected';
 
 export const SaveProfile = () => {
 
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const currentUser = useSelector(selectCurrentUser);
+    const [ openAvatarModal, setOpenAvatarModal ] = useState();
     const [profileImage, setProfileImage] = useState(null);
     const {
         hasError: userNameHasError, inputBlurHandler: userNameBlurHandler,
@@ -22,21 +29,27 @@ export const SaveProfile = () => {
         reset: resetUserName, isValid: userNameIsValid,
     } = useForm(isNotEmpty);
 
-    const [ updateProfile, { isLoading } ] = useUpdateProfileMutation()
+    const { data:avatars, isLoading:loadingAvatars } = useGetAvatarsQuery();
+    const [ updateProfile, { isLoading } ] = useUpdateProfileMutation();
 
-    const handleFileUpload = (event) => {
-        event.preventDefault()
-        const { files } = event.target;
-        if(!files[0]) return;
-        setProfileImage(() => URL.createObjectURL(files[0]))
+    const toggleModal = () => {
+        setOpenAvatarModal(prev => !prev)
+    }
+
+    const handleAvatarSelect = (avatar) => {
+        setProfileImage(() => avatar.image)
+        setOpenAvatarModal(false)
     }
 
     const submitHandler = async(event) => {
         event.preventDefault();
         try {
-            const res = await updateProfile({ username: userNameValue }).unwrap();
+            const res = await updateProfile({ username: userNameValue, avatar: profileImage }).unwrap();
+            dispatch(setCredentials({
+                user: {...currentUser, avatar: profileImage}
+            }))
             toast.success(res?.message);
-            navigate('/', { replace: true })
+            navigate('/home/featured', { replace: true })
         } catch(err) {
             toast.error(err?.data?.message)
         }
@@ -45,7 +58,7 @@ export const SaveProfile = () => {
 
     let formIsValid = false;
 
-    if(userNameIsValid) {
+    if(userNameIsValid && profileImage) {
         formIsValid = true
     }
 
@@ -78,17 +91,9 @@ export const SaveProfile = () => {
                         <section className='flex flex-col items-center justify-center gap-2'>
                             <Avatar src={profileImage} size="xl" />
 
-                            <label className='cursor-pointer border border-tgray-50 rounded-full p-2 flex items-center justify-between gap-2'>
-                                <Input 
-                                    className='hidden'
-                                    type='file'
-                                    name="img"
-                                    id="img"
-                                    accept='image/*'
-                                    onChange={handleFileUpload}
-                                />
+                            <label onClick={toggleModal} className='cursor-pointer border border-tgray-50 rounded-full p-2 flex items-center justify-between gap-2'>
                                 <UploadAvatarIcon />
-                                <span className='text-tblack-100 text-sm'>Upload avatar</span>
+                                <span className='text-tblack-100 text-sm'>Choose an avatar</span>
                             </label>
                         </section>
                         <Input
@@ -114,6 +119,20 @@ export const SaveProfile = () => {
                     </form>
                 </motion.div>
             </main>
+            <Modal
+                show={openAvatarModal}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={toggleModal}
+                position='center'
+                contentWidth='w-full md:w-2/4'
+            >
+                <ChooseAvatarModal
+                    avatars={avatars}
+                    isLoading={loadingAvatars}
+                    handleAvatarSelect={handleAvatarSelect}
+                />
+            </Modal>
         </Protected>
     )
 }

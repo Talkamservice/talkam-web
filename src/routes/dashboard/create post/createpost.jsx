@@ -2,7 +2,6 @@ import { useState } from "react";
 import { DropDownSelect } from "../../../components/forms/dropdown"
 import { Tabs } from "../../../components/global/tabs"
 import { PostsText } from "./poststext";
-import { Input } from "../../../components/forms/input";
 import { Button } from "../../../components/forms/button";
 import { MediaPost } from "./mediapost";
 import { CreatePoll } from "./createpoll";
@@ -13,40 +12,99 @@ import { AnonToggleButton } from "../../../components/global/anonymoustoggle";
 import { BasicToggleButton } from "../../../components/global/basictoggle";
 import { downVariants } from "../../../helpers/cardanimation";
 import { motion } from "framer-motion";
+import { useGetCategoriesQuery, useGetTrendingTagsQuery } from "../../../services/userApiSlice";
+import { useCreatePostMutation } from "../../../services/posts/postsApiSlice";
+import { handleError } from "../../../utils/handleError";
+import { useNavigate } from "react-router-dom";
+import { MultiSelect } from "../../../components/forms/multiselect";
+import { ScheduleModal } from "./schedulemodal";
+import { Modal } from "../../../components/global/modal";
+import { storageDB } from "../../../utils/firestore";
+import { randomId } from "../../../helpers/randomid";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 export const CreatePost = () => {
 
+    let isValid = false;
+    const navigate = useNavigate();
     const [isChecked, setIsChecked] = useState(false)
-    const [scheduleCheck, setScheduleCheck] = useState(false)
-
+    const [scheduleCheck, setScheduleCheck] = useState(false);
+    const [ publishDate, setPublishDate ] = useState(null);
+    const [selectedItems, setSelectedItems] = useState([]);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [pollDuration, setPollDuration] = useState({
+        days: null,
+        hours: null
+    });
     const [ poll, setPoll ] = useState([
         {
             index: 1,
             option: '',
-            editable: false
         },
         {
             index: 2,
             option: '',
-            editable: false
         },
     ])
+
     const [ post, setPost ] = useState({
         title: "",
         comment: "",
         image: null,
-        question: "",
+        category: "",
+        tags: ""
+    });
+
+    //server calls
+    const [ createPost, { isLoading: createLoading } ] = useCreatePostMutation()
+    const { data:categories } = useGetCategoriesQuery(null);
+    const { data:trending } = useGetTrendingTagsQuery();
+    
+    //Functions
+    const toggleModal = () => {
+        setScheduleCheck(prev => !prev)
+    }
+    
+    const convertedtTrendsArray = trending && trending.data.map((trend) => trend.name)
+    console.log(convertedtTrendsArray)
+
+    const convertedTime = ( days, hours ) => {
+        let totalHours;
+        const totalMinutesInADay = 24 * 60
+        const totalMinutesInHours = hours * 60;
+        const daysToMinutes = days * totalMinutesInADay;
+
+        totalHours = daysToMinutes + totalMinutesInHours;
+        return(totalHours)
+    }
+
+    const transformedCategories = categories && categories?.data.map((category) => {
+        return {
+            id: category.id,
+            name: category.name,
+            value: category.name
+        }
     });
 
     const handleFileUpload = (event) => {
         event.preventDefault()
         const { files } = event.target;
         if(!files[0]) return;
-        setPost({...post, image: URL.createObjectURL(files[0])})
+        setImagePreview(() => URL.createObjectURL(files[0]))
+        savePostImage(files[0])
     };
 
+    const savePostImage = async (file) => {
+        const imageRef = ref(storageDB, `web-images/${randomId()}`);
+        const snapshot = await uploadBytes(imageRef, file);
+        const url = await getDownloadURL(
+            ref(storageDB, snapshot.metadata.fullPath)
+        );
+        setPost({...post, image: url})
+    }
+
     const addPollHandler = () => {
-        const newPoll = [...poll, { index: poll.length + 1,  option: '', editable: true }]
+        const newPoll = [...poll, { index: poll.length + 1,  options: '' }]
         setPoll(newPoll)
     };
 
@@ -82,18 +140,15 @@ export const CreatePost = () => {
         {
             id: 0,
             title: "Text",
-            component: 
-                <PostsText
-                    post={post}
-                    setPost={setPost}
-                />
+            component: <PostsText post={post} setPost={setPost}/>
         },
         {
             id: 1,
             title: "Media",
             component: 
                 <MediaPost
-                    image={post.image}
+                    image={imagePreview}
+                    setImagePreview={setImagePreview}
                     onChange={handleFileUpload}
                     setPost={setPost}
                     post={post}
@@ -110,9 +165,43 @@ export const CreatePost = () => {
                     post={post}
                     setPost={setPost}
                     removePollHandler={removePollHandler}
+                    pollDuration={pollDuration}
+                    setPollDuration={setPollDuration}
                 />
         },
     ];
+
+    const handleSelectedCategory = (category) => {
+        setPost({ ...post, category: category })
+    }
+
+    const handleCreatePost = async() => {
+        const transformedPollOptions = poll && poll.map((item) => [
+            item.option
+        ]).flat(2);
+        const PostType = poll.some(item => item.option !== "") ? "Poll" : "Text";
+
+        try {
+            const newPost = {
+                category_id: post.category?.id,
+                type: PostType,
+                title: post.title,
+                body: post.comment,
+                status: "Active",
+                publish_at: publishDate ?? null,
+                is_anonymous: isChecked ? 1 : 0,
+                attachments: [{url:post.image, type: "Image"}],
+                poll: PostType === "Poll" ? { duration: convertedTime(pollDuration.days, pollDuration.hours), options:transformedPollOptions, type: "Text"} : null,
+                tags: selectedItems
+            }
+            const postRes = await createPost({ ...newPost }).unwrap();
+            toast.success(postRes.message)
+            navigate("/home/featured", { replace: true })
+        } catch(error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    }
 
     return (
         <div className="w-full flex divide-x divide-tgray-light relative">
@@ -125,6 +214,8 @@ export const CreatePost = () => {
                             <DropDownSelect
                                 node={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
                                 defaultValue="Select group or category"
+                                options={transformedCategories}
+                                onChange={handleSelectedCategory}
                             />
                         </div>
                     </header>
@@ -139,13 +230,19 @@ export const CreatePost = () => {
                         </span>
                     </section>
                     <footer className="w-full flex flex-col gap-4 bg-white">
-                        <Input
-                            type="text"
-                            rounded="rounded-[4px]"
-                            placeholder = 'Add at least one tag'
-                            label = 'Tags'
-                            required
-                        />
+                        <section className="flex flex-col gap-2">
+                            <label
+                                className='text-sm font-medium text-tblack-100'
+                            >
+                                Tags <span className='text-error-100'>*</span> <span className="text-xs text-tgray-75 px-1">(Maximum 4)</span>
+                            </label>
+                            <MultiSelect
+                                rounded="rounded-[4px]"
+                                selectedItems={selectedItems}
+                                setSelectedItems={setSelectedItems}
+                                options={convertedtTrendsArray.data ?? []} 
+                            />
+                        </section>
 
                         <section className="w-full flex flex-col items-start md:flex-row justify-between gap-3">
                             <div className="flex flex-col gap-3">
@@ -153,7 +250,7 @@ export const CreatePost = () => {
                                     <p className="text-[#272727] font-normal text-base">Schedule this post</p>
                                     <BasicToggleButton checked={scheduleCheck} onChange={(event) => setScheduleCheck(event.target.checked)} />
                                 </div>
-                                {
+                                {/* {
                                     scheduleCheck &&
                                     <motion.div
                                         key="chatbox"
@@ -174,7 +271,7 @@ export const CreatePost = () => {
                                             className="!rounded-md !px-8 !py-2"
                                         />
                                     </motion.div>
-                                }
+                                } */}
                             </div>
                             <div className="flex items-center gap-8">
                                 <Button
@@ -185,6 +282,9 @@ export const CreatePost = () => {
                                 <Button
                                     children="Post"
                                     className="!rounded-full !text-base bg-tprimary-50 px-6 !py-1.5 md:!px-8 md:!py-2.5"
+                                    onClick={handleCreatePost}
+                                    isLoading={createLoading}
+                                    disabled={createLoading}
                                 />
                             </div>
                         </section>
@@ -205,6 +305,7 @@ export const CreatePost = () => {
                 }
             </section>
 
+            {/* Right side */}
             <section className="w-2/6 px-6 hidden md:block py-4 space-y-8 h-[93dvh] min-h-[93dvh] overflow-y-auto no-scrollbar">
                 <section className="flex flex-col gap-8">
                     <header className="flex flex-col gap-3">
@@ -225,6 +326,19 @@ export const CreatePost = () => {
                     </ul>
                 </section>
             </section>
+            <Modal
+                show={scheduleCheck}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={toggleModal}
+                position='center'
+                contentWidth='w-full md:w-3/6 xl:w-3/12'
+            >
+                <ScheduleModal
+                    setPublishDate={setPublishDate}
+                    onClose={toggleModal}
+                />
+            </Modal>
         </div>
     )
 }

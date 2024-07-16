@@ -23,7 +23,7 @@ export const DropDownSelect = ({defaultValue, options, label, onChange, readOnly
   }
 
   return (
-    <div tabIndex={0} className={`w-full space-y-1 ${styles}`}>
+    <div tabIndex={0} className={`w-full min-w-[200px] space-y-1 ${styles}`}>
       {!!label ? (
         <label className="text-sm font-medium text-tblack-100 ">{label}</label>
       ) : null}

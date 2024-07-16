@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react'
 import classNames from 'classnames'
-import DefaultAvatar from '../../assets/images/avatar.png'
+import DefaultAvatar from '../../assets/icons/profile.svg'
 
 export const Avatar = ({ src, size }) => {
 
     const [hasError, setHasError] = useState(false);
 
-    const baseClass = classNames('flex items-center justify-center rounded-full')
+    const baseClass = classNames('flex items-center justify-center rounded-full border border-tgray-xlight rounded-full')
     const xtrasmallClass = classNames('w-8 h-8')
+    const smallMediumClass = classNames('w-10 h-10')
     const smallClass = classNames('w-12 h-12')
     const mediumClass = classNames('w-16 h-16')
     const largeClass = classNames('w-20 h-20')
@@ -16,6 +17,7 @@ export const Avatar = ({ src, size }) => {
 
     const sizeMap = {
         "xs": xtrasmallClass,
+        "xsm": smallMediumClass,
         "sm": smallClass,
         "md": mediumClass,
         "lg": largeClass,

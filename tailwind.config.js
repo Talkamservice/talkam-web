@@ -74,8 +74,8 @@ export const theme = {
   };
   export const plugins = [
     // require('@tailwindcss/typography'),
-    // require('@tailwindcss/forms'),
-    // require('flowbite/plugin'),
+    require('@tailwindcss/forms'),
+    require('flowbite/plugin'),
     // require('@tailwindcss/line-clamp'),
     // require("daisyui"),
   ];

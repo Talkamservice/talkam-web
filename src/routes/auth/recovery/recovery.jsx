@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useForgotPasswordMutation } from '../../../services/authApiSlice';
 import { motion } from 'framer-motion';
 import { CardVariants } from '../../../helpers/cardanimation';
+import { handleError } from '../../../utils/handleError';
 
 export const Recovery = () => {
 
@@ -30,7 +31,8 @@ export const Recovery = () => {
             toast.success(res.message);
             navigate("/email-verification", { state: { emailValue: emailValue, type: "password_reset"} })
         } catch(error){
-          toast.error(error?.data?.message);
+            const errorMessage = handleError(error)
+            toast.error(errorMessage);
         }
         resetEmail();
     };

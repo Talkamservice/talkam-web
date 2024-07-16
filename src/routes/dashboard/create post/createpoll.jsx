@@ -7,12 +7,12 @@ import { Button } from "../../../components/forms/button";
 import { useMemo } from "react";
 import { randomId } from "../../../helpers/randomid";
 
-export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, removePollHandler }) => {
+export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, removePollHandler, pollDuration, setPollDuration }) => {
     
-    const pollDuration = useMemo(() => Array(24).fill(null).map((_,i) => i + 1).map(h => {
+    const pollHoursDuration = useMemo(() => Array(24).fill(null).map((_,i) => i + 1).map(h => {
         return {
             id: randomId(),
-            name: `${h < 1 ? '' : h === 1 ? h + ' hour' : h + ' hours' }`,
+            name: h,
             value: `${h < 1 ? '' : h === 1 ? h + ' hour' : h + ' hours' }`
         }
     }).flat(), []);
@@ -20,16 +20,16 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
     const pollDaysDuration = useMemo(() => Array(7).fill(null).map((_,i) => i + 1).map(d => {
         return {
             id: randomId(),
-            name: `${d < 1 ? '' : d === 1 ? d + ' day' : d + ' days' }`,
+            name: d,
             value: `${d < 1 ? '' : d === 1 ? d + ' day' : d + ' days' }`
         }
     }).flat(), []);
 
     const handlePollDurationTime = (option) => {
-        console.log(option.value)
+        setPollDuration({ ...pollDuration, hours: option.name })
     }
     const handlePollDurationDays = (option) => {
-        console.log(option.value)
+        setPollDuration({ ...pollDuration, days: option.name })
     }
      
     return(
@@ -47,8 +47,8 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
                 rounded="rounded-[4px]"
                 placeholder = 'Question here'
                 label = 'Post title/Question'
-                value={post?.question}
-                onChange={(event) => setPost({...post, question: event.target.value})}
+                value={post?.title}
+                onChange={(event) => setPost({...post, title: event.target.value})}
                 required
             />
 
@@ -88,17 +88,17 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
             <section className="w-full flex flex-col items-start justify-between gap-3 md:flex-row">
                 <div className="flex flex-col gap-2">
                     <span className="text-sm font-medium">Duration of Poll</span>
-                    <section className="flex items-center gap-3">
+                    <section className="flex flex-col xl:flex-row items-center gap-3">
                         <DropDownSelect
                             buttonStyles="!py-2"
-                            defaultValue="2 Days"
+                            defaultValue="Select days"
                             options={pollDaysDuration}
                             onChange={handlePollDurationDays}
                         />
                         <DropDownSelect
                             buttonStyles="!py-2"
-                            defaultValue="1 hour"
-                            options={pollDuration}
+                            defaultValue="Select hours"
+                            options={pollHoursDuration}
                             onChange={handlePollDurationTime}
                         />
                     </section>
