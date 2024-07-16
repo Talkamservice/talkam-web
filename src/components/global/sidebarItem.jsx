@@ -1,7 +1,7 @@
 import { cloneElement } from "react"
 import { NavLink } from "react-router-dom"
 
-export const SideBarItem = ({ children, url, icon, onClick }) => {
+export const SideBarItem = ({ children, url, icon, image, onClick }) => {
 
     return (
         <NavLink onClick={onClick} to={url} className={`cursor-pointer w-full flex items-center justify-start leading-none no-underline hover:no-underline m-0 `}
@@ -21,7 +21,11 @@ export const SideBarItem = ({ children, url, icon, onClick }) => {
                     cloneElement(icon, {
                         className: `w-6 h-6 `,
                         // fill: 'currentColor',
-                    })}
+                    })
+                }
+                {image &&
+                    <img className="w-6 h-6 rounded-full" src={image} />
+                }
                 </span>
                 <h2 className={`text-sm font-normal`}>{children}</h2>
             </div>

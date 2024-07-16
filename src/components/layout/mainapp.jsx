@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { GroupAddIcon, HumourIcon, InboxIcon, LatestEventsIcon, NotificationIcon, ProfileIcon, TalkamLogo, UsersIcon } from '../../assets/icons/generated';
-import { Modal } from '../global/modal';
+import { GroupAddIcon, HumourIcon, InboxIcon, LatestEventsIcon, NotificationIcon, TalkamLogo, UsersIcon } from '../../assets/icons/generated';
 import { SideBarItem } from '../global/sidebarItem';
 import { Button } from '../forms/button';
 import { NavSearch } from '../forms/navsearchbar';
+import { useGetCategoriesQuery } from '../../services/userApiSlice';
+import { ColoredLoader } from '../global/loader';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../services/authSlice';
+import { Avatar } from '../global/avatar';
 import * as Icon from 'react-feather'
 
 const followingItems = [
@@ -47,7 +51,11 @@ export const MainAppLayout = ({ children }) => {
     let isLogoMobile = useMediaQuery("(max-width: 425px)");
 
     const navigate = useNavigate();
+    const currentUser = useSelector(selectCurrentUser)
     const [showPanel, setShowPanel] = useState(false);
+    const { data:categories, loadingCategories } = useGetCategoriesQuery({
+        sort: 'popular'
+    });
 
     const toggleShowPanel = () => {
         setShowPanel((prev) => !prev);
@@ -58,34 +66,35 @@ export const MainAppLayout = ({ children }) => {
             <main className='w-full relative h-screen no-scrollbar max-w-screen-2xl no-scrollbar'>
                 {/* Mobile header */}
                 <header className={`sticky w-full flex items-center justify-between gap-4 border-b border-tgray-light bg-white z-40 px-4 md:px-24 py-7 h-[7dvh] top-0`}>
-                    <div onClick={() => navigate('/home')} className="flex items-center gap-2 cursor-pointer">
-                        <TalkamLogo width={35} height={40} />
+                    <div onClick={() => {navigate('/home'); setShowPanel(false);}} className="flex items-center gap-2 cursor-pointer">
+                        <TalkamLogo width={ isMobile ? 25 : 35} height={isMobile ? 30 : 40} />
                         <p className={` ${ !isLogoMobile ? 'block' : 'hidden' } flex items-center text-xl font-regularNunito` }><span className='font-extraboldNunito'>talk</span>AM</p>
                     </div>
                     <section className='w-10/12 md:w-9/12 flex items-center justify-end gap-6 md:gap-8 no-scrollbar'>
-                        <section className={`${isMobile ? "" : "flex-1"} flex items-center gap-6 md:gap-8`}>
+                        <section className={`${isMobile ? "" : "flex-1"} flex items-center gap-5 md:gap-8`}>
                             { isMobile ?
-                                <Icon.Search onClick={() => {navigate('/search')}} />
+                                <Icon.Search className={`${ isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} onClick={() => {navigate('/search'); setShowPanel(false);}} />
                                 :
                                 <span onClick={() => {navigate('/search')}} className='w-full'><NavSearch /></span>
                             }
-                            <NotificationIcon className = "cursor-pointer w-7 h-7" />
-                            <InboxIcon className = "cursor-pointer w-7 h-7" />
+                            <NotificationIcon className = {`cursor-pointer ${ isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
+                            <InboxIcon className = {`cursor-pointer ${ isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
                         </section>
-                        <section className='flex items-center gap-6 md:gap-8'>
+                        <section className='flex items-center gap-5 md:gap-8'>
                             <Button
                                 children={isMobile ? "" : "Post"}
-                                leftIcon={< Icon.Plus size={ isMobile ? 18 : 20 } />}
+                                leftIcon={< Icon.Plus size={ isMobile ? 16 : 20 } />}
                                 className={ isMobile ? "!rounded-full !text-base bg-tprimary-50 !p-1" : "!rounded-full !text-base bg-tprimary-50 !px-4 !py-2.5" }
                                 onClick={() => navigate('/create-post')}
                             />
-                            <ProfileIcon className = "cursor-pointer w-7 h-7" />
+                            <Avatar src={currentUser?.avatar} size={isMobile ? "xs" : "sm"} />
                             <Icon.Menu
                                 className={`${ isMobile ? 'block' : 'hidden' }`}
                                 width={24}
                                 height={24}
                                 color="black"
                                 onClick={toggleShowPanel}
+                                size={isMobile ? 15 : 18}
                             />
                         </section>
                     </section>
@@ -93,7 +102,7 @@ export const MainAppLayout = ({ children }) => {
 
                 <div className=" relative flex no-scrollbar h-[93dvh]">
                     <div
-                        className={`fixed inset-0 z-40 backdrop-blur-sm bg-tgray-300 lg:hidden`}
+                        className={`fixed inset-0 z-[39] backdrop-blur-sm bg-tgray-300 lg:hidden`}
                         style={{
                         opacity: 0.8,
                         display: isMobile && showPanel ? "block" : "none",
@@ -103,7 +112,7 @@ export const MainAppLayout = ({ children }) => {
                     ></div>
 
                     <aside
-                        className={`fixed border-r border-tgray-light inset-y-0 z-40 md:z-30 lg:absolute w-80 sm:w-96 no-scrollbar bg-white sm:pl-20 pr-6
+                        className={`fixed border-r border-tgray-light inset-y-0 z-[39] lg:absolute w-80 sm:w-96 no-scrollbar bg-white sm:pl-20 pr-6
                         ${ isMobile && !showPanel && "hidden"}`}
                     >
                         <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
@@ -132,7 +141,7 @@ export const MainAppLayout = ({ children }) => {
                                         children="Create group"
                                         rightIcon={<GroupAddIcon />}
                                         className="flex items-center justify-between text-sm !p-2 !px-3"
-                                        onClick={() => {navigate('/groups/create'); toggleShowPanel(); }}
+                                        onClick={() => {navigate('/groups/create'); setShowPanel(false);}}
                                     />
                                     <Button
                                         variant="link"
@@ -140,7 +149,7 @@ export const MainAppLayout = ({ children }) => {
                                         children="See all groups"
                                         rightIcon={<Icon.ArrowRight />}
                                         className="flex items-center justify-between !text-sm !py-0 !px-0"
-                                        onClick={() =>{navigate('/groups'); toggleShowPanel(); }}
+                                        onClick={() =>{navigate('/groups'); setShowPanel(false);}}
                                     />
                                 </section>
 
@@ -148,11 +157,15 @@ export const MainAppLayout = ({ children }) => {
                                     <h1 className='text-base font-bold'>Popular categories</h1>
                                     <ul className='flex flex-col gap-2'>
                                         {
-                                            followingItems?.map((item) => (
+                                            loadingCategories ?
+                                            <ColoredLoader />
+                                            :
+                                            categories?.data.slice(0, 5).map((item) => (
                                                 <SideBarItem
                                                     key={item.id}
                                                     children={item.name}
-                                                    icon={item.icon}
+                                                    icon={item.image ?? <LatestEventsIcon />}
+                                                    // image={item.image ?? <LatestEventsIcon />}
                                                     url={item.url}
                                                 />
                                             ))
@@ -205,20 +218,6 @@ export const MainAppLayout = ({ children }) => {
                     </main>
                 </div>
             </main>
-        
-        {/* <Modal
-            show={true}
-            shouldCloseOnEscPress={false}
-            shouldCloseOnOverlayClick={false}
-            onClose={false}
-            position='center'
-            contentWidth='w-full md:w-3/4 xl:w-3/5'
-        >
-            <section className='p-12 space-y-6'>
-                <p>Modal content here for test</p>       
-            </section>
-        </Modal> */}
-
         </section>
     );
 };

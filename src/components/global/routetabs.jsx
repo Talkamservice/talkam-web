@@ -17,7 +17,7 @@ export const RouteTabs = ({tabs, data}) => {
 
   return (
     <div className=''>
-        <div className='z-10 sticky top-0 flex items-center justify-start gap-5 overflow-x-auto w-full border-b border-[#DCDCDC] no-scrollbar bg-white mb-2'>
+        <div className='z-[12] sticky top-0 flex items-center justify-start gap-5 overflow-x-auto w-full border-b border-[#DCDCDC] no-scrollbar bg-white mb-2'>
             {   tabs?.map(item => (
                     <TabButton
                         key={item.title}

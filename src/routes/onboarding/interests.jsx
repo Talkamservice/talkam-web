@@ -15,7 +15,9 @@ export const Interests = () => {
     const navigate = useNavigate();
     const [ selectedItems, setSelectedItems ] = useState([]);
 
-    const { data: categories, isLoading } = useGetCategoriesQuery();
+    const { data: categories, isLoading } = useGetCategoriesQuery({
+        sort: ""
+    });
     const [ updateProfile, { isLoading:addLoading } ] = useUpdateProfileMutation();
 
     const itemCount = selectedItems.length < 3 ? selectedItems.length : 3

@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { CardVariants } from '../../../helpers/cardanimation';
 import * as Icon from 'react-feather'
+import { handleError } from '../../../utils/handleError';
 
 export const PasswordReset = () => {
 
@@ -48,7 +49,8 @@ export const PasswordReset = () => {
             toast.success(res.message);
             navigate("/login", { replace: true })
         } catch(err){
-            toast.error(err?.data?.message);
+            const errorMessage = handleError(err)
+            toast.error(errorMessage);
         };
         resetEnteredPassword()
         resetConfirmPassword()

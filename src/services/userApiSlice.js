@@ -3,8 +3,8 @@ import { apiSlice } from "../app/api/apiSlice"
 export const authApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getCategories: builder.query({
-            query: () => ({
-                url: `user/post-categories`,
+            query: (sort) => ({
+                url: `user/post-categories?sort=${sort}`,
                 method: "get",
             })
         }),
@@ -14,12 +14,25 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 method: 'post',
                 body: { ...payload }
             })
-        })
-        
+        }),
+        getTrendingTags: builder.query({
+            query: () => ({
+                url: `/user/trendings/fetch`,
+                method: 'get',
+            }),
+        }),
+        getAvatars: builder.query({
+            query: () => ({
+                url: `/profile/avatars`,
+                method: 'get'
+            })
+        }),
     })
 })
 
 export const { 
     useGetCategoriesQuery,
     useUpdateProfileMutation,
+    useGetTrendingTagsQuery,
+    useGetAvatarsQuery,
 } = authApiSlice

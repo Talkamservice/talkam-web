@@ -11,7 +11,7 @@ export const Tabs = ({tabs}) => {
 
   return (
     <div className='z-10 space-y-4'>
-        <div className='z-10 sticky top-0 flex items-center justify-start gap-6 overflow-x-auto w-full border-b border-[#DCDCDC] no-scrollbar bg-white'>
+        <div className='z-[12] sticky top-0 flex items-center justify-start gap-6 overflow-x-auto w-full border-b border-[#DCDCDC] no-scrollbar bg-white'>
             {   tabs?.map(item => (
                     <TabButton
                         key={item.id}

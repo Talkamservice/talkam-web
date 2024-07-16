@@ -6,7 +6,8 @@ import { selectCurrentToken } from '../services/authSlice';
 const Protected = ({ path="/login", children }) => {
 
     const token = useSelector(selectCurrentToken);
-    const location = useLocation()
+    const location = useLocation();
+    // console.log(token)
 
     return (
         token ? 

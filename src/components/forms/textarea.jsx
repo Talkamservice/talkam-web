@@ -13,6 +13,7 @@ export const TextArea = (props) => {
     onChange,
     rounded,
     wrapperClassName = '',
+    textstyles,
     placeholder = '',
     label = '',
     type = 'text',
@@ -57,6 +58,7 @@ export const TextArea = (props) => {
             readOnly={readOnly}
             ref={inputRef}
             type={type}
+            style={textstyles}
             className={`
               ${error ? 'border border-error-100 focus:ring-error-100 focus:ring-opacity-10 focus:border focus:border-error-100': 'focus:ring-tblue-100 focus:border-tprimary-100'}
               border border-tgray-50 placeholder:text-tgray-250 ${ rounded ? rounded : "rounded-xl" }

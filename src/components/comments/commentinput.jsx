@@ -1,3 +1,4 @@
+import { useSelector } from "react-redux"
 import { TrashIcon, UploadGifIcon } from "../../assets/icons/generated"
 import { downVariants } from "../../helpers/cardanimation"
 import { Button } from "../forms/button"
@@ -5,16 +6,33 @@ import { Input } from "../forms/input"
 import { AnonToggleButton } from "../global/anonymoustoggle"
 import { Avatar } from "../global/avatar"
 import { motion } from "framer-motion"
+import { selectCurrentUser } from "../../services/authSlice"
 import * as Icon from 'react-feather'
 
-export const CommentInput = ({ anonChecked, setAnonChecked, commentBody, setCommentBody, onChange, handleCommentChange, submitComment, image, setIsReplying, cancel }) => {
+export const CommentInput = ({
+    anonChecked,
+    setAnonChecked,
+    commentBody,
+    setImagePreview,
+    onChange,
+    handleCommentChange,
+    submitComment,
+    image,
+    setIsReplying,
+    cancel,
+    isValidComment,
+    isLoading,
+    error,
+}) => {
+
+    const currentUser = useSelector(selectCurrentUser);
 
     return (
         <>
             <div className={`w-full border border-tgray-50 rounded-tr-xl rounded-tl-xl ${ !anonChecked && "rounded-xl" } p-3 flex flex-col sm:flex-row items-start justify-between gap-2`}>
                 <section className="w-full flex items-start gap-2">
                     <div className="flex items-start justify-start">
-                        <Avatar size="sm" />
+                        <Avatar size="sm" src={currentUser.avatar} />
                     </div>
                     <section className="w-full flex flex-col gap-1">
                         <textarea
@@ -22,12 +40,17 @@ export const CommentInput = ({ anonChecked, setAnonChecked, commentBody, setComm
                                 outline: 'none',
                                 border: "none"
                             }}
-                            rows={2}
-                            className="md:text-base w-full no-scrollbar text-xs"
+                            rows={4}
+                            className={`
+                                ${error ? 'border border-error-100 focus:ring-error-100 focus:ring-opacity-10 focus:border focus:border-error-100': 'focus:ring-0 focus:border-0'}
+                                border border-tgray-50 placeholder:text-tgray-250
+                                p-3 focus:ring-4 focus:outline-none w-full text-xs text-tblack-100 no-scrollbar
+                            `}
                             placeholder="Leave a comment..."
                             value={commentBody?.comment}
                             onChange={handleCommentChange}
                         />
+                        
                         {/* Image here */}
                         { image ? 
                             <section className="relative rounded-lg min-h-[170px] h-[250px]">
@@ -41,7 +64,7 @@ export const CommentInput = ({ anonChecked, setAnonChecked, commentBody, setComm
                                     }}
                                 />
                                     <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
-                                        <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" onClick={() => setCommentBody({...commentBody, image: null })}>
+                                        <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" onClick={() => setImagePreview(null)}>
                                             <TrashIcon className=""  style={{paddingLeft: '2px', color:"#FF0000"}} />
                                         </span>
                                     </span>
@@ -74,7 +97,7 @@ export const CommentInput = ({ anonChecked, setAnonChecked, commentBody, setComm
                             variant="link"
                             children="Cancel"
                             className="!rounded-full !py-2 !px-3 self-end font-bold !text-error-500"
-                            onClick={() => setIsReplying(false)}
+                            onClick={() => setIsReplying(() => false)}
                         /> 
                         : 
                         null
@@ -83,6 +106,8 @@ export const CommentInput = ({ anonChecked, setAnonChecked, commentBody, setComm
                         children="Comment"
                         className="!rounded-full !py-2 !px-3"
                         onClick={submitComment}
+                        disabled={!isValidComment || isLoading}
+                        // isLoading={isLoading}
                     />
                 </section>
             </div>

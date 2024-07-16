@@ -11,6 +11,9 @@ export default defineConfig({
       svgrOptions: {}
     }),
   ],
+  server: {
+    port:  5173
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

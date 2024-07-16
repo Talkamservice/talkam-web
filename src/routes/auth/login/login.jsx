@@ -8,7 +8,7 @@ import { GoogleAuthButton } from '../../../components/forms/socialbuttons/google
 import { FacebookAuthButton } from '../../../components/forms/socialbuttons/facebookauthbutton';
 import { AppleAuthButton } from '../../../components/forms/socialbuttons/appleauthbutton';
 import { useForm } from '../../../hooks/useForm';
-import { isEmail, isNotEmpty } from '../../../utils/formValidations';
+import { isNotEmpty } from '../../../utils/formValidations';
 import { useLoginMutation, useOauthLoginMutation } from '../../../services/authApiSlice';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
@@ -16,6 +16,7 @@ import { setCredentials } from '../../../services/authSlice';
 import { useGoogleLogin } from '@react-oauth/google';
 import { TiktokAuthButton } from '../../../components/forms/socialbuttons/titktokauthbutton';
 import { CardVariants } from '../../../helpers/cardanimation';
+import { handleError } from '../../../utils/handleError';
 import FacebookLogin from '@greatsumini/react-facebook-login';
 import * as Icon from 'react-feather'
 
@@ -29,7 +30,7 @@ export const Login = () => {
         hasError: emailHasError, inputBlurHandler: emailBlurHandler,
         value: emailValue, valueChangeHandler: emailChangeHandler,
         reset: resetEmail, isValid: emailIsValid,
-      } = useForm(isEmail);
+      } = useForm(isNotEmpty);
     
     const {
         hasError: passwordHasError, inputBlurHandler: passwordBlurHandler,
@@ -52,7 +53,7 @@ export const Login = () => {
         event.preventDefault();
         try {
             const userData = await login ({
-                email: emailValue,
+                input: emailValue,
                 password: passwordValue,
             }).unwrap()
             dispatch(
@@ -64,7 +65,8 @@ export const Login = () => {
             toast.success("Logged in successfully!");
             navigate("/", { replace: true })
         } catch(error){
-            toast.error(error?.data?.message);
+            const errorMessage = handleError(error)
+            toast.error(errorMessage);
         }
         resetEmail();
         resetPassword();
@@ -84,8 +86,12 @@ export const Login = () => {
                         accessToken: loginData?.data?.token,
                     }),
                 )
-                toast.success("Logged in successfully!");
-                navigate("/", { replace: true })
+                if(loginData.data.new_user){
+                    navigate("/get-started/interests", { replace: true })
+                } else {
+                    toast.success("Logged in successfully!");
+                    navigate("/", { replace: true })
+                }
             } catch(error){
                 toast.error(error?.data?.message);
             }
@@ -104,8 +110,12 @@ export const Login = () => {
                     accessToken: loginData?.data?.token,
                 }),
             )
-            toast.success("Logged in successfully!");
-            navigate("/", { replace: true })
+            if(loginData.data.new_user){
+                navigate("/get-started/interests", { replace: true })
+            } else {
+                toast.success("Logged in successfully!");
+                navigate("/", { replace: true })
+            }
         } catch(error){
             toast.error(error?.data?.message);
         }
@@ -148,14 +158,14 @@ export const Login = () => {
                 <form onSubmit={submitHandler} className='flex items-center justify-center flex-col gap-4 w-full'>
                     <Input
                         wrapperClassName='w-full'
-                        type="email"
+                        type="text"
                         label='Username/Email'
                         placeholder='example@example.com'
                         onBlur={emailBlurHandler}
                         onChange={emailChangeHandler}
                         value={emailValue}
                         error={emailHasError}
-                        errorText={emailHasError ? "Please Enter a Valid Email" : ""}
+                        errorText={emailHasError ? "Please Enter a Valid Email/Username" : ""}
                         required
                     />
                     <Input
