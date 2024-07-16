@@ -65,7 +65,7 @@ export const CreatePost = () => {
         setScheduleCheck(prev => !prev)
     }
     
-    const convertedtTrendsArray = trending && trending.data.map((trend) => trend.name)
+    const convertedtTrendsArray = trending && trending.data?.map((trend) => trend.name)
     console.log(convertedtTrendsArray)
 
     const convertedTime = ( days, hours ) => {
@@ -78,7 +78,7 @@ export const CreatePost = () => {
         return(totalHours)
     }
 
-    const transformedCategories = categories && categories?.data.map((category) => {
+    const transformedCategories = categories && categories?.data?.map((category) => {
         return {
             id: category.id,
             name: category.name,
@@ -240,7 +240,7 @@ export const CreatePost = () => {
                                 rounded="rounded-[4px]"
                                 selectedItems={selectedItems}
                                 setSelectedItems={setSelectedItems}
-                                options={convertedtTrendsArray.data ?? []} 
+                                options={convertedtTrendsArray ?? []} 
                             />
                         </section>
 
