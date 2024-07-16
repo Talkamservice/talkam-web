@@ -55,7 +55,7 @@ export const PostPollBar = ({ color, option, selected, percentage, handlePollVot
           variants={textVariants}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {`${percentage}%`}
+          {`${percentage.toFixed(0)}%`}
         </motion.span>
       ) : null}
     </div>

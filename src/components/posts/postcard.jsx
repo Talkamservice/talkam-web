@@ -95,19 +95,21 @@ export const PostCard = ({
         // Check if the new reaction is the same as the current action
         if (reaction === action) {
             setAction(() => null);
-            if((reaction === "Like") === (action === "Like")){
-                setLikeCount( () => likeCount - 1 )
+            if (reaction === "Like") {
+                setLikeCount(() => likeCount - 1);
             }
-        }
-        // Update Optimistically for better UX
-        if (reaction && reaction !== action) {
-            setAction(() => reaction);
-            if(reaction === "Like"){
-                setLikeCount(() => likeCount + 1)
-            } else if ( reaction === "Dislike" && action === "Like" ){
-                setLikeCount(() => likeCount - 1)
-            } else if (reaction === "Dislike"){
-                setLikeCount(() => likeCount)
+        } else {
+            // Update Optimistically for better UX
+            if (reaction) {
+                setAction(() => reaction);
+                if (reaction === "Like") {
+                    setLikeCount(() => likeCount + 1);
+                    if (action === "Dislike") {
+                        // setUnlikeCount(() => unlikeCount - 1);
+                    }
+                } else if (reaction === "Dislike" && action === "Like") {
+                    setLikeCount(() => likeCount - 1);
+                }
             }
         }
         try {

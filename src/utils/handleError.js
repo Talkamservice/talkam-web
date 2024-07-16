@@ -22,4 +22,4 @@ export const handleError = (error) => {
       errorMessage = error.message;
     }
     return errorMessage;
-};  
+};

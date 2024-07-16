@@ -44,7 +44,7 @@ export const CommentInput = ({
                             className={`
                                 ${error ? 'border border-error-100 focus:ring-error-100 focus:ring-opacity-10 focus:border focus:border-error-100': 'focus:ring-0 focus:border-0'}
                                 border border-tgray-50 placeholder:text-tgray-250
-                                p-3 focus:ring-4 focus:outline-none w-full text-xs text-tblack-100 no-scrollbar
+                                p-3 focus:outline-none w-full text-xs text-tblack-100 no-scrollbar
                             `}
                             placeholder="Leave a comment..."
                             value={commentBody?.comment}

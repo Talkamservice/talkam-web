@@ -190,7 +190,7 @@ export const CreatePost = () => {
                 status: "Active",
                 publish_at: publishDate ?? null,
                 is_anonymous: isChecked ? 1 : 0,
-                attachments: [{url:post.image, type: "Image"}],
+                attachments: post.image !== null ? [{url:post.image, type: "Image"}] : null,
                 poll: PostType === "Poll" ? { duration: convertedTime(pollDuration.days, pollDuration.hours), options:transformedPollOptions, type: "Text"} : null,
                 tags: selectedItems
             }
@@ -222,7 +222,7 @@ export const CreatePost = () => {
                     
                     <section className="relative">
                         <Tabs tabs={tabs}/>
-                        <span className="absolute top-0 right-0 z-10">
+                        <span className="absolute top-0 right-0 z-[12]">
                             <AnonToggleButton
                                 checked={isChecked} 
                                 onChange={(event) => setIsChecked(event.target.checked)} 
