@@ -56,6 +56,7 @@ export const MainAppLayout = ({ children }) => {
     const { data:categories, loadingCategories } = useGetCategoriesQuery({
         sort: 'popular'
     });
+    console.log(categories)
 
     const toggleShowPanel = () => {
         setShowPanel((prev) => !prev);
@@ -164,8 +165,8 @@ export const MainAppLayout = ({ children }) => {
                                                 <SideBarItem
                                                     key={item.id}
                                                     children={item.name}
-                                                    icon={item.image ?? <LatestEventsIcon />}
-                                                    // image={item.image ?? <LatestEventsIcon />}
+                                                    // icon={item.image ?? <LatestEventsIcon />}
+                                                    image={item.icon_image ?? <LatestEventsIcon />}
                                                     url={item.url}
                                                 />
                                             ))
