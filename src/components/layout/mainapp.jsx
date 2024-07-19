@@ -56,7 +56,6 @@ export const MainAppLayout = ({ children }) => {
     const { data:categories, loadingCategories } = useGetCategoriesQuery({
         sort: 'popular'
     });
-    console.log(categories)
 
     const toggleShowPanel = () => {
         setShowPanel((prev) => !prev);
@@ -88,7 +87,13 @@ export const MainAppLayout = ({ children }) => {
                                 className={ isMobile ? "!rounded-full !text-base bg-tprimary-50 !p-1" : "!rounded-full !text-base bg-tprimary-50 !px-4 !py-2.5" }
                                 onClick={() => navigate('/create-post')}
                             />
-                            <Avatar src={currentUser?.avatar} size={isMobile ? "xs" : "sm"} />
+                            <span className='cursor-pointer'>
+                                <Avatar
+                                    
+                                    onClick={() => {navigate('/profile'); setShowPanel(false);}} src={currentUser?.avatar}
+                                    size={isMobile ? "xs" : "sm"}
+                                />
+                            </span>
                             <Icon.Menu
                                 className={`${ isMobile ? 'block' : 'hidden' }`}
                                 width={24}
@@ -165,7 +170,6 @@ export const MainAppLayout = ({ children }) => {
                                                 <SideBarItem
                                                     key={item.id}
                                                     children={item.name}
-                                                    // icon={item.image ?? <LatestEventsIcon />}
                                                     image={item.icon_image ?? <LatestEventsIcon />}
                                                     url={item.url}
                                                 />

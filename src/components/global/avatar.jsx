@@ -2,11 +2,11 @@ import React, { useMemo, useState } from 'react'
 import classNames from 'classnames'
 import DefaultAvatar from '../../assets/icons/profile.svg'
 
-export const Avatar = ({ src, size }) => {
+export const Avatar = ({ src, size, onClick, ...props }) => {
 
     const [hasError, setHasError] = useState(false);
 
-    const baseClass = classNames('flex items-center justify-center rounded-full border border-tgray-xlight rounded-full')
+    const baseClass = classNames('flex items-center justify-center rounded-full bg-white border border-tgray-xlight p-0 m-0')
     const xtrasmallClass = classNames('w-8 h-8')
     const smallMediumClass = classNames('w-10 h-10')
     const smallClass = classNames('w-12 h-12')
@@ -31,7 +31,7 @@ export const Avatar = ({ src, size }) => {
 
         if ((!hasImageSrc) || hasError)
         return (
-            <div className={classNames(baseClass,'bg-tgray-75', sizeMap[size] ?? largeClass)}>
+            <div {...props} onClick={onClick} className={classNames(baseClass, sizeMap[size] ?? largeClass)}>
                 <img
                     loading='lazy'
                     className={classNames(baseClass, sizeMap[size] ?? largeClass)}
@@ -49,7 +49,7 @@ export const Avatar = ({ src, size }) => {
 
         if (hasImageSrc && !hasError)
         return (
-            <div className={classNames(baseClass, sizeMap[size] ?? largeClass)}>
+            <div {...props} onClick={onClick} className={classNames(baseClass, sizeMap[size] ?? largeClass)}>
                 <img
                     loading='lazy'
                     className={classNames(baseClass, sizeMap[size] ?? largeClass)}

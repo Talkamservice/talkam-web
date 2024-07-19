@@ -11,6 +11,7 @@ import { MainAppLayout } from './components/layout/mainapp';
 import ErrorPage from './routes/error/error';
 import Protected from './utils/protected';
 import { GroupIndex } from './routes/dashboard/groups/groupindex';
+import { ProfileIndex } from './routes/dashboard/profile/profileindex';
 
 const router =  createBrowserRouter([
   {
@@ -53,7 +54,7 @@ const router =  createBrowserRouter([
               let { New } = await import("./routes/dashboard/home/new");
               return { Component: New };
             }
-          }
+          },
         ]
       },
       {
@@ -62,6 +63,86 @@ const router =  createBrowserRouter([
           let { CreatePost } = await import("./routes/dashboard/create post/createpost");
           return { Component: CreatePost };
         }
+      },
+      {
+        path: 'profile',
+        element: <ProfileIndex />,
+        children: [
+          {
+            lazy: async () => {
+              let { Profile } = await import("./routes/dashboard/profile/profile");
+              return { Component: Profile };
+            },
+            children: [
+              {
+                index: true,
+                loader: () => redirect('posts')
+              },
+              {
+                path: 'posts',
+                lazy: async () => {
+                  let { UsersPosts } = await import("./routes/dashboard/profile/userposts");
+                  return { Component: UsersPosts };
+                }
+              },
+              {
+                path: 'comments',
+                lazy: async () => {
+                  let { UsersComments } = await import("./routes/dashboard/profile/usercomments");
+                  return { Component: UsersComments };
+                }
+              },
+              {
+                path: 'upvotes',
+                lazy: async () => {
+                  let { UsersUpvotes } = await import("./routes/dashboard/profile/userupvotes");
+                  return { Component: UsersUpvotes };
+                }
+              },
+            ]
+          },
+          {
+            path: 'settings',
+            lazy: async () => {
+              let { ProfileSettings } = await import("./routes/dashboard/profile/settings/profilesettings");
+              return { Component: ProfileSettings };
+            },
+            children: [
+              {
+                index: true,
+                loader: () => redirect('account')
+              },
+              {
+                path: 'account',
+                lazy: async () => {
+                  let { AccountSettings } = await import("./routes/dashboard/profile/settings/account");
+                  return { Component: AccountSettings };
+                }
+              },
+              {
+                path: 'profile-notifications',
+                lazy: async () => {
+                  let { ProfileNotificationSettings } = await import("./routes/dashboard/profile/settings/notificationsettings");
+                  return { Component: ProfileNotificationSettings };
+                }
+              },
+              {
+                path: 'privacy',
+                lazy: async () => {
+                  let { PrivacySettings } = await import("./routes/dashboard/profile/settings/privacysettings");
+                  return { Component: PrivacySettings };
+                }
+              },
+              {
+                path: 'blocked-users',
+                lazy: async () => {
+                  let { BlockedUserSettings } = await import("./routes/dashboard/profile/settings/blockedusers");
+                  return { Component: BlockedUserSettings };
+                }
+              },
+            ]
+          }
+        ]
       },
       {
         path: 'comment/:commentId',

@@ -1,5 +1,6 @@
 import { cloneElement } from "react"
 import { NavLink } from "react-router-dom"
+import Fallback from "../../assets/icons/events.svg"
 
 export const SideBarItem = ({ children, url, icon, image, onClick }) => {
 
@@ -24,7 +25,14 @@ export const SideBarItem = ({ children, url, icon, image, onClick }) => {
                     })
                 }
                 {image &&
-                    <img className="w-6 h-6 rounded-full" src={image} />
+                    <img
+                        src={image}
+                        className="w-6 h-6 rounded-full"
+                        onError={(e) => {
+                            e.target.onerror = Fallback;
+                            e.target.src = Fallback;
+                        }}
+                    />
                 }
                 </span>
                 <h2 className={`text-sm font-normal`}>{children}</h2>

@@ -11,6 +11,7 @@ import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../../services/authSlice';
 import { CardVariants } from '../../../helpers/cardanimation';
 import { motion } from 'framer-motion';
+import { handleError } from '../../../utils/handleError';
 import * as Icon from 'react-feather'
 
 export const SignUp = () => {
@@ -57,7 +58,8 @@ export const SignUp = () => {
           toast.success("Account creation successfull!");
           navigate("/email-verification", { state: { emailValue: emailValue, type: "verify_email"} })
       } catch(error){
-        toast.error(error?.data?.message);
+        const errorMessage = handleError(error)
+        toast.error(errorMessage);
       }
       resetEmail();
       resetPassword();

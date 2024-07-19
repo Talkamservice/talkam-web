@@ -30,6 +30,7 @@ export const MultiSelect = ({ options, selectedItems, setSelectedItems, rounded 
     const handleAddNewtag = (event) => {
         if(selectedItems.length >=4) return;
         if(event.keyCode === 13){
+            if(!search || search.trim() === "") return;
             if(selectedItems.includes(search)) return;
             setSelectedItems((prev) => [ ...prev, search ]);
             setSearch(() => "")

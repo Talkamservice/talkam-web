@@ -66,7 +66,6 @@ export const CreatePost = () => {
     }
     
     const convertedtTrendsArray = trending && trending.data?.map((trend) => trend.name)
-    console.log(convertedtTrendsArray)
 
     const convertedTime = ( days, hours ) => {
         let totalHours;
@@ -145,7 +144,7 @@ export const CreatePost = () => {
         {
             id: 1,
             title: "Media",
-            component: 
+            component:
                 <MediaPost
                     image={imagePreview}
                     setImagePreview={setImagePreview}
@@ -191,16 +190,24 @@ export const CreatePost = () => {
                 publish_at: publishDate ?? null,
                 is_anonymous: isChecked ? 1 : 0,
                 attachments: post.image !== null ? [{url:post.image, type: "Image"}] : null,
-                poll: PostType === "Poll" ? { duration: convertedTime(pollDuration.days, pollDuration.hours), options:transformedPollOptions, type: "Text"} : null,
+                poll: PostType === "Poll" ? {
+                    duration: convertedTime(pollDuration.days, pollDuration.hours),
+                    options:transformedPollOptions,
+                    type: "Text"
+                } : null,
                 tags: selectedItems
             }
             const postRes = await createPost({ ...newPost }).unwrap();
             toast.success(postRes.message)
-            navigate("/home/featured", { replace: true })
+            navigate("/home/new", { replace: true })
         } catch(error) {
             const errorMessage = handleError(error);
             toast.error(errorMessage)
         }
+    }
+
+    if((post.comment || post.title) && post?.category.id){
+        isValid = true
     }
 
     return (
@@ -234,7 +241,7 @@ export const CreatePost = () => {
                             <label
                                 className='text-sm font-medium text-tblack-100'
                             >
-                                Tags <span className='text-error-100'>*</span> <span className="text-xs text-tgray-75 px-1">(Maximum 4)</span>
+                                Tags <span className="text-xs text-tgray-75 px-1">(Maximum: 4)</span>
                             </label>
                             <MultiSelect
                                 rounded="rounded-[4px]"
@@ -284,7 +291,7 @@ export const CreatePost = () => {
                                     className="!rounded-full !text-base bg-tprimary-50 px-6 !py-1.5 md:!px-8 md:!py-2.5"
                                     onClick={handleCreatePost}
                                     isLoading={createLoading}
-                                    disabled={createLoading}
+                                    disabled={!isValid || createLoading}
                                 />
                             </div>
                         </section>

@@ -93,7 +93,8 @@ export const Login = () => {
                     navigate("/", { replace: true })
                 }
             } catch(error){
-                toast.error(error?.data?.message);
+                const errorMessage = handleError(error)
+                toast.error(errorMessage);
             }
         },
     });
@@ -117,7 +118,8 @@ export const Login = () => {
                 navigate("/", { replace: true })
             }
         } catch(error){
-            toast.error(error?.data?.message);
+            const errorMessage = handleError(error)
+            toast.error(errorMessage);
         }
     }
 

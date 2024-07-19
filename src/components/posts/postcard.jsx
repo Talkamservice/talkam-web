@@ -156,7 +156,6 @@ export const PostCard = ({
                         showPopUp ? 
                         <motion.div
                             ref={popUpRef}
-                            key="chatbox"
                             variants={PostCardVariants}
                             initial="initial"
                             animate="animate"
@@ -218,9 +217,9 @@ export const PostCard = ({
                                 />
                                 <div className="flex flex-col gap-3">
                                     {
-                                        pollOptions?.map((poll) => (
+                                        pollOptions?.map((poll, index) => (
                                             <PostPollBar
-                                                key={poll.id}
+                                                key={poll.id + index}
                                                 option={poll.option}
                                                 selected={poll.selected}
                                                 percentage={poll.percentage}
@@ -237,7 +236,7 @@ export const PostCard = ({
                         </>
                     }
                     <section className="flex items-center justify-start gap-2 flex-wrap">
-                        {tags && tags?.map((tag) => ( <PostTags side={side} key={tag} tag={tag} /> ))}
+                        {tags && tags?.map((tag, index) => ( <PostTags side={side} key={tag + index} tag={tag} /> ))}
                     </section>
                 </section>
                 <footer className={` ${ side ? 'hidden' : 'flex' } flex item-center justify-between flex-wrap gap-2 border-t border-tgray-50 py-2`}>

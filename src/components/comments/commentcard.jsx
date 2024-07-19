@@ -23,6 +23,10 @@ export const CommentCard = ({
     setComment,
     nestedComment,
     setNestedComment,
+    anonChecked,
+    setAnonChecked,
+    nestedAnonChecked,
+    setNestedAnonChecked,
     time,
     reaction,
     avatar,
@@ -36,7 +40,6 @@ export const CommentCard = ({
     const [ unlikeCount, setUnlikeCount ] = useState();
     const [ isReplying, setIsReplying ] = useState(false);
     const [ showMore, setShowMore ] = useState(false);
-    const [ anonChecked, setAnonChecked ] = useState(false);
     const [ imagePreview, setImagePreview ] = useState(null);
     const [ commentReaction ] = useCommentReactionMutation();
     
@@ -112,18 +115,18 @@ export const CommentCard = ({
         reaction && setAction(() => reaction)
         setLikeCount(() => parentComment.likes)
         setUnlikeCount(() => parentComment.unlikes)
-    }, [])
+    }, []);
 
     return (
         <>
             <div className={`w-full border border-tgray-50 rounded-xl p-4 flex flex-col items-start justify-between gap-4 overflow-hidden`}>
                 <section className="w-full flex gap-3">
                     <div className="flex items-start justify-start">
-                        <Avatar size="xsm" src={avatar} />
+                        <Avatar size="xsm" src={parentComment.is_anonymous ? null : avatar} />
                     </div>
                     <section className="w-full flex flex-col gap-2">
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-bold">{parentComment?.user.username ?? parentComment?.user.name}</span>
+                            <span className="text-xs font-bold">{parentComment.is_anonymous ? "Anonymous" : (parentComment?.user.username ?? parentComment?.user.name)}</span>
                             <span className="p-0.5 rounded-full border border-[#F96C40]" />
                             <span className="text-xs text-tprimary-50 font-bold">{moment(time).fromNow(true)}</span>
                         </div>
@@ -221,6 +224,8 @@ export const CommentCard = ({
                                         setNestedComment={setNestedComment}
                                         submitNestedCommentResponse={() => { submitNestedCommentResponse( parentComment.id, comment.id ); setIsReplying(false); setShowMore(true)}}
                                         isLoading={isLoading}
+                                        anonChecked={nestedAnonChecked}
+                                        setAnonChecked={setNestedAnonChecked}
                                     />
                                 ))
                             }
