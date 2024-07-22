@@ -46,7 +46,7 @@ export const CreateGroup = () => {
     }
 
     return (
-        <main className="absolute top-0 left-0 bg-white z-[35] md:z-40 w-full h-full flex flex-col md:flex-row divide-x divide-tgray-50 overflow-auto no-scrollbar">
+        <main className="absolute top-0 left-0 bg-white z-[35] lg:z-40 w-full h-full flex flex-col md:flex-row divide-x divide-tgray-50 overflow-auto no-scrollbar">
             <section className="hidden lg:block md:w-3/6" />
 
             <section className=" w-full md:w-11/12 md:overflow-auto no-scrollbar flex flex-col gap-2 py-3 px-6 md:pb-6">

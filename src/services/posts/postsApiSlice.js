@@ -3,8 +3,8 @@ import { apiSlice } from "../../app/api/apiSlice"
 export const postsApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getAllPosts: builder.query({
-            query: ({ tab }) => ({
-                url: `/user/posts/?${tab}`,
+            query: ({ tab, page }) => ({
+                url: `/user/posts/?tab=${tab}&page=${page}`,
                 method: "get",
             }),
             providesTags: ["posts"]

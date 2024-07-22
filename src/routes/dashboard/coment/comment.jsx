@@ -30,10 +30,12 @@ export const Comment = () => {
         comments: []
     });
     //LOCAL COMMENTCARD STATE HERE
+    const [ commentAnonChecked, setCommentAnonChecked ] = useState(false);
     const [ comment, setComment ] = useState({
         image: "",
         comment: "",
     });
+    const [ nestedCommentAnonChecked, setNestedCommentAnonChecked ] = useState(false);
     const [ nestedComment, setNestedComment ] = useState({
         image: "",
         comment: "",
@@ -67,7 +69,8 @@ export const Comment = () => {
                 comment: commentBody.comment,
                 attachment: commentBody.image,
                 parent_id: null,
-                reply_comment_id: null
+                reply_comment_id: null,
+                is_anonymous: anonChecked ? 1 : 0
             }
             const comment = await makeComment(newComment).unwrap();
         } catch(error){
@@ -89,7 +92,8 @@ export const Comment = () => {
                 comment: comment.comment,
                 attachment: comment.image,
                 parent_id: replyId,
-                reply_comment_id: replyId
+                reply_comment_id: replyId,
+                is_anonymous: commentAnonChecked ? 1 : 0
             }
             const response = await makeComment(newComment).unwrap();
         } catch(error){
@@ -108,7 +112,8 @@ export const Comment = () => {
                 comment: nestedComment.comment,
                 attachment: nestedComment.image,
                 parent_id: parentId,
-                reply_comment_id: replyId
+                reply_comment_id: replyId,
+                is_anonymous: nestedCommentAnonChecked ? 1 : 0
             }
             const response = await makeComment(newComment).unwrap();
         } catch(error){
@@ -148,6 +153,7 @@ export const Comment = () => {
                     id={postDetails.data?.id}
                     isAnon={postDetails.data?.is_anonymous}
                     reaction={postDetails?.data.reaction}
+                    user={postDetails?.data.user}
                 />
             }
                 <section className="w-full flex flex-col">
@@ -191,6 +197,10 @@ export const Comment = () => {
                                 setNestedComment={setNestedComment}
                                 isLoading={newCommentLoading}
                                 reaction={parentcomment.reaction?.action}
+                                anonChecked={commentAnonChecked}
+                                setAnonChecked={setCommentAnonChecked}
+                                nestedAnonChecked={nestedCommentAnonChecked}
+                                setNestedAnonChecked={setNestedCommentAnonChecked}
                             />
                         ))
                     }

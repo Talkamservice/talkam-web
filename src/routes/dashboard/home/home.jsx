@@ -36,12 +36,14 @@ export const Home = () => {
     const { data:tags, isLoading:trendLoad } = useGetTrendingTagsQuery();
 
     return (
-        <div className="w-full flex divide-x divide-tgray-light">
-            <section className="relative w-full h-[93dvh] min-h-[93dvh] md:w-4/6 overflow-y-auto no-scrollbar px-6">
-                <RouteTabs tabs={tabs} />
+        <div className="w-full flex divide-x divide-tgray-light h-full">
+            <section className="relative w-full md:w-4/6 overflow-y-auto no-scrollbar px-6">
+                <RouteTabs
+                    tabs={tabs}
+                />
             </section>
 
-            <section className="w-2/6 px-6 hidden md:block py-4 space-y-8 h-[93dvh] min-h-[93dvh] overflow-y-auto no-scrollbar">
+            <section className="w-2/6 px-6 hidden md:block py-4 space-y-8 overflow-y-auto no-scrollbar">
                 {
                     trendLoad ?
                     <div className="flex items-center justify-center m-auto">
@@ -73,6 +75,7 @@ export const Home = () => {
                                 <PostCard
                                     key={post.id}
                                     type={post.type}
+                                    user={post.user}
                                     polls={post.polls}
                                     avatar={post.user.avatar}
                                     category={post.category?.name}

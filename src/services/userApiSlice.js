@@ -27,6 +27,13 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 method: 'get'
             })
         }),
+        blockUser: builder.mutation({
+            query: id => ({
+                url: `/user/blocked-users/add`,
+                method: 'post',
+                body: id
+            })
+        })
     })
 })
 
@@ -35,4 +42,5 @@ export const {
     useUpdateProfileMutation,
     useGetTrendingTagsQuery,
     useGetAvatarsQuery,
+    useBlockUserMutation,
 } = authApiSlice

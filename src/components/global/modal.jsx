@@ -1,18 +1,17 @@
 import classNames from 'classnames';
 import * as React from 'react';
 import { Zoom } from 'react-awesome-reveal';
-// import { Zoom } from 'react-awesome-reveal';
+import * as Icon from 'react-feather'
 import { createPortal } from 'react-dom';
 
 const modalOverlayBase = classNames(
   'fixed',
   'flex',
-  'flex-col',
   'justify-center',
   'overflow-hidden',
   'z-40',
-  'bg-tgray-300',
-  'bg-opacity-10',
+  'bg-tblack-100',
+  'bg-opacity-70',
   'backdrop-blur-sm',
   'left-0',
   'right-0',
@@ -105,6 +104,12 @@ export const Modal = ({
           <div className={`w-full ${bodypadding}`}>{children}</div>
           <div className="w-full">{footerFragment}</div>
         </div>
+        {/* <div className="absolute top-1 right-1 p-4 cursor-pointer rounded-full ">
+          <Icon.X 
+            color="gray"
+            onClick={onClose}
+          />
+        </div> */}
       </Zoom>
     </div>,
     containerId

@@ -35,6 +35,7 @@ export const Input = (props) => {
           {label} {required && <span className='text-error-100'>*</span>}
         </label>
         <input
+          autoComplete='new-password'
           name={name}
           onFocus={onFocus}
           readOnly={readOnly}

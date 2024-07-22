@@ -1,0 +1,37 @@
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom"
+import { logOut } from "../../../services/authSlice";
+
+export const UserPopUp = ({ toggleShowPanel, close }) => {
+
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+
+    const handleLogOut = () => {
+        toggleShowPanel();
+        close();
+        dispatch(logOut());
+      }
+
+    return (
+            <div className="flex flex-col min-w-[200px]">
+                <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
+                    <li onClick={() => {navigate( "/profile" ); toggleShowPanel(); close()}}
+                        className="bg-white w-full px-4 flex items-start gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight font-semibold whitespace-nowrap"
+                    >
+                        My Profile
+                    </li>
+                    <li onClick={() => {navigate("/settings"); toggleShowPanel(); close()}}
+                        className="bg-white w-full px-4 flex items-start gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight font-semibold whitespace-nowrap"
+                    >
+                        Settings
+                    </li>
+                    <li onClick={handleLogOut}
+                        className="bg-white w-full px-4 flex items-start gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight font-semibold whitespace-nowrap"
+                    >
+                        Log out
+                    </li>
+                </ul>
+            </div>
+    )
+}

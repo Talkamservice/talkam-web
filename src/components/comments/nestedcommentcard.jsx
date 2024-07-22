@@ -18,6 +18,8 @@ export const NestedCommentCard = ({
     nestedComment,
     setNestedComment,
     isLoading,
+    anonChecked,
+    setAnonChecked
 }) => {
 
     let isValidComment = false
@@ -26,7 +28,6 @@ export const NestedCommentCard = ({
     const [ likeCount, setLikeCount ] = useState();
     const [ unlikeCount, setUnlikeCount ] = useState();
     const [ isReplying, setIsReplying ] = useState();
-    const [ anonChecked, setAnonChecked ] = useState(false);
     const [ imagePreview, setImagePreview ] = useState(null);
     const [ commentReaction ] = useCommentReactionMutation();
 
@@ -111,11 +112,11 @@ export const NestedCommentCard = ({
             <div className={`w-full border border-tgray-50 rounded-xl p-2 flex flex-col items-start justify-between gap-4`}>
                 <section className="w-full flex gap-3">
                     <div className="flex items-start justify-start">
-                        <Avatar size="xs" src={parentComment.user.avatar} />
+                        <Avatar size="xs" src={parentComment.is_anonymous ? null : parentComment.user.avatar} />
                     </div>
                     <section className="w-full flex flex-col gap-2">
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-bold">{parentComment?.user.username ?? parentComment?.user.name}</span>
+                            <span className="text-xs font-bold">{parentComment.is_anonymous ? "Anonymous" : (parentComment?.user.username ?? parentComment?.user.name)}</span>
                             <span className="p-0.5 rounded-full border border-[#F96C40]" />
                             <span className="text-xs text-tprimary-50 font-bold">{moment(parentComment.created_at).fromNow(true)}</span>
                         </div>

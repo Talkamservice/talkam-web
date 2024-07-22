@@ -3,8 +3,7 @@ import { randomId } from "../helpers/randomid";
 let posts = [
     {
         id: randomId(),
-        comment: `I don't think Manchester City can have such dominance anymore in the upcoming season.
-        Everyone seems to get them a little now. Hopefully Arsenal come GUNBLAZING!!!.`,
+        comment: `I don't think Manchester City can have such dominance anymore in the upcoming season. Everyone seems to get them a little now. Hopefully Arsenal come GUNBLAZING!!!.`,
         image: 'https://assets.goal.com/images/v3/bltee3e9fe91a64c053/UCL_Man_City_vs_Arsenal.jpg?auto=webp&format=pjpg&width=3840&quality=60',
         category: 'Sports',
         author: 'Joe Biden',
