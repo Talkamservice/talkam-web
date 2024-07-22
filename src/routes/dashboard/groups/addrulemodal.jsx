@@ -56,7 +56,7 @@ export const AddRuleModal = ({  rules, setRules, onClose }) => {
                 />
             </form>
 
-            <footer className="flex flex-col md:flex-row items-center justify-between w-full gap-4 md:gap-48">
+            <footer className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
                 <Button
                     children="Cancel"
                     variant="outline"

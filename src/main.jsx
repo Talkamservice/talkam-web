@@ -7,11 +7,10 @@ import { Toaster } from 'sonner'
 import { store } from './app/store';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AnimatePresence } from 'framer-motion';
+import { GroupIndex } from './routes/dashboard/groups/groupindex';
 import { MainAppLayout } from './components/layout/mainapp';
 import ErrorPage from './routes/error/error';
 import Protected from './utils/protected';
-import { GroupIndex } from './routes/dashboard/groups/groupindex';
-import { ProfileIndex } from './routes/dashboard/profile/profileindex';
 
 const router =  createBrowserRouter([
   {
@@ -66,7 +65,6 @@ const router =  createBrowserRouter([
       },
       {
         path: 'profile',
-        element: <ProfileIndex />,
         children: [
           {
             lazy: async () => {
@@ -101,47 +99,48 @@ const router =  createBrowserRouter([
               },
             ]
           },
+          
+        ]
+      },
+      {
+        path: 'settings',
+        lazy: async () => {
+          let { ProfileSettings } = await import("./routes/dashboard/profile/settings/profilesettings");
+          return { Component: ProfileSettings };
+        },
+        children: [
           {
-            path: 'settings',
+            index: true,
+            loader: () => redirect('account')
+          },
+          {
+            path: 'account',
             lazy: async () => {
-              let { ProfileSettings } = await import("./routes/dashboard/profile/settings/profilesettings");
-              return { Component: ProfileSettings };
-            },
-            children: [
-              {
-                index: true,
-                loader: () => redirect('account')
-              },
-              {
-                path: 'account',
-                lazy: async () => {
-                  let { AccountSettings } = await import("./routes/dashboard/profile/settings/account");
-                  return { Component: AccountSettings };
-                }
-              },
-              {
-                path: 'profile-notifications',
-                lazy: async () => {
-                  let { ProfileNotificationSettings } = await import("./routes/dashboard/profile/settings/notificationsettings");
-                  return { Component: ProfileNotificationSettings };
-                }
-              },
-              {
-                path: 'privacy',
-                lazy: async () => {
-                  let { PrivacySettings } = await import("./routes/dashboard/profile/settings/privacysettings");
-                  return { Component: PrivacySettings };
-                }
-              },
-              {
-                path: 'blocked-users',
-                lazy: async () => {
-                  let { BlockedUserSettings } = await import("./routes/dashboard/profile/settings/blockedusers");
-                  return { Component: BlockedUserSettings };
-                }
-              },
-            ]
-          }
+              let { AccountSettings } = await import("./routes/dashboard/profile/settings/account");
+              return { Component: AccountSettings };
+            }
+          },
+          {
+            path: 'profile-notifications',
+            lazy: async () => {
+              let { ProfileNotificationSettings } = await import("./routes/dashboard/profile/settings/notificationsettings");
+              return { Component: ProfileNotificationSettings };
+            }
+          },
+          {
+            path: 'privacy',
+            lazy: async () => {
+              let { PrivacySettings } = await import("./routes/dashboard/profile/settings/privacysettings");
+              return { Component: PrivacySettings };
+            }
+          },
+          {
+            path: 'blocked-users',
+            lazy: async () => {
+              let { BlockedUserSettings } = await import("./routes/dashboard/profile/settings/blockedusers");
+              return { Component: BlockedUserSettings };
+            }
+          },
         ]
       },
       {

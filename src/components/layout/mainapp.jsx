@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { GroupAddIcon, HumourIcon, InboxIcon, LatestEventsIcon, NotificationIcon, TalkamLogo, UsersIcon } from '../../assets/icons/generated';
@@ -10,6 +10,10 @@ import { ColoredLoader } from '../global/loader';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../services/authSlice';
 import { Avatar } from '../global/avatar';
+import { motion } from 'framer-motion';
+import { downVariants } from '../../helpers/cardanimation';
+import { UserPopUp } from './components/userpopup';
+import { useOnOutsideClick } from '../../hooks/useOnOutsideClick';
 import * as Icon from 'react-feather'
 
 const followingItems = [
@@ -52,14 +56,22 @@ export const MainAppLayout = ({ children }) => {
 
     const navigate = useNavigate();
     const currentUser = useSelector(selectCurrentUser)
+    const popUpRef = useRef();
     const [showPanel, setShowPanel] = useState(false);
+    const [ profileMenu, setProfileMenu ] = useState(false);
     const { data:categories, loadingCategories } = useGetCategoriesQuery({
         sort: 'popular'
     });
+    useOnOutsideClick( popUpRef, () => {
+        setProfileMenu(() => false)
+    })
 
     const toggleShowPanel = () => {
         setShowPanel((prev) => !prev);
     };
+    const showProfileMenu = () => {
+        setProfileMenu((prev) => !prev)
+    }
   
     return (
         <section className='w-full flex items-center justify-center no-scrollbar'>
@@ -87,13 +99,31 @@ export const MainAppLayout = ({ children }) => {
                                 className={ isMobile ? "!rounded-full !text-base bg-tprimary-50 !p-1" : "!rounded-full !text-base bg-tprimary-50 !px-4 !py-2.5" }
                                 onClick={() => navigate('/create-post')}
                             />
-                            <span className='cursor-pointer'>
+                            <div ref={popUpRef} className='cursor-pointer relative'>
                                 <Avatar
                                     
-                                    onClick={() => {navigate('/profile'); setShowPanel(false);}} src={currentUser?.avatar}
+                                    onClick={showProfileMenu} src={currentUser?.avatar}
                                     size={isMobile ? "xs" : "sm"}
                                 />
-                            </span>
+                                {
+                                    profileMenu ?
+                                    <motion.div
+                                        variants={downVariants}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                        className="absolute top-14 -right-12 z-10"
+                                    >
+                                        <UserPopUp
+                                            toggleShowPanel={toggleShowPanel}
+                                            close={showProfileMenu}
+                                        />
+                                    </motion.div>
+                                    :
+                                    null
+                                }
+                            </div>
                             <Icon.Menu
                                 className={`${ isMobile ? 'block' : 'hidden' }`}
                                 width={24}
@@ -226,4 +256,3 @@ export const MainAppLayout = ({ children }) => {
         </section>
     );
 };
-

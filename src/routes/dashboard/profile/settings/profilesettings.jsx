@@ -19,7 +19,7 @@ const tabs = [
     //     text: "privacy",
     // },
     {
-        id: 3,
+        id: 2,
         title: "Blocked users",
         text: "blocked-users",
     },

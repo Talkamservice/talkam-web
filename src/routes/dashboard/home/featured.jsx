@@ -40,11 +40,11 @@ export const Featured = () => {
             setIsFetching(true);
             setPage((prevPage) => prevPage + 1);
         }
-        Storage.setItem("scrollPosition", scrollTop);
+        Storage.setItem("scrollPosition_featured", scrollTop);
     }, [isFetching, featured]);
 
     const restoreScrollPosition = () => {
-        const savedScrollPosition = Storage.getItem("scrollPosition");
+        const savedScrollPosition = Storage.getItem("scrollPosition_featured");
         if (savedScrollPosition && scrollableRef.current) {
             isRestoringScroll.current = true;
             scrollableRef.current.scrollTop = parseInt(savedScrollPosition, 10);
@@ -92,6 +92,7 @@ export const Featured = () => {
                             polls={post.polls}
                             avatar={post.user.avatar}
                             category={post.category?.name}
+                            user={post.user}
                             author={post.user.username ?? post.user.name}
                             title={post.title}
                             comment={post.body}

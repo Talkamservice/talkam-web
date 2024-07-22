@@ -6,33 +6,61 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { handleError } from "../../../utils/handleError";
 import { ColoredLoader } from "../../../components/global/loader";
+import { Storage } from "../../../app/storage";
 
 export const New = () => {
+
+    const isRestoringScroll = useRef(false);
     const scrollableRef = useRef(null);
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [posts, setPosts] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
-    const { data: latests, isLoading, isError, error } = useGetAllPostsQuery({
+    const { data: latest, isLoading, isError, error } = useGetAllPostsQuery({
         tab: 'latest',
         page: page
     });
 
-    useEffect(() => {
-        if (latests?.data?.data) {
-            setPosts((prevPosts) => [...prevPosts, ...latests.data.data]);
-            setIsFetching(false); // Reset the fetching flag after new data is loaded
+    const appendNewPageData = () => {
+        if (latest?.data?.data) {
+            setPosts((prevPosts) => {
+                const newPosts = new Set([...prevPosts, ...latest.data.data]);
+                return Array.from(newPosts);
+            });
+            setIsFetching(false);
         }
-    }, [latests]);
+    };
 
     const handleScroll = useCallback((event) => {
+        if (isRestoringScroll.current) return;
+
         const { scrollTop, scrollHeight, clientHeight } = event.target;
-        const bottom = scrollHeight - scrollTop <= clientHeight + 50; // Add margin to bottom check
-        if (bottom && !isFetching && latests?.data?.pagination_meta.can_load_more) {
-            setIsFetching(true); // Set fetching flag to true to prevent multiple requests
+        const bottom = scrollHeight - scrollTop <= clientHeight + 50;
+        if (bottom && !isFetching && latest?.data?.pagination_meta.can_load_more) {
+            setIsFetching(true);
             setPage((prevPage) => prevPage + 1);
         }
-    }, [isFetching, latests]);
+        Storage.setItem("scrollPosition_latest", scrollTop);
+    }, [isFetching, latest]);
+
+    const restoreScrollPosition = () => {
+        const savedScrollPosition = Storage.getItem("scrollPosition_latest");
+        if (savedScrollPosition && scrollableRef.current) {
+            isRestoringScroll.current = true;
+            scrollableRef.current.scrollTop = parseInt(savedScrollPosition, 10);
+            setTimeout(() => {
+                isRestoringScroll.current = false; // Allow the scroll handler to run again after a short delay
+            }, 0);
+        }
+    };
+
+    useEffect(() => {
+        appendNewPageData();
+    }, [latest]);
+
+    useEffect(() => {
+        restoreScrollPosition();
+    }, [restoreScrollPosition, page]);
 
     if (isError) {
         const errorMessage = handleError(error);
@@ -52,6 +80,7 @@ export const New = () => {
                 ref={scrollableRef}
                 className="w-full py-3 flex flex-col gap-3 overflow-y-auto no-scrollbar"
             >
+                {isLoading || isFetching && <GallerySkeletons />}
                 {
                     isLoading ?
                     <GallerySkeletons />
@@ -60,6 +89,7 @@ export const New = () => {
                         <PostCard
                             key={post.id}
                             type={post.type}
+                            user={post.user}
                             polls={post.polls}
                             avatar={post.user.avatar}
                             category={post.category?.name}

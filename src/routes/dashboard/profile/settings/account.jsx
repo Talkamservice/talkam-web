@@ -7,10 +7,17 @@ import { useOauthLoginMutation } from "../../../../services/authApiSlice"
 import { useDispatch } from "react-redux"
 import { toast } from "sonner"
 import { handleError } from "../../../../utils/handleError"
+import { Button } from "../../../../components/forms/button"
+import { Modal } from "../../../../components/global/modal"
+import { DeleteAccountModal } from "./deleteaccountmodal"
+import { useState } from "react"
+import { ChangePasswordModal } from "./changepasswordmodal"
 
 export const AccountSettings = () => {
 
     const dispatch = useDispatch();
+    const [ openDeleteAccount, setOpenDeleteAccount ] = useState(false);
+    const [ changePasswordModal, setChangePasswordModal ] = useState(false);
     const [ OauthLogin, { isLoading: OauthLoading } ] = useOauthLoginMutation();
 
     const googleLogin = useGoogleLogin({
@@ -63,6 +70,13 @@ export const AccountSettings = () => {
         }
     }
 
+    const handleDeleteModal = () => {
+        setOpenDeleteAccount((prev) => !prev)
+    }
+    const handleChangePasswordModal = () => {
+        setChangePasswordModal((prev) => !prev)
+    }
+
     return (
         <div className="flex flex-col gap-12 py-8">
             <section className="flex flex-col gap-6">
@@ -71,17 +85,17 @@ export const AccountSettings = () => {
                         <p className="text-sm font-bold text-tblack-50">Email address</p>
                         <p className="text-sm font-normal">janedough@email.com</p>
                     </div>
-                    <p to="settings" className='cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2'>
+                    {/* <p to="settings" className='cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2'>
                         <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Change</span>
-                    </p>
+                    </p> */}
                 </div>
                 <div className="flex items-center justify-between">
                     <div className="flex flex-col gap-1">
                         <p className="text-sm font-bold">Password</p>
                         <p className="text-sm font-normal">*****************</p>
                     </div>
-                    <p to="settings" className='cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2'>
-                        <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Change</span>
+                    <p onClick={handleChangePasswordModal} className='cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2'>
+                        <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap px-2'>Change</span>
                     </p>
                 </div>
             </section>
@@ -99,6 +113,36 @@ export const AccountSettings = () => {
                 />
                 <AppleAuthButton />
             </section>
+
+            <Button
+                children="Delete Account"
+                variant="link"
+                className="!text-[#EE1414] underline font-bold text-sm"
+                onClick={handleDeleteModal}
+            />
+
+
+            <Modal
+                show={openDeleteAccount}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={handleDeleteModal}
+                position='center'
+                contentWidth='w-full md:w-2/4'
+            >
+                <DeleteAccountModal onClose={handleDeleteModal} />
+            </Modal>
+
+            <Modal
+                show={changePasswordModal}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={handleChangePasswordModal}
+                position='center'
+                contentWidth='w-full md:w-2/4'
+            >
+                <ChangePasswordModal onClose={handleChangePasswordModal} />
+            </Modal>
         </div>
     )
 }

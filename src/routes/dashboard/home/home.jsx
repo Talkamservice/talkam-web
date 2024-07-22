@@ -75,6 +75,7 @@ export const Home = () => {
                                 <PostCard
                                     key={post.id}
                                     type={post.type}
+                                    user={post.user}
                                     polls={post.polls}
                                     avatar={post.user.avatar}
                                     category={post.category?.name}

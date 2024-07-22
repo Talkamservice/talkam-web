@@ -15,12 +15,18 @@ import { usePostReactionMutation, useSelectPollOptionMutation } from "../../serv
 import { toast } from "sonner"
 import { handleError } from "../../utils/handleError"
 import { PostPollBar } from "./postpollbar"
-import { PostPopup } from "./postpopup"
 import { useOnOutsideClick } from "../../hooks/useOnOutsideClick"
 import { Modal } from "../global/modal"
+import { ShareModal } from "./postsharemodal"
+import { NewNotificationIcon } from '../../assets/icons/generated'
+import { BlockPromptModal } from "../global/blockpromptmodal"
+import { useBlockUserMutation } from "../../services/userApiSlice"
+import { useSelector } from "react-redux"
+import { selectCurrentUser } from "../../services/authSlice"
 import TalkamLogo from "../../assets/icons/logo.svg"
 import moment from "moment"
 import * as Icon from 'react-feather'
+import { PostReportModal } from "./postreportmodal"
 
 export const PostCard = ({
     id,
@@ -40,16 +46,22 @@ export const PostCard = ({
     type,
     reaction,
     polls,
+    user,
 }) => {
 
     const anonymous = !!isAnon;
+    const currentUser = useSelector(selectCurrentUser);
+    const isCurrentUser = currentUser?.id === user?.id;
     const commentRef = useRef(null);
-    const popUpRef = useRef()
-    const [ showPopUp, setShowPopUp ] = useState(false)
+    const popUpRef = useRef();
+    const [ showPopUp, setShowPopUp ] = useState(false);
+    const [ openShare, setOpenShare ] = useState(false);
+    const [ showBlockModal, setShowBlockModal ] = useState(false);
+    const [ openReport, setOpenReport ] = useState(false);
     const [ action, setAction ] = useState(reaction && reaction?.action);
     const [ likeCount, setLikeCount ] = useState(likes);
     const [ showImagePreview, setShowImagePreview ] = useState(false)
-    const [pollOptions, setPollOptions] = useState(polls);
+    const [ pollOptions, setPollOptions ] = useState(polls);
     const [ selectedPoll, setSelectedPoll ] = useState(pollOptions && pollOptions.some(option => option.selected));
 
     const { isTruncated, isReadingMore, toggleIsShowingMore } = useTruncatedElement(commentRef);
@@ -58,7 +70,8 @@ export const PostCard = ({
     });
 
     const [ postReaction ] = usePostReactionMutation();
-    const [ selectPollOption ] = useSelectPollOptionMutation()
+    const [ selectPollOption ] = useSelectPollOptionMutation();
+    const [ blockUser, { isLoading } ] = useBlockUserMutation();
 
     const calculatePercentages = (options) => {
         const totalVotes = options.reduce((sum, option) => sum + option.count, 0);
@@ -121,11 +134,41 @@ export const PostCard = ({
             setAction(reaction?.action);
         }
     };
-    const getPopUpItem = (item, id) => {
-        // console.log(item, id)
+
+    const handleBlockUser = async() => {
+        try {
+            const blockRes = await blockUser({ blocked_user_id: user.id }).unwrap();
+            toast.success(blockRes.message);
+            setShowBlockModal(() => false)
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+
     }
+
+    const copyTextToClipboard = async () => {
+        try {
+                await navigator.clipboard.writeText(`https://web.talkam.prodevs.io/comment/${id}`);
+                toast.success("Copied to Clipboard")
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage);
+        }
+        setShowPopUp(() => false)
+    }
+    
     const toggleModal = () => {
         setShowImagePreview((prev) => !prev)
+    }
+    const toggleShareModal = () => {
+        setOpenShare((prev) => !prev)
+    }
+    const handleShowBlockModal = () => {
+        setShowBlockModal((prev) => !prev)
+    }
+    const handleReportModal = () => {
+        setOpenReport((prev) => !prev)
     }
 
     return (
@@ -150,12 +193,11 @@ export const PostCard = ({
                     </div>
                 </section>
 
-                <section className="cursor-pointer">
+                <section ref={popUpRef} className="cursor-pointer">
                     <Icon.MoreVertical onClick={() => setShowPopUp(prev => !prev)} color="#212121" />
                     { 
                         showPopUp ? 
                         <motion.div
-                            ref={popUpRef}
                             variants={PostCardVariants}
                             initial="initial"
                             animate="animate"
@@ -163,10 +205,36 @@ export const PostCard = ({
                             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                             className="absolute top-12 right-5 z-10"
                         >
-                            <PostPopup
-                                onClick={getPopUpItem}
-                                author={author}
-                            />
+                            <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
+                                <li onClick={() => copyTextToClipboard()}
+                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                >
+                                    <Icon.Link2 className='-rotate-45' size={15} color='#000000' strokeWidth={2} />
+                                    <p>Copy link</p>
+                                </li>
+                                <li onClick={() => onClick(item, id)}
+                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                >
+                                    <NewNotificationIcon className="w-4 h-4" />
+                                    <p>Get notifications for this thread</p>
+                                </li>
+                                <li onClick={handleShowBlockModal}
+                                    className={`
+                                        bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight
+                                        ${(!anonymous) ? "block" : 'hidden'}
+                                        ${(!isCurrentUser) ? "block" : 'hidden'}
+                                    `}
+                                >
+                                    <Icon.Slash size={15} color='#000000' strokeWidth={2} />
+                                    <p>Block @{author}</p>
+                                </li>
+                                <li onClick={handleReportModal}
+                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                >
+                                    <Icon.Flag size={15} color='#000000' strokeWidth={2} />
+                                    <p>Report this post</p>
+                                </li>
+                            </ul>
                         </motion.div>
                         :
                         null
@@ -251,30 +319,81 @@ export const PostCard = ({
                             reaction={action}
                         />
                     </div>
-                    <PostShareButton />
+                    <PostShareButton onClick={toggleShareModal} />
                 </footer>
             </main>
             <Modal
                 show={showImagePreview}
                 shouldCloseOnEscPress={false}
-                shouldCloseOnOverlayClick={true}
+                shouldCloseOnOverlayClick={false}
                 onClose={toggleModal}
                 position='center'
                 contentWidth='w-full md:w-2/4'
             >
-                <img 
-                    src={image}
-                    className="w-full h-full flex items-center justify-center m-auto bg-[#444444]"
-                    style={{
-                        backgroundRepeat: 'no-repeat',
-                        backgroundSize: "cover",
-                        objectFit: 'contain',
-                    }}
-                    onError={(e) => {
-                        e.target.onerror = TalkamLogo;
-                        e.target.src = TalkamLogo;
-                    }}
+                <div>
+                    <img 
+                        src={image}
+                        className="w-full h-full flex items-center justify-center m-auto bg-[#444444] relative"
+                        style={{
+                            backgroundRepeat: 'no-repeat',
+                            backgroundSize: "cover",
+                            objectFit: 'contain',
+                        }}
+                        onError={(e) => {
+                            e.target.onerror = TalkamLogo;
+                            e.target.src = TalkamLogo;
+                        }}
+                    />
+                    <Icon.X
+                        size={32}
+                        onClick={toggleModal}
+                        className="bg-white p-2 rounded-full bg-opacity-30 m-5 cursor-pointer absolute top-0 right-0 border-2 border-[#ffffff80]"
+                        color="#000000"
+                        strokeWidth={4}
+                    />
+                </div>
+            </Modal>
+            <Modal
+                show={openShare}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={toggleShareModal}
+                position='center'
+                contentWidth='w-full md:w-fit'
+            >
+                <ShareModal
+                    onClose={toggleShareModal}
+                    title={title}
+                    comment={comment}
+                    image={image}
                 />
+            </Modal>
+
+            <Modal
+                show={showBlockModal}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={handleShowBlockModal}
+                position='center'
+                contentWidth='w-full md:w-1/4'
+            >
+                <BlockPromptModal
+                    user={ !anonymous ? author : 'Anonymous' }
+                    onClose={handleShowBlockModal}
+                    handleBlockUser={handleBlockUser}
+                    isLoading={isLoading}
+                />
+            </Modal>
+
+            <Modal
+                show={openReport}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={handleReportModal}
+                position='center'
+                contentWidth='w-full md:w-2/4'
+            >
+                <PostReportModal onClose={handleReportModal} />
             </Modal>
         </motion.div>
     )

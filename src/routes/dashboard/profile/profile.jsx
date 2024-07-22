@@ -33,12 +33,12 @@ export const Profile = () => {
                 <div className="w-full px-6 py-3 flex items-start justify-between gap-4">
                     <section className="flex items-start flex-col gap-3">
                         <div className="flex items-center gap-2">
-                            <Avatar src={user.avatar} size='sm' />
-                            <span className="text-sm md:text-base font-bold text-tblack-100">{user.username ?? user.name}</span>
+                            <Avatar src={user?.avatar} size='sm' />
+                            <span className="text-sm md:text-base font-bold text-tblack-100">{user?.username ?? user?.name}</span>
                         </div>
                         <p className="text-base font-bold text-tblack-100">My Profile</p>
                     </section>
-                    <Link to="settings" className='cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2'>
+                    <Link to="" className='cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2'>
                         <UploadAvatarIcon />
                         <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Edit Profile</span>
                     </Link>

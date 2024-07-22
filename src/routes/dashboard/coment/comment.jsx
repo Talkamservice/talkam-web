@@ -153,6 +153,7 @@ export const Comment = () => {
                     id={postDetails.data?.id}
                     isAnon={postDetails.data?.is_anonymous}
                     reaction={postDetails?.data.reaction}
+                    user={postDetails?.data.user}
                 />
             }
                 <section className="w-full flex flex-col">
