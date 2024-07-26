@@ -3,26 +3,37 @@ import { Datepicker } from 'flowbite-react'
 import { Button } from '../../../components/forms/button'
 import { themeOptions } from '../../../utils/calendarTheme'
 import { DropDownSelect } from '../../../components/forms/dropdown'
-import { timeOptions } from '../../../utils/timeOptions'
+import { useTimeOptions } from '../../../utils/timeOptions'
 import { Storage } from '../../../app/storage'
+import { toast } from 'sonner'
 import moment from 'moment'
 
 export const ScheduleModal = ({ onClose, setPublishDate }) => {
 
+    const options = useTimeOptions();
     const [time, setTime] = useState('8:00')
-    const [date, setDate] = useState(new Date())
+    const [date, setDate] = useState(new Date());
 
     const handleTimeSelect = (option) => {
         setTime(option.value)
     }
-
     const handleDatePicker = (SelectedDate) => {
         setDate(SelectedDate)
     }
+
     const handleSchedulePost = () => {
+
       let formattedDate = moment(date).format("YYYY-MM-DD")
       let newTime = moment(time, "hh:mm:ss");
-      let formattedTime = moment(newTime._d).format("hh:mm:ss")
+      let formattedTime = moment(newTime._d).format("HH:mm:ss");
+
+      const isCurrentDateOrOlder = moment(formattedDate).isSameOrBefore();
+      const currentTime = moment(new Date()).format("HH:mm:ss")
+
+      if(currentTime > formattedTime && isCurrentDateOrOlder){
+        return toast.error("You can't select a passed time")
+      };
+
       setPublishDate(() => `${formattedDate} ${formattedTime}`);
       Storage.setItem("post_publish", `${formattedDate} ${formattedTime}`)
       onClose();
@@ -53,7 +64,7 @@ export const ScheduleModal = ({ onClose, setPublishDate }) => {
 
         <DropDownSelect
             defaultValue="8:00 AM"
-            options={timeOptions}
+            options={options}
             onChange={handleTimeSelect}
         />
         <p className='text-base text-tgray-100'>Your Post will be sent on 

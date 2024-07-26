@@ -12,8 +12,8 @@ export const PostImage = ({ src, style, side, onClick }) => {
         <div
             onClick={onClick}
             className={classNames(style,`w-full ${ src ? 'block' : 'hidden' } cursor-pointer
-                ${ side ? 'h-[100px]' : 'min-h-[150px] sm:min-h-[250px] md:min-h-[300px]' }
-                rounded-lg`)} 
+                ${ side ? 'h-[100px]' : 'min-h-[150px] sm:min-h-[250px] md:min-h-[400px]' }
+                rounded-xl`)} 
             style={{
                 backgroundImage: `url(${src})`,
                 backgroundRepeat: 'no-repeat',

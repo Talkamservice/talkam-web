@@ -24,6 +24,7 @@ import { useBlockUserMutation } from "../../services/userApiSlice"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "../../services/authSlice"
 import { PostReportModal } from "./postreportmodal"
+import { useNavigate } from "react-router-dom"
 import TalkamLogo from "../../assets/icons/logo.svg"
 import moment from "moment"
 import * as Icon from 'react-feather'
@@ -49,9 +50,11 @@ export const PostCard = ({
     user,
 }) => {
 
+    let totalVoteCount;
     const anonymous = !!isAnon;
     const currentUser = useSelector(selectCurrentUser);
     const isCurrentUser = currentUser && currentUser?.id === user?.id;
+    const navigate = useNavigate();
     const commentRef = useRef(null);
     const popUpRef = useRef();
     const [ showPopUp, setShowPopUp ] = useState(false);
@@ -201,7 +204,14 @@ export const PostCard = ({
         >
             <header className="flex items-center justify-between gap-3">
                 <section className="flex items-center gap-3">
-                    <Avatar size="xsm" src={ !anonymous ? avatar : null} />
+                    <span
+                        onClick={() => {
+                            isCurrentUser ? navigate('/profile') : navigate(`/userprofile/${user.id}`)
+                        }}
+                        className={`w-fit ${ anonymous ? "pointer-events-none" : "cursor-pointer" } `}
+                    >
+                        <Avatar size="xsm" src={ !anonymous ? avatar : null} />
+                    </span>
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                             <span className={`${ side ? "text-xs" : "text-sm" } font-medium text-tblack-100 whitespace-nowrap`}>{category}</span>
@@ -309,20 +319,23 @@ export const PostCard = ({
                                 />
                                 <div className="flex flex-col gap-3">
                                     {
-                                        pollOptions?.map((poll, index) => (
-                                            <PostPollBar
-                                                key={poll.id + index}
-                                                option={poll.option}
-                                                selected={poll.selected}
-                                                percentage={poll.percentage}
-                                                handlePollVote={updatePollHandler}
-                                                id={poll.id}
-                                                color="#BAE4FD"
-                                                selectedPoll={selectedPoll}
-                                            />
-                                        ))
+                                        pollOptions?.map((poll, index) => {
+                                            totalVoteCount = pollOptions.reduce((sum, option) => sum + option.count, 0);
+                                            return (
+                                                <PostPollBar
+                                                    key={poll.id + index}
+                                                    option={poll.option}
+                                                    selected={poll.selected}
+                                                    percentage={poll.percentage}
+                                                    handlePollVote={updatePollHandler}
+                                                    id={poll.id}
+                                                    color="#BAE4FD"
+                                                    selectedPoll={selectedPoll}
+                                                />
+                                            )
+                                        })
                                     }
-                                    <span className="text-sm font-medium">{ selectedPoll ? '3 votes' : '7 days left' }</span>
+                                    <span className="text-sm font-medium">{ selectedPoll ? `${totalVoteCount ?? 0} votes` : '7 days left' }</span>
                                 </div>
                             </section>
                         </>

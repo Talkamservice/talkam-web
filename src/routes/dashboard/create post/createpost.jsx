@@ -246,7 +246,6 @@ export const CreatePost = () => {
     if((post.comment || post.title) && post?.category?.id){
         isValid = true
     }
-    console.log(post)
 
     return (
         <div className="w-full flex divide-x divide-tgray-light relative">
