@@ -150,7 +150,7 @@ export const Comment = () => {
                 <meta property="og:description" content={postDetails?.data?.body}/>
                 <meta property="og:title" content={postDetails?.data?.title}/>
 
-                <meta name="twitter:card" content={postDetails?.data?.attachments?.[0]?.url} />
+                <meta name="twitter:card" content="summary" />
                 <meta name="twitter:url" content={`https://web.talkam.prodevs.io/comment/${postDetails?.data?.id}`} />
                 <meta name="twitter:title" content={postDetails?.data?.title} />
                 <meta name="twitter:description" content={postDetails?.data?.body}/>
