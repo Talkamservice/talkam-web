@@ -133,7 +133,10 @@ export const Comment = () => {
     return (
         <main className="w-full flex">
             <Helmet>
+                <title>{`${(postDetails?.data?.user.username ?? postDetails?.data?.user.name) ?? 'user'}`} on talkam</title>
                 <meta charset="utf-8" />
+                <meta name="description" content={postDetails?.data?.body}/>
+                <meta name="title" content={postDetails?.data?.title}/>
                 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
                 <meta name="csrf_token" content="" />
                 <meta property="type" content="website" />
