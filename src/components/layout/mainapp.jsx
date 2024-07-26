@@ -180,11 +180,11 @@ export const MainAppLayout = ({ children }) => {
                                         onClick={() => {navigate('/create-group'); setShowPanel(false);}}
                                     />
                                     <Button
-                                        variant="link"
+                                        variant="outline"
                                         fullWidth
                                         children="See all groups"
                                         rightIcon={<Icon.ArrowRight />}
-                                        className="flex items-center justify-between !text-sm !py-0 !px-0"
+                                        className="flex items-center justify-between !text-sm !p-2 !px-3 !border-none"
                                         onClick={() =>{navigate('/groups'); setShowPanel(false);}}
                                     />
                                 </section>

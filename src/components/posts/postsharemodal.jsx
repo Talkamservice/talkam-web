@@ -4,8 +4,11 @@ import WhatsappIcon from "../../assets/icons/whatsapp.png"
 import TwitterIcon from "../../assets/icons/twitter.png"
 import TikTokIcon from "../../assets/icons/tiktok.png"
 import InstagramIcon from "../../assets/icons/instagram.png"
-import { TwitterShareButton } from "react-share"
+import { FacebookShareButton, TwitterShareButton } from "react-share"
 import { Helmet } from "react-helmet"
+import { toast } from "sonner"
+import { handleError } from "../../utils/handleError"
+import * as Icon from 'react-feather'
 
 export const ShareModal = ({ title, comment, image, onClose, id }) => {
 
@@ -16,24 +19,15 @@ export const ShareModal = ({ title, comment, image, onClose, id }) => {
         url: ""
     }
 
-    const handleShare = async () => {
-        console.log("Whatsapp Clicked")
-        if(navigator.share){
-            try {
-                await navigator
-                  .share({title: "This was shared successfully!!!"})
-                  .then(() =>
-                    console.log("Hooray! Your content was shared to tha world")
-                  );
-              } catch (error) {
-                console.log(`Oops! I couldn't share to the world because: ${error}`);
-              }
-            } else {
-              // fallback code
-              console.log(
-                "Web share is currently not supported on this browser. Please provide a callback"
-              );
+    const copyTextToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(`https://web.talkam.prodevs.io/comment/${id}`);
+            toast.success("Copied to Clipboard")
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage);
         }
+        onClose();
     }
 
 
@@ -44,17 +38,19 @@ export const ShareModal = ({ title, comment, image, onClose, id }) => {
                 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
                 <meta name="csrf_token" content="" />
                 <meta property="type" content="website" />
-                <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+                <meta content="image/*" property="og:image:type" data-react-helmet="true"/>
                 <meta property="image" content={image} data-react-helmet="true"/>
                 <meta property="og:image" content={image} data-react-helmet="true"/>
+                <meta property="og:image:width" content="400" />
+                <meta property="og:image:height" content="400" />
                 <meta property="og:image:secure_url" content={image} data-react-helmet="true"/>
                 <meta property="og:locale" content="en_US" />
-                <meta content="image/*" property="og:image:type" data-react-helmet="true"/>
+                <meta property="og:quote" content={comment} />
                 <meta property="og:site_name" content="talkam" />
-                <meta property="og:title" content={title} />
-                <meta property="og:description" content={comment}/>
+                <meta property="og:title" content={title ?? comment} />
+                <meta property="og:description" content={comment ?? comment}/>
 
-                <meta name="twitter:card" content="summary" />
+                <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:url" content={`https://web.talkam.prodevs.io/comment/${id}`} />
                 <meta name="twitter:title" content={title} />
                 <meta name="twitter:description" content={comment}/>
@@ -65,18 +61,35 @@ export const ShareModal = ({ title, comment, image, onClose, id }) => {
                 <X className="cursor-pointer" onClick={onClose} strokeWidth={3} />
             </header>
             <section className="flex items-center gap-8 p-6">
-                <img onClick={handleShare} className="cursor-pointer w-7 h-7" src={WhatsappIcon} />
-                <FacebookIcon className="cursor-pointer w-7 h-7" />
+                {/* <img onClick={handleShare} className="cursor-pointer w-7 h-7" src={WhatsappIcon} /> */}
+
+                <FacebookShareButton
+                    url={`https://web.talkam.prodevs.io/comment/${id}`}
+                    quote={"CampersTribe - World is yours to explore"}
+                    title={title}
+                    hashtag="#talkam"
+                >
+                    <FacebookIcon className="cursor-pointer w-7 h-7" />
+                </FacebookShareButton>
+
                 <TwitterShareButton
                     url={`https://web.talkam.prodevs.io/comment/${id}`}
                     title={title}
                     content={comment}
-                    imageURL={image}
+                    className="w-fit"
                 >
                     <img className="cursor-pointer w-7 h-7" src={TwitterIcon} />
                 </TwitterShareButton>
-                <img className="cursor-pointer w-7 h-7" src={TikTokIcon} />
-                <img className="cursor-pointer w-7 h-7" src={InstagramIcon} />
+
+                <p onClick={() => copyTextToClipboard()}
+                    className="cursor-pointer bg-white px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight border border-tgray-50 rounded-full"
+                >
+                    <Icon.Link2 className='-rotate-45' size={15} color='#000000' strokeWidth={2} />
+                    <p>Copy link</p>
+                </p>
+
+                {/* <img className="cursor-pointer w-7 h-7" src={TikTokIcon} /> */}
+                {/* <img className="cursor-pointer w-7 h-7" src={InstagramIcon} /> */}
             </section>
         </main>
     )

@@ -98,6 +98,44 @@ const router =  createBrowserRouter([
               },
             ]
           },
+        ]
+      },
+      {
+        path: 'userprofile/:userId',
+        children: [
+          {
+            lazy: async () => {
+              let { Profile } = await import("./routes/dashboard/userprofile/userprofile");
+              return { Component: Profile };
+            },
+            children: [
+              {
+                index: true,
+                loader: () => redirect('posts')
+              },
+              {
+                path: 'posts',
+                lazy: async () => {
+                  let { ProfilesPosts } = await import("./routes/dashboard/userprofile/profileposts");
+                  return { Component: ProfilesPosts };
+                }
+              },
+              {
+                path: 'comments',
+                lazy: async () => {
+                  let { ProfileComments } = await import("./routes/dashboard/userprofile/profilecomments");
+                  return { Component: ProfileComments };
+                }
+              },
+              {
+                path: 'upvotes',
+                lazy: async () => {
+                  let { ProfileUpvotes } = await import("./routes/dashboard/userprofile/profileupvotes");
+                  return { Component: ProfileUpvotes };
+                }
+              },
+            ]
+          },
           
         ]
       },

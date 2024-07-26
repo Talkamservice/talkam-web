@@ -7,6 +7,9 @@ import { useForm } from "../../../../hooks/useForm";
 import { isNotEmpty } from "../../../../utils/formValidations";
 import { handleError } from "../../../../utils/handleError";
 import { useDeleteAccountMutation } from "../../../../services/settingsApiSlice";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { logOut } from "../../../../services/authSlice";
 
 const repercussions = [
     "Your profile information, posts, photos, and videos will be permanently removed.",
@@ -20,6 +23,8 @@ export const DeleteAccountModal = ({ onClose }) => {
 
     let isValidForm = false;
 
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [ reason, setReason ] = useState("");
 
     const {
@@ -40,14 +45,16 @@ export const DeleteAccountModal = ({ onClose }) => {
         event.preventDefault();
         try{
             const res = await deleteAccount(reason).unwrap();
-            toast.success(res.message)
-            onClose();
+            toast.success(res.message);
+            dispatch(logOut());
+            navigate('/login');
         } catch(error){
             const errorMessage = handleError(error);
             toast.error(errorMessage)
         }
         resetUsername();
         resetPassword();
+        onClose();
     }
 
     if(usernameIsValid && passwordIsValid && isNotEmpty(reason)){

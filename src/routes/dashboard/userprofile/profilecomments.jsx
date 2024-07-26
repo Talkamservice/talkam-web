@@ -1,16 +1,16 @@
-import { useSelector } from "react-redux";
-import { selectCurrentUser } from "../../../services/authSlice";
 import { ColoredLoader } from "../../../components/global/loader";
 import { UserReplyCard } from "../../../components/global/userprofilereplycard";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useGetUserCommentsQuery } from "../../../services/posts/postsApiSlice";
+import { EmptyState } from "../../../components/global/emptystate";
 import moment from "moment";
+import EmptyListIcon from "../../../assets/images/emptylist.png"
 
-export const UsersComments = () => {
+export const ProfileComments = () => {
 
-    const currentUser = useSelector(selectCurrentUser);
+    const { userId } = useParams();
     const navigate = useNavigate()
-    const { data: comments, isLoading } = useGetUserCommentsQuery(currentUser?.id);
+    const { data: comments, isLoading } = useGetUserCommentsQuery(userId);
 
     return (
         <main className="flex">
@@ -18,6 +18,17 @@ export const UsersComments = () => {
                 {
                     isLoading ? 
                     <ColoredLoader />
+                    :
+                    !comments.data?.length ?
+                    <section className="w-full py-4">
+                        <EmptyState
+                            icon={EmptyListIcon}
+                            height="h-[50px]"
+                            width="h-[50px]"
+                            text="No Comments yet"
+                            subtext="This user has no comments."
+                        />
+                    </section>
                     :
                     comments.data?.map((comment, index) => (
                         <div className="w-full flex items-start border-b border-tgray-light py-2">
