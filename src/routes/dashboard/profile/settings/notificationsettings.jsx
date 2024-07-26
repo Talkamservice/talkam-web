@@ -1,7 +1,65 @@
+import { useState } from "react"
 import { TextCheckBox } from "../../../../components/forms/textcheckbox"
 import { TextRadioButton } from "../../../../components/forms/textradiobutton"
+import { handleError } from "../../../../utils/handleError";
+import { toast } from "sonner";
+import { useNotificationSettingsMutation } from "../../../../services/settingsApiSlice";
 
 export const ProfileNotificationSettings = () => {
+    
+    const [ talkAmNews, setTalkAmNews ] = useState({
+        talkam_news: 0,
+        talkam_research: 0
+    });
+    const[ comments, setComments ] = useState();
+    const[ moderation, setModeration ] = useState();
+    const[ activity, setActivity ] = useState();
+    const [ notificationSettings, { isLoading } ] = useNotificationSettingsMutation();
+
+    const handleTalkAMNews = (event) => {
+        const { name, checked } = event.target;
+        if(checked){
+            setTalkAmNews( {
+                ...talkAmNews,
+                [name]: 1
+            })
+        }
+        if(!checked){
+            setTalkAmNews( {
+                ...talkAmNews,
+                [name]: 0
+            })
+        }
+    }
+
+    const handleComments = (event) => {
+        setComments(() => event.target.value)
+    }
+    const handleModeration = (event) => {
+        setModeration(event.target.value)
+    }
+    const handleActivities = (event) => {
+        setActivity(event.target.value)
+    }
+
+    const UpdateNotificationSettings = async() => {
+        try {
+            const notificationBody = {
+                talkam_news: talkAmNews.talkam_news,
+                talkam_research: talkAmNews.talkam_research,
+                moderation_activities: moderation,
+                user_activities: activity,
+                comments: comments
+            }
+            const res = await notificationSettings({ ...notificationBody }).unwrap();
+            toast.success(res?.message)
+
+        } catch(error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    }
+
     return (
         <div className="flex flex-col p-1">
             <header className="border-b border-tgray-xlight py-4">
@@ -18,6 +76,9 @@ export const ProfileNotificationSettings = () => {
 
                     <section className="w-full md:w-1/2 flex flex-col gap-4">
                         <TextCheckBox
+                            onChange={handleTalkAMNews}
+                            value="talkam_news"
+                            name="talkam_news"
                             node={
                                 <div className="flex flex-col">
                                     <h5 className="text-sm font-medium text-[#344054]">News and updates</h5>
@@ -26,6 +87,9 @@ export const ProfileNotificationSettings = () => {
                             }
                         />
                         <TextCheckBox
+                            onChange={handleTalkAMNews}
+                            value="talkam_research"
+                            name="talkam_research"
                             node={
                                 <div className="flex flex-col">
                                     <h5 className="text-sm font-medium text-[#344054]">User reasearch</h5>
@@ -46,8 +110,12 @@ export const ProfileNotificationSettings = () => {
                         <TextRadioButton
                             label="Do not notify me"
                             name="comments"
+                            onChange={handleComments}
+                            value="off"
                         />
                         <TextRadioButton
+                            onChange={handleComments}
+                            value="mentions"
                             node={
                                 <div className="flex flex-col">
                                     <h5 className="text-sm font-medium text-[#344054]">Mentions only</h5>
@@ -57,6 +125,8 @@ export const ProfileNotificationSettings = () => {
                             name="comments"
                         />
                         <TextRadioButton
+                            onChange={handleComments}
+                            value="all"
                             node={
                                 <div className="flex flex-col">
                                     <h5 className="text-sm font-medium text-[#344054]">All comments</h5>
@@ -78,6 +148,8 @@ export const ProfileNotificationSettings = () => {
                         <TextRadioButton
                             label="Do not notify me"
                             name="activites"
+                            onChange={handleModeration}
+                            value={0}
                         />
                         <TextRadioButton
                             node={
@@ -87,6 +159,8 @@ export const ProfileNotificationSettings = () => {
                                 </div>
                             }
                             name="activites"
+                            onChange={handleModeration}
+                            value={1}
                         />
                     </section>
                 </section>
@@ -101,6 +175,8 @@ export const ProfileNotificationSettings = () => {
                         <TextRadioButton
                             label="Do not notify me"
                             name="more"
+                            onChange={handleActivities}
+                            value={0}
                         />
                         <TextRadioButton
                             node={
@@ -109,6 +185,8 @@ export const ProfileNotificationSettings = () => {
                                     <span className="text-sm font-normal text-[#475467]">Notify me for all other activity</span>
                                 </div>
                             }
+                            onChange={handleActivities}
+                            value={1}
                             name="more"
                         />
                     </section>

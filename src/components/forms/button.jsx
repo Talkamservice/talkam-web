@@ -22,11 +22,12 @@ export const Button = ({
   disabled, 
   form,
   type,
-  ref, 
+  ref,
   ...rest 
   }) => {
   
   let isMonitor = useMediaQuery("(min-width: 2560px)");
+  const colors = ["#FFF", "#FFF", "#FFF", "#FFF", "#FFF"]
 
     const baseClass = (
       `md:text-sm text-xs cursor-pointer select-none [outline:none] disabled:cursor-not-allowed space-x-2 ${ variant === 'icon' ? '' : 'px-6 py-3.5' }
@@ -37,6 +38,7 @@ export const Button = ({
     const defaultClass = (` bg-twhite-100 text-tblack-100`)
     const successClass = (` bg-success-150 text-twhite-100`)
     const errorClass = (` bg-error-500 text-twhite-100`)
+    const errorOutlineClass = (` bg-twhite-100 text-error-500 border border-error-500`)
     const linkClass = (`bg-none text-tblack-100 border-none !px-0 !py-0 space-x-2`)
     const outlineClass = (`bg-none text-tblack-100 border border border-tgray-50`)
     const iconClass = (`p-0! ${color ? color : 'bg-none'} ${radius} ${tColor ? tColor : "black"} flex items-center justify-center space-y-0 space-x-0 m-0!`)
@@ -46,6 +48,7 @@ export const Button = ({
       "default" : defaultClass,
       "success" : successClass,
       "error" : errorClass,
+      "error-outline" : errorOutlineClass,
       "link" : linkClass,
       "outline" : outlineClass,
       "icon" : iconClass,
@@ -69,7 +72,7 @@ export const Button = ({
       {!!leftIcon && leftIcon}
       {isLoading && 
         <ColorRing
-          colors={["#FFF", "#FFF", "#FFF", "#FFF", "#FFF"]}
+          colors={loadColor ?? colors}
           ariaLabel="blocks-loading"
           animationDuration="0.75"
           width={isMonitor ? 40 : 20}

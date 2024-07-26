@@ -21,6 +21,7 @@ export const SaveProfile = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const currentUser = useSelector(selectCurrentUser);
+    const token = useSelector(selectCurrentToken)
     const [ openAvatarModal, setOpenAvatarModal ] = useState();
     const [profileImage, setProfileImage] = useState(null);
     const {
@@ -46,12 +47,14 @@ export const SaveProfile = () => {
         try {
             const res = await updateProfile({ username: userNameValue, avatar: profileImage }).unwrap();
             dispatch(setCredentials({
-                user: {...currentUser, avatar: profileImage}
+                user: {...currentUser, avatar: profileImage},
+                accessToken: token,
             }))
             toast.success(res?.message);
             navigate('/home/featured', { replace: true })
         } catch(err) {
-            toast.error(err?.data?.message)
+            const errorMessage = handleError(err);
+            toast.error(errorMessage)
         }
         resetUserName();
     }
@@ -125,7 +128,7 @@ export const SaveProfile = () => {
                 shouldCloseOnOverlayClick={false}
                 onClose={toggleModal}
                 position='center'
-                contentWidth='w-full md:w-2/4'
+                contentWidth='w-full md:w-3/4'
             >
                 <ChooseAvatarModal
                     avatars={avatars}

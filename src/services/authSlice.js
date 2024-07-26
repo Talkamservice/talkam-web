@@ -33,6 +33,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
 
+      Storage.clearItem();
       Storage.removeItem(USER);
       Storage.removeItem(TOKEN);
     },

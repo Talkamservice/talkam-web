@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion';
 import { useOnOutsideClick } from '../../hooks/useOnOutsideClick';
 import { CardVariants } from '../../helpers/cardanimation';
+import { Storage } from '../../app/storage';
 import * as Icon from 'react-feather'
 
 export const MultiSelect = ({ options, selectedItems, setSelectedItems, rounded }) => {
@@ -32,21 +33,26 @@ export const MultiSelect = ({ options, selectedItems, setSelectedItems, rounded 
         if(event.keyCode === 13){
             if(!search || search.trim() === "") return;
             if(selectedItems.includes(search)) return;
-            setSelectedItems((prev) => [ ...prev, search ]);
+            const updatedItems = [ ...selectedItems, search ]
+            setSelectedItems(() => updatedItems);
+            Storage.setItem("post_tags", updatedItems)
             setSearch(() => "")
         }
     }
 
     const handleAddItemArray = (item) => {
         if(selectedItems.includes(item) || selectedItems.length >= 4) return;
-        setSelectedItems((prev) => [ ...prev, item ]);
+        const updatedItems = [ ...selectedItems, item ]
+        setSelectedItems(() => updatedItems);
+        Storage.setItem("post_tags", updatedItems)
         setFilteredData(() => options)
         setSearch(() => '')
     }
 
     const removeItemFromArray = (item) => {
         const newItems = selectedItems.filter( option => option !== item );
-        setSelectedItems(() => newItems)
+        setSelectedItems(() => newItems);
+        Storage.setItem("post_tags", newItems)
     }
 
     useEffect(() => {

@@ -1,8 +1,12 @@
+import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "../../../../components/forms/button";
 import { Input } from "../../../../components/forms/input"
 import { TextArea } from "../../../../components/forms/textarea";
 import { useForm } from "../../../../hooks/useForm";
 import { isNotEmpty } from "../../../../utils/formValidations";
+import { handleError } from "../../../../utils/handleError";
+import { useDeleteAccountMutation } from "../../../../services/settingsApiSlice";
 
 const repercussions = [
     "Your profile information, posts, photos, and videos will be permanently removed.",
@@ -16,6 +20,8 @@ export const DeleteAccountModal = ({ onClose }) => {
 
     let isValidForm = false;
 
+    const [ reason, setReason ] = useState("");
+
     const {
         hasError: usernameHasError, inputBlurHandler: usernameBlurHandler,
         value: enteredUsername, valueChangeHandler: usernameChangeHandler,
@@ -28,7 +34,23 @@ export const DeleteAccountModal = ({ onClose }) => {
         reset: resetPassword, isValid: passwordIsValid,
     } = useForm(isNotEmpty);
 
-    if(usernameIsValid && passwordIsValid){
+    const [ deleteAccount, { isLoading } ] = useDeleteAccountMutation();
+
+    const handleDeleteAccount = async (event) => {
+        event.preventDefault();
+        try{
+            const res = await deleteAccount(reason).unwrap();
+            toast.success(res.message)
+            onClose();
+        } catch(error){
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+        resetUsername();
+        resetPassword();
+    }
+
+    if(usernameIsValid && passwordIsValid && isNotEmpty(reason)){
         isValidForm = true
     }
 
@@ -50,16 +72,17 @@ export const DeleteAccountModal = ({ onClose }) => {
                 }
             </ul>
 
-            <form className="flex flex-col gap-2">
+            <form id="delete" onSubmit={handleDeleteAccount} className="flex flex-col gap-2">
                 <Input
                     wrapperClassName='w-full'
                     type="text"
                     label='Enter your username'
-                    // onBlur={usernameBlurHandler}
+                    placeholder="Your username"
+                    onBlur={usernameBlurHandler}
                     onChange={usernameChangeHandler}
                     value={enteredUsername}
-                    // error={usernameHasError}
-                    // errorText={usernameHasError ? "Please enter your username" : ""}
+                    error={usernameHasError}
+                    errorText={usernameHasError ? "Please enter your username" : ""}
                     required
                 />
                 <Input
@@ -67,12 +90,12 @@ export const DeleteAccountModal = ({ onClose }) => {
                     label='Enter your password'
                     placeholder='********'
                     type="password"
-                    // onBlur={passwordBlurHandler}
+                    onBlur={passwordBlurHandler}
                     onChange={passwordChangeHandler}
                     value={passwordValue}
-                    // error={passwordHasError}
+                    error={passwordHasError}
                     required
-                    // errorText={passwordHasError ? "Please enter your password" : ""}
+                    errorText={passwordHasError ? "Please enter your password" : ""}
                 />
                 <TextArea
                     label="Reason for leaving"
@@ -80,6 +103,9 @@ export const DeleteAccountModal = ({ onClose }) => {
                     rounded="rounded-lg"
                     placeholder = '(optional)'
                     rows={3}
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    required
                 />
             </form>
 
@@ -88,16 +114,17 @@ export const DeleteAccountModal = ({ onClose }) => {
                     <Button
                         children="Cancel"
                         variant="outline"
-                        // className="!border-error-500 !text-error-500"
                         fullWidth
                         onClick={onClose}
                     />
 
                     <Button
+                        form="delete"
                         variant="error"
                         children="Delete Account"
                         fullWidth
-                        disabled={!isValidForm}
+                        disabled={!isValidForm || isLoading}
+                        isLoading={isLoading}
                     />
                 </section>
             </footer>

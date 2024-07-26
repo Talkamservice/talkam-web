@@ -7,7 +7,6 @@ import { Toaster } from 'sonner'
 import { store } from './app/store';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AnimatePresence } from 'framer-motion';
-import { GroupIndex } from './routes/dashboard/groups/groupindex';
 import { MainAppLayout } from './components/layout/mainapp';
 import ErrorPage from './routes/error/error';
 import Protected from './utils/protected';
@@ -152,23 +151,37 @@ const router =  createBrowserRouter([
       },
       {
         path: 'groups',
-        element: <GroupIndex />,
+        lazy: async () => {
+          let { Groups } = await import("./routes/dashboard/groups/groups");
+          return { Component: Groups };
+        },
         children: [
           {
             index: true,
+            loader: () => redirect('recents')
+          },
+          {
+            path: 'recents',
             lazy: async () => {
-              let { Groups } = await import("./routes/dashboard/groups/groups");
-              return { Component: Groups };
+              let { RecentGroups } = await import("./routes/dashboard/groups/recentgroups");
+              return { Component: RecentGroups };
             },
           },
           {
-            path: 'create',
+            path: 'explore',
             lazy: async () => {
-              let { CreateGroup } = await import("./routes/dashboard/groups/creategroup");
-              return { Component: CreateGroup };
+              let { ExploreGroups } = await import("./routes/dashboard/groups/exploregroups");
+              return { Component: ExploreGroups };
             },
-          }
+          },
         ]
+      },
+      {
+        path: 'create-group',
+        lazy: async () => {
+          let { CreateGroup } = await import("./routes/dashboard/groups/creategroup");
+          return { Component: CreateGroup };
+        },
       },
       {
         path: "search",

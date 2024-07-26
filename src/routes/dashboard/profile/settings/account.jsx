@@ -4,7 +4,7 @@ import { FacebookAuthButton } from "../../../../components/forms/socialbuttons/f
 import { AppleAuthButton } from "../../../../components/forms/socialbuttons/appleauthbutton"
 import { useGoogleLogin } from "@react-oauth/google"
 import { useOauthLoginMutation } from "../../../../services/authApiSlice"
-import { useDispatch } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { toast } from "sonner"
 import { handleError } from "../../../../utils/handleError"
 import { Button } from "../../../../components/forms/button"
@@ -12,9 +12,11 @@ import { Modal } from "../../../../components/global/modal"
 import { DeleteAccountModal } from "./deleteaccountmodal"
 import { useState } from "react"
 import { ChangePasswordModal } from "./changepasswordmodal"
+import { selectCurrentUser } from "../../../../services/authSlice"
 
 export const AccountSettings = () => {
 
+    const currentUser = useSelector(selectCurrentUser)
     const dispatch = useDispatch();
     const [ openDeleteAccount, setOpenDeleteAccount ] = useState(false);
     const [ changePasswordModal, setChangePasswordModal ] = useState(false);
@@ -83,20 +85,15 @@ export const AccountSettings = () => {
                 <div className="flex items-center justify-between">
                     <div className="flex flex-col gap-1">
                         <p className="text-sm font-bold text-tblack-50">Email address</p>
-                        <p className="text-sm font-normal">janedough@email.com</p>
+                        <p className="text-sm font-normal">{currentUser?.email}</p>
                     </div>
-                    {/* <p to="settings" className='cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2'>
-                        <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Change</span>
-                    </p> */}
                 </div>
                 <div className="flex items-center justify-between">
                     <div className="flex flex-col gap-1">
                         <p className="text-sm font-bold">Password</p>
                         <p className="text-sm font-normal">*****************</p>
                     </div>
-                    <p onClick={handleChangePasswordModal} className='cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2'>
-                        <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap px-2'>Change</span>
-                    </p>
+                    <span onClick={handleChangePasswordModal} className='cursor-pointer border border-tgray-50 rounded-full py-1 flex items-center text-tblack-100 text-xs md:text-sm whitespace-nowrap px-2'>Change</span>
                 </div>
             </section>
 
@@ -139,7 +136,7 @@ export const AccountSettings = () => {
                 shouldCloseOnOverlayClick={false}
                 onClose={handleChangePasswordModal}
                 position='center'
-                contentWidth='w-full md:w-2/4'
+                contentWidth='w-full md:w-2/4 lg:w-2/5'
             >
                 <ChangePasswordModal onClose={handleChangePasswordModal} />
             </Modal>

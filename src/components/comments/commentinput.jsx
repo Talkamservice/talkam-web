@@ -32,7 +32,7 @@ export const CommentInput = ({
             <div className={`w-full border border-tgray-50 rounded-tr-xl rounded-tl-xl ${ !anonChecked && "rounded-xl" } p-3 flex flex-col sm:flex-row items-start justify-between gap-2`}>
                 <section className="w-full flex items-start gap-2">
                     <div className="flex items-start justify-start">
-                        <Avatar size="sm" src={currentUser.avatar} />
+                        <Avatar size="sm" src={currentUser?.avatar} />
                     </div>
                     <section className="w-full flex flex-col gap-1">
                         <textarea
