@@ -170,7 +170,6 @@ export const NestedCommentCard = ({
         setLikeCount(() => parentComment.likes)
         setUnlikeCount(() => parentComment.unlikes)
     }, [])
-    console.log(parentComment)
 
     return (
         <>
