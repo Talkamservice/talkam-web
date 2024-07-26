@@ -54,7 +54,7 @@ export const ShareModal = ({ title, comment, image, onClose, id }) => {
                 <meta property="og:title" content={title} />
                 <meta property="og:description" content={comment}/>
 
-                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:card" content="summary" />
                 <meta name="twitter:url" content={`https://web.talkam.prodevs.io/comment/${id}`} />
                 <meta name="twitter:title" content={title} />
                 <meta name="twitter:description" content={comment}/>
