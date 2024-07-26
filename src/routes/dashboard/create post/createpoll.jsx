@@ -4,9 +4,10 @@ import { motion } from "framer-motion";
 import { AddOnPollInput } from "../../../components/forms/addonpollinput";
 import { DropDownSelect } from "../../../components/forms/dropdown";
 import { Button } from "../../../components/forms/button";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { randomId } from "../../../helpers/randomid";
 import { Storage } from "../../../app/storage";
+import { TextArea } from "../../../components/forms/textarea";
 
 export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, removePollHandler, pollDuration, setPollDuration }) => {
     
@@ -26,6 +27,13 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
         }
     }).flat(), []);
 
+    const setFormattedTitle = useCallback(
+        text => {
+        setPost({...post, title: text?.slice(0, 80)});
+        },
+        [post, setPost]
+    );
+
     const handlePollDurationTime = (option) => {
         setPollDuration({ ...pollDuration, hours: option.name })
     }
@@ -43,14 +51,17 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             className="flex flex-col gap-3"
         >
-            <Input
+            <TextArea
                 type="text"
                 rounded="rounded-[4px]"
-                placeholder = 'Question here'
-                label = 'Post title/Question'
+                placeholder = 'A sharp title for your post works best.'
+                label = 'Post title'
                 value={post?.title}
+                rows={1}
+                limitPosition="top"
+                limit={80}
                 onChange={(event) => {
-                    setPost({...post, title: event.target.value}),
+                    setFormattedTitle(event.target.value) 
                     Storage.setItem("post_title", event.target.value)
                 }}
                 required

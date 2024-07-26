@@ -1,10 +1,19 @@
+import { useCallback } from "react";
 import { Storage } from "../../../app/storage";
 import { TrashIcon, UploadImageIcon } from "../../../assets/icons/generated";
 import { Input } from "../../../components/forms/input"
+import { TextArea } from "../../../components/forms/textarea";
 import { PostCardVariants } from "../../../helpers/cardanimation";
 import { motion } from "framer-motion";
 
 export const MediaPost = ({ image, setImagePreview,  onChange, setPost, post }) => {
+
+    const setFormattedTitle = useCallback(
+        text => {
+        setPost({...post, title: text?.slice(0, 80)});
+        },
+        [post, setPost]
+    );
      
     return(
         <motion.form
@@ -15,14 +24,17 @@ export const MediaPost = ({ image, setImagePreview,  onChange, setPost, post }) 
             exit="exit"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             className="flex flex-col gap-3 bg-white">
-            <Input
+            <TextArea
                 type="text"
                 rounded="rounded-[4px]"
                 placeholder = 'A sharp title for your post works best.'
                 label = 'Post title'
                 value={post?.title}
+                rows={1}
+                limitPosition="top"
+                limit={80}
                 onChange={(event) => {
-                    setPost({...post, title: event.target.value}); 
+                    setFormattedTitle(event.target.value) 
                     Storage.setItem("post_title", event.target.value)
                 }}
                 required
