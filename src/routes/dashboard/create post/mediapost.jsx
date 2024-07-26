@@ -1,3 +1,4 @@
+import { Storage } from "../../../app/storage";
 import { TrashIcon, UploadImageIcon } from "../../../assets/icons/generated";
 import { Input } from "../../../components/forms/input"
 import { PostCardVariants } from "../../../helpers/cardanimation";
@@ -20,7 +21,10 @@ export const MediaPost = ({ image, setImagePreview,  onChange, setPost, post }) 
                 placeholder = 'A sharp title for your post works best.'
                 label = 'Post title'
                 value={post?.title}
-                onChange={(event) => setPost({...post, title: event.target.value})}
+                onChange={(event) => {
+                    setPost({...post, title: event.target.value}); 
+                    Storage.setItem("post_title", event.target.value)
+                }}
                 required
             />
             <section className="relative">
@@ -53,7 +57,14 @@ export const MediaPost = ({ image, setImagePreview,  onChange, setPost, post }) 
                 </label>
                 { image ? 
                     <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
-                        <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" onClick={() => setImagePreview(null)}>
+                        <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" 
+                            onClick={() => {
+                                setImagePreview(null);
+                                setPost({...post, image: null});
+                                Storage.removeItem("post_image")
+                                Storage.removeItem("post_image_url")
+                            }}
+                        >
                             <TrashIcon className=""  style={{paddingLeft: '2px', color:"#FF0000"}} />
                         </span>
                     </span> : null

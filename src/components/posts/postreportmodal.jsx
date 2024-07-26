@@ -31,7 +31,7 @@ export const PostReportModal = ({ onClose }) => {
         <main className="flex flex-col gap-4 py-8">
             <header className="flex items-center flex-col gap-3 px-6">
                 <p className="text-xl font-bold">Submit a report</p>
-                <span className="text-base">If you report someone, TalkAM doesn’t tell them who file a report against them.</span>
+                <span className="text-base">If you report someone, TalkAM doesn&apos;t tell them who file a report against them.</span>
             </header>
 
             <section className="flex flex-col divide-y divide-tgray-light">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DropDownSelect } from "../../../components/forms/dropdown"
 import { Tabs } from "../../../components/global/tabs"
 import { PostsText } from "./poststext";
@@ -22,17 +22,26 @@ import { Modal } from "../../../components/global/modal";
 import { storageDB } from "../../../utils/firestore";
 import { randomId } from "../../../helpers/randomid";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { Storage } from "../../../app/storage";
+
+const storageKeys = [
+    "post_title", "post_comment",
+    "post_image", "post_tags",
+    "post_publish", "post_anonymous",
+    "post_polls", "post_category",
+    "post_image_url"
+];
 
 export const CreatePost = () => {
 
     let isValid = false;
     const navigate = useNavigate();
-    const [isChecked, setIsChecked] = useState(false)
-    const [scheduleCheck, setScheduleCheck] = useState(false);
+    const [ isChecked, setIsChecked ] = useState(false)
+    const [ scheduleCheck, setScheduleCheck ] = useState(false);
     const [ publishDate, setPublishDate ] = useState(null);
-    const [selectedItems, setSelectedItems] = useState([]);
-    const [imagePreview, setImagePreview] = useState(null);
-    const [pollDuration, setPollDuration] = useState({
+    const [ selectedItems, setSelectedItems ] = useState([]);
+    const [ imagePreview, setImagePreview ] = useState(null);
+    const [ pollDuration, setPollDuration ] = useState({
         days: null,
         hours: null
     });
@@ -90,7 +99,8 @@ export const CreatePost = () => {
         const { files } = event.target;
         if(!files[0]) return;
         setImagePreview(() => URL.createObjectURL(files[0]))
-        savePostImage(files[0])
+        Storage.setItem("post_image", URL.createObjectURL(files[0]))
+        savePostImage(files[0]);
     };
 
     const savePostImage = async (file) => {
@@ -100,6 +110,7 @@ export const CreatePost = () => {
             ref(storageDB, snapshot.metadata.fullPath)
         );
         setPost({...post, image: url})
+        Storage.setItem("post_image_url", url)
     }
 
     const addPollHandler = () => {
@@ -133,6 +144,7 @@ export const CreatePost = () => {
             return prev;
         }, [])
         setPoll(result)
+        Storage.setItem("post_polls", result)
     }
     
     const tabs = [
@@ -172,6 +184,7 @@ export const CreatePost = () => {
 
     const handleSelectedCategory = (category) => {
         setPost({ ...post, category: category })
+        Storage.setItem("post_category", category)
     }
 
     const handleCreatePost = async() => {
@@ -189,7 +202,7 @@ export const CreatePost = () => {
                 status: "Active",
                 publish_at: publishDate ?? null,
                 is_anonymous: isChecked ? 1 : 0,
-                attachments: post.image !== null ? [{url:post.image, type: "Image"}] : null,
+                attachments: !post.image ? null : [{url:post.image, type: "Image"}],
                 poll: PostType === "Poll" ? {
                     duration: convertedTime(pollDuration.days, pollDuration.hours),
                     options:transformedPollOptions,
@@ -198,7 +211,8 @@ export const CreatePost = () => {
                 tags: selectedItems
             }
             const postRes = await createPost({ ...newPost }).unwrap();
-            toast.success(postRes.message)
+            toast.success(postRes.message);
+            storageKeys.forEach((key) => Storage.removeItem(key))
             navigate("/home/new", { replace: true })
         } catch(error) {
             const errorMessage = handleError(error);
@@ -206,9 +220,33 @@ export const CreatePost = () => {
         }
     }
 
-    if((post.comment || post.title) && post?.category.id){
+    useEffect(() => {
+        
+        const post_title = Storage.getItem('post_title');
+        const post_comment = Storage.getItem('post_comment');
+        const post_image = Storage.getItem('post_image');
+        const post_image_url = Storage.getItem('post_image_url');
+        const post_tags = Storage.getItem('post_tags');
+        const post_category = Storage.getItem('post_category');
+
+        setPost((prev) => {
+            return {
+                ...prev,
+                title: post_title,
+                comment: post_comment,
+                image: post_image_url,
+                tags: post_tags,
+                category: post_category,
+            }
+        })
+        setImagePreview(post_image)
+        setSelectedItems(post_tags ?? [])
+    }, [])
+
+    if((post.comment || post.title) && post?.category?.id){
         isValid = true
     }
+    console.log(post)
 
     return (
         <div className="w-full flex divide-x divide-tgray-light relative">
@@ -219,8 +257,9 @@ export const CreatePost = () => {
                         <h2 className="font-bold text-2xl">Create post</h2>
                         <div className="w-3/7">
                             <DropDownSelect
+                                value={post.category?.value}
                                 node={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
-                                defaultValue="Select group or category"
+                                defaultValue={ post.category?.value ?? "Select group or category" }
                                 options={transformedCategories}
                                 onChange={handleSelectedCategory}
                             />

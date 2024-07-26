@@ -36,9 +36,9 @@ export const Avatar = ({ src, size, onClick, ...props }) => {
                     loading='lazy'
                     className={classNames(baseClass, sizeMap[size] ?? largeClass)}
                     style={{
-                        backgroundSize: "cover",
+                        backgroundSize: "contain",
                         backgroundRepeat: "no-repeat",
-                        objectFit: "cover",
+                        objectFit: "contain",
                     }}
                     src={DefaultAvatar}
                     alt='profile'
@@ -54,9 +54,9 @@ export const Avatar = ({ src, size, onClick, ...props }) => {
                     loading='lazy'
                     className={classNames(baseClass, sizeMap[size] ?? largeClass)}
                     style={{
-                        backgroundSize: "cover",
+                        backgroundSize: "contain",
                         backgroundRepeat: "no-repeat",
-                        objectFit: "cover",
+                        objectFit: "contain",
                     }}
                     src={src}
                     alt='profile'

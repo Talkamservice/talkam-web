@@ -3,6 +3,7 @@ import { Input } from "../../../components/forms/input"
 import { TextArea } from "../../../components/forms/textarea"
 import { PostCardVariants } from "../../../helpers/cardanimation";
 import { motion } from "framer-motion";
+import { Storage } from "../../../app/storage";
 
 export const PostsText = ({ post, setPost }) => {
 
@@ -30,7 +31,10 @@ export const PostsText = ({ post, setPost }) => {
                 placeholder = 'A sharp title for your post works best.'
                 label = 'Post title'
                 value={post?.title}
-                onChange={(event) => setPost({...post, title: event.target.value})}
+                onChange={(event) => {
+                    setPost({...post, title: event.target.value}); 
+                    Storage.setItem("post_title", event.target.value)
+                }}
                 required
             />
 
@@ -41,7 +45,10 @@ export const PostsText = ({ post, setPost }) => {
                 value={post?.comment}
                 limit = {limit}
                 rows={8}
-                onChange={(event) => setFormattedContent(event.target.value)}
+                onChange={(event) => {
+                    setFormattedContent(event.target.value)
+                    Storage.setItem("post_comment", event.target.value)
+                }}
             />
         </motion.form>
     )

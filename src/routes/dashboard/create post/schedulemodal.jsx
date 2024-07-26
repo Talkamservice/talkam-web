@@ -4,6 +4,7 @@ import { Button } from '../../../components/forms/button'
 import { themeOptions } from '../../../utils/calendarTheme'
 import { DropDownSelect } from '../../../components/forms/dropdown'
 import { timeOptions } from '../../../utils/timeOptions'
+import { Storage } from '../../../app/storage'
 import moment from 'moment'
 
 export const ScheduleModal = ({ onClose, setPublishDate }) => {
@@ -23,6 +24,7 @@ export const ScheduleModal = ({ onClose, setPublishDate }) => {
       let newTime = moment(time, "hh:mm:ss");
       let formattedTime = moment(newTime._d).format("hh:mm:ss")
       setPublishDate(() => `${formattedDate} ${formattedTime}`);
+      Storage.setItem("post_publish", `${formattedDate} ${formattedTime}`)
       onClose();
     }
 

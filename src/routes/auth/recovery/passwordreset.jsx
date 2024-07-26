@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/forms/button';
 import { TalkamLogo } from '../../../assets/icons/generated';
 import { useForm } from '../../../hooks/useForm';
-import { confirmPasswordMatches, isValidPassword, passwordMatcher } from '../../../utils/formValidations';
+import { confirmPasswordMatches, isNotEmpty, passwordMatcher } from '../../../utils/formValidations';
 import { useResetPasswordMutation } from '../../../services/authApiSlice';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -26,7 +26,7 @@ export const PasswordReset = () => {
         valueChangeHandler: passwordChangeHandler,
         inputBlurHandler: passwordBlurHandler,
         reset: resetEnteredPassword,
-    } = useForm(isValidPassword)
+    } = useForm(isNotEmpty)
     
     const {
         value: enteredConfirmPassword,

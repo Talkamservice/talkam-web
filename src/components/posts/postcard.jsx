@@ -11,22 +11,22 @@ import { useRef, useState } from "react"
 import { useTruncatedElement } from "../../hooks/useTruncated"
 import { Button } from "../forms/button"
 import { PostTitle } from "./posttitle"
-import { usePostReactionMutation, useSelectPollOptionMutation } from "../../services/posts/postsApiSlice"
+import { useDeletePostMutation, usePostReactionMutation, useSelectPollOptionMutation } from "../../services/posts/postsApiSlice"
 import { toast } from "sonner"
 import { handleError } from "../../utils/handleError"
 import { PostPollBar } from "./postpollbar"
 import { useOnOutsideClick } from "../../hooks/useOnOutsideClick"
 import { Modal } from "../global/modal"
 import { ShareModal } from "./postsharemodal"
-import { NewNotificationIcon } from '../../assets/icons/generated'
+import { NewNotificationIcon, TrashIcon } from '../../assets/icons/generated'
 import { BlockPromptModal } from "../global/blockpromptmodal"
 import { useBlockUserMutation } from "../../services/userApiSlice"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "../../services/authSlice"
+import { PostReportModal } from "./postreportmodal"
 import TalkamLogo from "../../assets/icons/logo.svg"
 import moment from "moment"
 import * as Icon from 'react-feather'
-import { PostReportModal } from "./postreportmodal"
 
 export const PostCard = ({
     id,
@@ -51,7 +51,7 @@ export const PostCard = ({
 
     const anonymous = !!isAnon;
     const currentUser = useSelector(selectCurrentUser);
-    const isCurrentUser = currentUser?.id === user?.id;
+    const isCurrentUser = currentUser && currentUser?.id === user?.id;
     const commentRef = useRef(null);
     const popUpRef = useRef();
     const [ showPopUp, setShowPopUp ] = useState(false);
@@ -72,6 +72,7 @@ export const PostCard = ({
     const [ postReaction ] = usePostReactionMutation();
     const [ selectPollOption ] = useSelectPollOptionMutation();
     const [ blockUser, { isLoading } ] = useBlockUserMutation();
+    const [ deletePost ] = useDeletePostMutation();
 
     const calculatePercentages = (options) => {
         const totalVotes = options.reduce((sum, option) => sum + option.count, 0);
@@ -81,7 +82,7 @@ export const PostCard = ({
         }));
     };
 
-    const updatePollHandler = async(pollId) => {
+    const updatePollHandler = (pollId) => {
         if(selectedPoll) return;
         const newOptions = pollOptions.map((poll) => {
             if(poll.id === pollId) {
@@ -94,13 +95,19 @@ export const PostCard = ({
             return poll
         });
         setPollOptions(() => calculatePercentages(newOptions));
-        try {
-            await selectPollOption({poll_id: pollId}).unwrap();
-            toast.success("Vote submitted")
-        } catch (error){
-            const errorMessage = handleError(error);
-            toast.error(errorMessage)
+        submitPoll();
+
+        //Creating this as a closure so the UI updates immediately before the server response returns ( Optimistic UI updates ==> better UX )
+        async function submitPoll(){
+            try {
+                await selectPollOption({poll_id: pollId}).unwrap();
+                toast.success("Vote submitted")
+            } catch (error){
+                const errorMessage = handleError(error);
+                toast.error(errorMessage)
+            }
         }
+
         setSelectedPoll(true);
     }
 
@@ -145,12 +152,23 @@ export const PostCard = ({
             toast.error(errorMessage)
         }
 
+    };
+
+    const handleDeletePost = async() => {
+        try {
+            const deleteRes = await deletePost(id);
+            toast.success(deleteRes?.data?.message)
+        } catch(error){
+            const errorMessage = handleError(error);
+            toast.error(errorMessage);
+        }
+        setShowPopUp(() => false)
     }
 
     const copyTextToClipboard = async () => {
         try {
-                await navigator.clipboard.writeText(`https://web.talkam.prodevs.io/comment/${id}`);
-                toast.success("Copied to Clipboard")
+            await navigator.clipboard.writeText(`https://web.talkam.prodevs.io/comment/${id}`);
+            toast.success("Copied to Clipboard")
         } catch (error) {
             const errorMessage = handleError(error);
             toast.error(errorMessage);
@@ -234,7 +252,13 @@ export const PostCard = ({
                                     <Icon.Flag size={15} color='#000000' strokeWidth={2} />
                                     <p>Report this post</p>
                                 </li>
-                            </ul>
+                                <li onClick={handleDeletePost}
+                                        className={` ${ isCurrentUser ? 'block' : 'hidden' }  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}
+                                    >
+                                        <TrashIcon className="text-[#AC4242]" />
+                                        <p>Delete Comment</p>
+                                    </li>
+                                </ul>
                         </motion.div>
                         :
                         null
@@ -366,6 +390,7 @@ export const PostCard = ({
                     title={title}
                     comment={comment}
                     image={image}
+                    id={id}
                 />
             </Modal>
 

@@ -1,29 +1,14 @@
 import { Button } from "../forms/button"
-import FallBack from '../../assets/images/fallback.png'
+import { GroupCard } from "./groupcard"
 
 export const JoinGroupCard = ({ avatar }) => {
     return (
         <div className="w-full flex items-center justify-between gap-4">
-            
-            <section className="flex items-center gap-2">
-                <img
-                    style={{
-                        backgroundSize: "cover",
-                        backgroundRepeat: "no-repeat",
-                        objectFit: "cover",
-                    }}
-                    src={avatar ?? FallBack}
-                    className="rounded-full w-14 h-14"
-                    onError={(e) => {
-                        e.target.onerror = FallBack;
-                        e.target.src = FallBack
-                    }}
-                />
-                <div className="flex flex-col items-start gap-1">
-                    <p className="font-bold text-base">Cooking</p>
-                    <span className="text-sm font-normal">328 members</span>
-                </div>
-            </section>
+            <GroupCard
+                img={avatar}
+                group="Cooking"
+                members={327}
+            />
 
             <Button
                 children="Join"

@@ -1,4 +1,4 @@
-export const TextCheckBox = ({ position='left', space = false, id, label, node, onChange, checked, defaultChecked, disabled, ...rest }) => {
+export const TextCheckBox = ({ position='left', space = false, id, label, name, node, onChange, checked, defaultChecked, disabled, ...rest }) => {
 
     return (
       <label id={id} className={`flex items-start ${space && `justify-between`} cursor-pointer gap-3`}>
@@ -13,6 +13,7 @@ export const TextCheckBox = ({ position='left', space = false, id, label, node, 
             checked={checked}
             defaultChecked={defaultChecked}
             disabled={disabled}
+            name={name}
           />
         )}
         {label ? <span className='cursor-pointer text-base text-tblack-100 leading'>{label}</span> : null}
@@ -28,6 +29,7 @@ export const TextCheckBox = ({ position='left', space = false, id, label, node, 
             checked={checked}
             defaultChecked={defaultChecked}
             disabled={disabled}
+            name={name}
           />
         )}
       </label>

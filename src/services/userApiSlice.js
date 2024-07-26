@@ -32,8 +32,23 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 url: `/user/blocked-users/add`,
                 method: 'post',
                 body: id
-            })
-        })
+            }),
+            invalidatesTags: ['blocked']
+        }),
+        getUserProfileDetails: builder.query({
+            query: id => ({
+                url: `/user/profile/fetch?user_id=${id}`,
+                method: "get",
+            }),
+            providesTags: ["profile"]
+        }),
+        getBlockedList: builder.query({
+            query: () => ({
+                url: `/user/blocked-users`,
+                method: 'get',
+            }),
+            providesTags: ['blocked']
+        }),
     })
 })
 
@@ -43,4 +58,6 @@ export const {
     useGetTrendingTagsQuery,
     useGetAvatarsQuery,
     useBlockUserMutation,
+    useGetUserProfileDetailsQuery,
+    useGetBlockedListQuery,
 } = authApiSlice

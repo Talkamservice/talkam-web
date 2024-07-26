@@ -6,6 +6,7 @@ import { DropDownSelect } from "../../../components/forms/dropdown";
 import { Button } from "../../../components/forms/button";
 import { useMemo } from "react";
 import { randomId } from "../../../helpers/randomid";
+import { Storage } from "../../../app/storage";
 
 export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, removePollHandler, pollDuration, setPollDuration }) => {
     
@@ -48,7 +49,10 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
                 placeholder = 'Question here'
                 label = 'Post title/Question'
                 value={post?.title}
-                onChange={(event) => setPost({...post, title: event.target.value})}
+                onChange={(event) => {
+                    setPost({...post, title: event.target.value}),
+                    Storage.setItem("post_title", event.target.value)
+                }}
                 required
             />
 

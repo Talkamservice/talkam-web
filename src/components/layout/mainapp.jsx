@@ -77,7 +77,7 @@ export const MainAppLayout = ({ children }) => {
         <section className='w-full flex items-center justify-center no-scrollbar'>
             <main className='w-full relative h-screen no-scrollbar max-w-screen-2xl no-scrollbar'>
                 {/* Mobile header */}
-                <header className={`sticky w-full flex items-center justify-between gap-4 border-b border-tgray-light bg-white z-40 px-4 md:px-24 py-7 h-[7dvh] top-0`}>
+                <header className={`sticky w-full flex items-center justify-between gap-4 border-b border-tgray-light bg-white z-40 px-4 lg:px-24 py-7 h-[7dvh] top-0`}>
                     <div onClick={() => {navigate('/home'); setShowPanel(false);}} className="flex items-center gap-2 cursor-pointer">
                         <TalkamLogo width={ isMobile ? 25 : 35} height={isMobile ? 30 : 40} />
                         <p className={` ${ !isLogoMobile ? 'block' : 'hidden' } flex items-center text-xl font-regularNunito` }><span className='font-extraboldNunito'>talk</span>AM</p>
@@ -113,10 +113,10 @@ export const MainAppLayout = ({ children }) => {
                                         animate="animate"
                                         exit="exit"
                                         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                                        className="absolute top-14 -right-12 z-10"
+                                        className="absolute top-14 -right-12 z-40"
                                     >
                                         <UserPopUp
-                                            toggleShowPanel={toggleShowPanel}
+                                            toggleShowPanel={() => setShowPanel(false)}
                                             close={showProfileMenu}
                                         />
                                     </motion.div>
@@ -138,7 +138,7 @@ export const MainAppLayout = ({ children }) => {
 
                 <div className=" relative flex no-scrollbar h-[93dvh]">
                     <div
-                        className={`fixed inset-0 z-[39] backdrop-blur-sm bg-tgray-300 lg:hidden`}
+                        className={`fixed inset-0 z-[38] backdrop-blur-sm bg-tgray-300 lg:hidden`}
                         style={{
                         opacity: 0.8,
                         display: isMobile && showPanel ? "block" : "none",
@@ -148,7 +148,7 @@ export const MainAppLayout = ({ children }) => {
                     ></div>
 
                     <aside
-                        className={`fixed border-r border-tgray-light inset-y-0 z-[39] lg:absolute w-80 sm:w-96 no-scrollbar bg-white sm:pl-20 pr-6
+                        className={`fixed border-r border-tgray-light inset-y-0 z-[38] lg:absolute w-80 sm:w-96 no-scrollbar bg-white sm:pl-20 pr-6
                         ${ isMobile && !showPanel && "hidden"}`}
                     >
                         <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
@@ -177,7 +177,7 @@ export const MainAppLayout = ({ children }) => {
                                         children="Create group"
                                         rightIcon={<GroupAddIcon />}
                                         className="flex items-center justify-between text-sm !p-2 !px-3"
-                                        onClick={() => {navigate('/groups/create'); setShowPanel(false);}}
+                                        onClick={() => {navigate('/create-group'); setShowPanel(false);}}
                                     />
                                     <Button
                                         variant="link"
