@@ -68,6 +68,7 @@ export const ShareModal = ({ title, comment, image, onClose, id }) => {
                     url={`https://web.talkam.prodevs.io/comment/${id}`}
                     title={title}
                     content={comment}
+                    imageURL={image}
                 >
                     <img className="cursor-pointer w-7 h-7" src={TwitterIcon} />
                 </TwitterShareButton>

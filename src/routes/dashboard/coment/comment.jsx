@@ -11,6 +11,7 @@ import { handleError } from "../../../utils/handleError"
 import { randomId } from "../../../helpers/randomid"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { storageDB } from "../../../utils/firestore"
+import { Helmet } from "react-helmet"
 
 export const Comment = () => {
 
@@ -131,6 +132,27 @@ export const Comment = () => {
 
     return (
         <main className="w-full flex">
+            <Helmet>
+                <meta charset="utf-8" />
+                <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+                <meta name="csrf_token" content="" />
+                <meta property="type" content="website" />
+                <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+                <meta property="image" content={postDetails?.data?.attachments?.[0]?.url} data-react-helmet="true"/>
+                <meta property="og:image" content={postDetails?.data?.attachments?.[0]?.url} data-react-helmet="true"/>
+                <meta property="og:image:secure_url" content={postDetails?.data?.attachments?.[0]?.url} data-react-helmet="true"/>
+                <meta property="og:locale" content="en_US" />
+                <meta content="image/*" property="og:image:type" data-react-helmet="true"/>
+                <meta property="og:site_name" content="talkam" />
+                <meta property="og:description" content={postDetails?.data?.body}/>
+                <meta property="og:title" content={postDetails?.data?.title}/>
+
+                <meta name="twitter:card" content={postDetails?.data?.attachments?.[0]?.url} />
+                <meta name="twitter:url" content={`https://web.talkam.prodevs.io/comment/${postDetails?.data?.id}`} />
+                <meta name="twitter:title" content={postDetails?.data?.title} />
+                <meta name="twitter:description" content={postDetails?.data?.body}/>
+                <meta name="twitter:image" content={`${postDetails?.data?.attachments?.[0]?.url}?4362984378`} />
+            </Helmet>
             <section className="w-full md:w-4/6 overflow-auto no-scrollbar px-6 py-3 flex flex-col items-center gap-3">
             {
                  isLoading ? 
