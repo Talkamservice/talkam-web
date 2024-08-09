@@ -1,6 +1,7 @@
 import { Button } from "../forms/button"
 
-export const BlockPromptModal = ({ user, onClose, handleBlockUser, isLoading }) => {
+export const BlockPromptModal = ({ user, handleBlockUser, isLoading, handleShowBlockModal }) => {
+
     return (
         <main className="flex flex-col gap-4 p-6">
             <header className="w-full flex flex-col items-center justify-center gap-3">
@@ -23,7 +24,7 @@ export const BlockPromptModal = ({ user, onClose, handleBlockUser, isLoading }) 
                     children="Cancel"
                     variant="outline"
                     fullWidth
-                    onClick={onClose}
+                    onClick={handleShowBlockModal}
                 />
             </section>
         </main>

@@ -1,53 +1,82 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PostCard } from "../../../components/posts/postcard";
 import { GallerySkeletons } from "../../../components/global/skeletons";
+import { useDeletePostMutation, useGetAllPostsQuery } from "../../../services/posts/postsApiSlice";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { handleError } from "../../../utils/handleError";
 import { ColoredLoader } from "../../../components/global/loader";
 import { Storage } from "../../../app/storage";
-import { useSelector } from "react-redux";
-import { selectCurrentUser } from "../../../services/authSlice";
-import { useGetUserUpvotesQuery } from "../../../services/posts/postsApiSlice";
+import { EmptyState } from "../../../components/global/emptystate";
+import EmptyListIcon from "../../../assets/images/emptylist.png"
 
-export const UsersUpvotes = () => {
+export const GroupFeatured = () => {
 
-    const currentUser = useSelector(selectCurrentUser);
-    const navigate = useNavigate();
+    const { groupId } = useParams();
     const isRestoringScroll = useRef(false);
     const scrollableRef = useRef(null);
+    const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [posts, setPosts] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
-    const { data: userUpvotes, isLoading, isError, error } = useGetUserUpvotesQuery({
-        id: currentUser?.id,
-        page: page
+    const { data: featured, isLoading, isError, error } = useGetAllPostsQuery({
+        tab: 'featured',
+        page: page,
+        groupId: groupId
+    });
+    const [ deletePost ] = useDeletePostMutation();
+
+    const postIds = new Set();
+
+    // Deduplicate new posts
+    const newResults = (posts || []).filter(post => {
+        if (!postIds.has(post.id)) {
+            postIds.add(post.id);
+            return true;
+        }
+        return false;
     });
 
     const appendNewPageData = () => {
-        if (userUpvotes?.data?.data) {
+        if (featured?.data?.data) {
             setPosts((prevPosts) => {
-                const newPosts = new Set([...prevPosts, ...userUpvotes.data.data]);
+                const newPosts = new Set([...prevPosts, ...featured.data.data]);
                 return Array.from(newPosts);
             });
             setIsFetching(false);
         }
     };
 
+    const handleDeletePost = async (id) => {
+        const newPage = 1
+        const newPosts = posts.filter((post) => post.id !== id);
+        setPosts(() => newPosts);
+
+        try {
+            const deleteRes = await deletePost(id);
+            toast.success(deleteRes?.data?.message);
+            setPage(() => newPage);
+        } catch(error){
+            const errorMessage = handleError(error);
+            toast.error(errorMessage);
+        }
+        setPage(() => newPage);
+    }
+
     const handleScroll = useCallback((event) => {
         if (isRestoringScroll.current) return;
 
         const { scrollTop, scrollHeight, clientHeight } = event.target;
         const bottom = scrollHeight - scrollTop <= clientHeight + 50;
-        if (bottom && !isFetching && userUpvotes?.data?.pagination_meta.can_load_more) {
+        if (bottom && !isFetching && featured?.data?.pagination_meta.can_load_more) {
             setIsFetching(true);
             setPage((prevPage) => prevPage + 1);
         }
-        Storage.setItem("scrollPosition_userUpvotes", scrollTop);
-    }, [isFetching, userUpvotes]);
+        Storage.setItem("scrollPosition_groupfeatured", scrollTop);
+    }, [isFetching, featured]);
 
     const restoreScrollPosition = () => {
-        const savedScrollPosition = Storage.getItem("scrollPosition_userUpvotes");
+        const savedScrollPosition = Storage.getItem("scrollPosition_groupfeatured");
         if (savedScrollPosition && scrollableRef.current) {
             isRestoringScroll.current = true;
             scrollableRef.current.scrollTop = parseInt(savedScrollPosition, 10);
@@ -59,7 +88,7 @@ export const UsersUpvotes = () => {
 
     useEffect(() => {
         appendNewPageData();
-    }, [userUpvotes]);
+    }, [featured]);
 
     useEffect(() => {
         restoreScrollPosition();
@@ -83,19 +112,29 @@ export const UsersUpvotes = () => {
                 ref={scrollableRef}
                 className="w-full py-3 flex flex-col gap-3 overflow-y-auto no-scrollbar"
             >
-                {isLoading || isFetching && <GallerySkeletons />}
                 {
                     isLoading ?
                     <GallerySkeletons />
                     :
-                    posts.map((post) => (
+                    !newResults.length ?
+                    <section className="w-full py-1">
+                        <EmptyState
+                            icon={EmptyListIcon}
+                            height="h-[30px]"
+                            width="h-[30px]"
+                            text="No Featured Posts within this group"
+                            subtext="Featured posts within the group would appear here"
+                        />
+                    </section>
+                    :
+                    newResults.map((post) => (
                         <PostCard
                             key={post.id}
                             type={post.type}
+                            user={post.user}
                             polls={post.polls}
                             avatar={post.user.avatar}
                             category={post.category?.name}
-                            user={post.user}
                             author={post.user.username ?? post.user.name}
                             title={post.title}
                             comment={post.body}
@@ -108,10 +147,17 @@ export const UsersUpvotes = () => {
                             id={post.id}
                             isAnon={post.is_anonymous}
                             routeChange={() => navigate(`/comment/${post.id}`)}
+                            handleDeletePost={handleDeletePost}
                         />
                     ))
                 }
-                { isFetching && <ColoredLoader /> }
+                { isFetching ?
+                    <div className="w-full flex items-center justify-center py-24">
+                        <ColoredLoader />
+                    </div>
+                    :
+                    null
+                }
             </section>
         </main>
     );

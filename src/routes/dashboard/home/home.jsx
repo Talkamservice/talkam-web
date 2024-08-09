@@ -2,10 +2,9 @@ import { FeaturedFireIcon, NewBadgeIcon, TrendingIcon } from "../../../assets/ic
 import { RouteTabs } from "../../../components/global/routetabs"
 import { PostCard } from "../../../components/posts/postcard"
 import { PostTags } from "../../../components/posts/posttags"
-import { GallerySkeletons } from "../../../components/global/skeletons"
+import { GallerySkeletons, PillSkeletonLoader } from "../../../components/global/skeletons"
 import { useGetRecentPostsQuery } from "../../../services/posts/postsApiSlice"
 import { useGetTrendingTagsQuery } from "../../../services/userApiSlice"
-import { ColoredLoader } from "../../../components/global/loader"
 
 const tabs = [
     {
@@ -28,8 +27,6 @@ const tabs = [
     },
 ];
 
-// const trending = [ "BBN", "Arsenal", "Champions League", "Dating", "Gaming PC", "PS6", "Programming" ];
-
 export const Home = () => {
 
     const { data:recents, isLoading:recentLoading } = useGetRecentPostsQuery();
@@ -37,17 +34,17 @@ export const Home = () => {
 
     return (
         <div className="w-full flex divide-x divide-tgray-light h-full">
-            <section className="relative w-full md:w-4/6 overflow-y-auto no-scrollbar px-6">
+            <section className="relative w-full lg:w-4/6 overflow-y-auto no-scrollbar px-6">
                 <RouteTabs
                     tabs={tabs}
                 />
             </section>
 
-            <section className="w-2/6 px-6 hidden md:block py-4 space-y-8 overflow-y-auto no-scrollbar">
+            <section className="w-2/6 px-6 hidden lg:block py-4 space-y-8 overflow-y-auto no-scrollbar">
                 {
                     trendLoad ?
                     <div className="flex items-center justify-center m-auto">
-                        <ColoredLoader />
+                        <PillSkeletonLoader num={8} />
                     </div>
                     :
                     <>
@@ -56,7 +53,7 @@ export const Home = () => {
                             <section className="flex flex-col gap-3">
                                 <h2 className="text-base font-bold leading-none">Trending Tags</h2>
                                 <ul className="flex items-center flex-wrap gap-1">
-                                    {tags && tags.data.map((tag) => <PostTags key={tag} tag={tag.name} />)}
+                                    {tags && tags.data.map((tag) => <PostTags key={tag.id} tag={tag.tag} />)}
                                 </ul>
                             </section>
                             :

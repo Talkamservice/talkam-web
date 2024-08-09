@@ -85,9 +85,9 @@ export const MainAppLayout = ({ children }) => {
                     <section className='w-10/12 md:w-9/12 flex items-center justify-end gap-6 md:gap-8 no-scrollbar'>
                         <section className={`${isMobile ? "" : "flex-1"} flex items-center gap-5 md:gap-8`}>
                             { isMobile ?
-                                <Icon.Search className={`${ isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} onClick={() => {navigate('/search'); setShowPanel(false);}} />
+                                <Icon.Search className={`${ isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
                                 :
-                                <span onClick={() => {navigate('/search')}} className='w-full'><NavSearch /></span>
+                                <NavSearch />
                             }
                             <NotificationIcon className = {`cursor-pointer ${ isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
                             <InboxIcon className = {`cursor-pointer ${ isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
@@ -116,6 +116,7 @@ export const MainAppLayout = ({ children }) => {
                                         className="absolute top-14 -right-12 z-40"
                                     >
                                         <UserPopUp
+                                            currentUser={currentUser}
                                             toggleShowPanel={() => setShowPanel(false)}
                                             close={showProfileMenu}
                                         />
@@ -154,7 +155,7 @@ export const MainAppLayout = ({ children }) => {
                         <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
                             <nav className={`flex-1 no-scrollbar ${ isMobile && 'pt-14' } `}>
                                 <section className='flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4'>
-                                    <h1 className='text-base font-bold'>Following</h1>
+                                    <h1 className='text-base font-bold'>Your categories</h1>
                                     <ul className='flex flex-col gap-2'>
                                         {
                                             followingItems?.map((item) => (

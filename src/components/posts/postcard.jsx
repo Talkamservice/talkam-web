@@ -7,24 +7,15 @@ import { PostActionButton } from "./postactionbutton"
 import { PostShareButton } from "./postsharebutton"
 import { motion } from "framer-motion"
 import { PostCardVariants } from "../../helpers/cardanimation"
-import { useRef, useState } from "react"
-import { useTruncatedElement } from "../../hooks/useTruncated"
 import { Button } from "../forms/button"
 import { PostTitle } from "./posttitle"
-import { useDeletePostMutation, usePostReactionMutation, useSelectPollOptionMutation } from "../../services/posts/postsApiSlice"
-import { toast } from "sonner"
-import { handleError } from "../../utils/handleError"
 import { PostPollBar } from "./postpollbar"
-import { useOnOutsideClick } from "../../hooks/useOnOutsideClick"
 import { Modal } from "../global/modal"
 import { ShareModal } from "./postsharemodal"
 import { NewNotificationIcon, TrashIcon } from '../../assets/icons/generated'
 import { BlockPromptModal } from "../global/blockpromptmodal"
-import { useBlockUserMutation } from "../../services/userApiSlice"
-import { useSelector } from "react-redux"
-import { selectCurrentUser } from "../../services/authSlice"
 import { PostReportModal } from "./postreportmodal"
-import { useNavigate } from "react-router-dom"
+import { usePostController } from "../../controllers/postsController"
 import TalkamLogo from "../../assets/icons/logo.svg"
 import moment from "moment"
 import * as Icon from 'react-feather'
@@ -48,149 +39,10 @@ export const PostCard = ({
     reaction,
     polls,
     user,
+    handleDeletePost,
 }) => {
 
-    let totalVoteCount;
-    const anonymous = !!isAnon;
-    const currentUser = useSelector(selectCurrentUser);
-    const isCurrentUser = currentUser && currentUser?.id === user?.id;
-    const navigate = useNavigate();
-    const commentRef = useRef(null);
-    const popUpRef = useRef();
-    const [ showPopUp, setShowPopUp ] = useState(false);
-    const [ openShare, setOpenShare ] = useState(false);
-    const [ showBlockModal, setShowBlockModal ] = useState(false);
-    const [ openReport, setOpenReport ] = useState(false);
-    const [ action, setAction ] = useState(reaction && reaction?.action);
-    const [ likeCount, setLikeCount ] = useState(likes);
-    const [ showImagePreview, setShowImagePreview ] = useState(false)
-    const [ pollOptions, setPollOptions ] = useState(polls);
-    const [ selectedPoll, setSelectedPoll ] = useState(pollOptions && pollOptions.some(option => option.selected));
-
-    const { isTruncated, isReadingMore, toggleIsShowingMore } = useTruncatedElement(commentRef);
-    useOnOutsideClick(popUpRef, () => {
-        setShowPopUp(false);
-    });
-
-    const [ postReaction ] = usePostReactionMutation();
-    const [ selectPollOption ] = useSelectPollOptionMutation();
-    const [ blockUser, { isLoading } ] = useBlockUserMutation();
-    const [ deletePost ] = useDeletePostMutation();
-
-    const calculatePercentages = (options) => {
-        const totalVotes = options.reduce((sum, option) => sum + option.count, 0);
-        return options.map(option => ({
-          ...option,
-          percentage: totalVotes ? (option.count / totalVotes) * 100 : 0
-        }));
-    };
-
-    const updatePollHandler = (pollId) => {
-        if(selectedPoll) return;
-        const newOptions = pollOptions.map((poll) => {
-            if(poll.id === pollId) {
-                return {
-                    ...poll,
-                    selected: true,
-                    count: poll.count + 1,
-                }
-            }
-            return poll
-        });
-        setPollOptions(() => calculatePercentages(newOptions));
-        submitPoll();
-
-        //Creating this as a closure so the UI updates immediately before the server response returns ( Optimistic UI updates ==> better UX )
-        async function submitPoll(){
-            try {
-                await selectPollOption({poll_id: pollId}).unwrap();
-                toast.success("Vote submitted")
-            } catch (error){
-                const errorMessage = handleError(error);
-                toast.error(errorMessage)
-            }
-        }
-
-        setSelectedPoll(true);
-    }
-
-    const handlePostReaction = async (reaction) => {
-        // Check if the new reaction is the same as the current action
-        if (reaction === action) {
-            setAction(() => null);
-            if (reaction === "Like") {
-                setLikeCount(() => likeCount - 1);
-            }
-        } else {
-            // Update Optimistically for better UX
-            if (reaction) {
-                setAction(() => reaction);
-                if (reaction === "Like") {
-                    setLikeCount(() => likeCount + 1);
-                    if (action === "Dislike") {
-                        // setUnlikeCount(() => unlikeCount - 1);
-                    }
-                } else if (reaction === "Dislike" && action === "Like") {
-                    setLikeCount(() => likeCount - 1);
-                }
-            }
-        }
-        try {
-            const res = await postReaction({ post_id: id, action: reaction }).unwrap()
-            // setAction(() => res?.data?.action);
-        } catch (error) {
-            const errorMessage = handleError(error)
-            toast.error(errorMessage);
-            setAction(reaction?.action);
-        }
-    };
-
-    const handleBlockUser = async() => {
-        try {
-            const blockRes = await blockUser({ blocked_user_id: user.id }).unwrap();
-            toast.success(blockRes.message);
-            setShowBlockModal(() => false)
-        } catch (error) {
-            const errorMessage = handleError(error);
-            toast.error(errorMessage)
-        }
-
-    };
-
-    const handleDeletePost = async() => {
-        try {
-            const deleteRes = await deletePost(id);
-            toast.success(deleteRes?.data?.message)
-        } catch(error){
-            const errorMessage = handleError(error);
-            toast.error(errorMessage);
-        }
-        setShowPopUp(() => false)
-    }
-
-    const copyTextToClipboard = async () => {
-        try {
-            await navigator.clipboard.writeText(`https://web.talkam.prodevs.io/comment/${id}`);
-            toast.success("Copied to Clipboard")
-        } catch (error) {
-            const errorMessage = handleError(error);
-            toast.error(errorMessage);
-        }
-        setShowPopUp(() => false)
-    }
-    
-    const toggleModal = () => {
-        setShowImagePreview((prev) => !prev)
-    }
-    const toggleShareModal = () => {
-        setOpenShare((prev) => !prev)
-    }
-    const handleShowBlockModal = () => {
-        setShowBlockModal((prev) => !prev)
-    }
-    const handleReportModal = () => {
-        setOpenReport((prev) => !prev)
-    }
+    const postController = usePostController(isAnon, user, reaction, likes, polls, id);
 
     return (
         <motion.div
@@ -205,26 +57,24 @@ export const PostCard = ({
             <header className="flex items-center justify-between gap-3">
                 <section className="flex items-center gap-3">
                     <span
-                        onClick={() => {
-                            isCurrentUser ? navigate('/profile') : navigate(`/userprofile/${user.id}`)
-                        }}
-                        className={`w-fit ${ anonymous ? "pointer-events-none" : "cursor-pointer" } `}
+                        onClick={() => postController.navigate(`/userprofile/${user.id}`)}
+                        className={`w-fit ${ postController.anonymous ? "pointer-events-none" : "cursor-pointer" } `}
                     >
-                        <Avatar size="xsm" src={ !anonymous ? avatar : null} />
+                        <Avatar size="xsm" src={ !postController.anonymous ? avatar : null} />
                     </span>
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                             <span className={`${ side ? "text-xs" : "text-sm" } font-medium text-tblack-100 whitespace-nowrap`}>{category}</span>
                             <span className={`${side ? "text-xs" : "text-sm"} font-medium text-tprimary-50 whitespace-nowrap`}>{moment(time).fromNow(true)}</span>
                         </div>
-                        <span className="text-xs font-medium text-[#858585]">Posted by { !anonymous ? author : 'Anonymous' }</span>
+                        <span className="text-xs font-medium text-[#858585]">Posted by { !postController.anonymous ? author : 'Anonymous' }</span>
                     </div>
                 </section>
 
-                <section ref={popUpRef} className="cursor-pointer">
-                    <Icon.MoreVertical onClick={() => setShowPopUp(prev => !prev)} color="#212121" />
+                <section ref={postController.popUpRef} className="cursor-pointer">
+                    <Icon.MoreVertical onClick={() => postController.setShowPopUp(prev => !prev)} color="#212121" />
                     { 
-                        showPopUp ? 
+                        postController.showPopUp ? 
                         <motion.div
                             variants={PostCardVariants}
                             initial="initial"
@@ -234,39 +84,39 @@ export const PostCard = ({
                             className="absolute top-12 right-5 z-10"
                         >
                             <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
-                                <li onClick={() => copyTextToClipboard()}
+                                <li onClick={() => postController.copyTextToClipboard()}
                                     className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                 >
                                     <Icon.Link2 className='-rotate-45' size={15} color='#000000' strokeWidth={2} />
                                     <p>Copy link</p>
                                 </li>
-                                <li onClick={() => onClick(item, id)}
+                                <li
                                     className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                 >
                                     <NewNotificationIcon className="w-4 h-4" />
                                     <p>Get notifications for this thread</p>
                                 </li>
-                                <li onClick={handleShowBlockModal}
+                                <li onClick={postController.handleShowBlockModal}
                                     className={`
                                         bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight
-                                        ${(!anonymous) ? "block" : 'hidden'}
-                                        ${(!isCurrentUser) ? "block" : 'hidden'}
+                                        ${(!postController.anonymous) ? "block" : 'hidden'}
+                                        ${(!postController.isCurrentUser) ? "block" : 'hidden'}
                                     `}
                                 >
                                     <Icon.Slash size={15} color='#000000' strokeWidth={2} />
                                     <p>Block @{author}</p>
                                 </li>
-                                <li onClick={handleReportModal}
+                                <li onClick={postController.handleReportModal}
                                     className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                 >
                                     <Icon.Flag size={15} color='#000000' strokeWidth={2} />
                                     <p>Report this post</p>
                                 </li>
-                                <li onClick={handleDeletePost}
-                                        className={` ${ isCurrentUser ? 'block' : 'hidden' }  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}
+                                <li onClick={() =>handleDeletePost(id)}
+                                        className={` ${ postController.isCurrentUser ? 'block' : 'hidden' }  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}
                                     >
                                         <TrashIcon className="text-[#AC4242]" />
-                                        <p>Delete Comment</p>
+                                        <p>Delete Post</p>
                                     </li>
                                 </ul>
                         </motion.div>
@@ -283,28 +133,28 @@ export const PostCard = ({
                         <>
                             <article className="flex flex-col w-full gap-2">
                                 <PostTitle
-                                    ref={commentRef}
+                                    ref={postController.commentRef}
                                     side={side}
                                     title={title}
-                                    isReadingMore={isReadingMore}
+                                    isReadingMore={postController.isReadingMore}
                                 />
                                 <PostComment
                                     side={side}
-                                    ref={commentRef}
+                                    ref={postController.commentRef}
                                     comment={comment}
-                                    isReadingMore={isReadingMore}
+                                    isReadingMore={postController.isReadingMore}
                                 />
-                                {isTruncated && (
+                                {postController.isTruncated && (
                                     <Button
                                         variant="link"
                                         className="!text-tprimary-50 !font-medium !text-sm "
-                                        onClick={toggleIsShowingMore}
-                                        children={isReadingMore ? 'Read less...' : 'Read more...'}
+                                        onClick={postController.toggleIsShowingMore}
+                                        children={postController.isReadingMore ? 'Read less...' : 'Read more...'}
                                     />
                                 )}
                             </article>
                             <PostImage
-                                onClick={toggleModal}
+                                onClick={postController.toggleModal}
                                 side={side}
                                 src={image}
                             />
@@ -315,27 +165,45 @@ export const PostCard = ({
                                 <PostTitle
                                     side={side}
                                     title={title}
-                                    isReadingMore={isReadingMore}
+                                    isReadingMore={postController.isReadingMore}
                                 />
                                 <div className="flex flex-col gap-3">
                                     {
-                                        pollOptions?.map((poll, index) => {
-                                            totalVoteCount = pollOptions.reduce((sum, option) => sum + option.count, 0);
+                                        postController.pollOptions?.map((poll, index) => {
+
+                                            postController.totalVoteCount = postController.pollOptions.reduce((sum, option) => sum + option.count, 0) ?? 0 ;
+
+                                            if (!postController.pluralization)
+                                                postController.pluralization = '0 votes'
+                                            if(postController.totalVoteCount > 0){
+                                                const noun = postController.totalVoteCount > 1 ? 'Votes' : 'Vote';
+                                                postController.pluralization = postController.totalVoteCount + " " + noun
+                                            }
+
+                                            let today = moment();
+                                            let expiresAt = moment(poll.expires_at);
+                                            postController.hasExpired = moment(expiresAt).isSameOrBefore(today);
+
+                                            postController.noOfDaysLeft = expiresAt.to(today, true) ?? 0; 
+
                                             return (
                                                 <PostPollBar
                                                     key={poll.id + index}
                                                     option={poll.option}
                                                     selected={poll.selected}
                                                     percentage={poll.percentage}
-                                                    handlePollVote={updatePollHandler}
+                                                    handlePollVote={postController.updatePollHandler}
                                                     id={poll.id}
                                                     color="#BAE4FD"
-                                                    selectedPoll={selectedPoll}
+                                                    selectedPoll={postController.selectedPoll}
+                                                    hasExpired={postController.hasExpired}
                                                 />
                                             )
                                         })
                                     }
-                                    <span className="text-sm font-medium">{ selectedPoll ? `${totalVoteCount ?? 0} votes` : '7 days left' }</span>
+                                    <span className="text-sm font-medium">
+                                        { (postController.selectedPoll || postController.hasExpired) ? postController.pluralization : !postController.noOfDaysLeft ? 0 : postController.noOfDaysLeft + ' left' }
+                                    </span>
                                 </div>
                             </section>
                         </>
@@ -351,55 +219,61 @@ export const PostCard = ({
                             routeChange={routeChange}
                         />
                         <PostActionButton
-                            count={likeCount}
-                            handleReaction={handlePostReaction}
-                            reaction={action}
+                            count={postController.likeCount}
+                            handleReaction={postController.handlePostReaction}
+                            reaction={postController.action}
                         />
                     </div>
-                    <PostShareButton onClick={toggleShareModal} />
+                    <PostShareButton onClick={postController.toggleShareModal} />
                 </footer>
             </main>
             <Modal
-                show={showImagePreview}
+                show={postController.showImagePreview}
                 shouldCloseOnEscPress={false}
                 shouldCloseOnOverlayClick={false}
-                onClose={toggleModal}
+                onClose={postController.toggleModal}
                 position='center'
-                contentWidth='w-full md:w-2/4'
+                contentWidth='w-full'
             >
-                <div>
-                    <img 
-                        src={image}
-                        className="w-full h-full flex items-center justify-center m-auto bg-[#444444] relative"
-                        style={{
-                            backgroundRepeat: 'no-repeat',
-                            backgroundSize: "cover",
-                            objectFit: 'contain',
-                        }}
-                        onError={(e) => {
-                            e.target.onerror = TalkamLogo;
-                            e.target.src = TalkamLogo;
-                        }}
-                    />
+                <div className="relative h-[90dvh] w-full">
+
                     <Icon.X
                         size={32}
-                        onClick={toggleModal}
-                        className="bg-white p-2 rounded-full bg-opacity-30 m-5 cursor-pointer absolute top-0 right-0 border-2 border-[#ffffff80]"
+                        onClick={postController.toggleModal}
+                        className="bg-white p-2 rounded-full bg-opacity-30 cursor-pointer absolute top-0 right-0 m-5 border-2 border-[#ffffff80]"
                         color="#000000"
                         strokeWidth={4}
                     />
+                    
+                    <div className="w-full h-full">
+                        <img 
+                            src={image}
+                            className="w-full h-full flex items-center justify-center bg-[#000]"
+                            style={{
+                                backgroundRepeat: 'no-repeat',
+                                backgroundSize: "cover",
+                                objectFit: 'contain',
+                                objectPosition: "center",
+                                backgroundPosition: "center"
+                            }}
+                            onError={(e) => {
+                                e.target.onerror = TalkamLogo;
+                                e.target.src = TalkamLogo;
+                            }}
+                        />
+                    </div>
                 </div>
             </Modal>
             <Modal
-                show={openShare}
+                show={postController.openShare}
                 shouldCloseOnEscPress={false}
                 shouldCloseOnOverlayClick={false}
-                onClose={toggleShareModal}
+                onClose={postController.toggleShareModal}
                 position='center'
                 contentWidth='w-full md:w-fit'
             >
                 <ShareModal
-                    onClose={toggleShareModal}
+                    onClose={postController.toggleShareModal}
                     title={title}
                     comment={comment}
                     image={image}
@@ -408,30 +282,30 @@ export const PostCard = ({
             </Modal>
 
             <Modal
-                show={showBlockModal}
+                show={postController.showBlockModal}
                 shouldCloseOnEscPress={false}
                 shouldCloseOnOverlayClick={false}
-                onClose={handleShowBlockModal}
+                onClose={postController.handleShowBlockModal}
                 position='center'
-                contentWidth='w-full md:w-1/4'
+                contentWidth='w-full sm:w-3/5 md:w-5/12 xl:w-3/12 '
             >
                 <BlockPromptModal
-                    user={ !anonymous ? author : 'Anonymous' }
-                    onClose={handleShowBlockModal}
-                    handleBlockUser={handleBlockUser}
-                    isLoading={isLoading}
+                    handleBlockUser={postController.handleBlockUser}
+                    isLoading={postController.isLoading}
+                    handleShowBlockModal={postController.handleShowBlockModal}
+                    user={ !postController.anonymous ? author : 'Anonymous' }
                 />
             </Modal>
 
             <Modal
-                show={openReport}
+                show={postController.openReport}
                 shouldCloseOnEscPress={false}
                 shouldCloseOnOverlayClick={false}
-                onClose={handleReportModal}
+                onClose={postController.handleReportModal}
                 position='center'
                 contentWidth='w-full md:w-2/4'
             >
-                <PostReportModal onClose={handleReportModal} />
+                <PostReportModal onClose={postController.handleReportModal} />
             </Modal>
         </motion.div>
     )

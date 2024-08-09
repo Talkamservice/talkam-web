@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "../../../../components/forms/button";
-import { Input } from "../../../../components/forms/input"
-import { TextArea } from "../../../../components/forms/textarea";
-import { useForm } from "../../../../hooks/useForm";
-import { isNotEmpty } from "../../../../utils/formValidations";
-import { handleError } from "../../../../utils/handleError";
-import { useDeleteAccountMutation } from "../../../../services/settingsApiSlice";
+import { Button } from "../../../components/forms/button";
+import { Input } from "../../../components/forms/input"
+import { TextArea } from "../../../components/forms/textarea";
+import { useForm } from "../../../hooks/useForm";
+import { isNotEmpty } from "../../../utils/formValidations";
+import { handleError } from "../../../utils/handleError";
+import { useDeleteAccountMutation } from "../../../services/settingsApiSlice";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { logOut } from "../../../../services/authSlice";
+import { logOut } from "../../../services/authSlice";
 
 const repercussions = [
     "Your profile information, posts, photos, and videos will be permanently removed.",

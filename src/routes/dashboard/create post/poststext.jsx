@@ -7,13 +7,19 @@ import { Storage } from "../../../app/storage";
 
 export const PostsText = ({ post, setPost }) => {
 
-    let limit = 280
+    let limit = 350
 
     const setFormattedContent = useCallback(
         text => {
         setPost({...post, comment: text?.slice(0, limit)});
         },
         [limit, post, setPost]
+    );
+    const setFormattedTitle = useCallback(
+        text => {
+        setPost({...post, title: text?.slice(0, 80)});
+        },
+        [post, setPost]
     );
      
     return(
@@ -25,14 +31,17 @@ export const PostsText = ({ post, setPost }) => {
             exit="exit"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             className="flex flex-col gap-3">
-            <Input
+            <TextArea
                 type="text"
                 rounded="rounded-[4px]"
                 placeholder = 'A sharp title for your post works best.'
                 label = 'Post title'
                 value={post?.title}
+                rows={1}
+                limitPosition="top"
+                limit={80}
                 onChange={(event) => {
-                    setPost({...post, title: event.target.value}); 
+                    setFormattedTitle(event.target.value) 
                     Storage.setItem("post_title", event.target.value)
                 }}
                 required

@@ -1,4 +1,3 @@
-import { useCallback, useState } from "react"
 import { Button } from "../../../components/forms/button"
 import { LockIcon, TrashIcon } from "../../../assets/icons/generated"
 import { Input } from "../../../components/forms/input"
@@ -8,53 +7,45 @@ import { Modal } from "../../../components/global/modal"
 import { AddRuleModal } from "./addrulemodal"
 import { GroupRuleItem } from "../../../components/global/groupruleitem"
 import { EmptyState } from "../../../components/global/emptystate"
+import { randomId } from "../../../helpers/randomid"
+import { Loader } from "../../../components/global/loader"
+import { useGroupController } from "../../../controllers/groupController"
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 import * as Icon from 'react-feather'
 
 const purposeLimit = 100
-const InformationLimit = 500
+const InformationLimit = 500;
+
+const discoverOptions = [
+    {
+        id: randomId(),
+        name: "Opened",
+        value: "Opened"
+    },
+    {
+        id: randomId(),
+        name: "Closed",
+        value: "Closed"
+    },
+]
 
 export const CreateGroup = () => {
 
-    const [ showModal, setShowModal ] = useState(false)
-    const [ groupDetails, setGroupDetails ] = useState({
-        banner: null,
-        purpose: "",
-        information: "",
-        rulesSummary: "",
-    });
-    const [ rules, setRules ] = useState([]);
-
-    const setFormattedDetailsContent = useCallback(
-        (text, name, limit) => {
-        setGroupDetails({...groupDetails, [name]: text?.slice(0, limit)});
-        },
-        [groupDetails, setGroupDetails]
-    );
-    const handleFileUpload = (event) => {
-        event.preventDefault()
-        const { files } = event.target;
-        if(!files[0]) return;
-        setGroupDetails({...groupDetails, banner: URL.createObjectURL(files[0])})
-    };
-    const handleRemoveRule = (id) => {
-        const newRules = rules.filter((rule) => rule.id !== id);
-        setRules(() => newRules)
-    }
-    const toggleModal = ()=> {
-        setShowModal((prev) => !prev)
-    }
+    const controller = useGroupController();
 
     return (
         <main className="absolute top-0 left-0 bg-white z-[35] lg:z-[39] w-full h-full flex flex-col md:flex-row divide-x divide-tgray-50 overflow-auto no-scrollbar">
             <section className="hidden lg:block md:w-3/6" />
 
-            <section className=" w-full md:w-11/12 md:overflow-auto no-scrollbar flex flex-col gap-2 py-3 px-6 md:pb-6">
+            <section className=" w-full md:w-11/12 md:overflow-y-auto no-scrollbar flex flex-col gap-2 py-3 px-6 md:pb-6">
                 <header className="flex items-center justify-between gap-4 w-full">
                     <p className="text-lg font-bold text-tblack-100">Create new group</p>
                     <Button
                         children="Save and Publish"
-                        className="!rounded-full !py-2.5 !px-3.5" 
+                        className="!rounded-full !py-2.5 !px-3.5"
+                        isLoading={controller.createGroupLoading}
+                        disabled={!controller.isValid || controller.createGroupLoading}
+                        form="group"
                     />
                 </header>
                 <main className="flex flex-col gap-6">
@@ -63,7 +54,7 @@ export const CreateGroup = () => {
                             className="relative w-full overflow-hidden cursor-pointer min-h-[150px] max-h-[160px] border-tgray-200 rounded-sm flex items-center justify-center">
                             <img
                                 className="border-none h-full w-full"
-                                src={ groupDetails.banner ?? null}
+                                src={ controller.groupDetails.banner ?? null}
                                 style={{
                                     backgroundRepeat: 'no-repeat',
                                     backgroundSize: "cover",
@@ -71,7 +62,12 @@ export const CreateGroup = () => {
                                 }}
                             />
                             {
-                                !groupDetails.banner ?
+                                controller.imageLoading ?
+                                <div className="w-full h-full bg-gradient-to-b from-[#a99daa] to-[#563e58] absolute flex items-center justify-center m-auto pointer-events-none">
+                                    <Loader />
+                                </div>
+                                :
+                                !controller.groupDetails.banner ?
                                 <label className="w-full h-full bg-gradient-to-b from-[#7D3881] to-[#9A4FA1] absolute flex items-end justify-end p-4">
                                     <Input
                                         className='hidden'
@@ -79,7 +75,7 @@ export const CreateGroup = () => {
                                         name="img"
                                         id="img"
                                         accept='image/*'
-                                        onChange={handleFileUpload}
+                                        onChange={controller.handleFileUpload}
                                     />
                                     <div className="flex items-center gap-4 bg-twhite-100 py-2.5 px-3.5 rounded-full cursor-pointer">
                                         <Icon.Plus size={18} />
@@ -89,26 +85,33 @@ export const CreateGroup = () => {
                                 : null
                             }
                         </div>
-                        { groupDetails.banner ? 
+                        { controller.groupDetails.banner ? 
                             <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
-                                <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" onClick={() => setGroupDetails({...groupDetails, banner: null })}>
+                                <span
+                                    className="absolute top-2 right-2 text-white bg-white p-2 rounded-full"
+                                    onClick={() => controller.setGroupDetails({...controller.groupDetails, banner: null })}
+                                >
                                     <TrashIcon className=""  style={{paddingLeft: '2px', color:"#FF0000"}} />
                                 </span>
                             </span> : null
                         }
                     </section>
 
-                    <form className="flex flex-col gap-3 w-full md:w-3/5">
+                    <form id="group" onSubmit={controller.handleCreateGroup} className="flex flex-col gap-3 w-full md:w-3/5">
                         <Input 
                             label="Name"
                             placeholder="Enter your group name"
                             rounded="rounded-lg"
+                            value={controller.groupDetails.name}
+                            onChange={(event) => controller.setGroupDetails((prev) => ({ ...prev, name: event.target.value }))}
                             required
                         />
                         <DropDownSelect
                             label="Category"
                             node={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
                             defaultValue="Select category"
+                            options={controller.transformedCategories ?? []}
+                            onChange={controller.handleCategoryselect}
                             required
                         />
                         <TextArea
@@ -116,11 +119,11 @@ export const CreateGroup = () => {
                             type="text"
                             rounded="rounded-lg"
                             placeholder = 'A short description of your group'
-                            value={groupDetails?.purpose}
+                            value={controller.groupDetails.purpose}
                             limit = {purposeLimit}
                             limitPosition="top"
                             rows={3}
-                            onChange={(event) => setFormattedDetailsContent(event.target.value, 'purpose', purposeLimit)}
+                            onChange={(event) => controller.setFormattedDetailsContent(event.target.value, 'purpose', purposeLimit)}
                             required
                         />
                         <TextArea
@@ -128,11 +131,11 @@ export const CreateGroup = () => {
                             type="text"
                             rounded="rounded-lg"
                             placeholder = 'Any and all information for this group'
-                            value={groupDetails?.information}
+                            value={controller.groupDetails?.information}
                             limit = {InformationLimit}
                             limitPosition="top"
                             rows={3}
-                            onChange={(event) => setFormattedDetailsContent(event.target.value, 'information', InformationLimit)}
+                            onChange={(event) => controller.setFormattedDetailsContent(event.target.value, 'information', InformationLimit)}
                             required
                         />
 
@@ -143,6 +146,8 @@ export const CreateGroup = () => {
                             <DropDownSelect
                                 label="Discoverability"
                                 defaultValue="Public/Open to everyone"
+                                options={discoverOptions}
+                                onChange={controller.handleDiscoverabiltySelect}
                                 required
                             />
                         </div>
@@ -150,7 +155,7 @@ export const CreateGroup = () => {
                 </main>
             </section>
 
-            <section className="w-full flex flex-col gap-4 md:w-5/12 md:overflow-auto no-scrollbar py-3 px-6">
+            <section className="w-full flex flex-col gap-4 md:w-5/12 md:overflow-y-auto no-scrollbar py-3 px-6">
                 <header className="flex items-center justify-between gap-4">
                     <h2 className="text-lg font-bold">Group Rules</h2>
                     <Button
@@ -158,11 +163,11 @@ export const CreateGroup = () => {
                         leftIcon={<Icon.Plus size={15} />}
                         variant="default"
                         className='!py-2 !px-3 border border-tgray-50 !rounded-full'
-                        onClick={toggleModal}
+                        onClick={controller.toggleModal}
                     />
                 </header>
 
-                <main className="flex flex-col gap-7">
+                <main className="w-full flex flex-col gap-7">
                     <article className="text-sm font-normal">
                         You group can have up to 8 different rules.
                         Make your rules clear for healthy participation of all members
@@ -173,17 +178,17 @@ export const CreateGroup = () => {
                         type="text"
                         rounded="rounded-lg"
                         placeholder = 'About the rules for this group'
-                        value={groupDetails?.rulesSummary}
+                        value={controller.groupDetails?.rulesSummary}
                         limit = {purposeLimit}
                         limitPosition="top"
                         rows={3}
-                        onChange={(event) => setFormattedDetailsContent(event.target.value, 'rulesSummary', purposeLimit)}
+                        onChange={(event) => controller.setFormattedDetailsContent(event.target.value, 'rulesSummary', purposeLimit)}
                         required
                     />
 
-                    <section className="flex flex-col gap-4">
+                    <section className="w-full flex flex-col gap-4">
                         {
-                            !rules.length ?
+                            !controller.rules.length ?
                             <EmptyState
                                 icon={EmptyListIcon}
                                 height="h-[50px]"
@@ -192,14 +197,14 @@ export const CreateGroup = () => {
                                 subtext="When rules are added they would appear here"
                             />
                             :
-                            rules?.map((rule, index) => (
+                            controller.rules?.map((rule, index) => (
                                 <GroupRuleItem
-                                    id={rule.id}
-                                    key={rule.id}
+                                    id={index}
+                                    key={index}
                                     index={index + 1}
-                                    rule={rule.ruleBody}
-                                    description={rule.descriptionBody}
-                                    handleRemoveRule={handleRemoveRule}
+                                    rule={rule.title}
+                                    description={rule.description}
+                                    handleRemoveRule={controller.handleRemoveRule}
                                 />
                             ))
                         }
@@ -208,17 +213,19 @@ export const CreateGroup = () => {
             </section> 
 
             <Modal
-                show={showModal}
+                show={controller.showModal}
                 shouldCloseOnEscPress={false}
                 shouldCloseOnOverlayClick={false}
-                onClose={toggleModal}
+                onClose={controller.toggleModal}
                 position='center'
                 contentWidth='w-full md:w-3/6'
             >
                 <AddRuleModal
-                    onClose={toggleModal}
-                    rules={rules}
-                    setRules={setRules}
+                    handleSaveRule={controller.handleSaveRule}
+                    setFormattedRuleContent={controller.setFormattedRuleContent}
+                    onClose={controller.toggleModal}
+                    isValid={controller.isRuleValid}
+                    ruleBody={controller.ruleBody}
                 />
             </Modal>
         </main>

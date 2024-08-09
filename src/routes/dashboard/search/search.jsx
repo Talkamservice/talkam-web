@@ -1,30 +1,37 @@
+import { useLocation, useParams } from "react-router-dom";
 import { RouteTabs } from "../../../components/global/routetabs";
 
 export const Search = () => {
+
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const searchTerm = searchParams.get('search') || '';
 
     const tabs = [
         {
             id: 0,
             title: "Posts",
-            text: "posts-results",
+            text: `posts?search=${searchTerm ?? ""}`,
         },
         {
             id: 1,
             title: "Groups",
-            text: "groups-results",
+            text: `groups?search=${searchTerm ?? ""}`,
         },
         {
             id: 2,
             title: "Media",
-            text: "media-results",
+            text: `media?search=${searchTerm ?? ""}`,
         },
     ];
 
-    return (
-        <div className="flex flex-col p-6 gap-4">
-            <section className="text-xl font-bold">Search Results for: ""</section>
 
-            <section className="w-full md:w-3/5">
+
+    return (
+        <div className="flex flex-col px-6 pt-6 gap-4 h-full">
+            <section className="text-xl font-bold">Search Results for : "{searchTerm}"</section>
+
+            <section className="relative w-full lg:w-4/6 overflow-y-auto no-scrollbar">
                 <RouteTabs tabs={tabs} />
             </section>
         </div>

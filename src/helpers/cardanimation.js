@@ -30,14 +30,14 @@ export const CardVariants = {
       y: 0,
       transition: {
         ease: "easeInOut",
-        duration: 0.5,
+        duration: 0.3,
       },
     },
     exit: {
-      opacity: 0.5,
+      opacity: 0.3,
       transition: {
         ease: "easeOut",
-        duration: 0.5,
+        duration: 0.3,
       },
     },
   };

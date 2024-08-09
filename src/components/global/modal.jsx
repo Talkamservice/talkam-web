@@ -25,7 +25,6 @@ const modalOverlayBase = classNames(
   'p-5'
 );
 const modalContentBase = classNames(
-  'body-font font-avenir',
   'rounded-xl',
   'relative',
   'w-full',

@@ -69,7 +69,6 @@ export const Button = ({
       )}
       {...rest}
     >
-      {!!leftIcon && leftIcon}
       {isLoading && 
         <ColorRing
           colors={loadColor ?? colors}
@@ -81,6 +80,7 @@ export const Button = ({
           visible={true}
         />
       }
+      {!!leftIcon && leftIcon}
       {children ? <span className="whitespace-nowrap">{children}</span> : null}
       {icon ? <span>{icon}</span> : null}
       {!!rightIcon && rightIcon}

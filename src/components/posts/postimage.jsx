@@ -8,18 +8,22 @@ export const PostImage = ({ src, style, side, onClick }) => {
         const randomIndex = Math.floor(Math.random() * bgColors.length);
         return bgColors[randomIndex];
     }
+
     return(
         <div
             onClick={onClick}
-            className={classNames(style,`w-full ${ src ? 'block' : 'hidden' } cursor-pointer
-                ${ side ? 'h-[100px]' : 'min-h-[150px] sm:min-h-[250px] md:min-h-[400px]' }
-                rounded-xl`)} 
+            className={classNames(style,`w-full flex items-center justify-center ${ src ? 'block' : 'hidden' } cursor-pointer
+                ${ side ? 'h-[150px]' : 'min-h-[250px] sm:min-h-[300px] md:min-h-[400px]' }
+                rounded-xl`)
+            } 
             style={{
                 backgroundImage: `url(${src})`,
                 backgroundRepeat: 'no-repeat',
                 backgroundSize: "cover",
                 objectFit: 'contain',
-                backgroundColor: colorAtRandom()
+                objectPosition: "center",
+                backgroundColor: colorAtRandom(),
+                backgroundPosition: "center"
             }} 
         />
     )

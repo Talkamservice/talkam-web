@@ -3,8 +3,14 @@ import { apiSlice } from "../app/api/apiSlice"
 export const authApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getCategories: builder.query({
-            query: (sort) => ({
+            query: ({sort}) => ({
                 url: `user/post-categories?sort=${sort}`,
+                method: "get",
+            })
+        }),
+        getSubCategories: builder.query({
+            query: ({sort, categoryId}) => ({
+                url: `user/post-categories/sub-categories?sort=${sort}&catgeory_id=${categoryId}`,
                 method: "get",
             })
         }),
@@ -27,14 +33,6 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 method: 'get'
             })
         }),
-        blockUser: builder.mutation({
-            query: id => ({
-                url: `/user/blocked-users/add`,
-                method: 'post',
-                body: id
-            }),
-            invalidatesTags: ['blocked']
-        }),
         getUserProfileDetails: builder.query({
             query: id => ({
                 url: `/user/profile/fetch?user_id=${id}`,
@@ -42,22 +40,14 @@ export const authApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: ["profile"]
         }),
-        getBlockedList: builder.query({
-            query: () => ({
-                url: `/user/blocked-users`,
-                method: 'get',
-            }),
-            providesTags: ['blocked']
-        }),
     })
 })
 
 export const { 
     useGetCategoriesQuery,
+    useGetSubCategoriesQuery,
     useUpdateProfileMutation,
     useGetTrendingTagsQuery,
     useGetAvatarsQuery,
-    useBlockUserMutation,
     useGetUserProfileDetailsQuery,
-    useGetBlockedListQuery,
 } = authApiSlice

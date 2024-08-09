@@ -3,7 +3,7 @@ import { Button } from "../forms/button"
 import { Avatar } from "../global/avatar"
 import { CommentInput } from "./commentinput"
 import { motion } from "framer-motion"
-import { useCommentReactionMutation, useDeleteCommentMutation } from "../../services/posts/postsApiSlice"
+import { useBlockUserMutation, useCommentReactionMutation, useDeleteCommentMutation } from "../../services/posts/postsApiSlice"
 import { handleError } from "../../utils/handleError"
 import { toast } from "sonner"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
@@ -14,7 +14,6 @@ import { Modal } from "../global/modal"
 import { PostReportModal } from "../posts/postreportmodal"
 import { BlockPromptModal } from "../global/blockpromptmodal"
 import { useOnOutsideClick } from "../../hooks/useOnOutsideClick"
-import { useBlockUserMutation } from "../../services/userApiSlice"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "../../services/authSlice"
 import { PostCardVariants } from "../../helpers/cardanimation"
@@ -28,7 +27,7 @@ export const NestedCommentCard = ({
     setNestedComment,
     isLoading,
     anonChecked,
-    setAnonChecked
+    setAnonChecked,
 }) => {
 
     let isValidComment = false
@@ -52,7 +51,6 @@ export const NestedCommentCard = ({
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
     });
-
    
     const handleAddNewComment = (event) => {
         setNestedComment({...nestedComment, comment: event.target.value });
@@ -169,7 +167,7 @@ export const NestedCommentCard = ({
         parentComment && setAction(() => parentComment.reaction?.action)
         setLikeCount(() => parentComment.likes)
         setUnlikeCount(() => parentComment.unlikes)
-    }, [])
+    }, []);
 
     return (
         <>
@@ -186,7 +184,7 @@ export const NestedCommentCard = ({
                         </div>
 
                         <pre className="text-sm font-normal text-wrap break-words whitespace-normal pr-2 w-full">
-                            <span className="text-xs font-bold pr-2">@{parentComment?.reply_to?.username || parentComment?.reply_to?.name}</span>{parentComment.comment}
+                            <span className="text-xs font-bold pr-2">Replying @{!parentComment.reply_to ? "Anonymous" : (parentComment?.reply_to?.username || parentComment?.reply_to?.name)}</span>{parentComment.comment}
                         </pre>
                         <section className="">
                             { parentComment.attachment ? 

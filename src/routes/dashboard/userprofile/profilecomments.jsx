@@ -1,6 +1,6 @@
 import { ColoredLoader } from "../../../components/global/loader";
 import { UserReplyCard } from "../../../components/global/userprofilereplycard";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { useGetUserCommentsQuery } from "../../../services/posts/postsApiSlice";
 import { EmptyState } from "../../../components/global/emptystate";
 import moment from "moment";
@@ -33,7 +33,7 @@ export const ProfileComments = () => {
                     comments.data?.map((comment, index) => (
                         <div className="w-full flex items-start border-b border-tgray-light py-2">
                             <UserReplyCard
-                                key={comment.comment + index}
+                                key={comment.id}
                                 comment={comment.comment}
                                 user={(comment.reply_to?.username ?? comment.reply_to?.name) ?? (comment.post?.user?.username ?? comment.post?.user?.name)}
                                 image={comment.attachment}

@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux";
-import { selectCurrentUser } from "../../../../services/authSlice";
-import { RouteTabs } from "../../../../components/global/routetabs";
+import { selectCurrentUser } from "../../../services/authSlice";
+import { RouteTabs } from "../../../components/global/routetabs";
 
 const tabs = [
     {

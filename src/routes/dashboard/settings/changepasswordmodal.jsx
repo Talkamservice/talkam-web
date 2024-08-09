@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Button } from "../../../../components/forms/button";
-import { Input } from "../../../../components/forms/input"
-import { useForm } from "../../../../hooks/useForm";
-import { confirmPasswordMatches, isNotEmpty, passwordMatcher } from "../../../../utils/formValidations";
-import { useUpdateProfileMutation } from "../../../../services/userApiSlice";
+import { Button } from "../../../components/forms/button";
+import { Input } from "../../../components/forms/input"
+import { useForm } from "../../../hooks/useForm";
+import { confirmPasswordMatches, isNotEmpty, passwordMatcher } from "../../../utils/formValidations";
+import { useUpdateProfileMutation } from "../../../services/userApiSlice";
 import { toast } from "sonner";
-import { handleError } from "../../../../utils/handleError";
+import { handleError } from "../../../utils/handleError";
 
 export const ChangePasswordModal = ({ onClose }) => {
 
