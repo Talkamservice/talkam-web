@@ -35,8 +35,8 @@ export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCa
     }
 
     return (
-        <div className="flex flex-col items-center h-full gap-4 p-6">
-            <header className="py-4">
+        <div className="flex flex-col items-center h-full gap-8 p-6">
+            <header className="py-2">
                 <p className="text-lg font-bold">Select a Subcategory/Group</p>
             </header>
             <section className="px-6 w-full flex flex-col items-start md:flex-row gap-8">
@@ -62,7 +62,7 @@ export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCa
                         animate="animate"
                         exit="exit"
                         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                        className="w-full flex flex-col gap-6 p-6">
+                        className="w-full flex flex-col gap-6 px-6">
                         {
                             showOptions === "subcategory" ?
                                 <motion.section

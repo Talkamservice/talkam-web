@@ -8,6 +8,7 @@ import { Storage } from "../../../app/storage";
 import { ColoredLoader } from "../../../components/global/loader";
 import { toast } from "sonner";
 import { EmptyState } from "../../../components/global/emptystate";
+import { handleError } from "../../../utils/handleError";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 export const RecentGroups = () => {
@@ -159,7 +160,7 @@ export const RecentGroups = () => {
                                     user={post.user}
                                     polls={post.polls}
                                     avatar={post.user.avatar}
-                                    category={post.category?.name}
+                                    category={post.category}
                                     author={post.user.username ?? post.user.name}
                                     title={post.title}
                                     comment={post.body}
@@ -173,6 +174,9 @@ export const RecentGroups = () => {
                                     isAnon={post.is_anonymous}
                                     routeChange={() => navigate(`/comment/${post.id}`)}
                                     handleDeletePost={handleDeletePost}
+                                    group={post?.group}
+                                    parentCategory={post?.category?.parent_category}
+                                    home
                                 />
                             ))
                 }

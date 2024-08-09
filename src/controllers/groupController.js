@@ -5,11 +5,13 @@ import { randomId } from "../helpers/randomid";
 import { storageDB } from "../utils/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export const useGroupController = (groupTab) => {
 
     let isValid = false;
     let isRuleValid = false;
+    const navigate = useNavigate();
     const [search, setSearch] = useState(null);
     const [categoryId, setCategoryId] = useState("")
     const [imageLoading, setImageLoading] = useState(false);
@@ -108,6 +110,7 @@ export const useGroupController = (groupTab) => {
             }
             const res = await createGroup({ ...groupInformation }).unwrap();
             toast.success(res?.message);
+            navigate("/groups")
             setGroupDetails(() => ({
                 name: "",
                 banner: null,
