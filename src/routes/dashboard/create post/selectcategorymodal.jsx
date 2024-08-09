@@ -1,13 +1,21 @@
+import { useState } from "react";
 import { Storage } from "../../../app/storage";
 import { Button } from "../../../components/forms/button";
 import { DropDownSelect } from "../../../components/forms/dropdown";
+import { TextRadioButton } from "../../../components/forms/textradiobutton";
+import { motion } from "framer-motion";
+import { downVariants, PostCardVariants } from "../../../helpers/cardanimation";
 
 export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCategory, onChangeGroup, transformedGroups, post, setPost }) => {
 
     let isValid = false;
+    const [showOptions, setShowOptions] = useState(null);
 
-    if (post.category?.id) {
-        isValid = true
+    const toggleDropdownView = (event) => {
+        const { name, checked, value } = event.target;
+        if (checked) {
+            setShowOptions(() => value)
+        }
     }
 
     const handleCancel = () => {
@@ -22,32 +30,93 @@ export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCa
         onClose();
     }
 
-    return (
-        <div className="flex flex-col items-center h-full gap-6 p-6">
-            <header className="">
-                <p className="text-base font-bold">Select a Category</p>
-            </header>
-            <section className="w-full flex flex-col gap-6 p-6">
-                <DropDownSelect
-                    label="Select a category"
-                    value={post.category?.value}
-                    node={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
-                    defaultValue={post.category?.value ?? "Select a category"}
-                    options={transformedCategories}
-                    onChange={onChangeCategory}
-                    required
-                />
+    if (post.category?.id || post?.group?.id) {
+        isValid = true
+    }
 
-                <DropDownSelect
-                    label="Select a group"
-                    value={post.group?.value}
-                    node={<span className="p-2.5 rounded-full bg-[#bc1f1f]" />}
-                    defaultValue={post.group?.value ?? "Select a group"}
-                    options={transformedGroups}
-                    onChange={onChangeGroup}
+    return (
+        <div className="flex flex-col items-center h-full gap-4 p-6">
+            <header className="py-4">
+                <p className="text-lg font-bold">Select a Subcategory/Group</p>
+            </header>
+            <section className="px-6 w-full flex flex-col items-start md:flex-row gap-8">
+                <TextRadioButton
+                    label="Subcategory"
+                    name="categories"
+                    onChange={toggleDropdownView}
+                    value="subcategory"
+                />
+                <TextRadioButton
+                    label="Group"
+                    name="categories"
+                    onChange={toggleDropdownView}
+                    value="group"
                 />
             </section>
-            <div className="w-full flex items-center gap-4 p-6">
+            {
+                showOptions ?
+                    <motion.section
+                        key="chatbox"
+                        variants={PostCardVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                        className="w-full flex flex-col gap-6 p-6">
+                        {
+                            showOptions === "subcategory" ?
+                                <motion.section
+                                    key="chatbox"
+                                    variants={downVariants}
+                                    initial="initial"
+                                    animate="animate"
+                                    exit="exit"
+                                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                >
+                                    <DropDownSelect
+                                        label="Select a subcategory"
+                                        value={post.category?.value}
+                                        node={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
+                                        defaultValue={post.category?.value ?? "Select a subcategory"}
+                                        options={transformedCategories}
+                                        onChange={onChangeCategory}
+                                        required
+                                    />
+                                </motion.section>
+                                :
+                                null
+                        }
+
+                        {
+                            showOptions === "group" ?
+                                <motion.section
+                                    key="chatbox"
+                                    variants={downVariants}
+                                    initial="initial"
+                                    animate="animate"
+                                    exit="exit"
+                                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                    className=""
+                                >
+                                    <DropDownSelect
+                                        label="Select a group"
+                                        value={post.group?.value}
+                                        node={<span className="p-2.5 rounded-full bg-[#bc1f1f]" />}
+                                        defaultValue={post.group?.value ?? "Select a group"}
+                                        options={transformedGroups}
+                                        onChange={onChangeGroup}
+                                    />
+                                </motion.section>
+                                :
+                                null
+                        }
+                    </motion.section>
+                    :
+                    null
+            }
+
+            {/* Footer */}
+            <div className="w-full flex items-center gap-4 px-6">
                 <Button
                     onClick={onClose}
                     fullWidth

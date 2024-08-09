@@ -12,7 +12,7 @@ import { AnonToggleButton } from "../../../components/global/anonymoustoggle";
 import { BasicToggleButton } from "../../../components/global/basictoggle";
 import { downVariants } from "../../../helpers/cardanimation";
 import { motion } from "framer-motion";
-import { useGetCategoriesQuery, useGetTrendingTagsQuery } from "../../../services/userApiSlice";
+import { useGetSubCategoriesQuery, useGetTrendingTagsQuery } from "../../../services/userApiSlice";
 import { useCreatePostMutation } from "../../../services/posts/postsApiSlice";
 import { handleError } from "../../../utils/handleError";
 import { useNavigate } from "react-router-dom";
@@ -71,7 +71,7 @@ export const CreatePost = () => {
 
     //server calls
     const [createPost, { isLoading: createLoading }] = useCreatePostMutation()
-    const { data: categories } = useGetCategoriesQuery({
+    const { data: categories } = useGetSubCategoriesQuery({
         sort: "",
         categoryId: ""
     });
@@ -113,7 +113,7 @@ export const CreatePost = () => {
     const transformedGroups = following && following?.data?.data?.map((group) => {
         return {
             id: group.id,
-            name: group.name,
+            name: group.category?.id,
             value: group.name
         }
     });
@@ -226,7 +226,7 @@ export const CreatePost = () => {
 
         try {
             const newPost = {
-                category_id: post.category?.id,
+                category_id: post?.group ? post.group?.name : post?.category?.id,
                 group_id: post.group?.id,
                 type: PostType,
                 title: post.title,
@@ -277,7 +277,7 @@ export const CreatePost = () => {
         setSelectedItems(post_tags ?? [])
     }, [])
 
-    if ((post.comment || post.title) && post?.category?.id) {
+    if ((post.comment || post.title) && (post?.category?.id || post?.group?.id)) {
         isValid = true
     }
 
@@ -302,13 +302,7 @@ export const CreatePost = () => {
                                 leftIcon={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
                             >
                                 {
-                                    (post?.category?.name && post?.group?.name) ?
-                                        post?.category?.name + '/' + (post?.group?.name ?? "")
-                                        :
-                                        (post?.category?.name || post?.group?.name) ?
-                                            post?.category?.name
-                                            :
-                                            'Select a category or group'
+                                    (post?.group?.value || post?.category?.value) ?? "Select a Subcategory or Group"
                                 }
                             </Button>
                         </div>
@@ -418,7 +412,7 @@ export const CreatePost = () => {
                 shouldCloseOnOverlayClick={false}
                 onClose={toggleCategoryModal}
                 position='center'
-                contentWidth='w-full md:w-2/5'
+                contentWidth='w-full sm:w-4/5 lg:w-2/5'
             >
                 <SelectCategoryModal
                     onClose={(toggleCategoryModal)}

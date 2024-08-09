@@ -3,13 +3,13 @@ import { apiSlice } from "../app/api/apiSlice"
 export const authApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getCategories: builder.query({
-            query: ({sort}) => ({
+            query: ({ sort }) => ({
                 url: `user/post-categories?sort=${sort}`,
                 method: "get",
             })
         }),
         getSubCategories: builder.query({
-            query: ({sort, categoryId}) => ({
+            query: ({ sort, categoryId }) => ({
                 url: `user/post-categories/sub-categories?sort=${sort}&catgeory_id=${categoryId}`,
                 method: "get",
             })
@@ -40,14 +40,22 @@ export const authApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: ["profile"]
         }),
+        followingCategories: builder.query({
+            query: () => ({
+                url: `/user/post-categories/following`,
+                method: 'get'
+            }),
+            providesTags: ["usercategories"]
+        })
     })
 })
 
-export const { 
+export const {
     useGetCategoriesQuery,
     useGetSubCategoriesQuery,
     useUpdateProfileMutation,
     useGetTrendingTagsQuery,
     useGetAvatarsQuery,
     useGetUserProfileDetailsQuery,
+    useFollowingCategoriesQuery,
 } = authApiSlice

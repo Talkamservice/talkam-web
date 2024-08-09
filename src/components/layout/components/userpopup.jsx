@@ -2,6 +2,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom"
 import { logOut } from "../../../services/authSlice";
 import { apiSlice } from "../../../app/api/apiSlice";
+import { Storage } from "../../../app/storage";
 
 export const UserPopUp = ({ currentUser, toggleShowPanel, close }) => {
 
@@ -13,6 +14,7 @@ export const UserPopUp = ({ currentUser, toggleShowPanel, close }) => {
         close();
         dispatch(apiSlice.util.resetApiState());
         dispatch(logOut());
+        Storage.clearItem();
         navigate("/login", { replace: true })
     }
 

@@ -91,7 +91,7 @@ export const groupApiSlice = apiSlice.injectEndpoints({
                 method: "PUT",
                 body: { ...body }
             }),
-            invalidatesTags: ["details"]
+            invalidatesTags: ["details", "groups", "usergroups"]
         }),
         updateGuidelines: builder.mutation({
             query: ({ id, body }) => ({

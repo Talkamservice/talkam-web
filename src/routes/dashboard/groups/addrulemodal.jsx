@@ -9,10 +9,10 @@ export const AddRuleModal = ({ handleSaveRule, setFormattedRuleContent, onClose,
                 <h4 className="text-lg font-boldNunito">Add Rule</h4>
             </header>
 
-            <form id="rule" onSubmit={handleSaveRule}  className="flex flex-col gap-5">
+            <form id="rule" onSubmit={handleSaveRule} className="flex flex-col gap-5">
                 <TextArea
                     label="Name"
-                    placeholder="Enter your group name"
+                    placeholder="Enter your rule"
                     rounded="rounded-lg"
                     value={ruleBody?.title}
                     onChange={(event) => setFormattedRuleContent(event.target.value, 'title', 50)}
@@ -26,7 +26,7 @@ export const AddRuleModal = ({ handleSaveRule, setFormattedRuleContent, onClose,
                     label="Description"
                     type="text"
                     rounded="rounded-lg"
-                    placeholder = 'A short description of your group'
+                    placeholder='A short description of your rule'
                     value={ruleBody?.description}
                     onChange={(event) => setFormattedRuleContent(event.target.value, 'description', 100)}
                     rows={4}

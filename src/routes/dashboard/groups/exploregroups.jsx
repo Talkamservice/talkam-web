@@ -18,7 +18,7 @@ export const ExploreGroups = () => {
                         groupController.categoriesLoading ?
                             <PillSkeletonLoader num={12} />
                             :
-                            groupController.categories?.data?.slice(0, 12).map((item, index) => (
+                            groupController.categories?.data?.slice(0, 15).map((item, index) => (
                                 <span
                                     key={index}
                                     onClick={() => groupController.setCategoryId(item.id)}
