@@ -11,7 +11,7 @@ import { MainAppLayout } from './components/layout/mainapp';
 import ErrorPage from './routes/error/error';
 import Protected from './utils/protected';
 
-const router =  createBrowserRouter([
+const router = createBrowserRouter([
   {
     path: '/',
     errorElement: <ErrorPage />,
@@ -63,44 +63,6 @@ const router =  createBrowserRouter([
         }
       },
       {
-        path: 'profile',
-        children: [
-          {
-            lazy: async () => {
-              let { Profile } = await import("./routes/dashboard/profile/profile");
-              return { Component: Profile };
-            },
-            children: [
-              {
-                index: true,
-                loader: () => redirect('posts')
-              },
-              {
-                path: 'posts',
-                lazy: async () => {
-                  let { UsersPosts } = await import("./routes/dashboard/profile/userposts");
-                  return { Component: UsersPosts };
-                }
-              },
-              {
-                path: 'comments',
-                lazy: async () => {
-                  let { UsersComments } = await import("./routes/dashboard/profile/usercomments");
-                  return { Component: UsersComments };
-                }
-              },
-              {
-                path: 'upvotes',
-                lazy: async () => {
-                  let { UsersUpvotes } = await import("./routes/dashboard/profile/userupvotes");
-                  return { Component: UsersUpvotes };
-                }
-              },
-            ]
-          },
-        ]
-      },
-      {
         path: 'userprofile/:userId',
         children: [
           {
@@ -136,13 +98,13 @@ const router =  createBrowserRouter([
               },
             ]
           },
-          
+
         ]
       },
       {
         path: 'settings',
         lazy: async () => {
-          let { ProfileSettings } = await import("./routes/dashboard/profile/settings/profilesettings");
+          let { ProfileSettings } = await import("./routes/dashboard/settings/profilesettings");
           return { Component: ProfileSettings };
         },
         children: [
@@ -153,28 +115,28 @@ const router =  createBrowserRouter([
           {
             path: 'account',
             lazy: async () => {
-              let { AccountSettings } = await import("./routes/dashboard/profile/settings/account");
+              let { AccountSettings } = await import("./routes/dashboard/settings/account");
               return { Component: AccountSettings };
             }
           },
           {
             path: 'profile-notifications',
             lazy: async () => {
-              let { ProfileNotificationSettings } = await import("./routes/dashboard/profile/settings/notificationsettings");
+              let { ProfileNotificationSettings } = await import("./routes/dashboard/settings/notificationsettings");
               return { Component: ProfileNotificationSettings };
             }
           },
           {
             path: 'privacy',
             lazy: async () => {
-              let { PrivacySettings } = await import("./routes/dashboard/profile/settings/privacysettings");
+              let { PrivacySettings } = await import("./routes/dashboard/settings/privacysettings");
               return { Component: PrivacySettings };
             }
           },
           {
             path: 'blocked-users',
             lazy: async () => {
-              let { BlockedUserSettings } = await import("./routes/dashboard/profile/settings/blockedusers");
+              let { BlockedUserSettings } = await import("./routes/dashboard/settings/blockedusers");
               return { Component: BlockedUserSettings };
             }
           },
@@ -222,6 +184,40 @@ const router =  createBrowserRouter([
         },
       },
       {
+        path: 'group/:groupId',
+        lazy: async () => {
+          let { Group } = await import("./routes/dashboard/group/group");
+          return { Component: Group };
+        },
+        children: [
+          {
+            index: true,
+            loader: () => redirect('featured')
+          },
+          {
+            path: 'featured',
+            lazy: async () => {
+              let { GroupFeatured } = await import("./routes/dashboard/group/groupfeatured");
+              return { Component: GroupFeatured };
+            },
+          },
+          {
+            path: 'trending',
+            lazy: async () => {
+              let { GroupTrending } = await import("./routes/dashboard/group/grouptrending");
+              return { Component: GroupTrending };
+            },
+          },
+          {
+            path: 'new',
+            lazy: async () => {
+              let { GroupLatest } = await import("./routes/dashboard/group/grouplatest");
+              return { Component: GroupLatest };
+            },
+          },
+        ]
+      },
+      {
         path: "search",
         lazy: async () => {
           let { Search } = await import("./routes/dashboard/search/search");
@@ -230,24 +226,24 @@ const router =  createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect('posts-results'),
+            loader: () => redirect('posts'),
           },
           {
-            path: "posts-results",
+            path: "posts",
             lazy: async () => {
               let { SearchPosts } = await import("./routes/dashboard/search/searchposts");
               return { Component: SearchPosts };
             },
           },
           {
-            path: "groups-results",
+            path: "groups",
             lazy: async () => {
               let { SearchGroup } = await import("./routes/dashboard/search/searchgroups");
               return { Component: SearchGroup };
             },
           },
           {
-            path: "media-results",
+            path: "media",
             lazy: async () => {
               let { SearchMedia } = await import("./routes/dashboard/search/searchmedia");
               return { Component: SearchMedia };
@@ -257,7 +253,7 @@ const router =  createBrowserRouter([
       }
     ]
   },
-  { 
+  {
     path: 'login',
     lazy: async () => {
       let { Login } = await import("./routes/auth/login/login");

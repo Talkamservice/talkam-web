@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import * as Icon from 'react-feather'
 
-export const PostPollBar = ({ color, option, selected, percentage, handlePollVote, id, selectedPoll }) => {
+export const PostPollBar = ({ color, option, selected, percentage, handlePollVote, id, selectedPoll, hasExpired }) => {
   const containerStyles = {
     height: 38,
     width: '100%',
@@ -12,7 +12,7 @@ export const PostPollBar = ({ color, option, selected, percentage, handlePollVot
 
   const fillerStyles = {
     height: '100%',
-    backgroundColor: selectedPoll ? '#ccc' : color,
+    backgroundColor: (selectedPoll || hasExpired) ? '#ccc' : color,
     borderRadius: 'inherit',
     textAlign: 'right',
   };
@@ -30,13 +30,13 @@ export const PostPollBar = ({ color, option, selected, percentage, handlePollVot
   return (
     <div
       style={containerStyles}
-      className={` ${selectedPoll ? "border border-[#D2D2D2]" : "border border-[#86AAEE]" }
-        border border-[#86AAEE] ${ selectedPoll ? "cursor-default" : "cursor-pointer" } transition-all duration-700 ease-in-out overflow-hidden flex items-center
-        ${selectedPoll ? "justify-between" : "justify-center"} px-3`
+      className={` ${(selectedPoll || hasExpired) ? "border border-[#D2D2D2]" : "border border-[#86AAEE]" }
+        border border-[#86AAEE] ${ (selectedPoll || hasExpired) ? "cursor-default" : "cursor-pointer" } transition-all duration-700 ease-in-out overflow-hidden flex items-center
+        ${(selectedPoll || hasExpired) ? "justify-between" : "justify-center"} px-3`
       }
-      onClick={() => !selectedPoll && handlePollVote(id)}
+      onClick={() => (!selectedPoll && !hasExpired ) && handlePollVote(id)}
     >
-      {selectedPoll  ? (
+      {selectedPoll || hasExpired ? (
         <motion.div
           style={fillerStyles}
           className="absolute inset-0 w-full flex items-center justify-between"
@@ -47,7 +47,7 @@ export const PostPollBar = ({ color, option, selected, percentage, handlePollVot
         ></motion.div>
       ) : null}
       <span className="z-[9] text-sm p-0 font-medium text-black px-1 flex items-center gap-2">{option}{ selected ? <Icon.CheckCircle color="#444444" size={15} /> : null }</span>
-      {selectedPoll ? (
+      {selectedPoll || hasExpired ? (
         <motion.span
           className="z-[9] text-sm p-0 font-medium text-black px-1"
           initial="initial"

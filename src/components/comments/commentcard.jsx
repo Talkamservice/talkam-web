@@ -5,7 +5,7 @@ import { CommentInput } from "./commentinput"
 import { motion } from "framer-motion"
 import { NestedCommentCard } from "./nestedcommentcard"
 import { downVariants, PostCardVariants } from "../../helpers/cardanimation"
-import { useCommentReactionMutation, useDeleteCommentMutation } from "../../services/posts/postsApiSlice"
+import { useBlockUserMutation, useCommentReactionMutation, useDeleteCommentMutation } from "../../services/posts/postsApiSlice"
 import { toast } from "sonner"
 import { handleError } from "../../utils/handleError"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
@@ -18,7 +18,6 @@ import { NewNotificationIcon, TrashIcon } from "../../assets/icons/generated"
 import { Modal } from "../global/modal"
 import { PostReportModal } from "../posts/postreportmodal"
 import { BlockPromptModal } from "../global/blockpromptmodal"
-import { useBlockUserMutation } from "../../services/userApiSlice"
 import * as Icon from "react-feather"
 import moment from "moment"
 
@@ -348,6 +347,7 @@ export const CommentCard = ({
                                         isLoading={isLoading}
                                         anonChecked={nestedAnonChecked}
                                         setAnonChecked={setNestedAnonChecked}
+                                        parentIsAnon={parentComment.is_anonymous}
                                     />
                                 ))
                             }

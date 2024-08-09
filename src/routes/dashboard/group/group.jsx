@@ -1,0 +1,132 @@
+import { useParams } from "react-router-dom";
+import { FeaturedFireIcon, LatestEventsIcon, NewBadgeIcon, TrendingIcon } from "../../../assets/icons/generated";
+import { RouteTabs } from "../../../components/global/routetabs"
+import { useFollowGroupMutation, useGetGroupDetailsQuery, useUnFollowGroupMutation } from "../../../services/groupApiSlice";
+import { GroupBanner } from "../../../components/global/groupbanner";
+import { BannerSkeletons, ButtonSkeletonLoader } from "../../../components/global/skeletons";
+import { GroupDetails } from "./groupdetails/groupdetails";
+import { Button } from "../../../components/forms/button";
+import { handleError } from "../../../utils/handleError";
+import { toast } from "sonner";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../../services/authSlice";
+import * as Icon from 'react-feather'
+
+const tabs = [
+    {
+        id: 0,
+        title: "Featured",
+        text: "featured",
+        icon: <FeaturedFireIcon />
+    },
+    {
+        id: 1,
+        title: "Trending",
+        text: "trending",
+        icon: <TrendingIcon />
+    },
+    {
+        id: 2,
+        title: "Just In",
+        text: "new",
+        icon: <NewBadgeIcon />
+    },
+];
+
+export const Group = () => {
+
+    const currentUser = useSelector(selectCurrentUser);
+    const { groupId } = useParams();
+    const { data:groupDetails, isLoading } = useGetGroupDetailsQuery(groupId);
+    const [ followGroup, { isLoading:followLoading } ] = useFollowGroupMutation();
+    const [ unFollowGroup, { isLoading:unFollowLoading } ] = useUnFollowGroupMutation();
+
+    const handleFollowGroup = async() => {
+        try {
+            const credentials = {
+                group_id: groupId,
+                user_id: currentUser?.id,
+            }
+            const res = await followGroup({ ...credentials }).unwrap();
+            toast.success(res?.message)
+        } catch(error){
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    }
+
+    const handleUnFollowGroup = async() => {
+        try {
+            const credentials = {
+                group_id: groupId,
+                user_id: currentUser?.id,
+            }
+            const res = await unFollowGroup({ ...credentials }).unwrap();
+            toast.success(res?.message)
+        } catch(error){
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    }
+
+    return (
+        <section className="h-full flex divide-x divide-tgray-xlight">
+            <div className="w-full flex flex-col lg:w-4/6 h-full p-2 md:px-6 md:pt-6">
+                <section className="w-full flex flex-col gap-2">
+                    {
+                        isLoading ?
+                        <BannerSkeletons />
+                        :
+                        <GroupBanner
+                            groupCategory={groupDetails?.data.category?.name}
+                            banner={groupDetails?.data.image}
+                            groupCategoryIcon={groupDetails?.data.category?.icon_image ?? <LatestEventsIcon />}
+                        />
+                    }
+                    {
+                        isLoading ?
+                        <div className="flex items-end justify-end py-1">
+                            <ButtonSkeletonLoader />
+                        </div>
+                        :
+                        <section className="flex items-end justify-end">
+                        {
+                            !groupDetails?.data?.is_following ?
+                            <Button
+                                children="Follow"
+                                leftIcon={< Icon.Plus size={18} />}
+                                className="!rounded-full !text-sm bg-tprimary-50 !px-4 !py-2.5 font-semiboldNunito"
+                                onClick={handleFollowGroup}
+                                isLoading={followLoading}
+                                disabled={followLoading}
+                            />
+                            :
+                            <Button
+                                children="Unfollow"
+                                leftIcon={< Icon.Minus size={18} />}
+                                className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
+                                onClick={handleUnFollowGroup}
+                                isLoading={unFollowLoading}
+                                disabled={unFollowLoading}
+                                variant="error"
+                            />
+                        }
+                        </section>
+                    }
+                </section>
+
+                <section className="relative overflow-y-auto w-full no-scrollbar">
+                    <RouteTabs tabs={tabs} />
+                </section>
+            </div>
+
+            <section className="w-full lg:w-2/6 h-full p-2 md:px-6 md:pt-6 relative">
+                <GroupDetails
+                    currentUserRole={groupDetails?.data?.user_role ?? "Member"}
+                    groupDetails={groupDetails}
+                    isLoading={isLoading}
+                />
+            </section>
+        </section>
+    )
+} 

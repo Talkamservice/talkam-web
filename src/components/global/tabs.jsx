@@ -23,7 +23,7 @@ export const Tabs = ({tabs}) => {
             }
         </div>
         <motion.div
-            className='w-full no-scrollbar p-1'>
+            className='w-full h-full no-scrollbar p-1'>
             {tabs[activeTab].component}
         </motion.div>
     </div>
@@ -45,7 +45,7 @@ export const TabButton = ({ text, onClick, active, icon }) => {
             { 
                     active ? 
                     <motion.div 
-                        layoutId='active-pill' 
+                        layoutId='active-pillTab' 
                         className='border-b-4 border-tprimary-50 absolute inset-0 p-3 w-full' 
                     /> 
                     : 

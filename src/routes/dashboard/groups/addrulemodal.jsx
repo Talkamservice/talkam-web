@@ -1,33 +1,7 @@
-import { useState } from "react"
 import { Button } from "../../../components/forms/button"
-import { Input } from "../../../components/forms/input"
 import { TextArea } from "../../../components/forms/textarea"
-import { randomId } from "../../../helpers/randomid"
 
-export const AddRuleModal = ({  rules, setRules, onClose }) => {
-
-    const [ ruleBody, setRuleBody ] = useState({
-        id: randomId(),
-        ruleBody: "",
-        descriptionBody: "",
-    })
-
-    const handleSaveRule = (event) => {
-        event.preventDefault();
-        setRules(() => [ ruleBody, ...rules ])
-        setRuleBody({
-            id: randomId(),
-            ruleBody: "",
-            descriptionBody: "",
-        })
-        onClose();
-    }
-
-    let isValid = false;
-
-    if(ruleBody.ruleBody){
-        isValid = true
-    }
+export const AddRuleModal = ({ handleSaveRule, setFormattedRuleContent, onClose, isValid, ruleBody }) => {
 
     return (
         <main className="w-full flex flex-col gap-4 p-6 md:p-8">
@@ -36,23 +10,29 @@ export const AddRuleModal = ({  rules, setRules, onClose }) => {
             </header>
 
             <form id="rule" onSubmit={handleSaveRule}  className="flex flex-col gap-5">
-                <Input
+                <TextArea
                     label="Name"
                     placeholder="Enter your group name"
                     rounded="rounded-lg"
-                    value={ruleBody.ruleBody}
-                    onChange={(event) => setRuleBody({ ...ruleBody, ruleBody: event.target.value })}
+                    value={ruleBody?.title}
+                    onChange={(event) => setFormattedRuleContent(event.target.value, 'title', 50)}
+                    limit={80}
+                    limitPosition="top"
+                    rows={1}
                     required
                 />
 
                 <TextArea
-                    label="Description (optional)"
+                    label="Description"
                     type="text"
                     rounded="rounded-lg"
                     placeholder = 'A short description of your group'
-                    value={ruleBody.descriptionBody}
-                    onChange={(event) => setRuleBody({...ruleBody, descriptionBody: event.target.value  })}
+                    value={ruleBody?.description}
+                    onChange={(event) => setFormattedRuleContent(event.target.value, 'description', 100)}
                     rows={4}
+                    limit={100}
+                    limitPosition="bottom"
+                    required
                 />
             </form>
 
@@ -68,7 +48,7 @@ export const AddRuleModal = ({  rules, setRules, onClose }) => {
                 <Button
                     form="rule"
                     children="Save"
-                    className="!bg-[#272727]"
+                    className="!bg-[#272727] disabled:!bg-opacity-50"
                     fullWidth
                     disabled={!isValid}
                 />

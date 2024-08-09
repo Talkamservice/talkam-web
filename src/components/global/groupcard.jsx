@@ -1,6 +1,16 @@
-import FallBack from '../../assets/images/fallback.png'
+import FallBack from '../../assets/icons/groupicon.svg'
 
 export const GroupCard = ({ group, members, img }) => {
+
+    let membersPluralization;
+
+    if (!members)
+       membersPluralization = 'members'
+    if(members > 0){
+        const noun = members > 1 ? 'members' : 'member';
+        membersPluralization = members + " " + noun
+    }
+
     return (
         <section className="flex items-center gap-2">
             <img
@@ -18,7 +28,7 @@ export const GroupCard = ({ group, members, img }) => {
             />
             <div className="flex flex-col items-start gap-1">
                 <p className="font-bold text-base">{group}</p>
-                <span className="text-sm font-normal">{members} members</span>
+                <span className="text-sm font-normal">{membersPluralization}</span>
             </div>
         </section>
     )

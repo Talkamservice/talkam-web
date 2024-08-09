@@ -1,9 +1,9 @@
 import { useState } from "react"
-import { TextCheckBox } from "../../../../components/forms/textcheckbox"
-import { TextRadioButton } from "../../../../components/forms/textradiobutton"
-import { handleError } from "../../../../utils/handleError";
+import { TextCheckBox } from "../../../components/forms/textcheckbox"
+import { TextRadioButton } from "../../../components/forms/textradiobutton"
+import { handleError } from "../../../utils/handleError";
 import { toast } from "sonner";
-import { useNotificationSettingsMutation } from "../../../../services/settingsApiSlice";
+import { useNotificationSettingsMutation } from "../../../services/settingsApiSlice";
 
 export const ProfileNotificationSettings = () => {
     

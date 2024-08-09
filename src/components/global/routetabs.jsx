@@ -22,7 +22,7 @@ export const RouteTabs = ({tabs, data}) => {
                     <TabButton
                         key={item.title}
                         text={item.title}
-                        type={item.text === activePath ? "" : "text"}
+                        type={item.text === activePath || item.text.includes(activePath) ? "" : "text"}
                         onClick={() => handleTabClick(item.text)}
                         icon={item.icon}
                     />

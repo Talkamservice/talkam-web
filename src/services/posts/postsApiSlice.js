@@ -1,11 +1,11 @@
+import { defaultSerializeQueryArgs } from "@reduxjs/toolkit/query"
 import { apiSlice } from "../../app/api/apiSlice"
 
 export const postsApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getAllPosts: builder.query({
-            keepUnusedDataFor:  180,
-            query: ({ tab, page }) => ({
-                url: `/user/posts/?tab=${tab}&page=${page}`,
+            query: ({tab, categoryId="", groupId="", page}) => ({
+                url: `/user/posts/?tab=${tab}&category_id=${categoryId}&group_id=${groupId}&page=${page}`,
                 method: "get",
             }),
             providesTags: ["posts"]
@@ -30,7 +30,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 url: `/user/posts/${postId}`,
                 method: 'delete',
             }),
-            invalidatesTags: ["posts", "userposts", "upvotes", "usercomments"]
+            invalidatesTags: ["posts", "userposts", "upvotes"]
         }),
         getPostComments: builder.query({
             query: id => ({
@@ -45,7 +45,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 method: 'POST',
                 body: {...action }
             }),
-            invalidatesTags: ["postDetail", "posts", "comments"],
+            invalidatesTags: ["postDetail", "posts", "upvotes"],
         }),
         commentReaction: builder.mutation({
             query: action => ({
@@ -61,7 +61,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 method: 'POST',
                 body: {...body}
             }),
-            invalidatesTags: ["comments", "posts", "postDetail"],
+            invalidatesTags: ["comments", "postDetail"],
         }),
         createPost: builder.mutation({
             query: body => ({
@@ -69,7 +69,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 method: 'post',
                 body: { ...body }
             }),
-            invalidatesTags: ["posts"]
+            invalidatesTags: ["posts", "userposts"]
         }),
         savePostToDrafts: builder.mutation({
             query: body => ({
@@ -84,14 +84,14 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 method: 'post',
                 body: pollId
             }),
-            invalidatesTags: ["posts","postDetail"]
+            invalidatesTags: ["posts", "postDetail"]
         }),
         deleteComment: builder.mutation({
             query: postId => ({
                 url: `/user/post-comments/${postId}`,
                 method: 'delete',
             }),
-            invalidatesTags: ["posts", "postDetail", "comments"]
+            invalidatesTags: ["postDetail", "comments"]
         }),
         getUserComments: builder.query({
             query: userId => ({
@@ -109,10 +109,48 @@ export const postsApiSlice = apiSlice.injectEndpoints({
         }),
         getUserPosts: builder.query({
             query: ({ userId, page }) => ({
-                url: `/user/posts/?user_id=${userId}&tab=latest&page=${page}`,
+                url: `/user/posts/?user_id=${userId}&tab=latest&page=${page}&exclude_anonymous=1`,
                 method: "get",
             }),
+            serializeQueryArgs: ({ queryArgs, endpointDefinition, endpointName }) => {
+                const { userId } = queryArgs
+
+                return defaultSerializeQueryArgs({
+                  endpointName,
+                  queryArgs: { userId },
+                  endpointDefinition
+                })
+            },
+            forceRefetch({ currentArg, previousArg }) {
+                const { page, userId } = currentArg;
+
+                const data = previousArg;
+                const prevPage = data && data.page;
+                const prevUserId = data && data.userId;
+
+                if((page === prevPage) && (userId === prevUserId)){
+                    return false;
+                } else {
+                    return true;
+                }
+            },
             providesTags: ["userposts"]
+        }),
+        blockUser: builder.mutation({
+            query: id => ({
+                url: `/user/blocked-users/add`,
+                method: 'post',
+                body: id
+            }),
+            invalidatesTags: ['posts', 'blocked']
+        }),
+        getBlockedList: builder.query({
+            keepUnusedDataFor: 0,
+            query: () => ({
+                url: `/user/blocked-users`,
+                method: 'get',
+            }),
+            providesTags: ['blocked']
         }),
     })
 })
@@ -133,4 +171,6 @@ export const {
     useGetUserCommentsQuery,
     useGetUserUpvotesQuery,
     useGetUserPostsQuery,
+    useBlockUserMutation,
+    useGetBlockedListQuery,
 } = postsApiSlice

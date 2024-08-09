@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PostCard } from "../../../components/posts/postcard";
 import { GallerySkeletons } from "../../../components/global/skeletons";
-import { useGetAllPostsQuery } from "../../../services/posts/postsApiSlice";
+import { useDeletePostMutation, useGetAllPostsQuery } from "../../../services/posts/postsApiSlice";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { handleError } from "../../../utils/handleError";
@@ -20,6 +20,18 @@ export const Trending = () => {
         tab: 'trending',
         page: page
     });
+    const [ deletePost ] = useDeletePostMutation();
+
+    const postIds = new Set();
+
+    // Deduplicate new posts
+    const newResults = (posts || []).filter(post => {
+        if (!postIds.has(post.id)) {
+            postIds.add(post.id);
+            return true;
+        }
+        return false;
+    });
 
     const appendNewPageData = () => {
         if (trending?.data?.data) {
@@ -30,6 +42,22 @@ export const Trending = () => {
             setIsFetching(false);
         }
     };
+
+    const handleDeletePost = async (id) => {
+        const newPage = 1
+        const newPosts = posts.filter((post) => post.id !== id);
+        setPosts(() => newPosts);
+
+        try {
+            const deleteRes = await deletePost(id);
+            toast.success(deleteRes?.data?.message);
+            setPage(() => newPage);
+        } catch(error){
+            const errorMessage = handleError(error);
+            toast.error(errorMessage);
+        }
+        setPage(() => newPage);
+    }
 
     const handleScroll = useCallback((event) => {
         if (isRestoringScroll.current) return;
@@ -80,12 +108,11 @@ export const Trending = () => {
                 ref={scrollableRef}
                 className="w-full py-3 flex flex-col gap-3 overflow-y-auto no-scrollbar"
             >
-                {isLoading || isFetching && <GallerySkeletons />}
                 {
                     isLoading ?
                     <GallerySkeletons />
                     :
-                    posts.map((post) => (
+                    newResults.map((post) => (
                         <PostCard
                             key={post.id}
                             type={post.type}
@@ -105,10 +132,17 @@ export const Trending = () => {
                             id={post.id}
                             isAnon={post.is_anonymous}
                             routeChange={() => navigate(`/comment/${post.id}`)}
+                            handleDeletePost={handleDeletePost}
                         />
                     ))
                 }
-                { isFetching && <ColoredLoader /> }
+                { isFetching ?
+                    <div className="w-full flex items-center justify-center py-24">
+                        <ColoredLoader />
+                    </div>
+                    :
+                    null
+                }
             </section>
         </main>
     );

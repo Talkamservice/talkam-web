@@ -23,6 +23,11 @@ import EnableUserIcon from "../icons/enableuser.svg?react";
 import UploadGifIcon from "../icons/gif.svg?react";
 import LockIcon from "../icons/keylock.svg?react";
 import NewNotificationIcon from "../icons/bell-plus.svg?react";
+import GroupIcon from "../icons/groupicon.svg?react";
+import NoteIcon from "../icons/note.svg?react";
+import CalendarPlusIcon from "../icons/calendarplus.svg?react";
+import SingleUserIcon from "../icons/singleuser.svg?react";
+import HandIcon from "../icons/suspend.svg?react";
 
 export {
     TalkamLogo,
@@ -50,4 +55,9 @@ export {
     UploadGifIcon,
     LockIcon,
     NewNotificationIcon,
+    GroupIcon,
+    NoteIcon,
+    CalendarPlusIcon,
+    SingleUserIcon,
+    HandIcon,
 }

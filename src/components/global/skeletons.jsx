@@ -1,12 +1,89 @@
 import React from 'react'
 
+const randomPillWidth = () => Math.floor(Math.random() * (105 - 80 + 1)) + 80;
+
 export const ListSkeleton = () => {
     return(
-        <div role="status" className="w-full flex flex-col gap-1 animate-pulse">
-            <div className="h-2 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
-            <div className="h-2 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
-            <div className="h-2 bg-tgray-100 opacity-10 rounded-full"></div>
+        <div role="status" className="w-full flex flex-col gap-2 animate-pulse">
+            <div className="h-8 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
+            <div className="h-8 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
+            <div className="h-8 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
+            <div className="h-8 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
+            <div className="h-8 bg-tgray-100 opacity-10 rounded-full"></div>
         </div>
+    )
+}
+
+export const BannerSkeletons = () => {
+    return (
+        <div className="w-full min-h-[180px] max-h-[180px] bg-tgray-100 opacity-10 rounded-sm animate-pulse" />
+    )
+}
+
+export const PillSkeletonLoader = ({ num = 20 }) => {
+    return (
+        <div className="flex items-center flex-wrap gap-1">
+            {
+                [...Array(num)].map((_, index) => (
+                    <span style={{ width: `${randomPillWidth()}px` }} key={index} className={`py-3 px-6 border bg-tgray-100 opacity-10 rounded-full h-8`} />
+                ))
+            }
+        </div>
+    )
+}
+
+export const GroupSkeletonLoader = ({ num = 4, button=true }) => {
+    return (
+        <div className='flex flex-col gap-3'>
+            {
+                [...Array(num)].map(( _, index ) => (
+                    <div key={index} className="w-full flex items-center justify-between gap-4 animate-pulse">
+                        <section className="flex items-center gap-2">
+                            <div className='flex items-center justify-center w-16 h-16 rounded-full p-3 bg-tgray-100 opacity-10 animate-pulse'></div>
+                            <div className="flex flex-col items-start gap-2">
+                                <div className='bg-tgray-100 opacity-10 rounded-full h-4 w-[90px]' />
+                                <div className='bg-tgray-100 opacity-10 rounded-full h-3 w-[45px]' />
+                            </div>
+                        </section>
+
+                        {
+                            button ?
+                            <span
+                                children="Join"
+                                className="!rounded-full !py-2 !px-4 font-bold bg-tgray-100 opacity-10"
+                            />
+                            :
+                            null
+                        }
+                    </div>
+                ))
+            }
+        </div>
+    )
+}
+
+export const CategorySkeletonLoader = ({ num = 4}) => {
+    return (
+        <div className='flex flex-col gap-3'>
+            {
+                [...Array(num)].map(( _, index ) => (
+                    <div key={index} className="w-full flex items-center justify-between gap-4 animate-pulse">
+                        <section className="flex items-center gap-3">
+                            <div className='flex items-center justify-center w-8 h-8 rounded-full p-3 bg-tgray-100 opacity-10 animate-pulse'></div>
+                            <div className='bg-tgray-100 opacity-10 rounded-full h-3 w-[90px]' />
+                        </section>
+                    </div>
+                ))
+            }
+        </div>
+    )
+}
+
+export const ButtonSkeletonLoader = () => {
+    return (
+        <span
+            className="!rounded-full !py-6 !px-14 font-bold bg-tgray-100 opacity-10 animate-pulse"
+        />
     )
 }
 

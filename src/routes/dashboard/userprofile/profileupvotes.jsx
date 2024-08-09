@@ -1,27 +1,37 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PostCard } from "../../../components/posts/postcard";
 import { GallerySkeletons } from "../../../components/global/skeletons";
+import { useDeletePostMutation, useGetUserUpvotesQuery } from "../../../services/posts/postsApiSlice";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { handleError } from "../../../utils/handleError";
 import { ColoredLoader } from "../../../components/global/loader";
 import { Storage } from "../../../app/storage";
-import { useGetUserUpvotesQuery } from "../../../services/posts/postsApiSlice";
-import { EmptyState } from "../../../components/global/emptystate";
-import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 export const ProfileUpvotes = () => {
 
     const { userId } = useParams();
-    const navigate = useNavigate();
     const isRestoringScroll = useRef(false);
     const scrollableRef = useRef(null);
+    const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [posts, setPosts] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
-    const { data: userUpvotes, isLoading, isError, error } = useGetUserUpvotesQuery({
+    const { data:userUpvotes, isLoading, isError, error } = useGetUserUpvotesQuery({
         id: userId,
         page: page
+    });
+    const [ deletePost ] = useDeletePostMutation();
+
+    const postIds = new Set();
+
+    // Deduplicate new posts
+    const newResults = (posts || []).filter(post => {
+        if (!postIds.has(post.id)) {
+            postIds.add(post.id);
+            return true;
+        }
+        return false;
     });
 
     const appendNewPageData = () => {
@@ -33,6 +43,22 @@ export const ProfileUpvotes = () => {
             setIsFetching(false);
         }
     };
+
+    const handleDeletePost = async (id) => {
+        const newPage = 1
+        const newPosts = posts.filter((post) => post.id !== id);
+        setPosts(() => newPosts);
+
+        try {
+            const deleteRes = await deletePost(id);
+            toast.success(deleteRes?.data?.message);
+            setPage(() => newPage);
+        } catch(error){
+            const errorMessage = handleError(error);
+            toast.error(errorMessage);
+        }
+        setPage(() => newPage);
+    }
 
     const handleScroll = useCallback((event) => {
         if (isRestoringScroll.current) return;
@@ -59,7 +85,7 @@ export const ProfileUpvotes = () => {
 
     useEffect(() => {
         appendNewPageData();
-    }, [userUpvotes]);
+    }, [userUpvotes, userId]);
 
     useEffect(() => {
         restoreScrollPosition();
@@ -83,30 +109,18 @@ export const ProfileUpvotes = () => {
                 ref={scrollableRef}
                 className="w-full py-3 flex flex-col gap-3 overflow-y-auto no-scrollbar"
             >
-                {isLoading || isFetching && <GallerySkeletons />}
                 {
                     isLoading ?
                     <GallerySkeletons />
                     :
-                    !posts.length ?
-                    <section className="w-full py-4">
-                        <EmptyState
-                            icon={EmptyListIcon}
-                            height="h-[50px]"
-                            width="h-[50px]"
-                            text="No Upvotes yet"
-                            subtext="This user has no upvotes or reactions"
-                        />
-                    </section>
-                    :
-                    posts.map((post) => (
+                    newResults.map((post) => (
                         <PostCard
                             key={post.id}
                             type={post.type}
+                            user={post.user}
                             polls={post.polls}
                             avatar={post.user.avatar}
                             category={post.category?.name}
-                            user={post.user}
                             author={post.user.username ?? post.user.name}
                             title={post.title}
                             comment={post.body}
@@ -119,10 +133,17 @@ export const ProfileUpvotes = () => {
                             id={post.id}
                             isAnon={post.is_anonymous}
                             routeChange={() => navigate(`/comment/${post.id}`)}
+                            handleDeletePost={handleDeletePost}
                         />
                     ))
                 }
-                { isFetching && <ColoredLoader /> }
+                { isFetching ?
+                    <div className="w-full flex items-center justify-center py-24">
+                        <ColoredLoader />
+                    </div>
+                    :
+                    null
+                }
             </section>
         </main>
     );

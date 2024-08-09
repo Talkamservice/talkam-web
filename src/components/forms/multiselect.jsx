@@ -65,8 +65,8 @@ export const MultiSelect = ({ options, selectedItems, setSelectedItems, rounded 
         <div className='w-full relative '>
             <div className={`w-full flex items-center justify-between gap-2 border border-[#E2E4E9] ${ rounded ? rounded : "rounded-xl" } cursor-pointer p-1`}>
                 {   !selectedItems?.length ? 
-                    <span onClick={() => setShowDropDown(prev => !prev)} className='text-[#76787e] text-sm p-2 whitespace-nowrap leading-none'>
-                        Add at least one tag
+                    <span onClick={() => setShowDropDown(prev => !prev)} className='text-[#76787e] text-[12px] p-2 whitespace-nowrap leading-none'>
+                        Add a tag (Tap "Enter" to add your tag.)
                     </span>
                     : 
                     <div className='flex-2 flex items-center gap-2 flex-wrap overflow-auto'>
