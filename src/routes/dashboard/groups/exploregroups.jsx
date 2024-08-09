@@ -22,7 +22,11 @@ export const ExploreGroups = () => {
                                 <span
                                     key={index}
                                     onClick={() => groupController.setCategoryId(item.id)}
-                                    className="text-sm py-1 px-2 border border-tgray-50 rounded-full text whitespace-nowrap cursor-pointer">
+                                    className={`
+                                        text-sm py-1 px-2 border border-tgray-50 rounded-full text whitespace-nowrap cursor-pointer
+                                        ${groupController.categoryId === item?.id ? "bg-tprimary-50 text-white" : "bg-white text-tblack-100"}
+                                    `}
+                                >
                                     {item.name}
                                 </span>
                             ))

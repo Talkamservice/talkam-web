@@ -22,7 +22,7 @@ export const groupApiSlice = apiSlice.injectEndpoints({
                 method: "post",
                 body: { ...group }
             }),
-            invalidatesTags: ['groups']
+            invalidatesTags: ['groups', 'usergroups']
         }),
         getGroupDetails: builder.query({
             query: id => ({

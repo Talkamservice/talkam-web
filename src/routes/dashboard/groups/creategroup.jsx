@@ -54,7 +54,7 @@ export const CreateGroup = () => {
                             className="relative w-full overflow-hidden cursor-pointer min-h-[150px] max-h-[160px] border-tgray-200 rounded-sm flex items-center justify-center">
                             <img
                                 className="border-none h-full w-full"
-                                src={ controller.groupDetails.banner ?? null}
+                                src={controller.groupDetails.banner ?? null}
                                 style={{
                                     backgroundRepeat: 'no-repeat',
                                     backgroundSize: "cover",
@@ -63,42 +63,42 @@ export const CreateGroup = () => {
                             />
                             {
                                 controller.imageLoading ?
-                                <div className="w-full h-full bg-gradient-to-b from-[#a99daa] to-[#563e58] absolute flex items-center justify-center m-auto pointer-events-none">
-                                    <Loader />
-                                </div>
-                                :
-                                !controller.groupDetails.banner ?
-                                <label className="w-full h-full bg-gradient-to-b from-[#7D3881] to-[#9A4FA1] absolute flex items-end justify-end p-4">
-                                    <Input
-                                        className='hidden'
-                                        type='file'
-                                        name="img"
-                                        id="img"
-                                        accept='image/*'
-                                        onChange={controller.handleFileUpload}
-                                    />
-                                    <div className="flex items-center gap-4 bg-twhite-100 py-2.5 px-3.5 rounded-full cursor-pointer">
-                                        <Icon.Plus size={18} />
-                                        <span className="text-sm">Add banner</span>
+                                    <div className="w-full h-full bg-gradient-to-b from-[#a99daa] to-[#563e58] absolute flex items-center justify-center m-auto pointer-events-none">
+                                        <Loader />
                                     </div>
-                                </label>
-                                : null
+                                    :
+                                    !controller.groupDetails.banner ?
+                                        <label className="w-full h-full bg-gradient-to-b from-[#7D3881] to-[#9A4FA1] absolute flex items-end justify-end p-4">
+                                            <Input
+                                                className='hidden'
+                                                type='file'
+                                                name="img"
+                                                id="img"
+                                                accept='image/*'
+                                                onChange={controller.handleFileUpload}
+                                            />
+                                            <div className="flex items-center gap-4 bg-twhite-100 py-2.5 px-3.5 rounded-full cursor-pointer">
+                                                <Icon.Plus size={18} />
+                                                <span className="text-sm">Add banner</span>
+                                            </div>
+                                        </label>
+                                        : null
                             }
                         </div>
-                        { controller.groupDetails.banner ? 
+                        {controller.groupDetails.banner ?
                             <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
                                 <span
                                     className="absolute top-2 right-2 text-white bg-white p-2 rounded-full"
-                                    onClick={() => controller.setGroupDetails({...controller.groupDetails, banner: null })}
+                                    onClick={() => controller.setGroupDetails({ ...controller.groupDetails, banner: null })}
                                 >
-                                    <TrashIcon className=""  style={{paddingLeft: '2px', color:"#FF0000"}} />
+                                    <TrashIcon className="" style={{ paddingLeft: '2px', color: "#FF0000" }} />
                                 </span>
                             </span> : null
                         }
                     </section>
 
                     <form id="group" onSubmit={controller.handleCreateGroup} className="flex flex-col gap-3 w-full md:w-3/5">
-                        <Input 
+                        <Input
                             label="Name"
                             placeholder="Enter your group name"
                             rounded="rounded-lg"
@@ -118,9 +118,9 @@ export const CreateGroup = () => {
                             label="Group Purpose"
                             type="text"
                             rounded="rounded-lg"
-                            placeholder = 'A short description of your group'
+                            placeholder='A short description of your group'
                             value={controller.groupDetails.purpose}
-                            limit = {purposeLimit}
+                            limit={purposeLimit}
                             limitPosition="top"
                             rows={3}
                             onChange={(event) => controller.setFormattedDetailsContent(event.target.value, 'purpose', purposeLimit)}
@@ -130,9 +130,9 @@ export const CreateGroup = () => {
                             label="Group Information"
                             type="text"
                             rounded="rounded-lg"
-                            placeholder = 'Any and all information for this group'
+                            placeholder='Any and all information for this group'
                             value={controller.groupDetails?.information}
-                            limit = {InformationLimit}
+                            limit={InformationLimit}
                             limitPosition="top"
                             rows={3}
                             onChange={(event) => controller.setFormattedDetailsContent(event.target.value, 'information', InformationLimit)}
@@ -167,7 +167,8 @@ export const CreateGroup = () => {
                     />
                 </header>
 
-                <main className="w-full flex flex-col gap-7">
+                <main className="w-full flex flex-col gap-5">
+                    <span className="text-xs font-medium"><span className="text-error-100 pr-1">*Hint:</span>Minimum 2 rules</span>
                     <article className="text-sm font-normal">
                         You group can have up to 8 different rules.
                         Make your rules clear for healthy participation of all members
@@ -177,9 +178,9 @@ export const CreateGroup = () => {
                         label="Rules Summary"
                         type="text"
                         rounded="rounded-lg"
-                        placeholder = 'About the rules for this group'
+                        placeholder='About the rules for this group'
                         value={controller.groupDetails?.rulesSummary}
-                        limit = {purposeLimit}
+                        limit={purposeLimit}
                         limitPosition="top"
                         rows={3}
                         onChange={(event) => controller.setFormattedDetailsContent(event.target.value, 'rulesSummary', purposeLimit)}
@@ -189,28 +190,28 @@ export const CreateGroup = () => {
                     <section className="w-full flex flex-col gap-4">
                         {
                             !controller.rules.length ?
-                            <EmptyState
-                                icon={EmptyListIcon}
-                                height="h-[50px]"
-                                width="h-[50px]"
-                                text="No rules added yet"
-                                subtext="When rules are added they would appear here"
-                            />
-                            :
-                            controller.rules?.map((rule, index) => (
-                                <GroupRuleItem
-                                    id={index}
-                                    key={index}
-                                    index={index + 1}
-                                    rule={rule.title}
-                                    description={rule.description}
-                                    handleRemoveRule={controller.handleRemoveRule}
+                                <EmptyState
+                                    icon={EmptyListIcon}
+                                    height="h-[50px]"
+                                    width="h-[50px]"
+                                    text="No rules added yet"
+                                    subtext="When rules are added they would appear here"
                                 />
-                            ))
+                                :
+                                controller.rules?.map((rule, index) => (
+                                    <GroupRuleItem
+                                        id={index}
+                                        key={index}
+                                        index={index + 1}
+                                        rule={rule.title}
+                                        description={rule.description}
+                                        handleRemoveRule={controller.handleRemoveRule}
+                                    />
+                                ))
                         }
                     </section>
                 </main>
-            </section> 
+            </section>
 
             <Modal
                 show={controller.showModal}
