@@ -4,6 +4,7 @@ import { RouteTabs } from "../../../components/global/routetabs"
 import { GroupSkeletonLoader } from "../../../components/global/skeletons";
 import { useGroupController } from "../../../controllers/groupController";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
+import { useNavigate } from "react-router-dom";
 
 const tabs = [
     {
@@ -20,6 +21,7 @@ const tabs = [
 
 export const Groups = () => {
 
+    const navigate = useNavigate();
     const groupController = useGroupController('popular');
 
     return (
@@ -51,6 +53,7 @@ export const Groups = () => {
                                     :
                                     groupController.following?.data?.data.map((group) => (
                                         <GroupCard
+                                            onClick={() => navigate(`/group/${group.id}`)}
                                             key={group.id}
                                             img={group.image}
                                             members={group.total_members}

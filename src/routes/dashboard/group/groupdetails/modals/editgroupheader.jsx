@@ -14,8 +14,8 @@ import * as Icon from "react-feather"
 
 export const EditGroupHeader = ({ groupId, onClose }) => {
 
-    const [ imageLoading, setImageLoading ] = useState();
-    const [ details, setDetails ] = useState({
+    const [imageLoading, setImageLoading] = useState();
+    const [details, setDetails] = useState({
         banner: null,
         title: "",
         description: "",
@@ -23,16 +23,16 @@ export const EditGroupHeader = ({ groupId, onClose }) => {
 
     const setFormattedDetailsContent = useCallback(
         (text, name, limit) => {
-        setDetails({...details, [name]: text?.slice(0, limit)});
+            setDetails({ ...details, [name]: text?.slice(0, limit) });
         },
         [details, setDetails]
     );
-    const [ updateGroupDetails, { isLoading } ] = useUpdateGroupDetailsMutation();
+    const [updateGroupDetails, { isLoading }] = useUpdateGroupDetailsMutation();
 
     const handleFileUpload = (event) => {
         event.preventDefault()
         const { files } = event.target;
-        if(!files[0]) return;
+        if (!files[0]) return;
         savePostImage(files[0]);
     };
 
@@ -52,8 +52,9 @@ export const EditGroupHeader = ({ groupId, onClose }) => {
         try {
             const body = {
                 group_id: groupId,
-                title: details?.title,
-                description: details?.description
+                name: details?.title,
+                about: details?.description,
+                image: details?.banner
             }
             const res = await updateGroupDetails({ id: groupId, body }).unwrap()
             toast.success(res?.message);
@@ -67,7 +68,7 @@ export const EditGroupHeader = ({ groupId, onClose }) => {
     return (
         <main className="w-full flex flex-col gap-4 p-6 md:p-8">
             <header className="w-full flex items-start border-b border-tgray-50 ">
-                <h4 className="text-lg font-boldNunito">Edit Header Details</h4>
+                <h4 className="text-lg font-boldNunito">Edit Group Details</h4>
             </header>
 
             <section className="relative">
@@ -75,7 +76,7 @@ export const EditGroupHeader = ({ groupId, onClose }) => {
                     className="relative w-full overflow-hidden cursor-pointer min-h-[150px] max-h-[160px] border-tgray-200 rounded-sm flex items-center justify-center">
                     <img
                         className="border-none h-full w-full"
-                        src={ details?.banner ?? null}
+                        src={details?.banner ?? null}
                         style={{
                             backgroundRepeat: 'no-repeat',
                             backgroundSize: "cover",
@@ -84,41 +85,41 @@ export const EditGroupHeader = ({ groupId, onClose }) => {
                     />
                     {
                         imageLoading ?
-                        <div className="w-full h-full bg-gradient-to-b from-[#a99daa] to-[#563e58] absolute flex items-center justify-center m-auto pointer-events-none">
-                            <Loader />
-                        </div>
-                        :
-                        !details?.banner ?
-                        <label className="w-full h-full bg-gradient-to-b from-[#7D3881] to-[#9A4FA1] absolute flex items-end justify-end p-4">
-                            <Input
-                                className='hidden'
-                                type='file'
-                                name="img"
-                                id="img"
-                                accept='image/*'
-                                onChange={handleFileUpload}
-                            />
-                            <div className="flex items-center gap-4 bg-twhite-100 py-2.5 px-3.5 rounded-full cursor-pointer">
-                                <Icon.Plus size={18} />
-                                <span className="text-sm">Add banner</span>
+                            <div className="w-full h-full bg-gradient-to-b from-[#a99daa] to-[#563e58] absolute flex items-center justify-center m-auto pointer-events-none">
+                                <Loader />
                             </div>
-                        </label>
-                        : null
+                            :
+                            !details?.banner ?
+                                <label className="w-full h-full bg-gradient-to-b from-[#7D3881] to-[#9A4FA1] absolute flex items-end justify-end p-4">
+                                    <Input
+                                        className='hidden'
+                                        type='file'
+                                        name="img"
+                                        id="img"
+                                        accept='image/*'
+                                        onChange={handleFileUpload}
+                                    />
+                                    <div className="flex items-center gap-4 bg-twhite-100 py-2.5 px-3.5 rounded-full cursor-pointer">
+                                        <Icon.Plus size={18} />
+                                        <span className="text-sm">Add banner</span>
+                                    </div>
+                                </label>
+                                : null
                     }
                 </div>
-                { details?.banner ? 
+                {details?.banner ?
                     <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
                         <span
                             className="absolute top-2 right-2 text-white bg-white p-2 rounded-full"
                             onClick={() => setDetails({ ...details, banner: null })}
                         >
-                            <TrashIcon className=""  style={{paddingLeft: '2px', color:"#FF0000"}} />
+                            <TrashIcon className="" style={{ paddingLeft: '2px', color: "#FF0000" }} />
                         </span>
                     </span> : null
                 }
             </section>
 
-            <form id="update" onSubmit={handleUpdateGroupDetails}  className="flex flex-col gap-5">
+            <form id="update" onSubmit={handleUpdateGroupDetails} className="flex flex-col gap-5">
                 <TextArea
                     label="Name"
                     placeholder="Enter your new group name"
@@ -135,11 +136,11 @@ export const EditGroupHeader = ({ groupId, onClose }) => {
                     label="Description"
                     type="text"
                     rounded="rounded-lg"
-                    placeholder = 'A short description of your group'
+                    placeholder='A short description of your group'
                     value={details.description}
-                    onChange={(event) => setFormattedDetailsContent(event.target.value, 'description', 100)}
+                    onChange={(event) => setFormattedDetailsContent(event.target.value, 'description', 500)}
                     rows={4}
-                    limit={100}
+                    limit={500}
                     limitPosition="bottom"
                     required
                 />

@@ -13,7 +13,7 @@ export const useGroupController = (groupTab) => {
     const [search, setSearch] = useState(null);
     const [categoryId, setCategoryId] = useState("")
     const [imageLoading, setImageLoading] = useState(false);
-    const [showModal, setShowModal] = useState(false)
+    const [showModal, setShowModal] = useState(false);
     const [groupDetails, setGroupDetails] = useState({
         name: "",
         banner: null,
@@ -127,7 +127,7 @@ export const useGroupController = (groupTab) => {
 
     const handleSaveRule = (event) => {
         event.preventDefault();
-        setRules(() => [ruleBody, ...rules])
+        setRules(() => [...rules, ruleBody])
         setRuleBody({
             id: randomId(),
             title: "",
@@ -162,6 +162,7 @@ export const useGroupController = (groupTab) => {
         groupDetails,
         setGroupDetails,
         rules,
+        categoryId,
         setRules,
         setFormattedDetailsContent,
         setFormattedRuleContent,

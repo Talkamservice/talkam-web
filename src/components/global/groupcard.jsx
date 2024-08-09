@@ -1,18 +1,18 @@
 import FallBack from '../../assets/icons/groupicon.svg'
 
-export const GroupCard = ({ group, members, img }) => {
+export const GroupCard = ({ group, members, img, onClick }) => {
 
     let membersPluralization;
 
     if (!members)
-       membersPluralization = 'members'
-    if(members > 0){
+        membersPluralization = 'members'
+    if (members > 0) {
         const noun = members > 1 ? 'members' : 'member';
         membersPluralization = members + " " + noun
     }
 
     return (
-        <section className="flex items-center gap-2">
+        <section onClick={onClick} className="cursor-pointer flex items-center gap-2">
             <img
                 style={{
                     backgroundSize: "cover",

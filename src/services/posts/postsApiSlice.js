@@ -4,8 +4,8 @@ import { apiSlice } from "../../app/api/apiSlice"
 export const postsApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getAllPosts: builder.query({
-            query: ({tab, categoryId="", groupId="", page}) => ({
-                url: `/user/posts/?tab=${tab}&category_id=${categoryId}&group_id=${groupId}&page=${page}`,
+            query: ({ tab, categoryId = "", groupId = "", target, page }) => ({
+                url: `/user/posts/?tab=${tab}&category_id=${categoryId}&group_id=${groupId}&target=${target}&page=${page}`,
                 method: "get",
             }),
             providesTags: ["posts"]
@@ -43,7 +43,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
             query: action => ({
                 url: `/user/posts/reaction`,
                 method: 'POST',
-                body: {...action }
+                body: { ...action }
             }),
             invalidatesTags: ["postDetail", "posts", "upvotes"],
         }),
@@ -51,7 +51,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
             query: action => ({
                 url: `/user/post-comments/reaction`,
                 method: 'POST',
-                body: {...action }
+                body: { ...action }
             }),
             invalidatesTags: ["postDetail", "comments"],
         }),
@@ -59,7 +59,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
             query: body => ({
                 url: `/user/post-comments`,
                 method: 'POST',
-                body: {...body}
+                body: { ...body }
             }),
             invalidatesTags: ["comments", "postDetail"],
         }),
@@ -101,7 +101,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
             providesTags: ["usercomments"]
         }),
         getUserUpvotes: builder.query({
-            query: ({page, id}) => ({
+            query: ({ page, id }) => ({
                 url: `/user/posts/actions/get-upvotes?user_id=${id}&page=${page}`,
                 method: "get",
             }),
@@ -116,9 +116,9 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 const { userId } = queryArgs
 
                 return defaultSerializeQueryArgs({
-                  endpointName,
-                  queryArgs: { userId },
-                  endpointDefinition
+                    endpointName,
+                    queryArgs: { userId },
+                    endpointDefinition
                 })
             },
             forceRefetch({ currentArg, previousArg }) {
@@ -128,7 +128,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 const prevPage = data && data.page;
                 const prevUserId = data && data.userId;
 
-                if((page === prevPage) && (userId === prevUserId)){
+                if ((page === prevPage) && (userId === prevUserId)) {
                     return false;
                 } else {
                     return true;

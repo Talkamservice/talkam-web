@@ -7,10 +7,12 @@ import { useDeletePostMutation, useGetAllPostsQuery } from "../../../services/po
 import { Storage } from "../../../app/storage";
 import { ColoredLoader } from "../../../components/global/loader";
 import { toast } from "sonner";
+import { EmptyState } from "../../../components/global/emptystate";
+import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 export const RecentGroups = () => {
 
-    const groupController = useGroupController();
+    const groupController = useGroupController('popular');
     const isRestoringScroll = useRef(false);
     const scrollableRef = useRef(null);
     const navigate = useNavigate();
@@ -19,9 +21,10 @@ export const RecentGroups = () => {
     const [posts, setPosts] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
     const { data: featured, isLoading, isFetching: postFetching, isError, error, refetch } = useGetAllPostsQuery({
-        tab: '',
+        tab: 'latest',
         page: page,
-        categoryId: categoryId
+        categoryId: categoryId,
+        target: "group"
     });
     const [deletePost] = useDeletePostMutation();
 
@@ -113,11 +116,15 @@ export const RecentGroups = () => {
                         groupController.categoriesLoading ?
                             <PillSkeletonLoader num={12} />
                             :
-                            groupController.categories?.data.slice(0, 12).map((item, index) => (
+                            groupController.categories?.data.slice(0, 15).map((item, index) => (
                                 <span
                                     key={index}
                                     onClick={() => { setCategoryId(item.id); refetch() }}
-                                    className="text-sm py-1 px-2 border border-tgray-50 rounded-full text whitespace-nowrap cursor-pointer">
+                                    className={`
+                                        text-sm py-1 px-2 border border-tgray-50 rounded-full whitespace-nowrap cursor-pointer
+                                        ${categoryId === item?.id ? "bg-tprimary-50 text-white" : "bg-white text-tblack-100"}
+                                    `}
+                                >
                                     {item.name}
                                 </span>
                             ))
@@ -134,29 +141,40 @@ export const RecentGroups = () => {
                     isLoading || postFetching ?
                         <GallerySkeletons />
                         :
-                        featured?.data?.data?.map((post) => (
-                            <PostCard
-                                key={post.id}
-                                type={post.type}
-                                user={post.user}
-                                polls={post.polls}
-                                avatar={post.user.avatar}
-                                category={post.category?.name}
-                                author={post.user.username ?? post.user.name}
-                                title={post.title}
-                                comment={post.body}
-                                image={post.attachments?.[0]?.url}
-                                commentcount={post.comments_count}
-                                likes={post.likes_count}
-                                reaction={post.reaction}
-                                tags={post.tags}
-                                time={post.created_at}
-                                id={post.id}
-                                isAnon={post.is_anonymous}
-                                routeChange={() => navigate(`/comment/${post.id}`)}
-                                handleDeletePost={handleDeletePost}
-                            />
-                        ))
+                        !featured?.data?.data.length ?
+                            <section className="w-full py-1">
+                                <EmptyState
+                                    icon={EmptyListIcon}
+                                    height="h-[30px]"
+                                    width="h-[30px]"
+                                    text="No Posts within that category"
+                                    subtext="When an posts are added they would appear here"
+                                />
+                            </section>
+                            :
+                            featured?.data?.data?.map((post) => (
+                                <PostCard
+                                    key={post.id}
+                                    type={post.type}
+                                    user={post.user}
+                                    polls={post.polls}
+                                    avatar={post.user.avatar}
+                                    category={post.category?.name}
+                                    author={post.user.username ?? post.user.name}
+                                    title={post.title}
+                                    comment={post.body}
+                                    image={post.attachments?.[0]?.url}
+                                    commentcount={post.comments_count}
+                                    likes={post.likes_count}
+                                    reaction={post.reaction}
+                                    tags={post.tags}
+                                    time={post.created_at}
+                                    id={post.id}
+                                    isAnon={post.is_anonymous}
+                                    routeChange={() => navigate(`/comment/${post.id}`)}
+                                    handleDeletePost={handleDeletePost}
+                                />
+                            ))
                 }
                 {isFetching ?
                     <div className="w-full flex items-center justify-center py-24">
