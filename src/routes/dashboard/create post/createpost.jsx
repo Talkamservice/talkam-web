@@ -113,7 +113,7 @@ export const CreatePost = () => {
     const transformedGroups = following && following?.data?.data?.map((group) => {
         return {
             id: group.id,
-            name: group.category?.id,
+            name: group.category?.id, //Hack to get the groups category when it is selected, this is anti-programming but it works lol
             value: group.name
         }
     });
