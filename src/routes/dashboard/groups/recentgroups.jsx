@@ -149,7 +149,7 @@ export const RecentGroups = () => {
                                     height="h-[30px]"
                                     width="h-[30px]"
                                     text="No Posts within that category"
-                                    subtext="When an posts are added they would appear here"
+                                    subtext="When posts are added they would appear here"
                                 />
                             </section>
                             :

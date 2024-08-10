@@ -68,7 +68,7 @@ export const PostCard = ({
                     </span>
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                            <span className={`${side ? "text-xs" : "text-sm"} font-medium text-tblack-100 whitespace-nowrap`}>{parentCategory ? parentCategory?.name : category?.name}</span>
+                            <span className={`${side ? "text-xs" : "text-sm"} font-medium text-tblack-100 whitespace-nowrap`}>{parentCategory?.name ?? category?.name}</span>
                             <span className={`${side ? "text-xs" : "text-sm"} font-medium text-tprimary-50 whitespace-nowrap`}>{moment(time).fromNow(true)}</span>
                         </div>
                         <span className="text-xs font-medium text-[#858585]">
