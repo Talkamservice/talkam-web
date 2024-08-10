@@ -16,10 +16,10 @@ import { NewNotificationIcon, TrashIcon } from '../../assets/icons/generated'
 import { BlockPromptModal } from "../global/blockpromptmodal"
 import { PostReportModal } from "./postreportmodal"
 import { usePostController } from "../../controllers/postsController"
+import { Link } from "react-router-dom"
 import TalkamLogo from "../../assets/icons/logo.svg"
 import moment from "moment"
 import * as Icon from 'react-feather'
-import { Link } from "react-router-dom"
 
 export const PostCard = ({
     id,
