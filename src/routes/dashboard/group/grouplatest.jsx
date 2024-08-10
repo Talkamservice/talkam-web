@@ -24,7 +24,7 @@ export const GroupLatest = () => {
         page: page,
         groupId: groupId
     });
-    const [ deletePost ] = useDeletePostMutation();
+    const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();
 
@@ -56,7 +56,7 @@ export const GroupLatest = () => {
             const deleteRes = await deletePost(id);
             toast.success(deleteRes?.data?.message);
             setPage(() => newPage);
-        } catch(error){
+        } catch (error) {
             const errorMessage = handleError(error);
             toast.error(errorMessage);
         }
@@ -104,7 +104,7 @@ export const GroupLatest = () => {
             </div>
         );
     }
-    
+
     return (
         <main className="flex h-full">
             <section
@@ -114,44 +114,44 @@ export const GroupLatest = () => {
             >
                 {
                     isLoading ?
-                    <GallerySkeletons />
-                    :
-                    !newResults.length ?
-                    <section className="w-full py-1">
-                        <EmptyState
-                            icon={EmptyListIcon}
-                            height="h-[30px]"
-                            width="h-[30px]"
-                            text="No Latest Posts within this group"
-                            subtext="Latest posts within the group would appear here"
-                        />
-                    </section>
-                    :
-                    newResults.map((post) => (
-                        <PostCard
-                            key={post.id}
-                            type={post.type}
-                            user={post.user}
-                            polls={post.polls}
-                            avatar={post.user.avatar}
-                            category={post.category?.name}
-                            author={post.user.username ?? post.user.name}
-                            title={post.title}
-                            comment={post.body}
-                            image={post.attachments?.[0]?.url}
-                            commentcount={post.comments_count}
-                            likes={post.likes_count}
-                            reaction={post.reaction}
-                            tags={post.tags}
-                            time={post.created_at}
-                            id={post.id}
-                            isAnon={post.is_anonymous}
-                            routeChange={() => navigate(`/comment/${post.id}`)}
-                            handleDeletePost={handleDeletePost}
-                        />
-                    ))
+                        <GallerySkeletons />
+                        :
+                        !newResults.length ?
+                            <section className="w-full py-1">
+                                <EmptyState
+                                    icon={EmptyListIcon}
+                                    height="h-[30px]"
+                                    width="h-[30px]"
+                                    text="No Latest Posts within this group"
+                                    subtext="Latest posts within the group would appear here"
+                                />
+                            </section>
+                            :
+                            newResults.map((post) => (
+                                <PostCard
+                                    key={post.id}
+                                    type={post.type}
+                                    user={post.user}
+                                    polls={post.polls}
+                                    avatar={post.user.avatar}
+                                    category={post.category}
+                                    author={post.user.username ?? post.user.name}
+                                    title={post.title}
+                                    comment={post.body}
+                                    image={post.attachments?.[0]?.url}
+                                    commentcount={post.comments_count}
+                                    likes={post.likes_count}
+                                    reaction={post.reaction}
+                                    tags={post.tags}
+                                    time={post.created_at}
+                                    id={post.id}
+                                    isAnon={post.is_anonymous}
+                                    routeChange={() => navigate(`/comment/${post.id}`)}
+                                    handleDeletePost={handleDeletePost}
+                                />
+                            ))
                 }
-                { isFetching ?
+                {isFetching ?
                     <div className="w-full flex items-center justify-center py-24">
                         <ColoredLoader />
                     </div>
