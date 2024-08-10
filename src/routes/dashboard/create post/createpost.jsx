@@ -113,7 +113,7 @@ export const CreatePost = () => {
     const transformedGroups = following && following?.data?.data?.map((group) => {
         return {
             id: group.id,
-            name: group.category?.id, //Hack to get the groups category when it is selected, this is anti-programming but it works lol
+            name: group.category?.id, //Hack to get the groups category when it is selected, anti-programming
             value: group.name
         }
     });
@@ -282,10 +282,10 @@ export const CreatePost = () => {
     }
 
     return (
-        <div className="w-full flex divide-x divide-tgray-light relative">
-            <section className=" w-full h-[93dvh] min-h-[93dvh] md:w-4/6 overflow-auto no-scrollbar px-6 py-0 sm:py-6">
+        <div className="w-full h-full flex divide-x divide-tgray-light relative">
+            <section className=" w-full md:w-4/6 overflow-auto no-scrollbar">
                 {/*left side card here */}
-                <main className={`flex flex-col  gap-3 py-3 px-0 sm:px-6 sm:border border-tgray-xlight rounded-tr-xl rounded-tl-xl ${!isChecked && "rounded-xl"} pb-6 transition-all duration-300 ease-out`}>
+                <main className={`flex flex-col gap-3 sm:mx-6 sm:mt-6 p-6 sm:border border-tgray-xlight rounded-tr-xl rounded-tl-xl ${!isChecked && "rounded-xl"} transition-all duration-300 ease-out`}>
                     <header className="w-full flex flex-col items-start md:flex-row gap-4 md:items-center justify-between">
                         <h2 className="font-bold text-2xl">Create post</h2>
                         <div className="w-3/7">
@@ -302,7 +302,7 @@ export const CreatePost = () => {
                                 leftIcon={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
                             >
                                 {
-                                    (post?.group?.value || post?.category?.value) ?? "Select a Subcategory or Group"
+                                    (post?.group?.value || post?.category?.value) ?? "Select subcategory/group"
                                 }
                             </Button>
                         </div>
@@ -365,14 +365,14 @@ export const CreatePost = () => {
                         animate="animate"
                         exit="exit"
                         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                        className="bg-[#FDD78D] text-xs font-semibold rounded-bl-xl rounded-br-xl p-2 flex items-center justify-center text-center">
+                        className="bg-[#FDD78D] text-xs font-semibold sm:rounded-bl-xl sm:rounded-br-xl p-2 flex items-center justify-center text-center sm:mx-6">
                         You&apos;re posting anonymously. Your profile won&apos;t be shown.
                     </motion.p>
                 }
             </section>
 
             {/* Right side */}
-            <section className="w-2/6 px-6 hidden md:block py-4 space-y-8 h-[93dvh] min-h-[93dvh] overflow-y-auto no-scrollbar">
+            <section className="w-2/6 p-6 hidden md:block py-4 space-y-8 overflow-y-auto no-scrollbar">
                 <section className="flex flex-col gap-8">
                     <header className="flex flex-col gap-3">
                         <h2 className="text-base font-boldNunito leading-none border-b border-tgray-50 py-2">TalkAM Rules</h2>

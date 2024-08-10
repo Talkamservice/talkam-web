@@ -35,85 +35,90 @@ export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCa
     }
 
     return (
-        <div className="flex flex-col items-center h-full gap-8 p-6">
-            <header className="py-2">
+        <div className="flex flex-col items-center h-full gap-12 py-6">
+            <header className="border-b border-tgray-50">
                 <p className="text-lg font-bold">Select a Subcategory/Group</p>
             </header>
-            <section className="px-6 w-full flex flex-col items-start md:flex-row gap-8">
-                <TextRadioButton
-                    label="Subcategory"
-                    name="categories"
-                    onChange={toggleDropdownView}
-                    value="subcategory"
-                />
-                <TextRadioButton
-                    label="Group"
-                    name="categories"
-                    onChange={toggleDropdownView}
-                    value="group"
-                />
-            </section>
-            {
-                showOptions ?
-                    <motion.section
-                        key="chatbox"
-                        variants={PostCardVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                        className="w-full flex flex-col gap-6 px-6">
-                        {
-                            showOptions === "subcategory" ?
-                                <motion.section
-                                    key="chatbox"
-                                    variants={downVariants}
-                                    initial="initial"
-                                    animate="animate"
-                                    exit="exit"
-                                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                                >
-                                    <DropDownSelect
-                                        label="Select a subcategory"
-                                        value={post.category?.value}
-                                        node={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
-                                        defaultValue={post.category?.value ?? "Select a subcategory"}
-                                        options={transformedCategories}
-                                        onChange={onChangeCategory}
-                                        required
-                                    />
-                                </motion.section>
-                                :
-                                null
-                        }
 
-                        {
-                            showOptions === "group" ?
-                                <motion.section
-                                    key="chatbox"
-                                    variants={downVariants}
-                                    initial="initial"
-                                    animate="animate"
-                                    exit="exit"
-                                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                                    className=""
-                                >
-                                    <DropDownSelect
-                                        label="Select a group"
-                                        value={post.group?.value}
-                                        node={<span className="p-2.5 rounded-full bg-[#bc1f1f]" />}
-                                        defaultValue={post.group?.value ?? "Select a group"}
-                                        options={transformedGroups}
-                                        onChange={onChangeGroup}
-                                    />
-                                </motion.section>
-                                :
-                                null
-                        }
-                    </motion.section>
-                    :
-                    null
-            }
+            <main className="w-full flex flex-col items-start gap-5">
+                <section className="px-6 w-full flex flex-col items-start justify-between md:flex-row gap-5 sm:w-1/2">
+                    <TextRadioButton
+                        label="Subcategory"
+                        name="categories"
+                        onChange={toggleDropdownView}
+                        value="subcategory"
+                    />
+                    <TextRadioButton
+                        label="Group"
+                        name="categories"
+                        onChange={toggleDropdownView}
+                        value="group"
+                    />
+                </section>
+
+                {
+                    showOptions ?
+                        <motion.section
+                            key="chatbox"
+                            variants={PostCardVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                            className="w-full flex flex-col gap-6 px-6">
+                            {
+                                showOptions === "subcategory" ?
+                                    <motion.section
+                                        key="chatbox"
+                                        variants={downVariants}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                    >
+                                        <DropDownSelect
+                                            label="Select a subcategory"
+                                            value={post.category?.value}
+                                            node={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
+                                            defaultValue={post.category?.value ?? "Select a subcategory"}
+                                            options={transformedCategories}
+                                            onChange={onChangeCategory}
+                                            required
+                                        />
+                                    </motion.section>
+                                    :
+                                    null
+                            }
+
+                            {
+                                showOptions === "group" ?
+                                    <motion.section
+                                        key="chatbox"
+                                        variants={downVariants}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                        className=""
+                                    >
+                                        <DropDownSelect
+                                            label="Select a group"
+                                            value={post.group?.value}
+                                            node={<span className="p-2.5 rounded-full bg-[#bc1f1f]" />}
+                                            defaultValue={post.group?.value ?? "Select a group"}
+                                            options={transformedGroups}
+                                            onChange={onChangeGroup}
+                                        />
+                                    </motion.section>
+                                    :
+                                    null
+                            }
+                        </motion.section>
+                        :
+                        null
+                }
+            </main>
+
 
             {/* Footer */}
             <div className="w-full flex items-center gap-4 px-6">

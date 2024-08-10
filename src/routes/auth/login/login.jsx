@@ -25,13 +25,13 @@ export const Login = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [showPassword, setShowPassword] = useState(false);
-    
+
     const {
         hasError: emailHasError, inputBlurHandler: emailBlurHandler,
         value: emailValue, valueChangeHandler: emailChangeHandler,
         reset: resetEmail, isValid: emailIsValid,
-      } = useForm(isNotEmpty);
-    
+    } = useForm(isNotEmpty);
+
     const {
         hasError: passwordHasError, inputBlurHandler: passwordBlurHandler,
         value: passwordValue, valueChangeHandler: passwordChangeHandler,
@@ -41,18 +41,18 @@ export const Login = () => {
     const togglePasswordVisibility = () => {
         setShowPassword(prev => !prev)
     };
-    const [ login, { isLoading } ] = useLoginMutation();
-    const [ OauthLogin, { isLoading: OauthLoading } ] = useOauthLoginMutation();
+    const [login, { isLoading }] = useLoginMutation();
+    const [OauthLogin, { isLoading: OauthLoading }] = useOauthLoginMutation();
 
     let formIsValid = false;
-    if(emailIsValid && passwordIsValid){
+    if (emailIsValid && passwordIsValid) {
         formIsValid = true;
     };
-  
+
     const submitHandler = async (event) => {
         event.preventDefault();
         try {
-            const userData = await login ({
+            const userData = await login({
                 input: emailValue,
                 password: passwordValue,
             }).unwrap()
@@ -64,7 +64,7 @@ export const Login = () => {
             )
             toast.success("Logged in successfully!");
             navigate("/", { replace: true })
-        } catch(error){
+        } catch (error) {
             const errorMessage = handleError(error)
             toast.error(errorMessage);
         }
@@ -76,7 +76,7 @@ export const Login = () => {
     const googleLogin = useGoogleLogin({
         onSuccess: async tokenResponse => {
             try {
-                const loginData = await OauthLogin ({
+                const loginData = await OauthLogin({
                     token: tokenResponse?.access_token,
                     provider: 'google',
                 }).unwrap()
@@ -86,22 +86,22 @@ export const Login = () => {
                         accessToken: loginData?.data?.token,
                     }),
                 )
-                if(loginData.data.new_user){
+                if (loginData.data.new_user) {
                     navigate("/get-started/interests", { replace: true })
                 } else {
                     toast.success("Logged in successfully!");
                     navigate("/", { replace: true })
                 }
-            } catch(error){
+            } catch (error) {
                 const errorMessage = handleError(error)
                 toast.error(errorMessage);
             }
         },
     });
 
-    const responseFacebook = async(response) => {
+    const responseFacebook = async (response) => {
         try {
-            const loginData = await OauthLogin ({
+            const loginData = await OauthLogin({
                 token: response.accessToken,
                 provider: 'facebook',
             }).unwrap()
@@ -111,13 +111,13 @@ export const Login = () => {
                     accessToken: loginData?.data?.token,
                 }),
             )
-            if(loginData.data.new_user){
+            if (loginData.data.new_user) {
                 navigate("/get-started/interests", { replace: true })
             } else {
                 toast.success("Logged in successfully!");
                 navigate("/", { replace: true })
             }
-        } catch(error){
+        } catch (error) {
             const errorMessage = handleError(error)
             toast.error(errorMessage);
         }
@@ -128,13 +128,13 @@ export const Login = () => {
         const redirectUri = encodeURIComponent('https://localhost:5173/login/tiktok-callback');
         // random state token for CSRF protection
         const state = Math.random().toString(36).substring(2);
-    
+
         const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${clientKey}&response_type=code&redirect_uri=${redirectUri}&state=${state}`;
         window.location.href = authUrl
     };
 
     return (
-        <main className='w-full h-[100dvh] flex items-center justify-center m-auto bg-twhite-100 p-2 sm:p-12 no-scrollbar'>
+        <main className='w-full h-dvh flex items-center justify-center m-auto bg-twhite-100 p-2 sm:p-12 no-scrollbar'>
             <motion.div
                 key="chatbox"
                 variants={CardVariants}
@@ -182,11 +182,11 @@ export const Login = () => {
                         required
                         errorText={passwordHasError ? "Please Enter a Password" : ""}
                         eye
-                        icon = {
-                            showPassword ?  
-                            <Icon.EyeOff className='cursor-pointer' size={15} onClick={togglePasswordVisibility} /> 
-                            : 
-                            <Icon.Eye className='cursor-pointer' size={15} onClick={togglePasswordVisibility} />
+                        icon={
+                            showPassword ?
+                                <Icon.EyeOff className='cursor-pointer' size={15} onClick={togglePasswordVisibility} />
+                                :
+                                <Icon.Eye className='cursor-pointer' size={15} onClick={togglePasswordVisibility} />
                         }
                     />
 
@@ -194,7 +194,7 @@ export const Login = () => {
                         Forgot your password? <Link to='/recover-password' className='text-[#017FC8] text-sm font-bold'>Recover password</Link>.
                     </p>
 
-                    <Button 
+                    <Button
                         variant="primary"
                         children="Login"
                         disabled={!formIsValid || isLoading}

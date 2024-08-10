@@ -31,11 +31,11 @@ export const Profile = () => {
 
     const currentUser = useSelector(selectCurrentUser);
     const { userId } = useParams();
-    const [ editModal, setEditModal ] = useState();
+    const [editModal, setEditModal] = useState();
 
     const isLoggedInUser = currentUser?.id === Number(userId);
 
-    const { data:user } = useGetUserProfileDetailsQuery(userId, {
+    const { data: user } = useGetUserProfileDetailsQuery(userId, {
         // refetchOnMountOrArgChange: true
     });
 
@@ -54,7 +54,7 @@ export const Profile = () => {
                         </div>
                         <p className={`text-base font-bold text-tblack-100 ${isLoggedInUser ? "block" : "hidden"} `}>My Profile</p>
                     </section>
-                    <p onClick={handleEditModal} className={` ${ isLoggedInUser ? "flex" : "hidden"} cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2`}>
+                    <p onClick={handleEditModal} className={` ${isLoggedInUser ? "flex" : "hidden"} cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2`}>
                         <UploadAvatarIcon />
                         <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Edit Profile</span>
                     </p>

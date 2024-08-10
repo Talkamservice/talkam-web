@@ -43,9 +43,9 @@ export const MainAppLayout = ({ children }) => {
 
     return (
         <section className='w-full flex items-center justify-center no-scrollbar'>
-            <main className='w-full relative h-screen no-scrollbar max-w-screen-2xl no-scrollbar'>
+            <main className='w-full relative h-dvh no-scrollbar max-w-screen-2xl no-scrollbar'>
                 {/* Mobile header */}
-                <header className={`sticky w-full flex items-center justify-between gap-4 border-b border-tgray-light bg-white z-40 px-4 lg:px-24 py-7 h-[7dvh] top-0`}>
+                <header className={`sticky w-full flex items-center justify-between gap-4 border-b border-tgray-light bg-white z-40 px-6 lg:px-24 h-[7dvh] py-2 top-0`}>
                     <div onClick={() => { navigate('/home'); setShowPanel(false); }} className="flex items-center gap-2 cursor-pointer">
                         <TalkamLogo width={isMobile ? 25 : 35} height={isMobile ? 30 : 40} />
                         <p className={` ${!isLogoMobile ? 'block' : 'hidden'} flex items-center text-xl font-regularNunito`}><span className='font-extraboldNunito'>talk</span>AM</p>
@@ -105,7 +105,7 @@ export const MainAppLayout = ({ children }) => {
                     </section>
                 </header>
 
-                <div className=" relative flex no-scrollbar h-[93dvh]">
+                <div className=" relative flex no-scrollbar h-[calc(100dvh-7dvh)]">
                     <div
                         className={`fixed inset-0 z-[38] backdrop-blur-sm bg-tgray-300 lg:hidden`}
                         style={{
@@ -117,7 +117,7 @@ export const MainAppLayout = ({ children }) => {
                     ></div>
 
                     <aside
-                        className={`fixed border-r border-tgray-light inset-y-0 z-[38] lg:absolute w-80 sm:w-96 no-scrollbar bg-white sm:pl-20 pr-6
+                        className={`fixed border-r border-tgray-light inset-y-0 z-[38] lg:absolute w-80 sm:w-96 no-scrollbar overflow-y-auto bg-white sm:pl-20 pr-6
                         ${isMobile && !showPanel && "hidden"}`}
                     >
                         <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
@@ -217,7 +217,7 @@ export const MainAppLayout = ({ children }) => {
                         </div>
                     </aside>
 
-                    <main className={`flex-1 w-full ${!isMobile && " pl-80 sm:pl-96"} no-scrollbar`}>
+                    <main className={`flex-1 w-full h-full ${!isMobile && " pl-80 sm:pl-96"} no-scrollbar`}>
                         {/* main content */}
                         <div className="flex flex-col flex-1 h-full overflow-x-hidden overflow-auto no-scrollbar body-font font-normal text-tblack-100">
                             <Outlet />
