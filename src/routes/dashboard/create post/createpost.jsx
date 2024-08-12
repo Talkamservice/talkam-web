@@ -310,7 +310,7 @@ export const CreatePost = () => {
 
                     <section className="relative">
                         <Tabs tabs={tabs} />
-                        <span className="absolute top-0 right-0 z-[12]">
+                        <span className="absolute top-2 right-0 z-[12]">
                             <AnonToggleButton
                                 checked={isChecked}
                                 onChange={(event) => setIsChecked(event.target.checked)}

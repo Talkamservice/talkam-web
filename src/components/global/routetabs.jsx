@@ -2,43 +2,44 @@ import React, { useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
-export const RouteTabs = ({tabs, data}) => {
+export const RouteTabs = ({ tabs, data, id }) => {
 
     const navigate = useNavigate()
     const { pathname } = useLocation()
 
     const activePath = pathname.split('/').splice(-1)[0]
     const [activeTab, setActiveTab] = useState("")
-    
+
     const handleTabClick = (id) => {
         setActiveTab(id)
-        navigate(`${id}`, {replace: true})
+        navigate(`${id}`, { replace: true })
     }
 
-  return (
-    <>
-        <div className='z-[12] sticky top-0 flex items-center justify-start gap-8 overflow-x-auto w-full border-b border-[#DCDCDC] no-scrollbar bg-white mb-2'>
-            {   tabs?.map(item => (
+    return (
+        <>
+            <div className='z-[12] sticky top-0 flex items-center justify-start gap-8 overflow-x-auto w-full border-b border-[#DCDCDC] no-scrollbar bg-white mb-2'>
+                {tabs?.map(item => (
                     <TabButton
                         key={item.title}
                         text={item.title}
                         type={item.text === activePath || item.text.includes(activePath) ? "" : "text"}
                         onClick={() => handleTabClick(item.text)}
                         icon={item.icon}
+                        id={id}
                     />
                 ))
-            }
-        </div>
-        <div className='w-full overflow-auto no-scrollbar h-full'>
-            <Outlet context={data} />
-        </div>
-    </>
-  )
+                }
+            </div>
+            <div className='w-full overflow-y-auto no-scrollbar h-full'>
+                <Outlet context={data} />
+            </div>
+        </>
+    )
 }
 
-export const TabButton = ({ text, onClick, type, icon }) => {
+export const TabButton = ({ text, onClick, type, icon, id }) => {
     return (
-        <div onClick={onClick} 
+        <div onClick={onClick}
             className={`
                 text-sm font-medium text-tblack-100 cursor-pointer relative
                 flex items-center justify-center transition-all ease-linear duration-150`
@@ -50,13 +51,13 @@ export const TabButton = ({ text, onClick, type, icon }) => {
                 </span>
                 <span className='w-full text-sm font-medium z-10 whitespace-nowrap'>{text}</span>
             </div>
-            { 
-                    type !== 'text' ?
-                    <motion.div 
-                        layoutId='active-pill' 
-                        className='border-b-4 border-tprimary-50 absolute inset-0 p-3 w-full' 
-                    /> 
-                    : 
+            {
+                type !== 'text' ?
+                    <motion.div
+                        layoutId={'active-pill' + id ?? ""}
+                        className='border-b-4 border-tprimary-50 absolute inset-0 p-3 w-full'
+                    />
+                    :
                     null
             }
         </div>

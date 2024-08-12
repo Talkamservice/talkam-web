@@ -45,7 +45,7 @@ export const MainAppLayout = ({ children }) => {
         <section className='w-full flex items-center justify-center no-scrollbar'>
             <main className='w-full relative h-dvh no-scrollbar max-w-screen-2xl no-scrollbar'>
                 {/* Mobile header */}
-                <header className={`sticky w-full flex items-center justify-between gap-4 border-b border-tgray-light bg-white z-40 px-6 lg:px-24 h-[7dvh] py-2 top-0`}>
+                <header className={`sticky w-full flex items-center justify-between gap-8 sm:gap-4 border-b border-tgray-light bg-white z-40 px-6 lg:px-24 h-[7dvh] py-2 top-0`}>
                     <div onClick={() => { navigate('/home'); setShowPanel(false); }} className="flex items-center gap-2 cursor-pointer">
                         <TalkamLogo width={isMobile ? 25 : 35} height={isMobile ? 30 : 40} />
                         <p className={` ${!isLogoMobile ? 'block' : 'hidden'} flex items-center text-xl font-regularNunito`}><span className='font-extraboldNunito'>talk</span>AM</p>
@@ -53,7 +53,10 @@ export const MainAppLayout = ({ children }) => {
                     <section className='w-10/12 md:w-9/12 flex items-center justify-end gap-6 md:gap-8 no-scrollbar'>
                         <section className={`${isMobile ? "" : "flex-1"} flex items-center gap-5 md:gap-8`}>
                             {isMobile ?
-                                <Icon.Search className={`${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
+                                <Icon.Search
+                                    onClick={() => navigate('/search')}
+                                    className={`${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`}
+                                />
                                 :
                                 <NavSearch />
                             }

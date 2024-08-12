@@ -9,22 +9,27 @@ export const PostImage = ({ src, style, side, onClick }) => {
         return bgColors[randomIndex];
     }
 
-    return(
+    return (
         <div
             onClick={onClick}
-            className={classNames(style,`w-full flex items-center justify-center ${ src ? 'block' : 'hidden' } cursor-pointer
-                ${ side ? 'h-[150px]' : 'min-h-[250px] sm:min-h-[300px] md:min-h-[400px]' }
-                rounded-xl`)
-            } 
-            style={{
-                backgroundImage: `url(${src})`,
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: "cover",
-                objectFit: 'contain',
-                objectPosition: "center",
-                backgroundColor: colorAtRandom(),
-                backgroundPosition: "center"
-            }} 
-        />
+            className={classNames(style, `w-full flex items-center justify-center ${src ? 'block' : 'hidden'} cursor-pointer
+                ${side ? 'h-[150px]' : 'h-[250px] sm:h-[300px] md:h-[400px]'}
+                rounded-xl overflow-hidden`)
+            }
+        >
+            <img
+                src={src}
+                className="w-full h-full"
+                loading="lazy"
+                style={{
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: "100% 100%",
+                    objectFit: 'cover',
+                    objectPosition: "center",
+                    backgroundColor: colorAtRandom(),
+                    backgroundPosition: "center"
+                }}
+            />
+        </div>
     )
 }

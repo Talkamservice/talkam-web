@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { FeaturedFireIcon, LatestEventsIcon, NewBadgeIcon, TrendingIcon } from "../../../assets/icons/generated";
+import { FeaturedFireIcon, LatestEventsIcon, NewBadgeIcon, TrendingIcon, UploadAvatarIcon } from "../../../assets/icons/generated";
 import { RouteTabs } from "../../../components/global/routetabs"
 import { useFollowGroupMutation, useGetGroupDetailsQuery, useUnFollowGroupMutation } from "../../../services/groupApiSlice";
 import { GroupBanner } from "../../../components/global/groupbanner";
@@ -10,7 +10,14 @@ import { handleError } from "../../../utils/handleError";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../services/authSlice";
+import { IsRole } from "../../../utils/isRole";
+import { Modal } from "../../../components/global/modal";
+import { useState } from "react";
+import { ColoredLoader } from "../../../components/global/loader";
+import { EditGroupHeader } from "./groupdetails/modals/editgroupheader";
+import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import * as Icon from 'react-feather'
+import FallBack from "../../../assets/icons/users.svg"
 
 const tabs = [
     {
@@ -35,12 +42,19 @@ const tabs = [
 
 export const Group = () => {
 
+    let isMobile = useMediaQuery("(max-width: 768px)");
     const currentUser = useSelector(selectCurrentUser);
     const { groupId } = useParams();
+    const [showEditHeaderModal, setShowEditHeaderMdal] = useState();
+    const [showInfo, setShowInfo] = useState(false);
+
     const { data: groupDetails, isLoading } = useGetGroupDetailsQuery(groupId);
     const [followGroup, { isLoading: followLoading }] = useFollowGroupMutation();
     const [unFollowGroup, { isLoading: unFollowLoading }] = useUnFollowGroupMutation();
 
+    const toggleHeaderModal = () => {
+        setShowEditHeaderMdal((prev) => !prev)
+    }
     const handleFollowGroup = async () => {
         try {
             const credentials = {
@@ -69,9 +83,13 @@ export const Group = () => {
         }
     }
 
+    const toggleInfoView = () => {
+        setShowInfo((prev) => !prev)
+    }
+
     return (
         <section className="h-full flex divide-x divide-tgray-xlight">
-            <div className="w-full flex flex-col lg:w-4/6 h-full p-2 md:px-6 md:pt-6">
+            <div className="w-full flex flex-col gap-2 md:w-4/6 h-full p-2 md:px-6 md:pt-6">
                 <section className="w-full flex flex-col gap-2">
                     {
                         isLoading ?
@@ -83,49 +101,135 @@ export const Group = () => {
                                 groupCategoryIcon={groupDetails?.data.category?.icon_image ?? <LatestEventsIcon />}
                             />
                     }
-                    {
-                        isLoading ?
-                            <div className="flex items-end justify-end py-1">
-                                <ButtonSkeletonLoader />
-                            </div>
-                            :
-                            <section className="flex items-end justify-end">
+
+                    <section className="w-full flex flex-col items-start gap-2">
+                        <section className="w-full flex items-start gap-8">
+
+                            {
+                                isLoading ?
+                                    <section className="w-full flex items-center justify-center py-4">
+                                        <ColoredLoader />
+                                    </section>
+                                    :
+                                    <section className="w-full flex flex-col gap-2">
+                                        <header className="flex items-start gap-4">
+                                            <section className="flex items-start md:items-center gap-2">
+                                                <img
+                                                    style={{
+                                                        backgroundSize: "cover",
+                                                        backgroundRepeat: "no-repeat",
+                                                        objectFit: "cover",
+                                                    }}
+                                                    src={groupDetails?.data.image ?? FallBack}
+                                                    className="rounded-full w-12 h-12"
+                                                    onError={(e) => {
+                                                        e.target.onerror = FallBack;
+                                                        e.target.src = FallBack
+                                                    }}
+                                                />
+                                                <div className="flex flex-col md:flex-row items-start gap-3">
+                                                    <div className="flex flex-col items-start">
+                                                        <p className="font-medium text-sm md:text-base">{groupDetails?.data.name}</p>
+                                                        <span className="text-xs md:text-sm font-bold">{groupDetails?.data.total_members} members</span>
+                                                    </div>
+                                                    <IsRole currentRole={groupDetails?.data?.user_role ?? "Member"} allowedRoles={["Owner", "Admin"]}>
+                                                        <div onClick={toggleHeaderModal} className='cursor-pointer border border-tgray-50 rounded-full px-3 py-1 flex items-center justify-between gap-2'>
+                                                            <UploadAvatarIcon />
+                                                            <span className='text-tblack-100 text-xs md:text-sm'>Edit</span>
+                                                        </div>
+                                                    </IsRole>
+                                                </div>
+                                            </section>
+                                        </header>
+                                    </section>
+                            }
+                            {
+                                isLoading ?
+                                    <div className="flex items-end justify-end py-1">
+                                        <ButtonSkeletonLoader />
+                                    </div>
+                                    :
+                                    <section className="flex items-end justify-end">
+                                        {
+                                            !groupDetails?.data?.is_following ?
+                                                <Button
+                                                    children="Follow"
+                                                    leftIcon={< Icon.Plus size={18} />}
+                                                    className="!rounded-full !text-sm bg-tprimary-50 !px-4 !py-2.5 font-semiboldNunito"
+                                                    onClick={handleFollowGroup}
+                                                    isLoading={followLoading}
+                                                    disabled={followLoading}
+                                                />
+                                                :
+                                                <Button
+                                                    children="Unfollow"
+                                                    className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
+                                                    onClick={handleUnFollowGroup}
+                                                    isLoading={unFollowLoading}
+                                                    disabled={unFollowLoading}
+                                                    variant="error"
+                                                />
+                                        }
+                                    </section>
+                            }
+                        </section>
+                        <div className="w-full flex flex-col gap-2">
+                            <article className="w-full text-xs md:text-sm">{groupDetails?.data.about}</article>
+                            <div className="block md:hidden">
                                 {
-                                    !groupDetails?.data?.is_following ?
-                                        <Button
-                                            children="Follow"
-                                            leftIcon={< Icon.Plus size={18} />}
-                                            className="!rounded-full !text-sm bg-tprimary-50 !px-4 !py-2.5 font-semiboldNunito"
-                                            onClick={handleFollowGroup}
-                                            isLoading={followLoading}
-                                            disabled={followLoading}
-                                        />
+                                    showInfo ?
+                                        <button onClick={toggleInfoView} type="button" className="rounded-full px-4 py-2 text-xs text-twhite-100 bg-[#2D2D2D]">
+                                            View posts
+                                        </button>
                                         :
-                                        <Button
-                                            children="Unfollow"
-                                            className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
-                                            onClick={handleUnFollowGroup}
-                                            isLoading={unFollowLoading}
-                                            disabled={unFollowLoading}
-                                            variant="error"
-                                        />
+                                        <button onClick={toggleInfoView} type="button" className="rounded-full px-4 py-2 text-xs text-twhite-100 bg-[#2D2D2D]">
+                                            View info
+                                        </button>
                                 }
-                            </section>
-                    }
+                            </div>
+                        </div>
+                    </section>
                 </section>
 
-                <section className="relative overflow-y-auto w-full no-scrollbar">
-                    <RouteTabs tabs={tabs} />
-                </section>
+                {
+                    showInfo && isMobile ?
+                        <section className={`w-full block md:hidden md:w-2/6 h-full p-2 md:px-6 relative`}>
+                            <GroupDetails
+                                currentUserRole={groupDetails?.data?.user_role ?? "Member"}
+                                groupDetails={groupDetails}
+                                isLoading={isLoading}
+                            />
+                        </section>
+                        :
+                        <section className="relative overflow-y-auto w-full no-scrollbar">
+                            <RouteTabs
+                                tabs={tabs}
+                            />
+                        </section>
+                }
             </div>
 
-            <section className="w-full lg:w-2/6 h-full p-2 md:px-6 md:pt-6 relative">
+            <section className={`w-full hidden md:block md:w-2/6 h-full p-2 md:px-6 relative`}>
                 <GroupDetails
                     currentUserRole={groupDetails?.data?.user_role ?? "Member"}
                     groupDetails={groupDetails}
                     isLoading={isLoading}
                 />
             </section>
+
+            <Modal
+                show={showEditHeaderModal}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={toggleHeaderModal}
+                position='center'
+                contentWidth='w-full md:w-3/5'
+            >
+                <EditGroupHeader
+                    groupId={groupDetails?.data?.id}
+                    onClose={toggleHeaderModal}
+                />
+            </Modal>
         </section>
     )
 } 
