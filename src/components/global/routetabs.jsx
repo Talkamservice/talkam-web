@@ -54,7 +54,7 @@ export const TabButton = ({ text, onClick, type, icon, id }) => {
             {
                 type !== 'text' ?
                     <motion.div
-                        layoutId={'active-pill' + id ?? ""}
+                        layoutId={'active-pill' + id && id}
                         className='border-b-4 border-tprimary-50 absolute inset-0 p-3 w-full'
                     />
                     :
