@@ -119,8 +119,8 @@ export const ProfileUpvotes = () => {
                             <section className="w-full py-1">
                                 <EmptyState
                                     icon={EmptyListIcon}
-                                    height="h-[30px]"
-                                    width="h-[30px]"
+                                    height="h-[50px]"
+                                    width="h-[50px]"
                                     text="No upvotes yet"
                                     subtext="When upvotes or reactions are made they would appear here"
                                 />
