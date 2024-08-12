@@ -50,7 +50,7 @@ export const Profile = () => {
                     <section className="flex items-start flex-col gap-3">
                         <div className="flex items-center gap-2">
                             <Avatar src={user?.data.avatar} size='sm' />
-                            <span className="text-sm md:text-base font-bold text-tblack-100">{user?.data.username ?? user?.data.name}</span>
+                            <span className="text-sm md:text-base font-bold text-tblack-100">{(user?.data.username ?? user?.data.name) ?? user?.data?.email}</span>
                         </div>
                         <p className={`text-base font-bold text-tblack-100 ${isLoggedInUser ? "block" : "hidden"} `}>My Profile</p>
                     </section>
