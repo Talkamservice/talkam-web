@@ -1,5 +1,6 @@
 import { useLocation, useParams } from "react-router-dom";
 import { RouteTabs } from "../../../components/global/routetabs";
+import { NavSearch } from "../../../components/forms/navsearchbar";
 
 export const Search = () => {
 
@@ -29,6 +30,9 @@ export const Search = () => {
 
     return (
         <div className="flex flex-col px-6 pt-6 gap-4 h-full">
+            <section className="block lg:hidden">
+                <NavSearch />
+            </section>
             <section className="text-xl font-bold">Search Results for : "{searchTerm}"</section>
 
             <section className="relative w-full lg:w-4/6 overflow-y-auto no-scrollbar">

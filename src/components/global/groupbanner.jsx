@@ -6,7 +6,7 @@ import * as Icon from 'react-feather'
 
 export const GroupBanner = ({ banner, groupCategory, groupCategoryIcon }) => {
 
-    const [ showImagePreview, setShowImagePreview ] = useState();
+    const [showImagePreview, setShowImagePreview] = useState();
 
     const toggleModal = () => {
         setShowImagePreview((prev) => !prev)
@@ -14,10 +14,10 @@ export const GroupBanner = ({ banner, groupCategory, groupCategoryIcon }) => {
 
     return (
         <section className="relative">
-            <div onClick={toggleModal} className="relative w-full overflow-hidden cursor-pointer min-h-[180px] max-h-[180px] border-tgray-200 rounded-sm flex items-center justify-center">
+            <div onClick={toggleModal} className="relative w-full overflow-hidden cursor-pointer h-[100px] md:h-[150px] border-tgray-200 rounded-sm flex items-center justify-center">
                 <img
                     className="border-none h-full w-full"
-                    src={ banner ?? TalkamLogo}
+                    src={banner ?? TalkamLogo}
                     style={{
                         backgroundRepeat: 'no-repeat',
                         backgroundSize: "cover",
@@ -29,11 +29,11 @@ export const GroupBanner = ({ banner, groupCategory, groupCategoryIcon }) => {
                     }}
                 />
 
-                <div className="absolute top-0 left-0 m-5 md:m-2.5 flex items-center gap-1 px-2 py-1 rounded-full bg-twhite-100">
+                <div className="absolute top-0 left-0 m-2 md:m-2.5 flex items-center gap-1 px-2 py-1 rounded-full bg-twhite-100">
                     {groupCategoryIcon &&
                         <img
                             src={groupCategoryIcon}
-                            className="w-4 h-4 rounded-full"
+                            className="w-3 h-3 md:w-4 md:h-4 rounded-full"
                             onError={(e) => {
                                 e.target.onerror = Fallback;
                                 e.target.src = Fallback;
@@ -54,7 +54,7 @@ export const GroupBanner = ({ banner, groupCategory, groupCategoryIcon }) => {
                 contentWidth='w-full md:w-3/4'
             >
                 <div className="w-full h-[90dvh]">
-                    <img 
+                    <img
                         src={banner}
                         className="w-full h-full flex items-center justify-center m-auto bg-[#000000] relative"
                         style={{

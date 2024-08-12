@@ -12,9 +12,9 @@ export const NavSearch = () => {
         const newSearchTerm = e.target.value;
         searchParams.set('search', newSearchTerm);
         navigate({
-        pathname: '/search/posts',
-        search: `?${searchParams.toString()}`,
-        });
+            pathname: '/search/posts',
+            search: `?${searchParams.toString()}`,
+        }, { replace: true });
     };
 
     return (
