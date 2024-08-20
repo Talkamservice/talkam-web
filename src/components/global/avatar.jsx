@@ -30,45 +30,49 @@ export const Avatar = ({ src, size, onClick, ...props }) => {
         const hasImageSrc = !!src && src?.length;
 
         if ((!hasImageSrc) || hasError)
-        return (
-            <div {...props} onClick={onClick} className={classNames(baseClass, sizeMap[size] ?? largeClass)}>
-                <img
-                    loading='lazy'
-                    className={classNames(baseClass, sizeMap[size] ?? largeClass)}
-                    style={{
-                        backgroundSize: "contain",
-                        backgroundRepeat: "no-repeat",
-                        objectFit: "contain",
-                    }}
-                    src={DefaultAvatar}
-                    alt='profile'
-                    onError={(event) => setHasError(true)}
-                />
-            </div>
-        );
+            return (
+                <div {...props} onClick={onClick} className={classNames(baseClass, sizeMap[size] ?? largeClass)}>
+                    <img
+                        loading='lazy'
+                        className={`w-full h-full`}
+                        style={{
+                            backgroundRepeat: 'no-repeat',
+                            backgroundSize: "100% 100%",
+                            objectFit: 'cover',
+                            objectPosition: "center",
+                            backgroundPosition: "center"
+                        }}
+                        src={DefaultAvatar}
+                        alt='profile'
+                        onError={(event) => setHasError(true)}
+                    />
+                </div>
+            );
 
         if (hasImageSrc && !hasError)
-        return (
-            <div {...props} onClick={onClick} className={classNames(baseClass, sizeMap[size] ?? largeClass)}>
-                <img
-                    loading='lazy'
-                    className={classNames(baseClass, sizeMap[size] ?? largeClass)}
-                    style={{
-                        backgroundSize: "contain",
-                        backgroundRepeat: "no-repeat",
-                        objectFit: "contain",
-                    }}
-                    src={src}
-                    alt='profile'
-                    onError={(event) => setHasError(true)}
-                />
-            </div>
-        );
+            return (
+                <div {...props} onClick={onClick} className={classNames(baseClass, sizeMap[size] ?? largeClass)}>
+                    <img
+                        loading='lazy'
+                        className={`w-full h-full rounded-full`}
+                        style={{
+                            backgroundRepeat: 'no-repeat',
+                            backgroundSize: "100% 100%",
+                            objectFit: 'contain',
+                            objectPosition: "center",
+                            backgroundPosition: "center"
+                        }}
+                        src={src}
+                        alt='profile'
+                        onError={(event) => setHasError(true)}
+                    />
+                </div>
+            );
 
         if (hasError) return null;
         return null;
 
-    },[src, size, hasError])
+    }, [src, size, hasError])
 
     return getAvatar;
 }

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { ColoredLoader } from '../../../components/global/loader';
 import { motion } from 'framer-motion';
 import { CardVariants } from '../../../helpers/cardanimation';
+import { handleError } from '../../../utils/handleError';
 
 const typeMap = {
     "verify_email": "Verify Account",
@@ -17,17 +18,17 @@ const typeMap = {
 export const Verification = () => {
 
     const navigate = useNavigate();
-    const { state:locationState } = useLocation();
+    const { state: locationState } = useLocation();
     const { emailValue, type } = locationState;
     const [code, setCode] = useState(null)
     const handleChange = (enteredOtp) => {
         setCode(enteredOtp);
     };
 
-    const [ verifyOtp, { isLoading } ] = useVerifyOtpMutation();
-    const [ resendOtp, { isLoading: resendLoading } ] = useResendOtpMutation();
+    const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
+    const [resendOtp, { isLoading: resendLoading }] = useResendOtpMutation();
 
-    const verifyHandler = async(event) => {
+    const verifyHandler = async (event) => {
         event.preventDefault();
 
         try {
@@ -36,35 +37,37 @@ export const Verification = () => {
                 code: code,
                 type: type
             }
-            const email = await verifyOtp (verifyDetails).unwrap()
+            const email = await verifyOtp(verifyDetails).unwrap()
             toast.success(email.message);
-            if(type === "password_reset"){
+            if (type === "password_reset") {
                 navigate("/password-reset", { replace: true, state: code })
             } else {
-                navigate("/get-started/interests", { replace: true})
+                navigate("/get-started/interests", { replace: true })
             }
-        } catch(error){
-          toast.error(error?.data?.message);
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage);
         }
         setCode(null)
     }
 
-    const resendHandler = async() => {
+    const resendHandler = async () => {
         setCode(null)
         try {
             const resendDetails = {
                 email: emailValue,
                 type: type
             }
-            const response = await resendOtp (resendDetails).unwrap()
+            const response = await resendOtp(resendDetails).unwrap()
             toast.success(response.message);
-        } catch(error){
-          toast.error(error?.data?.message);
+        } catch (error) {
+            const errorMessage = handleError(error)
+            toast.error(errorMessage);
         }
     }
 
     let formIsValid = false;
-    if(code && code.length >= 4){
+    if (code && code.length >= 4) {
         formIsValid = true
     }
 
@@ -102,16 +105,16 @@ export const Verification = () => {
                     <div className='flex flex-col item-center justify-center text-center gap-3'>
                         <span className='text-doc-gray1 text-sm'>Haven’t received the PIN yet?</span>
                         <span onClick={resendHandler} className='w-full flex items-center justify-center underline cursor-pointer font-bold text-tprimary-50 text-sm'>
-                            { 
-                                resendLoading ? 
-                                <ColoredLoader />
-                                : 
-                                'Resend PIN'
+                            {
+                                resendLoading ?
+                                    <ColoredLoader />
+                                    :
+                                    'Resend PIN'
                             }
                         </span>
                     </div>
 
-                    <Button 
+                    <Button
                         variant="primary"
                         children="Verify"
                         disabled={!formIsValid}

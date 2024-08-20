@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Modal } from '../../components/global/modal';
 import { ChooseAvatarModal } from './avatarmodal';
-import { selectCurrentUser, setCredentials } from '../../services/authSlice';
+import { selectCurrentToken, selectCurrentUser, setCredentials } from '../../services/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import Protected from '../../utils/protected';
 
@@ -22,7 +22,7 @@ export const SaveProfile = () => {
     const dispatch = useDispatch();
     const currentUser = useSelector(selectCurrentUser);
     const token = useSelector(selectCurrentToken)
-    const [ openAvatarModal, setOpenAvatarModal ] = useState();
+    const [openAvatarModal, setOpenAvatarModal] = useState();
     const [profileImage, setProfileImage] = useState(null);
     const {
         hasError: userNameHasError, inputBlurHandler: userNameBlurHandler,
@@ -30,8 +30,8 @@ export const SaveProfile = () => {
         reset: resetUserName, isValid: userNameIsValid,
     } = useForm(isNotEmpty);
 
-    const { data:avatars, isLoading:loadingAvatars } = useGetAvatarsQuery();
-    const [ updateProfile, { isLoading } ] = useUpdateProfileMutation();
+    const { data: avatars, isLoading: loadingAvatars } = useGetAvatarsQuery();
+    const [updateProfile, { isLoading }] = useUpdateProfileMutation();
 
     const toggleModal = () => {
         setOpenAvatarModal(prev => !prev)
@@ -42,17 +42,17 @@ export const SaveProfile = () => {
         setOpenAvatarModal(false)
     }
 
-    const submitHandler = async(event) => {
+    const submitHandler = async (event) => {
         event.preventDefault();
         try {
             const res = await updateProfile({ username: userNameValue, avatar: profileImage }).unwrap();
             dispatch(setCredentials({
-                user: {...currentUser, avatar: profileImage},
+                user: { ...currentUser, avatar: profileImage },
                 accessToken: token,
             }))
             toast.success(res?.message);
             navigate('/home/featured', { replace: true })
-        } catch(err) {
+        } catch (err) {
             const errorMessage = handleError(err);
             toast.error(errorMessage)
         }
@@ -61,7 +61,7 @@ export const SaveProfile = () => {
 
     let formIsValid = false;
 
-    if(userNameIsValid && profileImage) {
+    if (userNameIsValid && profileImage) {
         formIsValid = true
     }
 

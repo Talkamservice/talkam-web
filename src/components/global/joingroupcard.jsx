@@ -15,7 +15,7 @@ export const JoinGroupCard = ({ avatar, groupName, membersCount, groupId }) => {
             />
 
             <Button
-                children="View group"
+                children="View"
                 className="!rounded-full !py-2 !px-4 font-bold"
                 onClick={() => navigate(`/group/${groupId}`)}
             />

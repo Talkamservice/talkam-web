@@ -25,7 +25,7 @@ export const SignUp = () => {
         value: emailValue, valueChangeHandler: emailChangeHandler,
         reset: resetEmail, isValid: emailIsValid,
     } = useForm(isEmail);
-    
+
     const {
         hasError: passwordHasError, inputBlurHandler: passwordBlurHandler,
         value: passwordValue, valueChangeHandler: passwordChangeHandler,
@@ -35,35 +35,35 @@ export const SignUp = () => {
     const togglePasswordVisibility = () => {
         setShowPassword(prev => !prev)
     };
-    const [ signup, { isLoading } ] = useSignupMutation();
+    const [signup, { isLoading }] = useSignupMutation();
 
     let formIsValid = false;
-    if(emailIsValid && passwordIsValid){
+    if (emailIsValid && passwordIsValid) {
         formIsValid = true;
     };
-  
+
     const submitHandler = async (event) => {
-      event.preventDefault();
-      try {
-          const userData = await signup ({
-              email: emailValue,
-              password: passwordValue,
-          }).unwrap()
-          dispatch(
-              setCredentials({
-                  user: userData?.data?.user,
-                  accessToken: userData?.data?.token,
-              }),
-          )
-          toast.success("Account creation successfull!");
-          navigate("/email-verification", { state: { emailValue: emailValue, type: "verify_email"} })
-      } catch(error){
-        const errorMessage = handleError(error)
-        toast.error(errorMessage);
-      }
-      resetEmail();
-      resetPassword();
-  }
+        event.preventDefault();
+        try {
+            const userData = await signup({
+                email: emailValue,
+                password: passwordValue,
+            }).unwrap()
+            dispatch(
+                setCredentials({
+                    user: userData?.data?.user,
+                    accessToken: userData?.data?.token,
+                }),
+            )
+            toast.success("Account creation successfull!");
+            navigate("/email-verification", { state: { emailValue: emailValue, type: "verify_email" } })
+        } catch (error) {
+            const errorMessage = handleError(error)
+            toast.error(errorMessage);
+        }
+        resetEmail();
+        resetPassword();
+    }
 
     return (
         <main className='w-full h-[100dvh] flex items-center justify-center m-auto bg-twhite-100 p-2 sm:p-12'>
@@ -114,15 +114,15 @@ export const SignUp = () => {
                         required
                         errorText={passwordHasError ? "Please Enter a Password" : ""}
                         eye
-                        icon = {
-                            showPassword ?  
-                            <Icon.EyeOff className='cursor-pointer' size={15} onClick={togglePasswordVisibility} /> 
-                            : 
-                            <Icon.Eye className='cursor-pointer' size={15} onClick={togglePasswordVisibility} />
+                        icon={
+                            showPassword ?
+                                <Icon.EyeOff className='cursor-pointer' size={15} onClick={togglePasswordVisibility} />
+                                :
+                                <Icon.Eye className='cursor-pointer' size={15} onClick={togglePasswordVisibility} />
                         }
                     />
 
-                    <Button 
+                    <Button
                         variant="primary"
                         children="Create Account"
                         disabled={!formIsValid}

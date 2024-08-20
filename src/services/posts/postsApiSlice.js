@@ -152,6 +152,14 @@ export const postsApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: ['blocked']
         }),
+        reportPost: builder.mutation({
+            query: body => ({
+                url: `/user/posts/report`,
+                method: 'post',
+                body: { ...body }
+            }),
+            invalidatesTags: ['posts']
+        }),
     })
 })
 
@@ -173,4 +181,5 @@ export const {
     useGetUserPostsQuery,
     useBlockUserMutation,
     useGetBlockedListQuery,
+    useReportPostMutation,
 } = postsApiSlice

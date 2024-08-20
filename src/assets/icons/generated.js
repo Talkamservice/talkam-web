@@ -28,6 +28,8 @@ import NoteIcon from "../icons/note.svg?react";
 import CalendarPlusIcon from "../icons/calendarplus.svg?react";
 import SingleUserIcon from "../icons/singleuser.svg?react";
 import HandIcon from "../icons/suspend.svg?react";
+import HasReadIcon from "../icons/read.svg?react";
+import UnreadIcon from "../icons/unread.svg?react";
 
 export {
     TalkamLogo,
@@ -60,4 +62,6 @@ export {
     CalendarPlusIcon,
     SingleUserIcon,
     HandIcon,
+    HasReadIcon,
+    UnreadIcon,
 }

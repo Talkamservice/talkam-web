@@ -1,4 +1,5 @@
 import classNames from "classnames"
+import Broken from "../../assets/images/broken.png"
 
 const bgColors = ["#05505C", "#800020", "#4B0082", "#444444"];
 
@@ -28,6 +29,10 @@ export const PostImage = ({ src, style, side, onClick }) => {
                     objectPosition: "center",
                     backgroundColor: colorAtRandom(),
                     backgroundPosition: "center"
+                }}
+                onError={(e) => {
+                    e.target.onerror = Broken;
+                    e.target.src = Broken;
                 }}
             />
         </div>

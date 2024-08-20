@@ -10,8 +10,8 @@ export const groupApiSlice = apiSlice.injectEndpoints({
             providesTags: ["groups"]
         }),
         getFollowingGroups: builder.query({
-            query: ({ categoryId, tab, search }) => ({
-                url: `/user/groups/members/following?category_id=${categoryId}&tab=${tab}&search=${search}`,
+            query: ({ categoryId, tab, search, type }) => ({
+                url: `/user/groups/members/following?type=${type}&category_id=${categoryId}&tab=${tab}&search=${search}`,
                 method: "get",
             }),
             providesTags: ["usergroups"]
@@ -32,8 +32,8 @@ export const groupApiSlice = apiSlice.injectEndpoints({
             providesTags: ["details"]
         }),
         getGroupMembers: builder.query({
-            query: id => ({
-                url: `user/group-members?group_id=${id}`,
+            query: ({ id, status }) => ({
+                url: `user/group-members?group_id=${id}&status=${status}`,
                 method: "get"
             }),
             providesTags: ["members"]
@@ -108,6 +108,28 @@ export const groupApiSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ["details", "guidelines"]
         }),
+        requestFollow: builder.mutation({
+            query: id => ({
+                url: `/user/groups/${id}/request-access`,
+                method: 'post'
+            }),
+            invalidatesTags: ['details']
+        }),
+        getGroupRequests: builder.query({
+            query: groupId => ({
+                url: `user/groups/members/list?group_id=${groupId}&status=Pending`,
+                method: 'get'
+            }),
+            providesTags: ['requests']
+        }),
+        updateMemberRequests: builder.mutation({
+            query: ({ id, body }) => ({
+                url: `/user/groups/${id}/update-access-request`,
+                method: 'post',
+                body: { ...body }
+            }),
+            invalidatesTags: ["requests", "members"]
+        })
     })
 })
 
@@ -126,4 +148,7 @@ export const {
     useUpdateGroupDetailsMutation,
     useUpdateGuidelinesMutation,
     useDeleteGuidelineMutation,
+    useRequestFollowMutation,
+    useGetGroupRequestsQuery,
+    useUpdateMemberRequestsMutation,
 } = groupApiSlice

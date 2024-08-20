@@ -38,7 +38,7 @@ export const Groups = () => {
                     <ul className="flex items-start flex-col gap-4">
                         {
                             groupController.followingGroupsLoading ?
-                                <GroupSkeletonLoader />
+                                <GroupSkeletonLoader button={false} />
                                 :
                                 !groupController.following?.data?.data.length ?
                                     <section className="w-full py-4">

@@ -17,7 +17,7 @@ import { BlockPromptModal } from "../global/blockpromptmodal"
 import { PostReportModal } from "./postreportmodal"
 import { usePostController } from "../../controllers/postsController"
 import { Link } from "react-router-dom"
-import TalkamLogo from "../../assets/icons/logo.svg"
+import { ImageModalView } from "../global/imgemodalview"
 import moment from "moment"
 import * as Icon from 'react-feather'
 
@@ -88,7 +88,7 @@ export const PostCard = ({
                                 category && home && !group ?
                                     <p className="items-center whitespace-nowrap inline-flex gap-1 pl-1">
                                         to{" "}
-                                        <Link to={`/categories/${category?.id}`} className="text-tprimary-50 cursor-pointer">
+                                        <Link to={`/category/${category?.id}`} className="text-tprimary-50 cursor-pointer">
                                             {category?.name}
                                         </Link>
                                     </p>
@@ -263,34 +263,10 @@ export const PostCard = ({
                 position='center'
                 contentWidth='w-full'
             >
-                <div className="relative h-[90dvh] w-full">
-
-                    <Icon.X
-                        size={32}
-                        onClick={postController.toggleModal}
-                        className="bg-white p-2 rounded-full bg-opacity-30 cursor-pointer absolute top-0 right-0 m-5 border-2 border-[#ffffff80]"
-                        color="#000000"
-                        strokeWidth={4}
-                    />
-
-                    <div className="w-full h-full">
-                        <img
-                            src={image}
-                            className="w-full h-full flex items-center justify-center bg-[#000]"
-                            style={{
-                                backgroundRepeat: 'no-repeat',
-                                backgroundSize: "cover",
-                                objectFit: 'contain',
-                                objectPosition: "center",
-                                backgroundPosition: "center"
-                            }}
-                            onError={(e) => {
-                                e.target.onerror = TalkamLogo;
-                                e.target.src = TalkamLogo;
-                            }}
-                        />
-                    </div>
-                </div>
+                <ImageModalView
+                    file={image}
+                    handleImageModal={postController.toggleModal}
+                />
             </Modal>
             <Modal
                 show={postController.openShare}
@@ -333,7 +309,15 @@ export const PostCard = ({
                 position='center'
                 contentWidth='w-full md:w-2/4'
             >
-                <PostReportModal onClose={postController.handleReportModal} />
+                <PostReportModal
+                    onClose={postController.handleReportModal}
+                    checkedValue={postController.checkedValue}
+                    setCheckedValue={postController.setCheckedValue}
+                    handleReport={postController?.handleReportPost}
+                    isLoading={postController?.reportLoading}
+                    confirmationModal={postController?.confirmationModal}
+                    setConfirmationModal={postController?.setConfirmationModal}
+                />
             </Modal>
         </motion.div>
     )

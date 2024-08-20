@@ -22,27 +22,26 @@ export const RouteTabs = ({ tabs, data, id }) => {
                     <TabButton
                         key={item.title}
                         text={item.title}
-                        type={item.text === activePath || item.text.includes(activePath) ? "" : "text"}
+                        type={item.text === activePath ? "" : "text"}
                         onClick={() => handleTabClick(item.text)}
                         icon={item.icon}
-                        id={id}
                     />
                 ))
                 }
             </div>
-            <div className='w-full overflow-y-auto no-scrollbar h-full'>
+            <div className='w-full overflow-y-auto no-scrollbar h-full transition-all ease-linear duration-150'>
                 <Outlet context={data} />
             </div>
         </>
     )
 }
 
-export const TabButton = ({ text, onClick, type, icon, id }) => {
+export const TabButton = ({ text, onClick, type, icon }) => {
     return (
         <div onClick={onClick}
             className={`
                 text-sm font-medium text-tblack-100 cursor-pointer relative
-                flex items-center justify-center transition-all ease-linear duration-150`
+                flex items-center justify-center `
             }
         >
             <div className='flex items-center justify-center gap-1 py-2 pt-4'>
@@ -54,7 +53,7 @@ export const TabButton = ({ text, onClick, type, icon, id }) => {
             {
                 type !== 'text' ?
                     <motion.div
-                        layoutId={'active-pill' + id && id}
+                        layoutId='active-pill'
                         className='border-b-4 border-tprimary-50 absolute inset-0 p-3 w-full'
                     />
                     :

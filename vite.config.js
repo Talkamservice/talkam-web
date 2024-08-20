@@ -20,7 +20,7 @@ export default defineConfig({
     },
   },
   build: {
-    sourcemap: false, // Ensure source maps are enabled
+    sourcemap: false, // Ensure source maps are not enabled
     manifest: true,
     outDir: 'dist',
     rollupOptions: {

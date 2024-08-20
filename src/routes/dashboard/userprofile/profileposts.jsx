@@ -16,6 +16,7 @@ export const ProfilesPosts = () => {
     const isRestoringScroll = useRef(false);
     const scrollableRef = useRef(null);
     const navigate = useNavigate();
+    const [currentParams, setCurrentParams] = useState(userId);
     const [page, setPage] = useState(1);
     const [posts, setPosts] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
@@ -45,6 +46,16 @@ export const ProfilesPosts = () => {
             setIsFetching(false);
         }
     };
+
+    const newPageData = () => {
+        if (userPosts?.data?.data) {
+            setPosts(() => {
+                const newPosts = new Set([...userPosts.data.data]);
+                return Array.from(newPosts);
+            });
+            setIsFetching(false);
+        }
+    }
 
     const handleDeletePost = async (id) => {
         const newPage = 1
@@ -86,8 +97,12 @@ export const ProfilesPosts = () => {
     };
 
     useEffect(() => {
-        appendNewPageData();
-    }, [userPosts, userId]);
+        if (userId === currentParams) {
+            appendNewPageData();
+        } else {
+            newPageData();
+        }
+    }, [userPosts, userId, currentParams]);
 
     useEffect(() => {
         restoreScrollPosition();
