@@ -29,8 +29,8 @@ const tabs = [
 
 export const Home = () => {
 
-    const { data:recents, isLoading:recentLoading } = useGetRecentPostsQuery();
-    const { data:tags, isLoading:trendLoad } = useGetTrendingTagsQuery();
+    const { data: recents, isLoading: recentLoading } = useGetRecentPostsQuery();
+    const { data: tags, isLoading: trendLoad } = useGetTrendingTagsQuery();
 
     return (
         <div className="w-full flex divide-x divide-tgray-light h-full">
@@ -43,52 +43,52 @@ export const Home = () => {
             <section className="w-2/6 px-6 hidden lg:block py-4 space-y-8 overflow-y-auto no-scrollbar">
                 {
                     trendLoad ?
-                    <div className="flex items-center justify-center m-auto">
-                        <PillSkeletonLoader num={8} />
-                    </div>
-                    :
-                    <>
-                        {
-                            tags && tags.data.length ?
-                            <section className="flex flex-col gap-3">
-                                <h2 className="text-base font-bold leading-none">Trending Tags</h2>
-                                <ul className="flex items-center flex-wrap gap-1">
-                                    {tags && tags.data.map((tag) => <PostTags key={tag.id} tag={tag.tag} />)}
-                                </ul>
-                            </section>
-                            :
-                            null
-                        }
-                    </>
+                        <div className="flex items-center justify-center m-auto">
+                            <PillSkeletonLoader num={8} />
+                        </div>
+                        :
+                        <>
+                            {
+                                tags && tags.data.length ?
+                                    <section className="flex flex-col gap-3">
+                                        <h2 className="text-base font-bold leading-none">Trending Tags</h2>
+                                        <ul className="flex items-center flex-wrap gap-1">
+                                            {tags && tags.data.map((tag) => <PostTags key={tag.id} tag={tag.tag} />)}
+                                        </ul>
+                                    </section>
+                                    :
+                                    null
+                            }
+                        </>
                 }
                 <section className="flex flex-col gap-4">
                     <h2 className="text-base font-bold leading-none">Recently Viewed</h2>
                     <ul className="flex flex-col gap-2.5">
                         {
-                            recentLoading ? 
-                            <GallerySkeletons side />
-                            :
-                            recents?.data?.map((post) => (
-                                <PostCard
-                                    key={post.id}
-                                    type={post.type}
-                                    user={post.user}
-                                    polls={post.polls}
-                                    avatar={post.user.avatar}
-                                    category={post.category?.name}
-                                    author={post.user.username ?? post.user.name}
-                                    title={post.title}
-                                    comment={post.body}
-                                    image={post.attachments?.[0]?.url}
-                                    commentcount={post.comments_count}
-                                    likes={post.likes_count}
-                                    tags={post.tags}
-                                    time={post.created_at}
-                                    id={post.id}
-                                    isAnon={post.is_anonymous}
-                                    side
-                                />
-                            ))
+                            recentLoading ?
+                                <GallerySkeletons side />
+                                :
+                                recents?.data?.map((post) => (
+                                    <PostCard
+                                        key={post.id}
+                                        type={post.type}
+                                        user={post.user}
+                                        polls={post.polls}
+                                        avatar={post.user.avatar}
+                                        category={post.category?.name}
+                                        author={post.user.username ?? post.user.name}
+                                        title={post.title}
+                                        comment={post.body}
+                                        image={post.attachments?.[0]?.url}
+                                        commentcount={post.comments_count}
+                                        likes={post.likes_count}
+                                        tags={post.tags}
+                                        time={post.created_at}
+                                        id={post.id}
+                                        isAnon={post.is_anonymous}
+                                        side
+                                    />
+                                ))
                         }
                     </ul>
                 </section>

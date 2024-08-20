@@ -12,10 +12,10 @@ export const SearchGroup = () => {
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
     const searchTerm = searchParams.get('search') || '';
-    const { data:searchResult, isLoading } = useSearchQuery({
+    const { data: searchResult, isLoading, isFetching } = useSearchQuery({
         sort: 'group',
         search: searchTerm
-    }, (searchTerm || searchTerm === "") ?? skipToken);
+    }, (searchTerm || searchTerm !== "") ?? skipToken);
 
     return (
         <motion.div
@@ -24,33 +24,33 @@ export const SearchGroup = () => {
             initial="initial"
             animate="animate"
             exit="exit"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }} 
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             className="flex flex-col gap-4 py-3">
             <section className="w-full py-3 flex flex-col gap-3">
                 {
-                    isLoading ?
-                    <GroupSkeletonLoader num={6} />
-                    :
-                    !searchResult?.data?.data.length ?
-                    <section className="w-full py-4">
-                        <EmptyState
-                            icon={SearchIcon}
-                            height="h-[50px]"
-                            width="h-[50px]"
-                            text={`No results for ${searchTerm} groups`}
-                            subtext="When groups are added they would appear here"
-                        />
-                    </section>
-                    :
-                    searchResult?.data.data.map((group) => (
-                        <JoinGroupCard
-                            key={group.id}
-                            avatar={group.image}
-                            membersCount={group.total_members}
-                            groupName={group.name}
-                            groupId={group.id}
-                        />
-                    ))
+                    isLoading || isFetching ?
+                        <GroupSkeletonLoader num={6} />
+                        :
+                        !searchResult?.data?.data.length ?
+                            <section className="w-full py-4">
+                                <EmptyState
+                                    icon={SearchIcon}
+                                    height="h-[50px]"
+                                    width="h-[50px]"
+                                    text={`No results for ${searchTerm} groups`}
+                                    subtext="When groups are added they would appear here"
+                                />
+                            </section>
+                            :
+                            searchResult?.data.data.map((group) => (
+                                <JoinGroupCard
+                                    key={group.id}
+                                    avatar={group.image}
+                                    membersCount={group.total_members}
+                                    groupName={group.name}
+                                    groupId={group.id}
+                                />
+                            ))
                 }
             </section>
         </motion.div>

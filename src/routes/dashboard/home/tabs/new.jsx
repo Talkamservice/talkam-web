@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PostCard } from "../../../components/posts/postcard";
-import { GallerySkeletons } from "../../../components/global/skeletons";
-import { useDeletePostMutation, useGetAllPostsQuery } from "../../../services/posts/postsApiSlice";
+import { PostCard } from "../../../../components/posts/postcard";
+import { GallerySkeletons } from "../../../../components/global/skeletons";
+import { useDeletePostMutation, useGetAllPostsQuery } from "../../../../services/posts/postsApiSlice";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { handleError } from "../../../utils/handleError";
-import { ColoredLoader } from "../../../components/global/loader";
-import { Storage } from "../../../app/storage";
+import { handleError } from "../../../../utils/handleError";
+import { ColoredLoader } from "../../../../components/global/loader";
+import { Storage } from "../../../../app/storage";
 
 export const New = () => {
 

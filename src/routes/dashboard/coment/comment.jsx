@@ -235,7 +235,6 @@ export const Comment = () => {
                 </section>
             </section>
 
-
             {/* right section */}
             <section className="hidden md:flex w-2/6 flex-col overflow-auto no-scrollbar">
             </section>

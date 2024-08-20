@@ -55,7 +55,8 @@ export const useGroupController = (groupTab) => {
     const { data: following, isLoading: followingGroupsLoading } = useGetFollowingGroupsQuery({
         categoryId: "",
         tab: "",
-        search: ""
+        search: "",
+        type: "all"
     });
 
     const transformedCategories = categories && categories?.data?.map((category) => {

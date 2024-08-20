@@ -8,9 +8,16 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 method: "get",
             })
         }),
+        getSingleCategory: builder.query({
+            query: id => ({
+                url: `/user/post-categories/${id}/show`,
+                method: "get",
+            }),
+            providesTags: ["category"]
+        }),
         getSubCategories: builder.query({
             query: ({ sort, categoryId }) => ({
-                url: `user/post-categories/sub-categories?sort=${sort}&catgeory_id=${categoryId}`,
+                url: `user/post-categories/sub-categories?sort=${sort}&category_id=${categoryId}`,
                 method: "get",
             })
         }),
@@ -19,7 +26,8 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 url: `user/profile/update`,
                 method: 'post',
                 body: { ...payload }
-            })
+            }),
+            invalidatesTags: ["profile"]
         }),
         getTrendingTags: builder.query({
             query: () => ({
@@ -46,16 +54,26 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 method: 'get'
             }),
             providesTags: ["usercategories"]
+        }),
+        addInterest: builder.mutation({
+            query: interest => ({
+                url: `/user/profile/interests/add-remove`,
+                method: 'post',
+                body: interest
+            }),
+            invalidatesTags: ['category']
         })
     })
 })
 
 export const {
     useGetCategoriesQuery,
+    useGetSingleCategoryQuery,
     useGetSubCategoriesQuery,
     useUpdateProfileMutation,
     useGetTrendingTagsQuery,
     useGetAvatarsQuery,
     useGetUserProfileDetailsQuery,
     useFollowingCategoriesQuery,
+    useAddInterestMutation,
 } = authApiSlice

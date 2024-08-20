@@ -5,6 +5,14 @@ import * as Icon from 'react-feather'
 
 export const GroupAbout = ({ groupDetails }) => {
 
+    const Discoverability = groupDetails?.data?.group_access === "Opened" ? `The group is Opened to everyone. Members can join without approval`
+        :
+        groupDetails?.data?.group_access === "Closed" ?
+            `The group is Closed. Members cannot join without approval and would need to make a request to join`
+            :
+            null
+
+
     return (
         <section className="w-full h-full flex flex-col gap-4">
             <header className="flex flex-col gap-4">
@@ -23,7 +31,7 @@ export const GroupAbout = ({ groupDetails }) => {
                 />
                 <GroupAboutCard
                     title="Discoverability"
-                    text={`The group is publicly ${groupDetails?.data?.group_access ?? "Opened"} to everyone. Members can join without approval`}
+                    text={Discoverability}
                     icon={<LockIcon />}
                 />
                 <GroupAboutCard

@@ -45,32 +45,32 @@ export const CommentCard = ({
     const isCurrentUser = currentUser && currentUser?.id === parentComment?.user?.id;
 
     const popUpRef = useRef();
-    const [ showBlockModal, setShowBlockModal ] = useState(false);
-    const [ showPopUp, setShowPopUp ] = useState(false);
-    const [ openReport, setOpenReport ] = useState(false);
-    const [ action, setAction ] = useState(reaction);
-    const [ likeCount, setLikeCount ] = useState();
-    const [ unlikeCount, setUnlikeCount ] = useState();
-    const [ isReplying, setIsReplying ] = useState(false);
-    const [ showMore, setShowMore ] = useState(false);
-    const [ imagePreview, setImagePreview ] = useState(null);
+    const [showBlockModal, setShowBlockModal] = useState(false);
+    const [showPopUp, setShowPopUp] = useState(false);
+    const [openReport, setOpenReport] = useState(false);
+    const [action, setAction] = useState(reaction);
+    const [likeCount, setLikeCount] = useState();
+    const [unlikeCount, setUnlikeCount] = useState();
+    const [isReplying, setIsReplying] = useState(false);
+    const [showMore, setShowMore] = useState(false);
+    const [imagePreview, setImagePreview] = useState(null);
 
-    const [ commentReaction ] = useCommentReactionMutation();
-    const [ blockUser, { isLoading:blockLoading } ] = useBlockUserMutation();
-    const [ deleteComment ] = useDeleteCommentMutation();
+    const [commentReaction] = useCommentReactionMutation();
+    const [blockUser, { isLoading: blockLoading }] = useBlockUserMutation();
+    const [deleteComment] = useDeleteCommentMutation();
 
 
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
     });
-    
+
     const handleAddNewComment = (event) => {
-        setComment({...comment, comment: event.target.value });
+        setComment({ ...comment, comment: event.target.value });
     }
     const handleFileUpload = (event) => {
         event.preventDefault()
         const { files } = event.target;
-        if(!files[0]) return;
+        if (!files[0]) return;
         setImagePreview(() => URL.createObjectURL(files[0]))
         savePostImage(files[0])
     };
@@ -80,7 +80,7 @@ export const CommentCard = ({
         const url = await getDownloadURL(
             ref(storageDB, snapshot.metadata.fullPath)
         );
-        setComment({...comment, image: url})
+        setComment({ ...comment, image: url })
     }
 
     const handlePostReaction = async (reaction) => {
@@ -128,7 +128,7 @@ export const CommentCard = ({
         }
     };
 
-    const handleBlockUser = async() => {
+    const handleBlockUser = async () => {
         try {
             const blockRes = await blockUser({ blocked_user_id: parentComment?.user?.id }).unwrap();
             toast.success(blockRes.message);
@@ -140,11 +140,11 @@ export const CommentCard = ({
 
     };
 
-    const handleDeleteComment = async(postId) => {
+    const handleDeleteComment = async (postId) => {
         try {
             const deleteRes = await deleteComment(postId);
             toast.success(deleteRes?.data?.message)
-        } catch(error){
+        } catch (error) {
             const errorMessage = handleError(error);
             toast.error(errorMessage);
         }
@@ -169,8 +169,8 @@ export const CommentCard = ({
         setOpenReport((prev) => !prev)
     }
 
-    if(comment.comment || comment.image){
-        isValidComment= true
+    if (comment.comment || comment.image) {
+        isValidComment = true
     };
 
     useEffect(() => {
@@ -197,7 +197,7 @@ export const CommentCard = ({
                             {parentComment.comment}
                         </article>
                         <section className="w-full">
-                            { parentComment.attachment ? 
+                            {parentComment.attachment ?
                                 <section className="relative rounded-lg min-h-[170px] h-[250px]">
                                     <img
                                         className="border-none h-full w-full rounded-lg bg-[#444444]"
@@ -221,11 +221,11 @@ export const CommentCard = ({
                                 onClick={() => setIsReplying(true)}
                             />
                             <div className="flex items-center gap-8">
-                                <div onClick={() =>handlePostReaction("Like")} className="flex items-center gap-2 cursor-pointer">
+                                <div onClick={() => handlePostReaction("Like")} className="flex items-center gap-2 cursor-pointer">
                                     <span className="font-boldNunito text-sm text-[#444444]">{likeCount}</span>
                                     <Icon.ThumbsUp size={20} fill={action === "Like" ? "#017FC8" : "#FFFFFF"} />
                                 </div>
-                                <div onClick={() =>handlePostReaction("Dislike")} className="flex items-center gap-2 cursor-pointer">
+                                <div onClick={() => handlePostReaction("Dislike")} className="flex items-center gap-2 cursor-pointer">
                                     <span className="font-boldNunito text-sm text-[#444444]">{unlikeCount}</span>
                                     <Icon.ThumbsDown size={20} fill={action === "Dislike" ? "#FF0000" : "#FFFFFF"} />
                                 </div>
@@ -234,70 +234,70 @@ export const CommentCard = ({
                             {/* more icon and popup */}
                             <section ref={popUpRef} className="cursor-pointer">
                                 <Icon.MoreVertical onClick={() => setShowPopUp(prev => !prev)} color="#212121" />
-                                { 
-                                    showPopUp ? 
-                                    <motion.div
-                                        variants={PostCardVariants}
-                                        initial="initial"
-                                        animate="animate"
-                                        exit="exit"
-                                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                                        className="absolute -top-12 -right-5 z-10"
-                                    >
-                                    <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
-                                        <li onClick={() => copyTextToClipboard()}
-                                            className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                {
+                                    showPopUp ?
+                                        <motion.div
+                                            variants={PostCardVariants}
+                                            initial="initial"
+                                            animate="animate"
+                                            exit="exit"
+                                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                            className="absolute -top-12 -right-5 z-10"
                                         >
-                                            <Icon.Link2 className='-rotate-45' size={15} color='#000000' strokeWidth={2} />
-                                            <p>Copy link</p>
-                                        </li>
-                                        <li onClick={() => onClick(item, id)}
-                                            className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
-                                        >
-                                            <NewNotificationIcon className="w-4 h-4" />
-                                            <p>Get notifications for this thread</p>
-                                        </li>
-                                        <li onClick={handleShowBlockModal}
-                                            className={`
+                                            <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
+                                                <li onClick={() => copyTextToClipboard()}
+                                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                                >
+                                                    <Icon.Link2 className='-rotate-45' size={15} color='#000000' strokeWidth={2} />
+                                                    <p>Copy link</p>
+                                                </li>
+                                                <li onClick={() => onClick(item, id)}
+                                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                                >
+                                                    <NewNotificationIcon className="w-4 h-4" />
+                                                    <p>Get notifications for this thread</p>
+                                                </li>
+                                                <li onClick={handleShowBlockModal}
+                                                    className={`
                                                 bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight
                                                 ${(!parentComment.is_anonymous) ? "block" : 'hidden'}
                                                 ${(!isCurrentUser) ? "block" : 'hidden'}
                                                 
                                             `}
-                                        >
-                                            <Icon.Slash size={15} color='#000000' strokeWidth={2} />
-                                            <p>Block @{parentComment?.user?.username ?? parentComment?.user?.name}</p>
-                                        </li>
-                                        <li onClick={handleReportModal}
-                                            className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
-                                        >
-                                            <Icon.Flag size={15} color='#000000' strokeWidth={2} />
-                                            <p>Report this post</p>
-                                        </li>
-                                        <li onClick={() => handleDeleteComment(parentComment?.id)}
-                                            className={` ${ isCurrentUser ? 'block' : 'hidden' }  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}
-                                        >
-                                            <TrashIcon className="text-[#AC4242]" />
-                                            <p>Delete Comment</p>
-                                        </li>
-                                    </ul>
-                                </motion.div>
-                                :
-                                null
-                            }
+                                                >
+                                                    <Icon.Slash size={15} color='#000000' strokeWidth={2} />
+                                                    <p>Block @{parentComment?.user?.username ?? parentComment?.user?.name}</p>
+                                                </li>
+                                                <li onClick={handleReportModal}
+                                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                                >
+                                                    <Icon.Flag size={15} color='#000000' strokeWidth={2} />
+                                                    <p>Report this post</p>
+                                                </li>
+                                                <li onClick={() => handleDeleteComment(parentComment?.id)}
+                                                    className={` ${isCurrentUser ? 'block' : 'hidden'}  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}
+                                                >
+                                                    <TrashIcon className="text-[#AC4242]" />
+                                                    <p>Delete Comment</p>
+                                                </li>
+                                            </ul>
+                                        </motion.div>
+                                        :
+                                        null
+                                }
                             </section>
 
                         </section>
-                        {   allComments?.length > 0 ?
+                        {allComments?.length > 0 ?
                             <span onClick={() => setShowMore(prev => !prev)} className="text-tprimary-50 font-bold text-xs sm:text-sm cursor-pointer">
-                                {` ${ showMore ? 'Hide' : 'View' } ${ allComments.length } ${ allComments?.length === 1 ? 'Reply' : 'Replies' } `}
-                            </span> 
-                            : 
+                                {` ${showMore ? 'Hide' : 'View'} ${allComments.length} ${allComments?.length === 1 ? 'Reply' : 'Replies'} `}
+                            </span>
+                            :
                             null
                         }
                     </section>
                 </section>
-                {    isReplying ?
+                {isReplying ?
                     <motion.section
                         key="chatbox"
                         variants={downVariants}
@@ -315,7 +315,7 @@ export const CommentCard = ({
                             image={imagePreview}
                             onChange={handleFileUpload}
                             handleCommentChange={handleAddNewComment}
-                            submitComment={() => { submitCommentResponse(); setIsReplying(false); setShowMore(true)}}
+                            submitComment={() => { submitCommentResponse(); setIsReplying(false); setShowMore(true) }}
                             setIsReplying={setIsReplying}
                             isValidComment={isValidComment}
                             isLoading={isLoading}
@@ -343,7 +343,7 @@ export const CommentCard = ({
                                         parentComment={comment}
                                         nestedComment={nestedComment}
                                         setNestedComment={setNestedComment}
-                                        submitNestedCommentResponse={() => { submitNestedCommentResponse( parentComment.id, comment.id ); setIsReplying(false); setShowMore(true)}}
+                                        submitNestedCommentResponse={() => { submitNestedCommentResponse(parentComment.id, comment.id); setIsReplying(false); setShowMore(true) }}
                                         isLoading={isLoading}
                                         anonChecked={nestedAnonChecked}
                                         setAnonChecked={setNestedAnonChecked}
@@ -376,8 +376,8 @@ export const CommentCard = ({
                 contentWidth='w-full md:w-1/4'
             >
                 <BlockPromptModal
-                    user={ !parentComment.is_anonymous ? (parentComment?.user?.username || parentComment?.user?.name ) : 'Anonymous' }
-                    onClose={handleShowBlockModal}
+                    user={!parentComment.is_anonymous ? (parentComment?.user?.username || parentComment?.user?.name) : 'Anonymous'}
+                    handleShowBlockModal={handleShowBlockModal}
                     handleBlockUser={handleBlockUser}
                     isLoading={blockLoading}
                 />

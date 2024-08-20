@@ -61,15 +61,15 @@ export const Login = () => {
                     user: userData?.data?.user,
                     accessToken: userData?.data?.token,
                 }),
-            )
+            );
+            resetEmail();
+            resetPassword();
             toast.success("Logged in successfully!");
             navigate("/", { replace: true })
         } catch (error) {
             const errorMessage = handleError(error)
             toast.error(errorMessage);
         }
-        resetEmail();
-        resetPassword();
     };
 
 

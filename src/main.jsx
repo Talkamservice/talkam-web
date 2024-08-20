@@ -7,15 +7,18 @@ import { Toaster } from 'sonner'
 import { store } from './app/store';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AnimatePresence } from 'framer-motion';
-import { MainAppLayout } from './components/layout/mainapp';
 import ErrorPage from './routes/error/error';
-import Protected from './utils/protected';
+import App from './App';
+
+window.addEventListener('vite:preloadError', (event) => {
+  window.location.reload() // for example, refresh the page
+})
 
 const router = createBrowserRouter([
   {
     path: '/',
     errorElement: <ErrorPage />,
-    element: <MainAppLayout />,
+    element: <App />,
     children: [
       {
         index: true,
@@ -35,21 +38,21 @@ const router = createBrowserRouter([
           {
             path: 'featured',
             lazy: async () => {
-              let { Featured } = await import("./routes/dashboard/home/featured");
+              let { Featured } = await import("./routes/dashboard/home/tabs/featured");
               return { Component: Featured };
             }
           },
           {
             path: 'trending',
             lazy: async () => {
-              let { Trending } = await import("./routes/dashboard/home/trending");
+              let { Trending } = await import("./routes/dashboard/home/tabs/trending");
               return { Component: Trending };
             }
           },
           {
             path: 'new',
             lazy: async () => {
-              let { New } = await import("./routes/dashboard/home/new");
+              let { New } = await import("./routes/dashboard/home/tabs/new");
               return { Component: New };
             }
           },
@@ -60,6 +63,13 @@ const router = createBrowserRouter([
         lazy: async () => {
           let { CreatePost } = await import("./routes/dashboard/create post/createpost");
           return { Component: CreatePost };
+        }
+      },
+      {
+        path: '/inbox',
+        lazy: async () => {
+          let { Messages } = await import("./routes/dashboard/messages/messages");
+          return { Component: Messages };
         }
       },
       {
@@ -182,6 +192,47 @@ const router = createBrowserRouter([
           let { CreateGroup } = await import("./routes/dashboard/groups/creategroup");
           return { Component: CreateGroup };
         },
+      },
+      {
+        path: 'categories',
+        lazy: async () => {
+          let { Categories } = await import("./routes/dashboard/categories/categories");
+          return { Component: Categories };
+        },
+      },
+      {
+        path: 'category/:subCategoryId',
+        lazy: async () => {
+          let { Category } = await import("./routes/dashboard/category/category");
+          return { Component: Category };
+        },
+        children: [
+          {
+            index: true,
+            loader: () => redirect('featured')
+          },
+          {
+            path: 'featured',
+            lazy: async () => {
+              let { CategoryFeatured } = await import("./routes/dashboard/category/tabs/categoryfeatured");
+              return { Component: CategoryFeatured };
+            },
+          },
+          {
+            path: 'trending',
+            lazy: async () => {
+              let { CategoryTrending } = await import("./routes/dashboard/category/tabs/trending");
+              return { Component: CategoryTrending };
+            },
+          },
+          {
+            path: 'new',
+            lazy: async () => {
+              let { CategoryJustIn } = await import("./routes/dashboard/category/tabs/justin");
+              return { Component: CategoryJustIn };
+            },
+          },
+        ]
       },
       {
         path: 'group/:groupId',
@@ -308,8 +359,12 @@ const router = createBrowserRouter([
       let { SaveProfile } = await import("./routes/onboarding/saveprofile");
       return { Component: SaveProfile };
     },
-  }
-])
+  },
+  {
+    path: '*',
+    element: <div>Nothing to see here</div>,
+  },
+]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

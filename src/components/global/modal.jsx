@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import * as React from 'react';
 import { Zoom } from 'react-awesome-reveal';
-import * as Icon from 'react-feather'
 import { createPortal } from 'react-dom';
 
 const modalOverlayBase = classNames(
@@ -22,7 +21,7 @@ const modalOverlayBase = classNames(
   'duration-700',
   'ease-in-out',
   'md:p-10',
-  'p-5'
+  'p-4'
 );
 const modalContentBase = classNames(
   'rounded-xl',

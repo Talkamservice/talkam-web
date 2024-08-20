@@ -78,7 +78,8 @@ export const CreatePost = () => {
     const { data: following } = useGetFollowingGroupsQuery({
         categoryId: "",
         tab: "",
-        search: ""
+        search: "",
+        type: ""
     });
     const { data: trending } = useGetTrendingTagsQuery();
 

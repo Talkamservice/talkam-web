@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
 import { useTruncatedElement } from "../hooks/useTruncated";
 import { useOnOutsideClick } from "../hooks/useOnOutsideClick";
-import { useBlockUserMutation, usePostReactionMutation, useSelectPollOptionMutation } from "../services/posts/postsApiSlice";
+import { useBlockUserMutation, usePostReactionMutation, useReportPostMutation, useSelectPollOptionMutation } from "../services/posts/postsApiSlice";
 import { toast } from "sonner";
 import { handleError } from "../utils/handleError";
 
@@ -21,37 +21,40 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
     const navigate = useNavigate();
     const commentRef = useRef(null);
     const popUpRef = useRef();
-    const [ showPopUp, setShowPopUp ] = useState(false);
-    const [ openShare, setOpenShare ] = useState(false);
-    const [ showBlockModal, setShowBlockModal ] = useState(false);
-    const [ openReport, setOpenReport ] = useState(false);
-    const [ action, setAction ] = useState(reaction && reaction?.action);
-    const [ likeCount, setLikeCount ] = useState(likes);
-    const [ showImagePreview, setShowImagePreview ] = useState(false)
-    const [ pollOptions, setPollOptions ] = useState(polls);
-    const [ selectedPoll, setSelectedPoll ] = useState(pollOptions && pollOptions.some(option => option.selected));
+    const [confirmationModal, setConfirmationModal] = useState();
+    const [checkedValue, setCheckedValue] = useState("");
+    const [showPopUp, setShowPopUp] = useState(false);
+    const [openShare, setOpenShare] = useState(false);
+    const [showBlockModal, setShowBlockModal] = useState(false);
+    const [openReport, setOpenReport] = useState(false);
+    const [action, setAction] = useState(reaction && reaction?.action);
+    const [likeCount, setLikeCount] = useState(likes);
+    const [showImagePreview, setShowImagePreview] = useState(false)
+    const [pollOptions, setPollOptions] = useState(polls);
+    const [selectedPoll, setSelectedPoll] = useState(pollOptions && pollOptions.some(option => option.selected));
 
     const { isTruncated, isReadingMore, toggleIsShowingMore } = useTruncatedElement(commentRef);
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
     });
 
-    const [ postReaction ] = usePostReactionMutation();
-    const [ selectPollOption ] = useSelectPollOptionMutation();
-    const [ blockUser, { isLoading } ] = useBlockUserMutation();
+    const [postReaction] = usePostReactionMutation();
+    const [selectPollOption] = useSelectPollOptionMutation();
+    const [blockUser, { isLoading }] = useBlockUserMutation();
+    const [reportPost, { isLoading: reportLoading }] = useReportPostMutation();
 
     const calculatePercentages = (options) => {
         const totalVotes = options.reduce((sum, option) => sum + option.count, 0);
         return options.map(option => ({
-          ...option,
-          percentage: totalVotes ? (option.count / totalVotes) * 100 : 0
+            ...option,
+            percentage: totalVotes ? (option.count / totalVotes) * 100 : 0
         }));
     };
 
     const updatePollHandler = (pollId) => {
-        if(selectedPoll) return;
+        if (selectedPoll) return;
         const newOptions = pollOptions.map((poll) => {
-            if(poll.id === pollId) {
+            if (poll.id === pollId) {
                 return {
                     ...poll,
                     selected: true,
@@ -64,11 +67,11 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
         submitPoll();
 
         //Creating this as a closure so the UI updates immediately before the server response returns ( Optimistic UI updates ==> better UX )
-        async function submitPoll(){
+        async function submitPoll() {
             try {
-                await selectPollOption({poll_id: pollId}).unwrap();
+                await selectPollOption({ poll_id: pollId }).unwrap();
                 toast.success("Vote submitted")
-            } catch (error){
+            } catch (error) {
                 const errorMessage = handleError(error);
                 toast.error(errorMessage)
             }
@@ -108,7 +111,23 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
         }
     };
 
-    const handleBlockUser = async() => {
+    const handleReportPost = async () => {
+        console.log(checkedValue, id)
+        try {
+            const reportDetails = {
+                reason: checkedValue,
+                post_id: id
+            }
+            const res = await reportPost(reportDetails).unwrap();
+            toast.success(res?.message);
+            setConfirmationModal(true)
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage);
+        }
+    }
+
+    const handleBlockUser = async () => {
         try {
             const blockRes = await blockUser({ blocked_user_id: user.id }).unwrap();
             toast.success(blockRes.message);
@@ -129,7 +148,7 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
         }
         setShowPopUp(() => false)
     }
-    
+
     const toggleModal = () => {
         setShowImagePreview((prev) => !prev)
     }
@@ -185,5 +204,11 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
         handleShowBlockModal,
         handleReportModal,
         isLoading,
+        checkedValue,
+        setCheckedValue,
+        handleReportPost,
+        reportLoading,
+        confirmationModal,
+        setConfirmationModal
     }
 }

@@ -4,7 +4,7 @@ import Fallback from "../../assets/icons/events.svg"
 import TalkamLogo from "../../assets/icons/logo.svg"
 import * as Icon from 'react-feather'
 
-export const GroupBanner = ({ banner, groupCategory, groupCategoryIcon }) => {
+export const Banner = ({ banner, groupCategory, groupCategoryIcon, onRoute }) => {
 
     const [showImagePreview, setShowImagePreview] = useState();
 
@@ -29,21 +29,26 @@ export const GroupBanner = ({ banner, groupCategory, groupCategoryIcon }) => {
                     }}
                 />
 
-                <div className="absolute top-0 left-0 m-2 md:m-2.5 flex items-center gap-1 px-2 py-1 rounded-full bg-twhite-100">
-                    {groupCategoryIcon &&
-                        <img
-                            src={groupCategoryIcon}
-                            className="w-3 h-3 md:w-4 md:h-4 rounded-full"
-                            onError={(e) => {
-                                e.target.onerror = Fallback;
-                                e.target.src = Fallback;
-                            }}
-                        />
-                    }
-                    <span className="text-[10px] md:text-sm text-tblack-100 whitespace-nowrap">
-                        {groupCategory}
-                    </span>
-                </div>
+                {groupCategoryIcon || groupCategory ?
+                    <div onClick={onRoute} className="absolute top-0 left-0 m-2 md:m-2.5 flex items-center gap-1 px-2 py-1 rounded-full bg-twhite-100">
+                        {groupCategoryIcon &&
+                            <img
+                                onClick={(e) => { e.stopPropagation(); }}
+                                src={groupCategoryIcon}
+                                className="w-3 h-3 md:w-4 md:h-4 rounded-full"
+                                onError={(e) => {
+                                    e.target.onerror = Fallback;
+                                    e.target.src = Fallback;
+                                }}
+                            />
+                        }
+                        <span className="text-[10px] md:text-sm text-tblack-100 whitespace-nowrap">
+                            {groupCategory}
+                        </span>
+                    </div>
+                    :
+                    null
+                }
             </div>
             <Modal
                 show={showImagePreview}

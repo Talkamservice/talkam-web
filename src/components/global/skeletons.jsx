@@ -3,7 +3,7 @@ import React from 'react'
 const randomPillWidth = () => Math.floor(Math.random() * (105 - 80 + 1)) + 80;
 
 export const ListSkeleton = () => {
-    return(
+    return (
         <div role="status" className="w-full flex flex-col gap-2 animate-pulse">
             <div className="h-8 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
             <div className="h-8 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
@@ -32,11 +32,11 @@ export const PillSkeletonLoader = ({ num = 20 }) => {
     )
 }
 
-export const GroupSkeletonLoader = ({ num = 4, button=true }) => {
+export const GroupSkeletonLoader = ({ num = 4, button = true }) => {
     return (
         <div className='flex flex-col gap-3'>
             {
-                [...Array(num)].map(( _, index ) => (
+                [...Array(num)].map((_, index) => (
                     <div key={index} className="w-full flex items-center justify-between gap-4 animate-pulse">
                         <section className="flex items-center gap-2">
                             <div className='flex items-center justify-center w-16 h-16 rounded-full p-3 bg-tgray-100 opacity-10 animate-pulse'></div>
@@ -48,12 +48,12 @@ export const GroupSkeletonLoader = ({ num = 4, button=true }) => {
 
                         {
                             button ?
-                            <span
-                                children="Join"
-                                className="!rounded-full !py-2 !px-4 font-bold bg-tgray-100 opacity-10"
-                            />
-                            :
-                            null
+                                <span
+                                    children="Join"
+                                    className="!rounded-full !py-2 !px-4 font-bold bg-tgray-100 opacity-10"
+                                />
+                                :
+                                null
                         }
                     </div>
                 ))
@@ -62,17 +62,37 @@ export const GroupSkeletonLoader = ({ num = 4, button=true }) => {
     )
 }
 
-export const CategorySkeletonLoader = ({ num = 4}) => {
+export const CategorySkeletonLoader = ({ num = 5 }) => {
     return (
-        <div className='flex flex-col gap-3'>
+        <div className='w-full flex flex-col animate-pulse gap-4'>
             {
-                [...Array(num)].map(( _, index ) => (
-                    <div key={index} className="w-full flex items-center justify-between gap-4 animate-pulse">
-                        <section className="flex items-center gap-3">
-                            <div className='flex items-center justify-center w-8 h-8 rounded-full p-3 bg-tgray-100 opacity-10 animate-pulse'></div>
-                            <div className='bg-tgray-100 opacity-10 rounded-full h-3 w-[90px]' />
+                [...Array(num)].map((_, index) => (
+                    <div key={index} className="w-full flex items-center justify-between gap-4 border-b border-tgray-50 py-2">
+                        <section className="w-full flex items-center gap-2">
+                            <div className='flex items-center justify-center w-10 h-10 rounded-full p-3 bg-tgray-100 opacity-10'></div>
+                            <div className="flex flex-col items-start gap-2">
+                                <div className='bg-tgray-100 opacity-10 rounded-full h-2 w-[90px]' />
+                            </div>
                         </section>
+
+                        <div>
+                            <div className='bg-tgray-100 opacity-10 rounded-full h-2 w-[40px]' />
+                        </div>
                     </div>
+
+                ))
+            }
+
+        </div>
+    )
+}
+
+export const SubCategorySkeletonLoader = ({ num = 8 }) => {
+    return (
+        <div className='w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-pulse gap-4'>
+            {
+                [...Array(num)].map((_, index) => (
+                    <div key={index} className='w-full min-w-[200px] h-[70px] bg-tgray-100 opacity-10 rounded-md' />
                 ))
             }
         </div>
@@ -87,7 +107,7 @@ export const ButtonSkeletonLoader = () => {
     )
 }
 
-export const GallerySkeletons = ({num = 3, direction='flex-col', side}) => {
+export const GallerySkeletons = ({ num = 3, direction = 'flex-col', side }) => {
     return (
         <div className={`w-full flex ${direction} gap-6 animate-pulse `}>
             {
@@ -113,7 +133,32 @@ export const GallerySkeletons = ({num = 3, direction='flex-col', side}) => {
                             <div className="h-2 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
                             <div className="h-2 bg-tgray-100 opacity-10 rounded-full"></div>
                         </div>
-                        <div className={` flex items-center justify-center m-auto w-full ${ side ? 'h-32' : 'h-64' } rounded-md p-3 bg-tgray-100 opacity-10 animate-pulse `}></div>
+                        <div className={` flex items-center justify-center m-auto w-full ${side ? 'h-32' : 'h-64'} rounded-md p-3 bg-tgray-100 opacity-10 animate-pulse `}></div>
+                    </div>
+                ))
+            }
+        </div>
+    )
+}
+
+export const ConversationSkeletonLoader = ({ num = 4 }) => {
+    return (
+        <div className='flex flex-col gap-3'>
+            {
+                [...Array(num)].map((_, index) => (
+                    <div key={index} className="w-full flex items-center justify-between gap-4 animate-pulse">
+                        <section className="flex items-center gap-2">
+                            <div className='flex items-center justify-center w-12 h-12 rounded-full p-3 bg-tgray-100 opacity-10 animate-pulse'></div>
+                            <div className="flex flex-col items-start gap-2">
+                                <div className='bg-tgray-100 opacity-10 rounded-full h-3 w-[100px]' />
+                                <div className='bg-tgray-100 opacity-10 rounded-full h-3 w-[150px]' />
+                            </div>
+                        </section>
+
+                        <div className="flex flex-col items-end gap-2">
+                            <div className='bg-tgray-100 opacity-10 rounded-full h-3 w-[45px]' />
+                            <div className='bg-tgray-100 opacity-10 rounded-full h-3 w-3' />
+                        </div>
                     </div>
                 ))
             }
@@ -122,7 +167,7 @@ export const GallerySkeletons = ({num = 3, direction='flex-col', side}) => {
 }
 
 const ShimmerWrapper = ({ children }) => {
-    return(
+    return (
         <div className='relative 
             before:absolute before:inset-0
             before:-translate-x-full

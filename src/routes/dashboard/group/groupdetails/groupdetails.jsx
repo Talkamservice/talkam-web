@@ -1,6 +1,6 @@
 import { Tabs } from "../../../../components/global/tabs";
 import { GroupAbout } from "./groupabout";
-import { GroupMembers } from "./groupmembers";
+import { GroupMembers } from "./groupmembers/groupmembers";
 import { GroupRules } from "./grouprules";
 
 export const GroupDetails = ({ groupDetails, currentUserRole, isLoading }) => {
@@ -14,7 +14,7 @@ export const GroupDetails = ({ groupDetails, currentUserRole, isLoading }) => {
         {
             id: 1,
             title: "Members",
-            component: <GroupMembers currentUserRole={currentUserRole} />
+            component: <GroupMembers currentUserRole={currentUserRole} requestCount={groupDetails?.data?.pending_count} />
         },
         {
             id: 2,

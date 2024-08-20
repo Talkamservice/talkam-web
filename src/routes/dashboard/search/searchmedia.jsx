@@ -25,11 +25,11 @@ export const SearchMedia = () => {
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [posts, setPosts] = useState([]);
-    const { data:searchResult, isLoading, isFetching:searchFetching, isError, error } = useSearchQuery({
+    const { data: searchResult, isLoading, isFetching: searchFetching, isError, error } = useSearchQuery({
         sort: 'media',
         search: searchTerm
-    }, (searchTerm || searchTerm === "") ?? skipToken);
-    const [ deletePost ] = useDeletePostMutation();
+    }, (searchTerm || searchTerm !== "") ?? skipToken);
+    const [deletePost] = useDeletePostMutation();
 
     const handleDeletePost = async (id) => {
         const newPage = 1
@@ -40,7 +40,7 @@ export const SearchMedia = () => {
             const deleteRes = await deletePost(id);
             toast.success(deleteRes?.data?.message);
             setPage(() => newPage);
-        } catch(error){
+        } catch (error) {
             const errorMessage = handleError(error);
             toast.error(errorMessage);
         }
@@ -87,7 +87,7 @@ export const SearchMedia = () => {
             initial="initial"
             animate="animate"
             exit="exit"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }} 
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             className="flex h-full">
             <section
                 onScroll={handleScroll}
@@ -96,44 +96,44 @@ export const SearchMedia = () => {
             >
                 {
                     isLoading || searchFetching ?
-                    <GallerySkeletons />
-                    :
-                    !searchResult?.data?.data?.length ?
-                    <section className="w-full py-12">
-                        <EmptyState
-                            icon={SearchIcon}
-                            height="h-[50px]"
-                            width="h-[50px]"
-                            text={`No media results for ${searchTerm}`}
-                            subtext="Try searching for something else"
-                        />
-                    </section>
-                    :
-                    searchResult?.data?.data?.map((post) => (
-                        <PostCard
-                            key={post.id}
-                            type={post.type}
-                            user={post.user}
-                            polls={post.polls}
-                            avatar={post.user.avatar}
-                            category={post.category?.name}
-                            author={post.user.username ?? post.user.name}
-                            title={post.title}
-                            comment={post.body}
-                            image={post.attachments?.[0]?.url}
-                            commentcount={post.comments_count}
-                            likes={post.likes_count}
-                            reaction={post.reaction}
-                            tags={post.tags}
-                            time={post.created_at}
-                            id={post.id}
-                            isAnon={post.is_anonymous}
-                            routeChange={() => navigate(`/comment/${post.id}`)}
-                            handleDeletePost={handleDeletePost}
-                        />
-                    ))
+                        <GallerySkeletons />
+                        :
+                        !searchResult?.data?.data?.length ?
+                            <section className="w-full py-12">
+                                <EmptyState
+                                    icon={SearchIcon}
+                                    height="h-[50px]"
+                                    width="h-[50px]"
+                                    text={`No media results for ${searchTerm}`}
+                                    subtext="Try searching for something else"
+                                />
+                            </section>
+                            :
+                            searchResult?.data?.data?.map((post) => (
+                                <PostCard
+                                    key={post.id}
+                                    type={post.type}
+                                    user={post.user}
+                                    polls={post.polls}
+                                    avatar={post.user.avatar}
+                                    category={post.category?.name}
+                                    author={post.user.username ?? post.user.name}
+                                    title={post.title}
+                                    comment={post.body}
+                                    image={post.attachments?.[0]?.url}
+                                    commentcount={post.comments_count}
+                                    likes={post.likes_count}
+                                    reaction={post.reaction}
+                                    tags={post.tags}
+                                    time={post.created_at}
+                                    id={post.id}
+                                    isAnon={post.is_anonymous}
+                                    routeChange={() => navigate(`/comment/${post.id}`)}
+                                    handleDeletePost={handleDeletePost}
+                                />
+                            ))
                 }
-                { searchFetching ?
+                {searchFetching ?
                     <div className="w-full flex items-center justify-center py-24">
                         <ColoredLoader />
                     </div>

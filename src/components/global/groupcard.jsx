@@ -20,7 +20,7 @@ export const GroupCard = ({ group, members, img, onClick }) => {
                     objectFit: "cover",
                 }}
                 src={img ?? FallBack}
-                className="rounded-full w-14 h-14"
+                className="rounded-full w-14 h-14 bg-[#00000071]"
                 onError={(e) => {
                     e.target.onerror = FallBack;
                     e.target.src = FallBack
