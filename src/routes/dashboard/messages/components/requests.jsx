@@ -2,10 +2,13 @@ import { EmptyState } from "../../../../components/global/emptystate";
 import { ConversationSkeletonLoader } from "../../../../components/global/skeletons";
 import { ConversationCard } from "../../../../components/messages/conversationcard"
 import { useGetAllConversationsQuery } from "../../../../services/posts/messagesApiSlice";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../../../services/authSlice";
 import EmptyListIcon from "../../../../assets/images/emptylist.png"
 
 export const Requests = ({ currentChat, setCurrentChat }) => {
 
+    const currentUser = useSelector(selectCurrentUser);
     const { data: conversations, isLoading } = useGetAllConversationsQuery({
         status: "Awaiting_response",
         tab: "request",
@@ -33,18 +36,21 @@ export const Requests = ({ currentChat, setCurrentChat }) => {
                                 />
                             </section>
                             :
-                            conversations?.data?.map((convo) => (
-                                <ConversationCard
-                                    key={convo.id}
-                                    user={convo.sender?.username ?? convo?.sender?.name}
-                                    time={convo.created_at}
-                                    lastMessage={convo.last_message?.message}
-                                    status={convo.last_message?.read}
-                                    onClick={() => setCurrentChat(() => convo)}
-                                    avatar={convo?.sender?.avatar}
-                                    activeChat={currentChat && currentChat?.last_message?.conversation_id === convo?.last_message?.conversation_id}
-                                />
-                            ))
+                            conversations?.data?.map((convo) => {
+                                const receiver = convo?.members?.find(member => member.id !== currentUser.id)
+                                return (
+                                    <ConversationCard
+                                        key={convo.id}
+                                        user={receiver?.username ?? receiver.name}
+                                        time={convo.created_at}
+                                        lastMessage={convo.last_message?.message}
+                                        status={convo.last_message?.read}
+                                        onClick={() => setCurrentChat(() => convo)}
+                                        avatar={receiver?.avatar}
+                                        activeChat={currentChat && currentChat?.last_message?.conversation_id === convo?.last_message?.conversation_id}
+                                    />
+                                )
+                            })
                 }
             </section>
         </div>

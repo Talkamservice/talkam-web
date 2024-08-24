@@ -229,6 +229,7 @@ export const Comment = () => {
                                         setAnonChecked={setCommentAnonChecked}
                                         nestedAnonChecked={nestedCommentAnonChecked}
                                         setNestedAnonChecked={setNestedCommentAnonChecked}
+                                        originalPostId={postDetails?.data?.id}
                                     />
                                 ))
                     }

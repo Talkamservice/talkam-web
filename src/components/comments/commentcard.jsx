@@ -9,6 +9,7 @@ import { useBlockUserMutation, useCommentReactionMutation, useDeleteCommentMutat
 import { toast } from "sonner"
 import { handleError } from "../../utils/handleError"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
+import { useNavigate } from "react-router-dom"
 import { randomId } from "../../helpers/randomid"
 import { storageDB } from "../../utils/firestore"
 import { useOnOutsideClick } from "../../hooks/useOnOutsideClick"
@@ -16,10 +17,10 @@ import { useSelector } from "react-redux"
 import { selectCurrentUser } from "../../services/authSlice"
 import { NewNotificationIcon, TrashIcon } from "../../assets/icons/generated"
 import { Modal } from "../global/modal"
-import { PostReportModal } from "../posts/postreportmodal"
+import { CommentReportModal } from "./commentreportmodal"
 import { BlockPromptModal } from "../global/blockpromptmodal"
-import * as Icon from "react-feather"
 import moment from "moment"
+import * as Icon from "react-feather"
 
 export const CommentCard = ({
     parentComment,
@@ -38,12 +39,14 @@ export const CommentCard = ({
     reaction,
     avatar,
     isLoading,
+    originalPostId,
 }) => {
 
     let isValidComment = false;
     const currentUser = useSelector(selectCurrentUser);
     const isCurrentUser = currentUser && currentUser?.id === parentComment?.user?.id;
 
+    const navigate = useNavigate()
     const popUpRef = useRef();
     const [showBlockModal, setShowBlockModal] = useState(false);
     const [showPopUp, setShowPopUp] = useState(false);
@@ -183,7 +186,8 @@ export const CommentCard = ({
         <>
             <div className={`w-full border border-tgray-50 rounded-xl p-4 flex flex-col items-start justify-between gap-4 relative`}>
                 <section className="w-full flex gap-3">
-                    <div className="flex items-start justify-start">
+                    <div onClick={() => navigate(`/userprofile/${parentComment?.user.id}`)}
+                        className={`flex items-start justify-start ${parentComment?.is_anonymous ? "pointer-events-none" : "cursor-pointer"}`}>
                         <Avatar size="xsm" src={parentComment.is_anonymous ? null : avatar} />
                     </div>
                     <section className="w-full flex flex-col gap-2">
@@ -348,6 +352,7 @@ export const CommentCard = ({
                                         anonChecked={nestedAnonChecked}
                                         setAnonChecked={setNestedAnonChecked}
                                         parentIsAnon={parentComment.is_anonymous}
+                                        originalPostId={originalPostId}
                                     />
                                 ))
                             }
@@ -364,7 +369,11 @@ export const CommentCard = ({
                 position='center'
                 contentWidth='w-full md:w-2/4'
             >
-                <PostReportModal onClose={handleReportModal} />
+                <CommentReportModal
+                    onClose={handleReportModal}
+                    commentId={parentComment?.id}
+                    postId={originalPostId}
+                />
             </Modal>
 
             <Modal

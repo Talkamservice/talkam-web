@@ -10,9 +10,9 @@ import Talkamlogo from '../../../../assets/icons/logo.svg'
 import InputEmoji from "react-input-emoji"
 import * as Icon from 'react-feather'
 
-export const ChatBox = ({ currentChat, isLoading }) => {
+export const ChatBox = ({ setCurrentChat, currentChat }) => {
 
-    const messageController = useMessagesController(currentChat);
+    const messageController = useMessagesController(currentChat, setCurrentChat);
 
     const renderMessages = () => {
         return messageController.messages?.map((message, index) => {
@@ -23,8 +23,9 @@ export const ChatBox = ({ currentChat, isLoading }) => {
                         text={message?.message}
                         time={message?.created_at}
                         file={message?.asset_url}
-                        isLoading={isLoading}
                         messageType={message?.message_type}
+                        preview={messageController?.imagePreview}
+                    // isLoading={message?.imageLoading}
                     />
                 );
             } else if (message?.sender_id !== messageController.currentUser?.id) {
@@ -34,8 +35,9 @@ export const ChatBox = ({ currentChat, isLoading }) => {
                         text={message?.message}
                         time={message?.created_at}
                         file={message?.asset_url}
-                        isLoading={isLoading}
                         messageType={message?.message_type}
+                        preview={messageController?.imagePreview}
+                    // isLoading={message?.imageLoading}
                     />
                 );
             }
@@ -81,50 +83,65 @@ export const ChatBox = ({ currentChat, isLoading }) => {
                                         </motion.ul>
                             }
                         </div>
-                        <section className="w-full p-2">
-                            {
-                                (Number(messageController?.currentUser?.id) !== Number(currentChat?.sender?.id)) && (currentChat?.status === "Awaiting_response" ? 'block' : 'hidden') ?
-                                    <div className={`w-2/3 flex items-center justify-center m-auto py-6`}>
-                                        <RequestPrompt user={currentChat?.sender?.username ?? currentChat?.sender.name} />
-                                    </div>
-                                    :
-                                    <form onSubmit={() => messageController.handleSubmit()} className={`w-full flex items-center gap-4 border rounded-full px-4`}>
-                                        <section className="flex-1">
-                                            <InputEmoji
-                                                value={messageController.text}
-                                                onChange={messageController.setText}
-                                                cleanOnEnter
-                                                onEnter={messageController.handleSubmit}
-                                                placeholder="Type a message..."
-                                                borderRadius={5}
-                                                borderColor="transparent"
-                                                theme="auto"
-                                            />
-                                        </section>
-                                        <section className="flex items-center gap-4 flex-2">
-                                            <label className=' cursor-pointer rounded-full'>
-                                                <input
-                                                    className='hidden'
-                                                    type='file'
-                                                    name="file"
-                                                    onChange={messageController.handleFileUpload}
-                                                />
-                                                <Icon.Paperclip
-                                                    size={18}
-                                                    color="gray"
-                                                />
-                                            </label>
+                        {
+                            messageController?.conversationdetails ?
+                                <section className="w-full p-2">
+                                    {
+                                        (Number(messageController?.currentUser?.id) !== Number(currentChat?.requested_by?.id)) && (messageController?.conversationdetails?.data?.status === "Awaiting_Response") ?
+                                            <div className={`w-2/3 flex items-center justify-center m-auto py-6`}>
+                                                <RequestPrompt
+                                                    user={messageController?.receiver?.username ?? messageController?.receiver?.name}
+                                                    handleRequest={messageController?.handleRequestStatus}
+                                                    isLoading={messageController?.requestLoading}
 
-                                            <button onClick={messageController.handleSubmit} type="button">
-                                                <Icon.Send
-                                                    size={18}
-                                                    color="gray"
                                                 />
-                                            </button>
-                                        </section>
-                                    </form>
-                            }
-                        </section>
+                                            </div>
+                                            :
+                                            <form onSubmit={() => messageController.handleSubmit()} className={`w-full flex items-center gap-4 border rounded-full px-4`}>
+                                                <section className="flex-1">
+                                                    <InputEmoji
+                                                        value={messageController.text}
+                                                        onChange={messageController.setText}
+                                                        cleanOnEnter
+                                                        onEnter={messageController.handleSubmit}
+                                                        placeholder="Type a message..."
+                                                        borderRadius={5}
+                                                        borderColor="transparent"
+                                                        theme="auto"
+                                                    />
+                                                </section>
+                                                <section className="flex items-center gap-4 flex-2">
+                                                    {
+                                                        messageController?.imageLoading ?
+                                                            <ColoredLoader />
+                                                            :
+                                                            <label className=' cursor-pointer rounded-full'>
+                                                                <input
+                                                                    className='hidden'
+                                                                    type='file'
+                                                                    name="file"
+                                                                    onChange={messageController.uploadFile}
+                                                                />
+                                                                <Icon.Paperclip
+                                                                    size={18}
+                                                                    color="gray"
+                                                                />
+                                                            </label>
+                                                    }
+
+                                                    <button onClick={messageController.handleSubmit} type="button">
+                                                        <Icon.Send
+                                                            size={18}
+                                                            color="gray"
+                                                        />
+                                                    </button>
+                                                </section>
+                                            </form>
+                                    }
+                                </section>
+                                :
+                                null
+                        }
                     </>
                     :
                     <div className='flex items-center justify-center m-auto relative w-full h-full p-6 overflow-y-auto'>

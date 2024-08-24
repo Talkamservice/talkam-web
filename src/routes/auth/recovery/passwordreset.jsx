@@ -9,8 +9,8 @@ import { useResetPasswordMutation } from '../../../services/authApiSlice';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { CardVariants } from '../../../helpers/cardanimation';
-import * as Icon from 'react-feather'
 import { handleError } from '../../../utils/handleError';
+import * as Icon from 'react-feather'
 
 export const PasswordReset = () => {
 
@@ -27,7 +27,7 @@ export const PasswordReset = () => {
         inputBlurHandler: passwordBlurHandler,
         reset: resetEnteredPassword,
     } = useForm(isNotEmpty)
-    
+
     const {
         value: enteredConfirmPassword,
         valueChangeHandler: confirmPasswordChangeHandler,
@@ -36,9 +36,9 @@ export const PasswordReset = () => {
         reset: resetConfirmPassword,
     } = useForm(confirmPasswordMatches(enteredPassword));
 
-    const [ resetPassword, { isLoading } ] = useResetPasswordMutation();
+    const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
-    const handleSubmit = async(event) => {
+    const handleSubmit = async (event) => {
         event?.preventDefault()
         try {
             const userData = {
@@ -48,7 +48,7 @@ export const PasswordReset = () => {
             const res = await resetPassword({ ...userData }).unwrap();
             toast.success(res.message);
             navigate("/login", { replace: true })
-        } catch(err){
+        } catch (err) {
             const errorMessage = handleError(err)
             toast.error(errorMessage);
         };
@@ -103,20 +103,20 @@ export const PasswordReset = () => {
                         required
                         errorText={passwordHasError ? "Password Must contain at least a number, an upperCase character and a special character (!, @, #, $, %, &, *)" : ""}
                         eye
-                        icon = {
-                            showPassword ?  
-                            <Icon.EyeOff className='cursor-pointer' size={15} onClick={togglePasswordVisibility} /> 
-                            : 
-                            <Icon.Eye className='cursor-pointer' size={15} onClick={togglePasswordVisibility} />
+                        icon={
+                            showPassword ?
+                                <Icon.EyeOff className='cursor-pointer' size={15} onClick={togglePasswordVisibility} />
+                                :
+                                <Icon.Eye className='cursor-pointer' size={15} onClick={togglePasswordVisibility} />
                         }
                     />
 
                     <Input
                         onFocus={() => {
                             setTimeout(() => {
-                              setTouched(true);
+                                setTouched(true);
                             }, 3000)
-                          }}
+                        }}
                         wrapperClassName='relative w-full'
                         label='Confirm password'
                         placeholder='********'
@@ -128,11 +128,11 @@ export const PasswordReset = () => {
                         errorText={touched && !confirmPasswordIsValid ? "Passwords do not match" : null}
                         type={showSecondPassword ? 'text' : 'password'}
                         eye
-                        icon = {
-                            showSecondPassword ?  
-                            <Icon.EyeOff className='cursor-pointer' size={15} onClick={toggleSecondPasswordVisibility} /> 
-                            : 
-                            <Icon.Eye className='cursor-pointer' size={15} onClick={toggleSecondPasswordVisibility} />
+                        icon={
+                            showSecondPassword ?
+                                <Icon.EyeOff className='cursor-pointer' size={15} onClick={toggleSecondPasswordVisibility} />
+                                :
+                                <Icon.Eye className='cursor-pointer' size={15} onClick={toggleSecondPasswordVisibility} />
                         }
                     />
 

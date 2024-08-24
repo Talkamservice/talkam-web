@@ -266,6 +266,9 @@ export const Group = () => {
                 <EditGroupHeader
                     groupId={groupDetails?.data?.id}
                     onClose={toggleHeaderModal}
+                    banner={groupDetails?.data.image}
+                    name={groupDetails?.data?.name}
+                    info={groupDetails?.data.about}
                 />
             </Modal>
         </section>

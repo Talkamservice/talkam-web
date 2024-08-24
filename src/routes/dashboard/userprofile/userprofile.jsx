@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Avatar } from "../../../components/global/avatar";
 import { RouteTabs } from "../../../components/global/routetabs";
 import { useGetUserProfileDetailsQuery } from "../../../services/userApiSlice";
@@ -7,7 +7,7 @@ import { Modal } from "../../../components/global/modal";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../services/authSlice";
-import { UploadAvatarIcon } from "../../../assets/icons/generated";
+import { ChatSquareIcon, UploadAvatarIcon } from "../../../assets/icons/generated";
 
 const tabs = [
     {
@@ -30,6 +30,7 @@ const tabs = [
 export const Profile = () => {
 
     const currentUser = useSelector(selectCurrentUser);
+    const navigate = useNavigate();
     const { userId } = useParams();
     const [editModal, setEditModal] = useState();
 
@@ -65,6 +66,15 @@ export const Profile = () => {
                     <p onClick={handleEditModal} className={` ${isLoggedInUser ? "flex" : "hidden"} cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2`}>
                         <UploadAvatarIcon />
                         <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Edit Profile</span>
+                    </p>
+                    <p onClick={() => {
+                        navigate({
+                            pathname: `${location.pathname}/`,
+                            search: `?messages=true`,
+                        }, { state: userId });
+                    }} className={` ${!isLoggedInUser ? "flex" : "hidden"} cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2`}>
+                        <ChatSquareIcon />
+                        <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Send a DM</span>
                     </p>
                 </div>
             </section>

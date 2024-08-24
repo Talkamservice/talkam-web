@@ -133,7 +133,7 @@ export const GallerySkeletons = ({ num = 3, direction = 'flex-col', side }) => {
                             <div className="h-2 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
                             <div className="h-2 bg-tgray-100 opacity-10 rounded-full"></div>
                         </div>
-                        <div className={` flex items-center justify-center m-auto w-full ${side ? 'h-32' : 'h-64'} rounded-md p-3 bg-tgray-100 opacity-10 animate-pulse `}></div>
+                        <div className={` flex items-center justify-center m-auto w-full ${side ? 'h-32' : 'h-80'} rounded-xl p-3 bg-tgray-100 opacity-10 animate-pulse `}></div>
                     </div>
                 ))
             }

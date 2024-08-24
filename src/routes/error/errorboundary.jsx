@@ -10,7 +10,6 @@ export const ErrorBoundaryFallBack = ({ error }) => {
         navigate(-1, { replace: true })
         // window.location.reload()
     }
-    console.log(error)
     return (
         <div id="error-page" className="w-full h-dvh flex items-center justify-center flex-col overflow-auto">
             <div className="w-1/2">
