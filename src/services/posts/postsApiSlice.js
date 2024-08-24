@@ -160,6 +160,14 @@ export const postsApiSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ['posts']
         }),
+        reportComment: builder.mutation({
+            query: body => ({
+                url: `/user/posts/report-comment`,
+                method: 'post',
+                body: { ...body }
+            }),
+            invalidatesTags: ['comments', 'postDetail']
+        }),
     })
 })
 
@@ -182,4 +190,5 @@ export const {
     useBlockUserMutation,
     useGetBlockedListQuery,
     useReportPostMutation,
+    useReportCommentMutation,
 } = postsApiSlice

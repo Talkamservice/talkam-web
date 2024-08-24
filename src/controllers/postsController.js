@@ -112,7 +112,6 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
     };
 
     const handleReportPost = async () => {
-        console.log(checkedValue, id)
         try {
             const reportDetails = {
                 reason: checkedValue,

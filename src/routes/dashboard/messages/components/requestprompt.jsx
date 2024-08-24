@@ -1,6 +1,6 @@
 import { Button } from "../../../../components/forms/button"
 
-export const RequestPrompt = ({ user }) => {
+export const RequestPrompt = ({ user, handleRequest, isLoading }) => {
     return (
         <div className="flex flex-col gap-4">
             <p className="font-normal text-sm text-center">
@@ -12,6 +12,8 @@ export const RequestPrompt = ({ user }) => {
                 <Button
                     variant="error-outline"
                     fullWidth
+                    onClick={() => handleRequest("Declined")}
+                    disabled={isLoading}
                 >
                     Reject
                 </Button>
@@ -19,6 +21,8 @@ export const RequestPrompt = ({ user }) => {
                 <Button
                     className="!bg-[#000000]"
                     fullWidth
+                    onClick={() => handleRequest("Accepted")}
+                    disabled={isLoading}
                 >
                     Accept
                 </Button>

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDeleteMemberMutation, useGetGroupMembersQuery, useMakeModeratorMutation, useRemoveModeratorMutation } from "../../../../../services/groupApiSlice"
 import { Avatar } from "../../../../../components/global/avatar";
 import { motion } from "framer-motion";
@@ -195,7 +195,8 @@ export const Members = ({ currentUserRole, setMemberView, requestCount }) => {
 
 export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, poppostion, handleDeleteMember, handleMakeModerator, handleRemoveModerator, userId }) => {
 
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const location = useLocation();
     const popUpRef = useRef();
     const [showPopUp, setShowPopUp] = useState();
     useOnOutsideClick(popUpRef, () => {
@@ -238,6 +239,12 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
                                 </li>
                                 <li
                                     className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap"
+                                    onClick={() => {
+                                        navigate({
+                                            pathname: `${location.pathname}`,
+                                            search: `?messages=true`,
+                                        }, { state: userId });
+                                    }}
                                 >
                                     <ChatSquareIcon className="w-4 h-4" />
                                     <p>Send Message</p>

@@ -25,7 +25,7 @@ export const GroupRequests = ({ setMemberView }) => {
                 member_id: memberId,
                 action: action
             }
-            const res = await updateMemberRequests({ ...requestDetails }).unwrap();
+            const res = await updateMemberRequests({ id: groupId, body: { ...requestDetails } }).unwrap();
             toast.success(res?.message)
         } catch (error) {
             const errorMessage = handleError(error);
@@ -63,9 +63,9 @@ export const GroupRequests = ({ setMemberView }) => {
                             :
                             requestMembers?.data?.data?.map((member) => (
                                 <GroupRequestCard
-                                    key={member?.id}
-                                    avatar={member?.avatar}
-                                    user={member?.username}
+                                    key={member?.user.id}
+                                    avatar={member?.user.avatar}
+                                    user={member?.user?.username}
                                     onApprove={() => handleRequests(member.id, "Approved")}
                                     onDecline={() => togglePrompt(member?.id)}
                                     isLoading={updateLoading}

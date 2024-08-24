@@ -8,8 +8,9 @@ import { allowedDocumentExtensions, allowedImageExtensions } from '../../helpers
 import { UserCardImage } from './usercardimage';
 import { ImageModalView } from '../global/imgemodalview';
 import moment from 'moment';
+import { ImagePreviewLoader } from './previewloader';
 
-export const SenderCard = ({ file, text, time, isLoading, messageType }) => {
+export const SenderCard = ({ preview, file, text, time, isLoading, messageType }) => {
 
     const [showImageModal, setShowImageModal] = useState(false);
 
@@ -34,7 +35,7 @@ export const SenderCard = ({ file, text, time, isLoading, messageType }) => {
             <div className="relative min-w-1/3 p-2 bg-tprimary-50 rounded-r-xl rounded-bl-xl">
                 {
                     isLoading ?
-                        <ColoredLoader />
+                        <ImagePreviewLoader src={preview} />
                         :
                         <div className='w-full flex flex-col'>
                             <UserCardImage
@@ -50,7 +51,7 @@ export const SenderCard = ({ file, text, time, isLoading, messageType }) => {
 
     const typeMap = {
         "Text": TextView,
-        "Media": MediaView,
+        "media": MediaView,
         "File": "File"
     };
 

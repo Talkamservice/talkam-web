@@ -128,7 +128,7 @@ export const groupApiSlice = apiSlice.injectEndpoints({
                 method: 'post',
                 body: { ...body }
             }),
-            invalidatesTags: ["requests", "members"]
+            invalidatesTags: ["requests", "members", "details"]
         })
     })
 })

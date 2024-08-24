@@ -4,10 +4,21 @@ import { ChatBox } from "./components/chatbox"
 import { Conversations } from "./components/conversations";
 import { Requests } from "./components/requests";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useCurrentConversationQuery } from "../../../services/posts/messagesApiSlice";
+import { apiSlice } from "../../../app/api/apiSlice";
+import { useDispatch } from "react-redux";
 
 export const Messages = ({ onClose }) => {
 
-    const [currentChat, setCurrentChat] = useState(null);
+    const dispatch = useDispatch()
+    const navigate = useNavigate();
+    const prefetchConversations = apiSlice.usePrefetch("getAllConversations");
+    const { state: receiverId } = useLocation();
+    const { data: currentConvo, isLoading: currentLoading } = useCurrentConversationQuery(receiverId, { skip: !receiverId })
+    const [currentChat, setCurrentChat] = useState(currentConvo && (currentConvo?.data ?? null));
+    const isMobile = useMediaQuery("(max-width: 1024px)");
+    let switchBoxView = currentChat && isMobile === true;
 
     const tabs = [
         {
@@ -28,10 +39,16 @@ export const Messages = ({ onClose }) => {
         },
     ];
 
-
-    const isMobile = useMediaQuery("(max-width: 1024px)");
-    let switchBoxView = currentChat && isMobile === true;
-
+    //Effects
+    useEffect(() => {
+        currentConvo && setCurrentChat(() => currentConvo?.data);
+        currentConvo && navigate({
+            pathname: `${location.pathname}/`,
+            search: `?messages=true`,
+        }, { replace: true });
+        currentConvo && prefetchConversations();
+        currentConvo && dispatch(apiSlice.endpoints.getAllConversations.initiate(null));
+    }, [currentConvo, receiverId])
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -59,6 +76,7 @@ export const Messages = ({ onClose }) => {
 
                 <section className={`w-full h-full md:w-2/3 ${switchBoxView && 'w-full md:w-full block'} ${!switchBoxView && isMobile ? "hidden" : "block"}`}>
                     <ChatBox
+                        setCurrentChat={setCurrentChat}
                         currentChat={currentChat}
                     />
                 </section>

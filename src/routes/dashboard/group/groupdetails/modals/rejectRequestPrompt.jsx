@@ -2,9 +2,11 @@ import { toast } from "sonner";
 import { Button } from "../../../../../components/forms/button";
 import { useUpdateMemberRequestsMutation } from "../../../../../services/groupApiSlice";
 import { handleError } from "../../../../../utils/handleError";
+import { useParams } from "react-router-dom";
 
 export const RejectRequestModal = ({ memberId, onClose }) => {
 
+    const { groupId } = useParams();
     const [updateMemberRequests, { isLoading: updateLoading }] = useUpdateMemberRequestsMutation();
 
     const handleRequests = async () => {
@@ -13,7 +15,7 @@ export const RejectRequestModal = ({ memberId, onClose }) => {
                 member_id: memberId,
                 action: "Declined"
             }
-            const res = await updateMemberRequests({ ...requestDetails }).unwrap();
+            const res = await updateMemberRequests({ id: groupId, body: { ...requestDetails } }).unwrap();
             toast.success(res?.message);
             onClose();
         } catch (error) {
@@ -35,7 +37,7 @@ export const RejectRequestModal = ({ memberId, onClose }) => {
                     isLoading={updateLoading}
                     disabled={updateLoading}
                     className="!rounded-full"
-                    children="Delete Rule"
+                    children="Reject"
                     variant="error"
                     fullWidth
                 />

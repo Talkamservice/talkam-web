@@ -5,10 +5,13 @@ import { ConversationCard } from "../../../../components/messages/conversationca
 import { useGetAllConversationsQuery } from "../../../../services/posts/messagesApiSlice";
 import { useState } from "react";
 import { useDebounceValue } from "../../../../hooks/useDebounceValue";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../../../services/authSlice";
 import EmptyListIcon from "../../../../assets/images/emptylist.png"
 
 export const Conversations = ({ currentChat, setCurrentChat }) => {
 
+    const currentUser = useSelector(selectCurrentUser);
     const [search, setSearch] = useState("");
     const debounceValue = useDebounceValue(search);
 
@@ -42,18 +45,21 @@ export const Conversations = ({ currentChat, setCurrentChat }) => {
                                 />
                             </section>
                             :
-                            conversations?.data?.map((convo) => (
-                                <ConversationCard
-                                    key={convo.id}
-                                    user={convo.receiver?.username ?? convo?.receiver?.name}
-                                    time={convo.created_at}
-                                    lastMessage={convo.last_message?.message}
-                                    status={convo.last_message?.read}
-                                    onClick={() => setCurrentChat(() => convo)}
-                                    avatar={convo?.receiver?.avatar}
-                                    activeChat={currentChat && currentChat?.last_message?.conversation_id === convo?.last_message?.conversation_id}
-                                />
-                            ))
+                            conversations?.data?.map((convo) => {
+                                const receiver = convo?.members?.find(member => member.id !== currentUser.id)
+                                return (
+                                    <ConversationCard
+                                        key={convo.id}
+                                        user={receiver?.username ?? receiver.name}
+                                        time={convo.created_at}
+                                        lastMessage={convo.last_message?.message}
+                                        status={convo.last_message?.read}
+                                        onClick={() => setCurrentChat(() => convo)}
+                                        avatar={receiver?.avatar}
+                                        activeChat={currentChat && currentChat?.last_message?.conversation_id === convo?.last_message?.conversation_id}
+                                    />
+                                )
+                            })
                 }
             </section>
         </div>

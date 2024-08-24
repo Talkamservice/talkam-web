@@ -1,3 +1,4 @@
+import { useReportCommentController } from "../../controllers/reportController";
 import { Button } from "../forms/button"
 import { CustomRadio } from "../forms/customradio"
 import { Modal } from "../global/modal";
@@ -13,14 +14,16 @@ const reportMap = {
     "Pornography": "We do not allow pornographic contents and would take it down as soon as reported",
 }
 
-export const PostReportModal = ({ onClose, checkedValue, setCheckedValue, confirmationModal, setConfirmationModal, handleReport, isLoading }) => {
+export const CommentReportModal = ({ onClose, postId, commentId }) => {
+
+    const reportController = useReportCommentController(postId, commentId);
 
     const checkBoxHandler = (event) => {
-        setCheckedValue(event.target.value)
+        reportController.setCheckedValue(event.target.value)
     };
 
     const handleConfirmationModal = () => {
-        setConfirmationModal((prev) => !prev)
+        reportController.setConfirmationModal((prev) => !prev)
     }
 
     return (
@@ -39,7 +42,7 @@ export const PostReportModal = ({ onClose, checkedValue, setCheckedValue, confir
                             name="report"
                             label={report}
                             value={report}
-                            checked={checkedValue === report}
+                            checked={reportController.checkedValue === report}
                         />
                     ))
                 }
@@ -67,14 +70,14 @@ export const PostReportModal = ({ onClose, checkedValue, setCheckedValue, confir
                         children="Report"
                         className="!bg-[#272727] disabled:!bg-opacity-40"
                         fullWidth
-                        disabled={!checkedValue || isLoading}
-                        onClick={handleReport}
-                        isLoading={isLoading}
+                        disabled={!reportController.checkedValue || reportController.reportLoading}
+                        onClick={reportController.handleReportPost}
+                        isLoading={reportController.reportLoading}
                     />
                 </section>
             </footer>
             <Modal
-                show={confirmationModal}
+                show={reportController.confirmationModal}
                 shouldCloseOnEscPress={false}
                 shouldCloseOnOverlayClick={false}
                 onClose={handleConfirmationModal}

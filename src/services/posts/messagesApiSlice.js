@@ -4,11 +4,11 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         sendMessage: builder.mutation({
             query: message => ({
-                url: `/user/messaging/conversations`,
+                url: `/user/messaging/messages/send`,
                 method: "post",
                 body: { ...message }
             }),
-            providesTags: ["messages"]
+            invalidatesTags: ["messages"]
         }),
         getMessages: builder.query({
             query: ({ id, search }) => ({
@@ -17,11 +17,10 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: ["messages"]
         }),
-        currentConversation: builder.mutation({
+        currentConversation: builder.query({
             query: id => ({
-                url: `/user/messaging/conversations/current-conversation`,
-                method: "post",
-                body: id
+                url: `/user/messaging/conversations/current/fetch?receiver_id=${id}`,
+                method: "get",
             })
         }),
         getAllConversations: builder.query({
@@ -30,6 +29,29 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
                 method: 'get'
             }),
             providesTags: ["conversations"]
+        }),
+        getConversationDetails: builder.query({
+            query: id => ({
+                url: `/user/messaging/conversations/${id}`,
+                method: 'get'
+            }),
+            providesTags: ["chatdetails"]
+        }),
+        updateRequestStatus: builder.mutation({
+            query: body => ({
+                url: `/user/messaging/conversations/update-status`,
+                method: "post",
+                body: { ...body }
+            }),
+            invalidatesTags: ["messages", "conversations", "chatdetails"]
+        }),
+        checkCurrentCoversation: builder.mutation({
+            query: id => ({
+                url: `/user/messaging/conversations/current-conversation`,
+                method: "post",
+                body: id
+            }),
+            invalidatesTags: ["conversations"]
         })
     })
 })
@@ -37,6 +59,9 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
 export const {
     useSendMessageMutation,
     useGetMessagesQuery,
-    useCurrentConversationMutation,
+    useCurrentConversationQuery,
     useGetAllConversationsQuery,
+    useGetConversationDetailsQuery,
+    useUpdateRequestStatusMutation,
+    useCheckCurrentCoversationMutation,
 } = messagesApiSlice

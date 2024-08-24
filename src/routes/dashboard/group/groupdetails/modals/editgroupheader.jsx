@@ -12,13 +12,13 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { storageDB } from "../../../../../utils/firestore"
 import * as Icon from "react-feather"
 
-export const EditGroupHeader = ({ groupId, onClose }) => {
+export const EditGroupHeader = ({ banner, name, info, groupId, onClose }) => {
 
     const [imageLoading, setImageLoading] = useState();
     const [details, setDetails] = useState({
-        banner: null,
-        title: "",
-        description: "",
+        banner: banner,
+        title: name,
+        description: info,
     });
 
     const setFormattedDetailsContent = useCallback(
@@ -122,7 +122,7 @@ export const EditGroupHeader = ({ groupId, onClose }) => {
             <form id="update" onSubmit={handleUpdateGroupDetails} className="flex flex-col gap-5">
                 <TextArea
                     label="Name"
-                    placeholder="Enter your new group name"
+                    placeholder={name}
                     rounded="rounded-lg"
                     value={details.title}
                     onChange={(event) => setFormattedDetailsContent(event.target.value, 'title', 50)}
@@ -136,7 +136,7 @@ export const EditGroupHeader = ({ groupId, onClose }) => {
                     label="Description"
                     type="text"
                     rounded="rounded-lg"
-                    placeholder='A short description of your group'
+                    placeholder={info}
                     value={details.description}
                     onChange={(event) => setFormattedDetailsContent(event.target.value, 'description', 500)}
                     rows={4}
