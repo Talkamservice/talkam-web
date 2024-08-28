@@ -13,16 +13,14 @@ import * as Icon from 'react-feather'
 export const ChatBox = ({ setCurrentChat, currentChat }) => {
 
     const messageController = useMessagesController(currentChat, setCurrentChat);
-    console.log(messageController?.updatedMessages)
 
     const renderMessages = () => {
         return messageController.updatedMessages?.map((message, index) => {
             if (message?.message_type === 'date') {
-                console.log(message?.date)
                 return (
-                    <div className="flex flex-1 gap-3 items-center justify-center w-full z-40 py-3">
+                    <div className="flex flex-1 gap-3 items-center justify-center w-full z-10 py-3">
                         <span className='text-black bg-none border border-tgray-50 bg-opacity-15 p-1 px-2.5 rounded-xl text-[10px]'>
-                            {message?.date}
+                            {message?.date ?? null}
                         </span>
                     </div>
                 )

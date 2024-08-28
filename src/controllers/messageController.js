@@ -17,8 +17,8 @@ import { randomId } from "../helpers/randomid";
 import { allowedDocumentExtensions, combinedExtensions } from "../helpers/extensions";
 import { getFileExtension } from "../helpers/getFileExtension";
 import { useLocation, useNavigate } from "react-router-dom";
-import Pusher from 'pusher-js';
 import { formatDate } from "../utils/formatMessageDate";
+import Pusher from 'pusher-js';
 
 export const useMessagesController = (currentChat, setCurrentChat) => {
 
@@ -76,8 +76,6 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
         }
         return newMessages;
     };
-
-
     const updatedMessages = addDateIndicators(messages);
 
     const connectToPusher = () => {
@@ -102,8 +100,14 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
         });
         pusherChannel = pusher.subscribe('private-conversation.' + currentChat?.id); // Assign pusherChannel
         pusherChannel.bind('receive-message.' + currentUser?.id, (data) => {
-            setMessages((prev) => [...prev, { ...data?.data }]);
-            scrollToBottom();
+            if (data?.data) {
+                if (data?.data?.conversation_id !== currentChat?.id) {
+                    return;
+                } else {
+                    setMessages((prev) => [...prev, { ...data?.data }]);
+                    scrollToBottom();
+                }
+            }
         });
         return () => {
             pusherChannel.unbind_all();
@@ -147,7 +151,8 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
             message_type: allowedDocumentExtensions.includes((getFileExtension(document?.type)?.toLowerCase())) ? "file" : "media",
             message: text,
             asset_url: URL.createObjectURL(files[0]),
-            imageLoading: imageLoading
+            imageLoading: imageLoading,
+            created_at: new Date()
         }
         setMessages((messages) => [...messages, messageData]);
         saveFileImage(files[0], allowedDocumentExtensions.includes((getFileExtension(document?.type)?.toLowerCase())) ? "file" : "media");
@@ -195,6 +200,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
                 message_type: "Text",
                 message: text,
                 asset_url: null,
+                created_at: new Date()
             }
             setText("")
             setMessages((messages) => [...messages, messageData]);

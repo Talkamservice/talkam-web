@@ -67,15 +67,15 @@ export const theme = {
     backgroundColor: ['even'],
   },
 };
-  export const variants = {
-    extend: {
-      display: ['group-focus']
-    }
-  };
-  export const plugins = [
-    // require('@tailwindcss/typography'),
-    require('@tailwindcss/forms'),
-    require('flowbite/plugin'),
-    // require('@tailwindcss/line-clamp'),
-    // require("daisyui"),
-  ];
+export const variants = {
+  extend: {
+    display: ['group-focus']
+  }
+};
+export const plugins = [
+  // require('@tailwindcss/typography'),
+  require('@tailwindcss/forms'),
+  require('flowbite/plugin'),
+  // require('@tailwindcss/line-clamp'),
+  // require("daisyui"),
+];

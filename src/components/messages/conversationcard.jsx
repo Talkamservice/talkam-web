@@ -25,7 +25,7 @@ export const ConversationCard = ({ avatar, user, lastMessage, time, status, onCl
                 }
             </div>
             {
-                isFromReceiver && unreadcount ?
+                isFromReceiver && unreadcount || isFromReceiver && !status ?
                     <span className='absolute top-2 left-3'>
                         <Icon.Circle
                             size={10}
