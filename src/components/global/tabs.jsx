@@ -18,6 +18,7 @@ export const Tabs = ({ tabs, headerPadding }) => {
                         text={item.title}
                         active={item.id === activeTab}
                         onClick={() => handleTabClick(item.id)}
+                        icon={item.icon}
                     />
                 ))
                 }

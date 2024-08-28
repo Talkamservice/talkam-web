@@ -5,7 +5,7 @@ import { GroupAddIcon, InboxIcon, LatestEventsIcon, NotificationIcon, TalkamLogo
 import { SideBarItem } from '../global/sidebarItem';
 import { Button } from '../forms/button';
 import { NavSearch } from '../forms/navsearchbar';
-import { useFollowingCategoriesQuery, useGetCategoriesQuery, useGetUserProfileDetailsQuery } from '../../services/userApiSlice';
+import { useFollowingCategoriesQuery, useGetSubCategoriesQuery, useGetUserProfileDetailsQuery } from '../../services/userApiSlice';
 import { ColoredLoader } from '../global/loader';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../services/authSlice';
@@ -36,12 +36,13 @@ export const MainAppLayout = ({ children }) => {
     const [profileMenu, setProfileMenu] = useState(false);
     const [verifyModal, setVerifyModal] = useState(false);
 
-    const { data: categories, isLoading: loadingCategories } = useGetCategoriesQuery({
-        sort: 'popular'
+    const { data: categories, isLoading: loadingCategories } = useGetSubCategoriesQuery({
+        sort: "popular",
+        categoryId: ""
     });
     const { data: followingCategories, isLoading: followingCategoriesLoading } = useFollowingCategoriesQuery();
     const [resendOtp, { isLoading: resendLoading }] = useResendOtpMutation();
-    const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
+    const { data: user, isSuccess } = useGetUserProfileDetailsQuery(currentUser?.id, {
         refetchOnFocus: true,
         refetchOnMountOrArgChange: true,
         refetchOnReconnect: true
@@ -83,7 +84,7 @@ export const MainAppLayout = ({ children }) => {
                 setVerifyModal(() => true)
             }
         };
-    }, [user]);
+    }, [isSuccess]);
 
     return (
         <Suspense fallback={<ColoredLoader />}>
@@ -105,7 +106,7 @@ export const MainAppLayout = ({ children }) => {
                                     :
                                     <NavSearch />
                                 }
-                                <NotificationIcon className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
+                                <NotificationIcon onClick={() => navigate('/notifications')} className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
                                 <InboxIcon
                                     onClick={() => {
                                         navigate({

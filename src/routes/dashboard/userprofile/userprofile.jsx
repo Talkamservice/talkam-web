@@ -30,7 +30,7 @@ const tabs = [
 export const Profile = () => {
 
     const currentUser = useSelector(selectCurrentUser);
-    const navigate = useNavigate();
+    const navigate = useNavigate()
     const { userId } = useParams();
     const [editModal, setEditModal] = useState();
 
@@ -91,7 +91,10 @@ export const Profile = () => {
                 position='center'
                 contentWidth='w-full md:w-3/5'
             >
-                <EditProfileModal onClose={handleEditModal} />
+                <EditProfileModal
+                    onClose={handleEditModal}
+                    user={user}
+                />
             </Modal>
         </div>
     )

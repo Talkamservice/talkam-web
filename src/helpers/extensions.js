@@ -1,2 +1,4 @@
-export const allowedImageExtensions = ['jpeg', 'jpg', 'png'];;
-export const allowedDocumentExtensions = ['pdf'];
+export const allowedImageExtensions = ['jpeg', 'jpg', 'png', 'webp'];;
+export const allowedDocumentExtensions = ['pdf', 'doc', 'docx',];
+
+export const combinedExtensions = allowedImageExtensions.concat(allowedDocumentExtensions)

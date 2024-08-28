@@ -15,21 +15,21 @@ import { Modal } from '../../../components/global/modal';
 import { ChooseAvatarModal } from '../../onboarding/avatarmodal';
 import { Button } from '../../../components/forms/button';
 
-export const EditProfileModal = ({ onClose }) => {
+export const EditProfileModal = ({ onClose, user }) => {
 
     const dispatch = useDispatch();
     const currentUser = useSelector(selectCurrentUser);
     const token = useSelector(selectCurrentToken)
-    const [ openAvatarModal, setOpenAvatarModal ] = useState();
-    const [profileImage, setProfileImage] = useState(null);
+    const [openAvatarModal, setOpenAvatarModal] = useState();
+    const [profileImage, setProfileImage] = useState(user?.data?.avatar ?? null);
     const {
         hasError: userNameHasError, inputBlurHandler: userNameBlurHandler,
         value: userNameValue, valueChangeHandler: userNameChangeHandler,
         reset: resetUserName, isValid: userNameIsValid,
     } = useForm(isNotEmpty);
 
-    const { data:avatars, isLoading:loadingAvatars } = useGetAvatarsQuery();
-    const [ updateProfile, { isLoading } ] = useUpdateProfileMutation();
+    const { data: avatars, isLoading: loadingAvatars } = useGetAvatarsQuery();
+    const [updateProfile, { isLoading }] = useUpdateProfileMutation();
 
     const toggleModal = () => {
         setOpenAvatarModal(prev => !prev)
@@ -40,21 +40,21 @@ export const EditProfileModal = ({ onClose }) => {
         setOpenAvatarModal(false)
     }
 
-    const submitHandler = async(event) => {
+    const submitHandler = async (event) => {
         event.preventDefault();
         try {
             const updateObject = {
-                username: (!userNameValue || userNameValue === "")  ? currentUser?.username : userNameValue,
+                username: (!userNameValue || userNameValue === "") ? currentUser?.username : userNameValue,
                 avatar: profileImage ?? currentUser?.avatar
             }
             const res = await updateProfile({ ...updateObject }).unwrap();
             dispatch(setCredentials({
-                user: {...currentUser, ...updateObject},
+                user: { ...currentUser, ...updateObject },
                 accessToken: token,
             }))
             toast.success(res?.message);
             onClose();
-        } catch(err) {
+        } catch (err) {
             const errorMessage = handleError(err);
             toast.error(errorMessage)
         }
@@ -97,14 +97,14 @@ export const EditProfileModal = ({ onClose }) => {
                     <Input
                         wrapperClassName='relative w-full'
                         label='Username'
-                        placeholder='Chuck Norris'
+                        placeholder={user?.data?.username ?? user?.data?.name}
                         type="text"
                         onBlur={userNameBlurHandler}
                         onChange={userNameChangeHandler}
                         value={userNameValue}
                         // error={userNameHasError}
                         required
-                        // errorText={userNameHasError ? "Please Enter a valid username" : ""}
+                    // errorText={userNameHasError ? "Please Enter a valid username" : ""}
                     />
 
                     <footer className='w-full flex item-center gap-4'>
