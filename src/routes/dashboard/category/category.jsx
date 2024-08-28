@@ -71,7 +71,15 @@ export const Category = () => {
                             <div className="flex items-center gap-2">
                                 <img
                                     src={subCategoryDetails?.data?.icon_image}
-                                    className="w-8 h-8 rounded-full"
+                                    className="w-8 h-8 rounded-full bg-tgray-100 bg-opacity-10"
+                                    loading="lazy"
+                                    style={{
+                                        backgroundRepeat: 'no-repeat',
+                                        backgroundSize: "100% 100%",
+                                        objectFit: 'cover',
+                                        objectPosition: "center",
+                                        backgroundPosition: "center"
+                                    }}
                                     onError={(e) => {
                                         e.target.onerror = Fallback;
                                         e.target.src = Fallback;

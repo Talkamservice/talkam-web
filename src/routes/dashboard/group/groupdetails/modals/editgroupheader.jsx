@@ -52,9 +52,9 @@ export const EditGroupHeader = ({ banner, name, info, groupId, onClose }) => {
         try {
             const body = {
                 group_id: groupId,
-                name: details?.title,
-                about: details?.description,
-                image: details?.banner
+                name: details?.title ?? name,
+                about: details?.description ?? info,
+                image: details?.banner ?? banner
             }
             const res = await updateGroupDetails({ id: groupId, body }).unwrap()
             toast.success(res?.message);

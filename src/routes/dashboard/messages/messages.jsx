@@ -5,17 +5,26 @@ import { Conversations } from "./components/conversations";
 import { Requests } from "./components/requests";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useCurrentConversationQuery } from "../../../services/posts/messagesApiSlice";
-import { apiSlice } from "../../../app/api/apiSlice";
-import { useDispatch } from "react-redux";
+import { useCurrentConversationQuery, useGetAllConversationsBareQuery } from "../../../services/posts/messagesApiSlice";
+import { useDebounceValue } from "../../../hooks/useDebounceValue";
+import { useSelector } from "react-redux";
+import { selectCurrentToken, selectCurrentUser } from "../../../services/authSlice";
+import Pusher from 'pusher-js';
 
 export const Messages = ({ onClose }) => {
 
-    const dispatch = useDispatch()
+    const currentUser = useSelector(selectCurrentUser)
+    const token = useSelector(selectCurrentToken);
     const navigate = useNavigate();
-    const prefetchConversations = apiSlice.usePrefetch("getAllConversations");
     const { state: receiverId } = useLocation();
-    const { data: currentConvo, isLoading: currentLoading } = useCurrentConversationQuery(receiverId, { skip: !receiverId })
+    const [search, setSearch] = useState("");
+    const debounceValue = useDebounceValue(search);
+    const { data: conversations, isLoading, refetch } = useGetAllConversationsBareQuery(
+        debounceValue ?? ""
+    );
+    const { data: currentConvo, isLoading: currentLoading, isSuccess } = useCurrentConversationQuery(receiverId,
+        { skip: !receiverId, refetchOnFocus: true, refetchOnMountOrArgChange: true }
+    );
     const [currentChat, setCurrentChat] = useState(currentConvo && (currentConvo?.data ?? null));
     const isMobile = useMediaQuery("(max-width: 1024px)");
     let switchBoxView = currentChat && isMobile === true;
@@ -27,6 +36,10 @@ export const Messages = ({ onClose }) => {
             component: <Conversations
                 setCurrentChat={setCurrentChat}
                 currentChat={currentChat}
+                conversations={conversations}
+                isLoading={isLoading}
+                setSearch={setSearch}
+                currentUser={currentUser}
             />
         },
         {
@@ -39,16 +52,48 @@ export const Messages = ({ onClose }) => {
         },
     ];
 
+    const connectToPusher = () => {
+        let pusherChannel; // Declare pusherChannel variable
+
+        // Unsubscribe from the channel if it's already subscribed
+        if (pusherChannel) {
+            pusherChannel.unbind_all();
+            pusher.unsubscribe('refresh-notification.' + currentUser?.id);
+        }
+
+        const pusher = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
+            cluster: import.meta.env.VITE_PUSHER_CLUSTER,
+            encrypted: true,
+            authEndpoint: `${import.meta.env.VITE_BASE_API_URL}/broadcasting/auth`,
+            auth: {
+                headers: {
+                    'content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        });
+        pusherChannel = pusher.subscribe('refresh-notification.' + currentUser?.id); // Assign pusherChannel
+        pusherChannel.bind('refresh', (data) => {
+            // console.log(data);
+            refetch()
+        });
+        return () => {
+            pusherChannel.unbind_all();
+            pusher.unsubscribe('refresh-notification.' + currentUser?.id);
+        };
+    };
+
     //Effects
     useEffect(() => {
-        currentConvo && setCurrentChat(() => currentConvo?.data);
-        currentConvo && navigate({
-            pathname: `${location.pathname}/`,
-            search: `?messages=true`,
-        }, { replace: true });
-        currentConvo && prefetchConversations();
-        currentConvo && dispatch(apiSlice.endpoints.getAllConversations.initiate(null));
-    }, [currentConvo, receiverId])
+        if (isSuccess) {
+            setCurrentChat(() => currentConvo?.data);
+            refetch();
+            navigate({
+                pathname: `${location.pathname}`,
+                search: `?messages=true`,
+            }, { replace: true });
+        }
+    }, [isSuccess])
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -62,6 +107,10 @@ export const Messages = ({ onClose }) => {
             document.removeEventListener("keydown", handleKeyDown);
         };
     }, []);
+
+    useEffect(() => {
+        connectToPusher();
+    }, [])
 
     return (
         <div className="w-full h-[calc(100dvh-2dvh)] top-0 bottom-0 relative">

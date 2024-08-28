@@ -1,7 +1,7 @@
 import { EmptyState } from "../../../../components/global/emptystate"
 import { ColoredLoader } from "../../../../components/global/loader"
 import { motion } from "framer-motion"
-import { ChatHeader } from "../../../../components/messages/chatheader"
+import { ChatHeader } from "../components/chatheader"
 import { UserCard } from "../../../../components/messages/usercard"
 import { SenderCard } from "../../../../components/messages/sendercard"
 import { useMessagesController } from "../../../../controllers/messageController"
@@ -13,10 +13,21 @@ import * as Icon from 'react-feather'
 export const ChatBox = ({ setCurrentChat, currentChat }) => {
 
     const messageController = useMessagesController(currentChat, setCurrentChat);
+    console.log(messageController?.updatedMessages)
 
     const renderMessages = () => {
-        return messageController.messages?.map((message, index) => {
-            if (message?.sender_id === messageController?.currentUser?.id) {
+        return messageController.updatedMessages?.map((message, index) => {
+            if (message?.message_type === 'date') {
+                console.log(message?.date)
+                return (
+                    <div className="flex flex-1 gap-3 items-center justify-center w-full z-40 py-3">
+                        <span className='text-black bg-none border border-tgray-50 bg-opacity-15 p-1 px-2.5 rounded-xl text-[10px]'>
+                            {message?.date}
+                        </span>
+                    </div>
+                )
+            }
+            else if (message?.sender_id === messageController?.currentUser?.id) {
                 return (
                     <UserCard
                         key={index}
@@ -51,8 +62,11 @@ export const ChatBox = ({ setCurrentChat, currentChat }) => {
                 currentChat ?
                     <>
                         <ChatHeader
-                            currentChat={currentChat}
+                            details={currentChat}
+                            currentChat={messageController?.conversationdetails?.data}
+                            setCurrentChat={setCurrentChat}
                             currentUser={messageController?.currentUser}
+                            messageController={messageController}
                         />
                         <div className="w-full h-full flex-col p-6 overflow-y-auto flex-grow">
                             {
@@ -105,9 +119,10 @@ export const ChatBox = ({ setCurrentChat, currentChat }) => {
                                                         cleanOnEnter
                                                         onEnter={messageController.handleSubmit}
                                                         placeholder="Type a message..."
-                                                        borderRadius={5}
                                                         borderColor="transparent"
                                                         theme="auto"
+                                                        keepOpened
+                                                        fontSize={12}
                                                     />
                                                 </section>
                                                 <section className="flex items-center gap-4 flex-2">

@@ -1,14 +1,13 @@
 import { motion } from 'framer-motion';
 import { PostCardVariants } from '../../helpers/cardanimation';
-import { getFileExtension } from '../../helpers/getFileExtension';
 import { ColoredLoader } from '../global/loader';
 import { Modal } from '../global/modal';
 import { useState } from 'react';
-import { allowedDocumentExtensions, allowedImageExtensions } from '../../helpers/extensions';
 import { UserCardImage } from './usercardimage';
 import { ImageModalView } from '../global/imgemodalview';
-import moment from 'moment';
 import { ImagePreviewLoader } from './previewloader';
+import moment from 'moment';
+import * as Icon from 'react-feather'
 
 export const SenderCard = ({ preview, file, text, time, isLoading, messageType }) => {
 
@@ -49,10 +48,32 @@ export const SenderCard = ({ preview, file, text, time, isLoading, messageType }
         </div>
     </li>
 
+    const FileView = <li className="flex justify-start">
+        <div className="w-fit">
+            <div className="relative p-2 bg-tprimary-50 rounded-r-xl rounded-bl-xl">
+                {
+                    isLoading ?
+                        <ColoredLoader />
+                        :
+                        <span className="flex items-start justify-start flex-col space-x-8 text-sm text-doc-white truncate">
+                            <a href={file} target="_blank" rel="noreferrer noopener" className="flex items-center justify-between space-x-6 w-full p-2 bg-doc-white rounded text-xs underline cursor-pointer truncate">
+                                <Icon.FileText color="#fff" >
+                                    {file}
+                                </Icon.FileText>
+                                <span style={{
+                                    textDecoration: "none",
+                                }} className="no-underline text-[10px] text-twhite-100 italic">Tap to view</span>
+                            </a>
+                        </span>
+                }
+            </div>
+        </div>
+    </li>
+
     const typeMap = {
         "Text": TextView,
         "media": MediaView,
-        "File": "File"
+        "file": FileView
     };
 
     return (

@@ -42,7 +42,7 @@ export const Requests = ({ currentChat, setCurrentChat }) => {
                                     <ConversationCard
                                         key={convo.id}
                                         user={receiver?.username ?? receiver.name}
-                                        time={convo.created_at}
+                                        time={convo.last_message?.created_at}
                                         lastMessage={convo.last_message?.message}
                                         status={convo.last_message?.read}
                                         onClick={() => setCurrentChat(() => convo)}

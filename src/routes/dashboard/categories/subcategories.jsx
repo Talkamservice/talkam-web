@@ -1,15 +1,12 @@
 import { SubCategoryCard } from "../../../components/categories/subcategorycard"
 import { EmptyState } from "../../../components/global/emptystate"
-import { useGetSubCategoriesQuery } from "../../../services/userApiSlice"
+import { useGetMergedSubCategoriesQuery } from "../../../services/userApiSlice"
 import { SubCategorySkeletonLoader } from "../../../components/global/skeletons"
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 export const SubCategories = ({ id }) => {
 
-    const { data: subcategories, isLoading } = useGetSubCategoriesQuery({
-        sort: "",
-        categoryId: id
-    });
+    const { data: subcategories, isLoading } = useGetMergedSubCategoriesQuery(id);
 
     return (
         <section className="w-full">
@@ -33,10 +30,11 @@ export const SubCategories = ({ id }) => {
                         <section className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {subcategories?.data?.map((category) => (
                                 <SubCategoryCard
-                                    key={category.id}
+                                    key={category?.id}
                                     followercount={category?.followers_count}
                                     name={category?.name}
-                                    id={category.id}
+                                    id={category?.id}
+                                    type={category?.type}
                                 />
                             ))}
                         </section>

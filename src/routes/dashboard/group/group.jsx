@@ -133,7 +133,7 @@ export const Group = () => {
                                                         objectFit: "cover",
                                                     }}
                                                     src={groupDetails?.data.image ?? FallBack}
-                                                    className="rounded-full w-12 h-12"
+                                                    className="rounded-full w-12 h-12 bg-tgray-100 bg-opacity-10"
                                                     onError={(e) => {
                                                         e.target.onerror = FallBack;
                                                         e.target.src = FallBack
@@ -175,7 +175,7 @@ export const Group = () => {
                                                     disabled={followLoading}
                                                 />
                                                 :
-                                                !groupDetails?.data?.is_following && groupDetails?.data.group_access && !groupDetails?.data?.has_requested === "Closed" ?
+                                                !groupDetails?.data?.is_following && groupDetails?.data.group_access === "Closed" && !groupDetails?.data?.has_requested ?
                                                     <Button
                                                         children="Request to join"
                                                         leftIcon={!requestLoading && <Icon.Plus size={18} />}

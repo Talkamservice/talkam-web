@@ -16,7 +16,7 @@ export const Banner = ({ banner, groupCategory, groupCategoryIcon, onRoute }) =>
         <section className="relative">
             <div onClick={toggleModal} className="relative w-full overflow-hidden cursor-pointer h-[100px] md:h-[150px] border-tgray-200 rounded-sm flex items-center justify-center">
                 <img
-                    className="border-none h-full w-full"
+                    className="border-none h-full w-full bg-tgray-100 bg-opacity-10"
                     src={banner ?? TalkamLogo}
                     style={{
                         backgroundRepeat: 'no-repeat',

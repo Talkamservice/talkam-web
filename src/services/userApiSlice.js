@@ -21,6 +21,12 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 method: "get",
             })
         }),
+        getMergedSubCategories: builder.query({
+            query: id => ({
+                url: `/user/post-categories/merged-categories?category_id=${id}`,
+                method: "get",
+            })
+        }),
         updateProfile: builder.mutation({
             query: payload => ({
                 url: `user/profile/update`,
@@ -73,6 +79,7 @@ export const {
     useUpdateProfileMutation,
     useGetTrendingTagsQuery,
     useGetAvatarsQuery,
+    useGetMergedSubCategoriesQuery,
     useGetUserProfileDetailsQuery,
     useFollowingCategoriesQuery,
     useAddInterestMutation,

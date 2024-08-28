@@ -8,7 +8,7 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
                 method: "post",
                 body: { ...message }
             }),
-            invalidatesTags: ["messages"]
+            invalidatesTags: ["messages", "conversations", "chats"]
         }),
         getMessages: builder.query({
             query: ({ id, search }) => ({
@@ -21,10 +21,11 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
             query: id => ({
                 url: `/user/messaging/conversations/current/fetch?receiver_id=${id}`,
                 method: "get",
-            })
+            }),
+            invalidatesTags: ["conversations", "chats"]
         }),
         getAllConversations: builder.query({
-            query: ({ status, tab, search }) => ({
+            query: ({ status = "", tab = "", search = "" }) => ({
                 url: `/user/messaging/conversations?status=${status}&tab=${tab}&search=${search}`,
                 method: 'get'
             }),
@@ -43,7 +44,7 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
                 method: "post",
                 body: { ...body }
             }),
-            invalidatesTags: ["messages", "conversations", "chatdetails"]
+            invalidatesTags: ["messages", "conversations", "chatdetails", "chats"]
         }),
         checkCurrentCoversation: builder.mutation({
             query: id => ({
@@ -51,7 +52,29 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
                 method: "post",
                 body: id
             }),
-            invalidatesTags: ["conversations"]
+            invalidatesTags: ["conversations", "chats"]
+        }),
+        getAllConversationsBare: builder.query({
+            query: search => ({
+                url: `/user/messaging/conversations?search=${search}`,
+                method: 'get'
+            }),
+            providesTags: ["chats"]
+        }),
+        deleteConversation: builder.mutation({
+            query: id => ({
+                url: `/user/messaging/conversations/${id}`,
+                method: "delete",
+            }),
+            invalidatesTags: ["conversations", "chats", "messages"]
+        }),
+        updateNotificationStatus: builder.mutation({
+            query: ({ id, status }) => ({
+                url: `/user/messaging/conversations/${id}`,
+                method: "PUT",
+                body: status
+            }),
+            invalidatesTags: ["conversations", "chats", "chatdetails"]
         })
     })
 })
@@ -64,4 +87,7 @@ export const {
     useGetConversationDetailsQuery,
     useUpdateRequestStatusMutation,
     useCheckCurrentCoversationMutation,
+    useGetAllConversationsBareQuery,
+    useDeleteConversationMutation,
+    useUpdateNotificationStatusMutation,
 } = messagesApiSlice

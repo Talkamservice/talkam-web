@@ -160,6 +160,33 @@ const router = createBrowserRouter([
         }
       },
       {
+        path: 'notifications',
+        lazy: async () => {
+          let { Notifications } = await import("./routes/dashboard/notifications/notifications");
+          return { Component: Notifications };
+        },
+        children: [
+          {
+            index: true,
+            loader: () => redirect('all')
+          },
+          {
+            path: 'all',
+            lazy: async () => {
+              let { AllNotifications } = await import("./routes/dashboard/notifications/allnotifications");
+              return { Component: AllNotifications };
+            },
+          },
+          {
+            path: 'mentions',
+            lazy: async () => {
+              let { Mentions } = await import("./routes/dashboard/notifications/mentions");
+              return { Component: Mentions };
+            },
+          },
+        ]
+      },
+      {
         path: 'groups',
         lazy: async () => {
           let { Groups } = await import("./routes/dashboard/groups/groups");
