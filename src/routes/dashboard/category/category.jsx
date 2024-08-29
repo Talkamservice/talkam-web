@@ -98,7 +98,7 @@ export const Category = () => {
                                             !subCategoryDetails?.data?.is_following ?
                                                 <Button
                                                     children="Follow"
-                                                    leftIcon={< Icon.Plus size={18} />}
+                                                    leftIcon={!addLoading && <Icon.Plus size={18} />}
                                                     className="!rounded-full !text-sm bg-tprimary-50 !px-4 !py-2.5 font-semiboldNunito"
                                                     onClick={handleFollowcategory}
                                                     isLoading={addLoading}

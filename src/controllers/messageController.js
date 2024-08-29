@@ -164,7 +164,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
             imageLoading: imageLoading,
             created_at: new Date()
         }
-        setMessages((messages) => [messageData, ...messages]);
+        setMessages((messages) => [...messages, messageData]);
         scrollToBottomSmooth();
         saveFileImage(files[0], allowedDocumentExtensions.includes((getFileExtension(document?.type)?.toLowerCase())) ? "file" : "media");
     };
@@ -215,7 +215,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
                 created_at: new Date()
             }
             setText("")
-            setMessages((messages) => [messageData, ...messages]);
+            setMessages((messages) => [...messages, messageData]);
             scrollToBottomSmooth();
             const res = await sendMessage(messageData).unwrap();
         } catch (error) {
@@ -304,7 +304,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     //     }
     // };
 
-    const updatedMessages = addDateIndicators(messages.reverse());
+    const updatedMessages = addDateIndicators(messages);
 
     //Effects
     useEffect(() => {
@@ -313,7 +313,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     }, [chatMessages])
 
     useEffect(() => {
-        (currentChat && chatMessages) && setMessages(() => [...chatMessages?.data?.data ?? []]);
+        (currentChat && chatMessages) && setMessages(() => [...chatMessages?.data?.data ?? []].reverse());
     }, [chatMessages, currentChat]);
 
     // useEffect(() => {
