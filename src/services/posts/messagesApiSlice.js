@@ -8,11 +8,12 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
                 method: "post",
                 body: { ...message }
             }),
-            invalidatesTags: ["messages", "conversations", "chats"]
+            invalidatesTags: ["", "conversations", "chats"]
         }),
         getMessages: builder.query({
-            query: ({ id, search }) => ({
-                url: `/user/messaging/messages/list?conversation_id=${id}&search=${search}`,
+            keepUnusedDataFor: 0,
+            query: ({ id, search, page }) => ({
+                url: `/user/messaging/messages/list?conversation_id=${id}&search=${search}&page=${page}`,
                 method: "get"
             }),
             providesTags: ["messages"]

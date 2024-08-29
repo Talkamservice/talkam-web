@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectCurrentToken, selectCurrentUser } from "../services/authSlice";
 import {
@@ -18,6 +18,7 @@ import { allowedDocumentExtensions, combinedExtensions } from "../helpers/extens
 import { getFileExtension } from "../helpers/getFileExtension";
 import { useLocation, useNavigate } from "react-router-dom";
 import { formatDate } from "../utils/formatMessageDate";
+import { Storage } from "../app/storage";
 import Pusher from 'pusher-js';
 
 export const useMessagesController = (currentChat, setCurrentChat) => {
@@ -25,18 +26,25 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     //hooks and variable declarations
     const navigate = useNavigate();
     const location = useLocation();
+    const isRestoringScroll = useRef(false);
+    const scrollableRef = useRef(null);
     const messagesEndRef = useRef();
     const token = useSelector(selectCurrentToken);
     const currentUser = useSelector(selectCurrentUser);
     const receiver = currentChat?.members?.find(member => member.id !== currentUser.id);
+    const [page, setPage] = useState(1);
+    const [isFetching, setIsFetching] = useState(false)
     const [imagePreview, setImagePreview] = useState(null);
     const [imageLoading, setImageLoading] = useState(false);
     const [text, setText] = useState("");
     const [messages, setMessages] = useState([]);
 
-    const { data: chatMessages, isLoading: messageLoading, isError, error } = useGetMessagesQuery({
+
+    //server hooks
+    const { data: chatMessages, isLoading: messageLoading, isFetching: messageFetching, isError, error, isUninitialized, refetch } = useGetMessagesQuery({
         id: currentChat?.id,
         search: "",
+        page: page
     }, { skip: !currentChat?.id, refetchOnMountOrArgChange: true });
     const [sendMessage, { isLoading: sendLoading }] = useSendMessageMutation();
     const [updateRequestStatus, { isLoading: requestLoading }] = useUpdateRequestStatusMutation();
@@ -50,6 +58,9 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     };
 
     //Functions
+    const scrollToBottomSmooth = () => {
+        messagesEndRef.current?.scrollIntoView?.({ behavior: "smooth", block: 'end', inline: 'nearest' });
+    };
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView?.({ behavior: "instant", block: 'end', inline: 'nearest' });
     };
@@ -76,7 +87,6 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
         }
         return newMessages;
     };
-    const updatedMessages = addDateIndicators(messages);
 
     const connectToPusher = () => {
         let pusherChannel; // Declare pusherChannel variable
@@ -104,8 +114,8 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
                 if (data?.data?.conversation_id !== currentChat?.id) {
                     return;
                 } else {
-                    setMessages((prev) => [...prev, { ...data?.data }]);
-                    scrollToBottom();
+                    setMessages((prev) => [{ ...data?.data }, ...prev,]);
+                    scrollToBottomSmooth();
                 }
             }
         });
@@ -145,7 +155,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
             return toast.error("File has to be either ('pdf', 'jpg', 'jpeg', 'pdf', 'doc', 'webp' )")
         }
         const messageData = {
-            conversation_id: currentChat?.id,
+            id: currentChat?.id,
             receiver_id: receiver?.id,
             sender_id: currentUser?.id,
             message_type: allowedDocumentExtensions.includes((getFileExtension(document?.type)?.toLowerCase())) ? "file" : "media",
@@ -154,7 +164,8 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
             imageLoading: imageLoading,
             created_at: new Date()
         }
-        setMessages((messages) => [...messages, messageData]);
+        setMessages((messages) => [messageData, ...messages]);
+        scrollToBottomSmooth();
         saveFileImage(files[0], allowedDocumentExtensions.includes((getFileExtension(document?.type)?.toLowerCase())) ? "file" : "media");
     };
 
@@ -195,6 +206,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
         try {
             const messageData = {
                 conversation_id: currentChat?.id,
+                id: randomId(),
                 receiver_id: receiver?.id,
                 sender_id: currentUser?.id,
                 message_type: "Text",
@@ -203,7 +215,8 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
                 created_at: new Date()
             }
             setText("")
-            setMessages((messages) => [...messages, messageData]);
+            setMessages((messages) => [messageData, ...messages]);
+            scrollToBottomSmooth();
             const res = await sendMessage(messageData).unwrap();
         } catch (error) {
             const errorMessage = handleError(error);
@@ -236,21 +249,93 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
         }
     }
 
-    //Effects
-    useEffect(() => {
-        messages && scrollToBottom();
-    }, [messages]);
+    //infinite scroll functions
+    const messageIds = new Set();
+    // Deduplicate new posts
+    const newResults = (messages || []).filter(message => {
+        if (!messageIds.has(message.id)) {
+            messageIds.add(message.id);
+            return true;
+        }
+        return false;
+    });
 
+    const appendNewPageData = () => {
+        if (chatMessages?.data?.data) {
+            setMessages((prevMessages) => {
+                const newMessages = new Set([...prevMessages, ...chatMessages?.data?.data]);
+                return Array.from(newMessages);
+            });
+            setIsFetching(false);
+        }
+    };
+
+    const handleScroll = useCallback((event) => {
+        if (isRestoringScroll.current) return;
+        const { scrollTop } = event.target;
+        const isAtTop = scrollTop <= 20;
+
+        if (isAtTop && !isFetching && chatMessages?.data?.pagination_meta?.can_load_more) {
+            setIsFetching(true);
+            setPage((prevPage) => prevPage + 1);
+        }
+        Storage.setItem("scrollPosition_messages", scrollTop);
+    }, [isFetching, chatMessages]);
+
+    // const handleScroll = useCallback((event) => {
+    //     if (isRestoringScroll.current) return;
+    //     const { scrollTop, scrollHeight, clientHeight } = event.target;
+    //     const bottom = scrollHeight - scrollTop <= clientHeight + 50;
+    //     if (bottom && !isFetching && chatMessages?.data?.pagination_meta.can_load_more) {
+    //         setIsFetching(true);
+    //         setPage((prevPage) => prevPage + 1);
+    //     }
+    //     Storage.setItem("scrollPosition_messages", scrollTop);
+    // }, [isFetching, chatMessages]);
+
+    // const restoreScrollPosition = () => {
+    //     // const savedScrollPosition = Storage.getItem("scrollPosition_messages");
+    //     if (savedScrollPosition && scrollableRef.current) {
+    //         isRestoringScroll.current = true;
+    //         scrollableRef.current.scrollTop = parseInt(savedScrollPosition, 10);
+    //         setTimeout(() => {
+    //             isRestoringScroll.current = false; // Allow the scroll handler to run again after a short delay
+    //         }, 0);
+    //     }
+    // };
+
+    const updatedMessages = addDateIndicators(newResults.reverse());
+
+    //Effects
     useEffect(() => {
         if (currentChat)
             connectToPusher();
-        scrollToBottom();
+
     }, [currentChat])
 
     useEffect(() => {
-        (currentChat && chatMessages) && setMessages(() => [...chatMessages?.data?.data ?? []].reverse());
-        scrollToBottom();
+        (currentChat && chatMessages) && setMessages(() => [...chatMessages?.data?.data ?? []]);
+    }, [currentChat]);
+
+    useEffect(() => {
+        appendNewPageData();
     }, [chatMessages]);
+
+    useEffect(() => {
+        if (page === 1) {
+            scrollToBottom();
+            console.log("page is 1 so scroll", page)
+        }
+    }, [chatMessages, messages, currentChat]);
+
+    // useEffect(() => {
+    //     !isUninitialized && refetch()
+    //     chatMessages && scrollToBottom();
+    // }, [refetch, currentChat])
+
+    // useEffect(() => {
+    //     restoreScrollPosition();
+    // }, [restoreScrollPosition, page]);
 
     return {
         text,
@@ -265,6 +350,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
         messagesEndRef,
         chatMessages,
         messageLoading,
+        messageFetching,
         handleRequestStatus,
         requestLoading,
         receiver,
@@ -277,5 +363,8 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
         handleDeleteConversation,
         deleteLoading,
         handleNotificationStatus,
+        handleScroll,
+        isFetching,
+        scrollableRef,
     }
 }
