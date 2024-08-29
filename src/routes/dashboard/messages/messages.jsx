@@ -91,7 +91,7 @@ export const Messages = ({ onClose }) => {
             refetch();
             navigate({
                 pathname: `${location.pathname}`,
-                search: `?messages=true`,
+                search: `?messages`,
             }, { replace: true });
         }
     }, [isSuccess])

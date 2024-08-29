@@ -249,38 +249,38 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
         }
     }
 
-    //infinite scroll functions
-    const messageIds = new Set();
-    // Deduplicate new posts
-    const newResults = (messages || []).filter(message => {
-        if (!messageIds.has(message.id)) {
-            messageIds.add(message.id);
-            return true;
-        }
-        return false;
-    });
+    // //infinite scroll functions
+    // const messageIds = new Set();
+    // // Deduplicate new posts
+    // const newResults = (messages || []).filter(message => {
+    //     if (!messageIds.has(message.id)) {
+    //         messageIds.add(message.id);
+    //         return true;
+    //     }
+    //     return false;
+    // });
 
-    const appendNewPageData = () => {
-        if (chatMessages?.data?.data) {
-            setMessages((prevMessages) => {
-                const newMessages = new Set([...prevMessages, ...chatMessages?.data?.data]);
-                return Array.from(newMessages);
-            });
-            setIsFetching(false);
-        }
-    };
+    // const appendNewPageData = () => {
+    //     if (chatMessages?.data?.data) {
+    //         setMessages((prevMessages) => {
+    //             const newMessages = new Set([...prevMessages, ...chatMessages?.data?.data]);
+    //             return Array.from(newMessages);
+    //         });
+    //         setIsFetching(false);
+    //     }
+    // };
 
-    const handleScroll = useCallback((event) => {
-        if (isRestoringScroll.current) return;
-        const { scrollTop } = event.target;
-        const isAtTop = scrollTop <= 20;
+    // const handleScroll = useCallback((event) => {
+    //     if (isRestoringScroll.current) return;
+    //     const { scrollTop } = event.target;
+    //     const isAtTop = scrollTop <= 20;
 
-        if (isAtTop && !isFetching && chatMessages?.data?.pagination_meta?.can_load_more) {
-            setIsFetching(true);
-            setPage((prevPage) => prevPage + 1);
-        }
-        Storage.setItem("scrollPosition_messages", scrollTop);
-    }, [isFetching, chatMessages]);
+    //     if (isAtTop && !isFetching && chatMessages?.data?.pagination_meta?.can_load_more) {
+    //         setIsFetching(true);
+    //         setPage((prevPage) => prevPage + 1);
+    //     }
+    //     Storage.setItem("scrollPosition_messages", scrollTop);
+    // }, [isFetching, chatMessages]);
 
     // const handleScroll = useCallback((event) => {
     //     if (isRestoringScroll.current) return;
@@ -304,27 +304,25 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     //     }
     // };
 
-    const updatedMessages = addDateIndicators(newResults.reverse());
+    const updatedMessages = addDateIndicators(messages.reverse());
 
     //Effects
     useEffect(() => {
         if (currentChat)
             connectToPusher();
-
-    }, [currentChat])
+    }, [chatMessages])
 
     useEffect(() => {
         (currentChat && chatMessages) && setMessages(() => [...chatMessages?.data?.data ?? []]);
-    }, [currentChat]);
+    }, [chatMessages, currentChat]);
 
-    useEffect(() => {
-        appendNewPageData();
-    }, [chatMessages]);
+    // useEffect(() => {
+    //     appendNewPageData();
+    // }, [chatMessages]);
 
     useEffect(() => {
         if (page === 1) {
             scrollToBottom();
-            console.log("page is 1 so scroll", page)
         }
     }, [chatMessages, messages, currentChat]);
 
@@ -336,6 +334,8 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     // useEffect(() => {
     //     restoreScrollPosition();
     // }, [restoreScrollPosition, page]);
+
+    // console.log(page, currentChat?.id)
 
     return {
         text,
@@ -363,7 +363,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
         handleDeleteConversation,
         deleteLoading,
         handleNotificationStatus,
-        handleScroll,
+        // handleScroll,
         isFetching,
         scrollableRef,
     }

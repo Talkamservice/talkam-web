@@ -106,7 +106,7 @@ export const ChatBox = ({ setCurrentChat, currentChat }) => {
                             }
                         </div>
                         {
-                            messageController?.conversationdetails ?
+                            messageController?.conversationdetails && !messageController?.messageFetching && !messageController?.detailsLoading ?
                                 <section className="w-full p-2">
                                     {
                                         (Number(messageController?.currentUser?.id) !== Number(currentChat?.requested_by?.id)) && (messageController?.conversationdetails?.data?.status === "Awaiting_Response") ?

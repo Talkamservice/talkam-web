@@ -25,6 +25,11 @@ const tabs = [
         title: "Upvotes",
         text: "upvotes",
     },
+    {
+        id: 3,
+        title: "Media",
+        text: "media",
+    },
 ];
 
 export const Profile = () => {

@@ -30,7 +30,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 url: `/user/posts/${postId}`,
                 method: 'delete',
             }),
-            invalidatesTags: ["posts", "userposts", "upvotes"]
+            invalidatesTags: ["posts", "userposts", "upvotes", "media"]
         }),
         getPostComments: builder.query({
             query: id => ({
@@ -69,7 +69,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 method: 'post',
                 body: { ...body }
             }),
-            invalidatesTags: ["posts", "userposts"]
+            invalidatesTags: ["posts", "userposts", "media"]
         }),
         savePostToDrafts: builder.mutation({
             query: body => ({
@@ -106,6 +106,13 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 method: "get",
             }),
             providesTags: ["upvotes"]
+        }),
+        getUserMedia: builder.query({
+            query: id => ({
+                url: `user/posts/media/fetch?user_id=${id}`,
+                method: "get",
+            }),
+            providesTags: ["media"]
         }),
         getUserPosts: builder.query({
             query: ({ userId, page }) => ({
@@ -191,4 +198,5 @@ export const {
     useGetBlockedListQuery,
     useReportPostMutation,
     useReportCommentMutation,
+    useGetUserMediaQuery,
 } = postsApiSlice

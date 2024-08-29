@@ -1,3 +1,4 @@
+import { defaultSerializeQueryArgs } from "@reduxjs/toolkit/query"
 import { apiSlice } from "../../app/api/apiSlice"
 
 export const messagesApiSlice = apiSlice.injectEndpoints({
@@ -16,6 +17,15 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
                 url: `/user/messaging/messages/list?conversation_id=${id}&search=${search}&page=${page}`,
                 method: "get"
             }),
+            serializeQueryArgs: ({ queryArgs, endpointDefinition, endpointName }) => {
+                const { id } = queryArgs
+
+                return defaultSerializeQueryArgs({
+                    endpointName,
+                    queryArgs: { id },
+                    endpointDefinition
+                })
+            },
             providesTags: ["messages"]
         }),
         currentConversation: builder.query({
