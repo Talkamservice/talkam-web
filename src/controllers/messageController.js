@@ -310,12 +310,11 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     useEffect(() => {
         if (currentChat)
             connectToPusher();
-        (currentChat && chatMessages) && setMessages(() => [...chatMessages?.data?.data ?? []]);
     }, [chatMessages])
 
-    // useEffect(() => {
-
-    // }, [currentChat]);
+    useEffect(() => {
+        (currentChat && chatMessages) && setMessages(() => [...chatMessages?.data?.data ?? []]);
+    }, [chatMessages, currentChat]);
 
     // useEffect(() => {
     //     appendNewPageData();
@@ -336,7 +335,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     //     restoreScrollPosition();
     // }, [restoreScrollPosition, page]);
 
-    console.log(page, currentChat?.id)
+    // console.log(page, currentChat?.id)
 
     return {
         text,

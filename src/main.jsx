@@ -106,6 +106,13 @@ const router = createBrowserRouter([
                   return { Component: ProfileUpvotes };
                 }
               },
+              {
+                path: 'media',
+                lazy: async () => {
+                  let { ProfileMedia } = await import("./routes/dashboard/userprofile/profilemedia");
+                  return { Component: ProfileMedia };
+                }
+              },
             ]
           },
 

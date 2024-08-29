@@ -1,9 +1,10 @@
 import classNames from "classnames"
 import { useNavigate } from "react-router-dom";
 
-export const NotificationCard = ({ user, notification, image, onClick, style, time, title, type, id }) => {
+export const NotificationCard = ({ notification, image, onClick, style, time, title, type, id }) => {
 
     const navigate = useNavigate();
+
     const notificationType = {
         "post": `https://web.talkam.prodevs.io/comment/${id}`,
         "group": "",
