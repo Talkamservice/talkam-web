@@ -40,6 +40,7 @@ export const Messages = ({ onClose }) => {
                 isLoading={isLoading}
                 setSearch={setSearch}
                 currentUser={currentUser}
+                refetchConvo={refetch}
             />
         },
         {
@@ -74,7 +75,7 @@ export const Messages = ({ onClose }) => {
         });
         pusherChannel = pusher.subscribe('refresh-notification.' + currentUser?.id); // Assign pusherChannel
         pusherChannel.bind('refresh', (data) => {
-            // console.log(data);
+            console.log(data)
             refetch()
         });
         return () => {

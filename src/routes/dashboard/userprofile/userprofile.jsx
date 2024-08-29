@@ -70,7 +70,7 @@ export const Profile = () => {
                     <p onClick={() => {
                         navigate({
                             pathname: `${location.pathname}/`,
-                            search: `?messages=true`,
+                            search: `?messages`,
                         }, { state: userId });
                     }} className={` ${!isLoggedInUser ? "flex" : "hidden"} cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2`}>
                         <ChatSquareIcon />

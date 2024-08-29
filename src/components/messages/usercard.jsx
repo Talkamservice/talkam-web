@@ -53,23 +53,25 @@ export const UserCard = ({ preview, file, text, time, isLoading, messageType }) 
     const FileView =
         <li className="flex justify-end">
             <div className="w-fit">
-                <div className="relative p-2 bg-[#EEEEEE] rounded-l-xl rounded-br-xl">
+                <div className="relative p-1 bg-[#EEEEEE] rounded-l-xl rounded-br-xl">
                     {
                         isLoading ?
                             <ColoredLoader />
                             :
-                            <span className="min-w-[100px] flex items-start justify-start flex-col space-x-8 text-sm text-doc-white truncate">
-                                <a href={file} target="_blank" rel="noreferrer noopener" className="flex items-center justify-between space-x-6 w-full p-2 bg-doc-white rounded text-xs underline cursor-pointer truncate">
-                                    <Icon.FileText color="#000" >
+                            <span className="min-w-[100px] p-1 flex items-start justify-start flex-col text-sm truncate">
+                                <a
+                                    href={file}
+                                    target="_blank"
+                                    rel="noreferrer noopener"
+                                    className="flex items-center justify-between gap-2 w-full px-4 py-3 bg-tgray-150 bg-opacity-20 rounded text-xs cursor-pointer truncate">
+                                    <Icon.FileText size={20} color="#000" >
                                         {file}
                                     </Icon.FileText>
-                                    <span style={{
-                                        textDecoration: "none",
-                                    }} className="no-underline text-[10px] text-doc-gray4 italic">Tap to view</span>
+                                    <span className="no-underline text-[13px] text-doc-gray4 italic">View file</span>
                                 </a>
                             </span>
                     }
-                    <span className="p-1 flex items-end justify-end text-[8px] leading-[0px]">{moment(time).format("LT")}</span>
+                    <span className="p-2 flex items-end justify-end text-[8px] leading-[0px]">{moment(time).format("LT")}</span>
                 </div>
             </div>
         </li>;

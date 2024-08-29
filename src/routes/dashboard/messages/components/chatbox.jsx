@@ -13,16 +13,14 @@ import * as Icon from 'react-feather'
 export const ChatBox = ({ setCurrentChat, currentChat }) => {
 
     const messageController = useMessagesController(currentChat, setCurrentChat);
-    console.log(messageController?.updatedMessages)
 
     const renderMessages = () => {
         return messageController.updatedMessages?.map((message, index) => {
             if (message?.message_type === 'date') {
-                console.log(message?.date)
                 return (
-                    <div className="flex flex-1 gap-3 items-center justify-center w-full z-40 py-3">
+                    <div key={index} className="flex flex-1 gap-3 items-center justify-center w-full py-3">
                         <span className='text-black bg-none border border-tgray-50 bg-opacity-15 p-1 px-2.5 rounded-xl text-[10px]'>
-                            {message?.date}
+                            {message?.date ?? null}
                         </span>
                     </div>
                 )
@@ -68,7 +66,10 @@ export const ChatBox = ({ setCurrentChat, currentChat }) => {
                             currentUser={messageController?.currentUser}
                             messageController={messageController}
                         />
-                        <div className="w-full h-full flex-col p-6 overflow-y-auto flex-grow">
+                        <div
+                            ref={messageController.scrollableRef}
+                            onScroll={messageController.handleScroll}
+                            className="w-full h-full flex-col p-6 overflow-y-auto flex-grow">
                             {
                                 messageController?.messageLoading ?
                                     <div className='flex items-center justify-center flex-col m-auto w-full h-full p-6 overflow-y-auto'>
@@ -90,10 +91,17 @@ export const ChatBox = ({ setCurrentChat, currentChat }) => {
                                         />
                                         :
                                         <motion.ul className="flex flex-col gap-2">
+                                            {messageController.isFetching ?
+                                                <div className="w-full flex items-center justify-center py-8">
+                                                    <ColoredLoader />
+                                                </div>
+                                                :
+                                                null
+                                            }
                                             <>
                                                 {renderMessages()}
                                             </>
-                                            <div className="p-1" ref={messageController.messagesEndRef} />
+                                            <div className="h-16" ref={messageController.messagesEndRef} />
                                         </motion.ul>
                             }
                         </div>

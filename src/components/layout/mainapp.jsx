@@ -84,7 +84,7 @@ export const MainAppLayout = ({ children }) => {
                 setVerifyModal(() => true)
             }
         };
-    }, [isSuccess]);
+    }, [user]);
 
     return (
         <Suspense fallback={<ColoredLoader />}>
@@ -111,7 +111,7 @@ export const MainAppLayout = ({ children }) => {
                                     onClick={() => {
                                         navigate({
                                             pathname: `${location.pathname}/`,
-                                            search: `?messages=true`,
+                                            search: `messages`,
                                         });
                                         setShowPanel(false);
                                     }}
@@ -318,7 +318,7 @@ export const MainAppLayout = ({ children }) => {
                 </Modal>
 
                 <DrawerModal
-                    show={searchParams.get('messages')}
+                    show={location.search.includes("messages")}
                     shouldCloseOnEscPress={false}
                     onClose={() => navigate(-1)}
                     contentWidth='w-full lg:w-9/12'

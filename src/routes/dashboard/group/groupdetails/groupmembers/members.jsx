@@ -242,7 +242,7 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
                                     onClick={() => {
                                         navigate({
                                             pathname: `${location.pathname}`,
-                                            search: `?messages=true`,
+                                            search: `?messages`,
                                         }, { state: userId });
                                     }}
                                 >
