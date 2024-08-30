@@ -53,6 +53,8 @@ export const Messages = ({ onClose }) => {
         },
     ];
 
+    console.log(receiverId)
+
     const connectToPusher = () => {
         let pusherChannel; // Declare pusherChannel variable
 
@@ -91,7 +93,7 @@ export const Messages = ({ onClose }) => {
             refetch();
             navigate({
                 pathname: `${location.pathname}`,
-                search: `?messages`,
+                search: `messages`,
             }, { replace: true });
         }
     }, [isSuccess])

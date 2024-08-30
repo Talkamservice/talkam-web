@@ -3,20 +3,22 @@ import Broken from "../../assets/images/broken.png"
 
 const bgColors = ["#05505C", "#800020", "#4B0082", "#444444"];
 
-export const UserCardImage = ({ src, style, onClick }) => {
+export const UserCardImage = ({ src, style, onClick, user }) => {
 
     const colorAtRandom = () => {
         const randomIndex = Math.floor(Math.random() * bgColors.length);
         return bgColors[randomIndex];
     }
 
+    const radiusMap = {
+        "sender": "rounded-tl-lg",
+        "receiver": "rounded-tr-lg",
+    }
+
     return (
         <div
             onClick={onClick}
-            className={classNames(style, `w-full flex items-center justify-center cursor-pointer
-                ${'h-[150px] md:h-[200px]'}
-                overflow-hidden`)
-            }
+            className={classNames(style, `w-full h-full flex items-center justify-center cursor-pointer overflow-hidden ${radiusMap[user]}`)}
         >
             <img
                 src={src}

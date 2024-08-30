@@ -109,7 +109,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
         }),
         getUserMedia: builder.query({
             query: id => ({
-                url: `user/posts/media/fetch?user_id=${id}`,
+                url: `user/posts/media/fetch?user_id=${id}&exclude_anonymous=1`,
                 method: "get",
             }),
             providesTags: ["media"]

@@ -27,7 +27,7 @@ export const AllNotifications = () => {
 
     return (
         <div>
-            <section className="w-full py-3 flex flex-col items-center justify-center gap-4">
+            <section className="w-full py-3 flex flex-col items-center justify-center">
                 {
                     isLoading ?
                         <ColoredLoader />
@@ -49,10 +49,12 @@ export const AllNotifications = () => {
                                         key={notification.id}
                                         title={notification.title}
                                         notification={notification.message}
-                                        user={(notification.reply_to?.username ?? notification.reply_to?.name) ?? (notification.post?.user?.username ?? notification.post?.user?.name)}
                                         image={notification.attachment}
                                         time={moment(notification.created_at).format("lll")}
                                         notificationId={notification.data_id}
+                                        type={notification?.type}
+                                        id={notification?.data_id}
+                                        extra={notification?.extra}
                                     />
                                 </div>
                             ))
