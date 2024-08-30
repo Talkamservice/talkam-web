@@ -14,7 +14,7 @@ export const ConversationCard = ({ avatar, user, lastMessage, time, status, onCl
                 <p className="text-sm font-normal text-[#666666] w-full text-left truncate">{lastMessage}</p>
             </div>
             <div className="flex flex-col items-end gap-1">
-                <span className="font-lightNunito text-[#888888] text-xs whitespace-nowrap">{moment(time).format('LT')}</span>
+                <span className="font-lightNunito text-[#888888] text-xs whitespace-nowrap">{moment(time).calendar()}</span>
                 {
                     !isFromReceiver ?
                         <span className="text-xs">
