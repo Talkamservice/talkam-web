@@ -164,6 +164,22 @@ export const ConversationSkeletonLoader = ({ num = 4 }) => {
             }
         </div>
     )
+};
+
+export const ImageGridLoader = ({ num = 9 }) => {
+    return (
+        <div className='w-full grid grid-cols-3 lg:grid-cols-3 gap-1 animate-pulse'>
+            {
+                [...Array(num)].map((_, index) => (
+                    <div
+                        key={index}
+                        className="w-full h-[100px] sm:h-[200px] overflow-hidden bg-tgray-100 opacity-10 animate-pulse"
+                    />
+                ))
+            }
+
+        </div>
+    )
 }
 
 const ShimmerWrapper = ({ children }) => {

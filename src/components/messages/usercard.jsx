@@ -4,7 +4,7 @@ import { ColoredLoader } from '../global/loader';
 import { Modal } from '../global/modal';
 import { useState } from 'react';
 import { UserCardImage } from './usercardimage';
-import { ImageModalView } from '../global/imgemodalview';
+import { ImageModalView } from '../global/imagemodalview';
 import { ImagePreviewLoader } from './previewloader';
 import * as Icon from "react-feather"
 import moment from 'moment';
@@ -32,18 +32,19 @@ export const UserCard = ({ preview, file, text, time, isLoading, messageType }) 
 
     const MediaView =
         <li className="flex justify-end">
-            <div className="w-3/5">
-                <div className="relative min-w-1/3 p-2 bg-[#EEEEEE] rounded-l-xl rounded-br-xl">
+            <div className="w-4/5 sm:w-3/5">
+                <div className="flex min-w-1/3 h-[200px] md:h-[280px] bg-[#EEEEEE] rounded-l-xl rounded-br-xl overflow-hidden p-1">
                     {
                         isLoading ?
                             <ImagePreviewLoader src={preview} />
                             :
-                            <div className='w-full flex flex-col'>
+                            <div className='w-full flex flex-col gap-2'>
                                 <UserCardImage
+                                    user="sender"
                                     src={file}
                                     onClick={handleImageModal}
                                 />
-                                <span className="p-3 flex items-end justify-end text-[8px] leading-[0px]">{moment(time).format("LT")}</span>
+                                <span className="p-1 flex items-end justify-end text-[8px] leading-[0px]">{moment(time).format("LT")}</span>
                             </div>
                     }
                 </div>

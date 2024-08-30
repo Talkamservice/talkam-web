@@ -138,7 +138,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
             toast.success(res?.message);
             navigate({
                 pathname: `${location.pathname}/`,
-                search: `?messages=true`,
+                search: `messages`,
             }, { replace: true });
         } catch (error) {
             const errorMessage = handleError(error);
@@ -313,7 +313,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     }, [chatMessages])
 
     useEffect(() => {
-        (currentChat && chatMessages) && setMessages(() => [...chatMessages?.data?.data ?? []].reverse());
+        (currentChat && chatMessages) && setMessages(() => [...chatMessages?.data?.data ?? []]);
     }, [chatMessages, currentChat]);
 
     // useEffect(() => {

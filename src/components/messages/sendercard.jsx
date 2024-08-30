@@ -4,7 +4,7 @@ import { ColoredLoader } from '../global/loader';
 import { Modal } from '../global/modal';
 import { useState } from 'react';
 import { UserCardImage } from './usercardimage';
-import { ImageModalView } from '../global/imgemodalview';
+import { ImageModalView } from '../global/imagemodalview';
 import { ImagePreviewLoader } from './previewloader';
 import moment from 'moment';
 import * as Icon from 'react-feather'
@@ -29,24 +29,26 @@ export const SenderCard = ({ preview, file, text, time, isLoading, messageType }
         </div>
     </li>
 
-    const MediaView = <li className="flex justify-start">
-        <div className="w-3/5">
-            <div className="relative min-w-1/3 p-2 bg-tprimary-50 rounded-r-xl rounded-bl-xl">
-                {
-                    isLoading ?
-                        <ImagePreviewLoader src={preview} />
-                        :
-                        <div className='w-full flex flex-col'>
-                            <UserCardImage
-                                src={file}
-                                onClick={handleImageModal}
-                            />
-                            <span className="p-3 flex items-end justify-end text-[8px] text-twhite-100 leading-[0px]">{moment(time).format("LT")}</span>
-                        </div>
-                }
+    const MediaView =
+        <li className="flex justify-start">
+            <div className="w-4/5 sm:w-3/5">
+                <div className="flex min-w-1/3 h-[200px] md:h-[280px] bg-tprimary-50 rounded-r-xl rounded-bl-xl overflow-hidden p-1">
+                    {
+                        isLoading ?
+                            <ImagePreviewLoader src={preview} />
+                            :
+                            <div className='w-full flex flex-col gap-2'>
+                                <UserCardImage
+                                    user="receiver"
+                                    src={file}
+                                    onClick={handleImageModal}
+                                />
+                                <span className="p-1 flex items-end justify-end text-[8px] text-twhite-100 leading-[0px]">{moment(time).format("LT")}</span>
+                            </div>
+                    }
+                </div>
             </div>
-        </div>
-    </li>
+        </li>;
 
     const FileView = <li className="flex justify-start">
         <div className="w-fit">
