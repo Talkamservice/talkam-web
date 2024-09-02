@@ -76,8 +76,8 @@ export const AllNotifications = () => {
                                     icon={EmptyListIcon}
                                     height="h-[50px]"
                                     width="h-[50px]"
-                                    text="No notifications yet"
-                                    subtext="You have no notifications."
+                                    text="You have no notifications"
+                                    subtext="When you have notifications they would appear here."
                                 />
                             </section>
                             :

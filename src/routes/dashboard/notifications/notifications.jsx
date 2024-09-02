@@ -47,7 +47,7 @@ export const Notifications = () => {
 
     return (
         <div className="w-full flex flex-col gap-8 lg:w-4/6 h-full p-6">
-            <header className="w-full flex items-center justify-between">
+            <header className="w-full flex flex-col gap-4  sm:flex-row sm:items-center justify-between">
                 <p className="text-lg font-medium">Notifications</p>
                 <section className="flex items-center gap-2">
                     {
