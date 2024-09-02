@@ -9,6 +9,7 @@ import { useCurrentConversationQuery, useGetAllConversationsBareQuery } from "..
 import { useDebounceValue } from "../../../hooks/useDebounceValue";
 import { useSelector } from "react-redux";
 import { selectCurrentToken, selectCurrentUser } from "../../../services/authSlice";
+import { X } from "react-feather";
 import Pusher from 'pusher-js';
 
 export const Messages = ({ onClose }) => {
@@ -118,10 +119,16 @@ export const Messages = ({ onClose }) => {
             <main className='w-full h-full flex flex-1 grow items-start justify-start border-r border-[#E2E4E9] divide-x divide-tgray-200 overflow-hidden'>
 
                 <section className={`w-full h-full md:w-1/3 relative overflow-y-auto pt-5 ${!switchBoxView && isMobile ? 'md:w-full' : ''} ${switchBoxView ? 'hidden' : 'block'}`}>
-                    <Tabs
-                        tabs={tabs}
-                        headerPadding="px-8"
-                    />
+                    <section className="w-full relative">
+                        <Tabs
+                            tabs={tabs}
+                            headerPadding="px-8"
+                        />
+                        <div onClick={() => navigate(-1)} className="absolute top-3 right-0 z-[12] px-5 flex items-center gap-1 cursor-pointer">
+                            <X color="#ff0000" size={18} />
+                            <span className="text-xs">Close</span>
+                        </div>
+                    </section>
                 </section>
 
                 <section className={`w-full h-full md:w-2/3 ${switchBoxView && 'w-full md:w-full block'} ${!switchBoxView && isMobile ? "hidden" : "block"}`}>
