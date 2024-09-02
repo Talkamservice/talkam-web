@@ -1,11 +1,14 @@
-import classNames from "classnames"
 import { useLocation, useNavigate } from "react-router-dom";
 import { Avatar } from "./avatar";
+import classNames from "classnames"
+import * as Icon from 'react-feather'
+import { useLazyShowNotificationQuery } from "../../services/notificationsApiSlice";
 
-export const NotificationCard = ({ notification, image, style, time, title, type, id, extra }) => {
+export const NotificationCard = ({ notification, image, style, time, title, type, id, extra, notifyId }) => {
 
     const location = useLocation();
     const navigate = useNavigate();
+    const [trigger, { }] = useLazyShowNotificationQuery()
 
     const notificationType = {
         "post": `/comment/${id}`,
@@ -18,8 +21,8 @@ export const NotificationCard = ({ notification, image, style, time, title, type
 
     return (
         <div
-            onClick={() => navigate(`${type ? notificationType[type] : location.pathname}`, { state: type === "conversation" ? extra?.sender?.id : id })}
-            className="cursor-pointer w-full flex items-start gap-4 justify-between hover:bg-tgray-xlight p-2">
+            onClick={() => { trigger(notifyId); navigate(`${type ? notificationType[type] : location.pathname}`, { state: type === "conversation" ? extra?.sender?.id : id }) }}
+            className="cursor-pointer w-full flex items-start gap-4 justify-between hover:bg-tgray-xlight p-2 relative">
             <section className="flex gap-2">
                 {
                     type === "conversation" ?
@@ -29,7 +32,7 @@ export const NotificationCard = ({ notification, image, style, time, title, type
                 }
                 <section className="flex flex-col gap-2">
                     <p className='text-sm font-bold leading-5'><b>{title ?? 'No title'}</b></p>
-                    <p className="w-full flex-2 text-sm font-normal">{notification}"</p>
+                    <p className="w-full flex-2 text-sm font-normal">{notification}</p>
                     <span className="font-medium text-xs">{time}</span>
                 </section>
             </section>
@@ -44,6 +47,20 @@ export const NotificationCard = ({ notification, image, style, time, title, type
                     backgroundColor: "#444444"
                 }}
             />
+
+            {
+                notification?.read_at === null ?
+                    <span className='absolute top-0 left-0'>
+                        <Icon.Circle
+                            size={10}
+                            fill="#FF0000"
+                            strokeWidth={0}
+                            color="#FFF"
+                        />
+                    </span>
+                    :
+                    null
+            }
         </div>
     )
 }

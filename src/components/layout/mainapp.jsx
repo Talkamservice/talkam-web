@@ -8,7 +8,7 @@ import { NavSearch } from '../forms/navsearchbar';
 import { useFollowingCategoriesQuery, useGetSubCategoriesQuery, useGetUserProfileDetailsQuery } from '../../services/userApiSlice';
 import { ColoredLoader } from '../global/loader';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../../services/authSlice';
+import { selectCurrentToken, selectCurrentUser } from '../../services/authSlice';
 import { Avatar } from '../global/avatar';
 import { motion } from 'framer-motion';
 import { downVariants } from '../../helpers/cardanimation';
@@ -20,7 +20,9 @@ import { toast } from 'sonner';
 import { handleError } from '../../utils/handleError';
 import { Messages } from '../../routes/dashboard/messages/messages';
 import { DrawerModal } from '../global/drawer';
+import { useGetNotificationStatsQuery } from '../../services/notificationsApiSlice';
 import * as Icon from 'react-feather'
+import Pusher from 'pusher-js';
 
 export const MainAppLayout = ({ children }) => {
 
@@ -30,6 +32,7 @@ export const MainAppLayout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation()
     const searchParams = new URLSearchParams(location.search);
+    const token = useSelector(selectCurrentToken)
     const currentUser = useSelector(selectCurrentUser)
     const popUpRef = useRef();
     const [showPanel, setShowPanel] = useState(false);
@@ -47,10 +50,42 @@ export const MainAppLayout = ({ children }) => {
         refetchOnMountOrArgChange: true,
         refetchOnReconnect: true
     });
+    const { data: notificationStats, refetch: refetchNotification } = useGetNotificationStatsQuery();
 
     useOnOutsideClick(popUpRef, () => {
         setProfileMenu(() => false)
-    })
+    });
+
+    const connectToPusher = () => {
+        let pusherChannel; // Declare pusherChannel variable
+
+        // Unsubscribe from the channel if it's already subscribed
+        if (pusherChannel) {
+            pusherChannel.unbind_all();
+            pusher.unsubscribe('refresh-notification.' + currentUser?.id);
+        }
+
+        const pusher = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
+            cluster: import.meta.env.VITE_PUSHER_CLUSTER,
+            encrypted: true,
+            authEndpoint: `${import.meta.env.VITE_BASE_API_URL}/broadcasting/auth`,
+            auth: {
+                headers: {
+                    'content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        });
+        pusherChannel = pusher.subscribe('refresh-notification.' + currentUser?.id); // Assign pusherChannel
+        pusherChannel.bind('refresh', (data) => {
+            console.log(data)
+            refetchNotification();
+        });
+        return () => {
+            pusherChannel.unbind_all();
+            pusher.unsubscribe('refresh-notification.' + currentUser?.id);
+        };
+    };
 
     const verifyAccountHandler = async () => {
         try {
@@ -79,12 +114,18 @@ export const MainAppLayout = ({ children }) => {
     }
 
     useEffect(() => {
+        refetchNotification();
         if (user) {
             if (!user?.data?.email_verified_at) {
                 setVerifyModal(() => true)
             }
         };
     }, [user]);
+
+    useEffect(() => {
+        connectToPusher();
+    }, [])
+
 
     return (
         <Suspense fallback={<ColoredLoader />}>
@@ -106,17 +147,39 @@ export const MainAppLayout = ({ children }) => {
                                     :
                                     <NavSearch />
                                 }
-                                <NotificationIcon onClick={() => navigate('/notifications')} className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
-                                <InboxIcon
-                                    onClick={() => {
-                                        navigate({
-                                            pathname: `${location.pathname}/`,
-                                            search: `messages`,
-                                        });
-                                        setShowPanel(false);
-                                    }}
-                                    className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`}
-                                />
+                                <div className='relative'>
+                                    <NotificationIcon onClick={() => navigate('/notifications')} className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
+                                    <span
+                                        className={`absolute top-0 right-0 rounded-full bg-red-600 p-[2px] flex items-center justify-center
+                                            ${notificationStats?.data?.unread_notifications > 99 ? "" : "h-3 w-3"}
+                                            ${notificationStats?.data?.unread_notifications ? ' flex' : 'hidden'} text-[6px] text-twhite-100`
+                                        }
+                                    >
+                                        {notificationStats?.data?.unread_notifications}
+                                    </span>
+                                </div>
+
+                                <div className='relative'>
+                                    <InboxIcon
+                                        onClick={() => {
+                                            navigate({
+                                                pathname: `${location.pathname}`,
+                                                search: `messages`,
+                                            });
+                                            setShowPanel(false);
+                                        }}
+                                        className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`}
+                                    />
+                                    <span
+                                        className={`absolute top-0 right-0 rounded-full bg-red-600 p-[2px] flex items-center justify-center
+                                            ${notificationStats?.data?.unread_messages > 99 ? "" : "h-3 w-3"}
+                                            ${notificationStats?.data?.unread_messages ? ' flex' : 'hidden'} text-[6px] text-twhite-100`
+                                        }
+                                    >
+                                        {notificationStats?.data?.unread_messages}
+                                    </span>
+
+                                </div>
                             </section>
                             <section className='flex items-center gap-5 md:gap-8'>
                                 <Button

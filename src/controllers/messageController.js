@@ -38,8 +38,6 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     const [imageLoading, setImageLoading] = useState(false);
     const [text, setText] = useState("");
     const [messages, setMessages] = useState([]);
-
-
     //server hooks
     const { data: chatMessages, isLoading: messageLoading, isFetching: messageFetching, isError, error, isUninitialized, refetch } = useGetMessagesQuery({
         id: currentChat?.id,
@@ -114,7 +112,7 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
                 if (data?.data?.conversation_id !== currentChat?.id) {
                     return;
                 } else {
-                    setMessages((prev) => [{ ...data?.data }, ...prev,]);
+                    setMessages((prev) => [...prev, { ...data?.data }]);
                     scrollToBottomSmooth();
                 }
             }

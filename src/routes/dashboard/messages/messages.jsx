@@ -53,8 +53,6 @@ export const Messages = ({ onClose }) => {
         },
     ];
 
-    console.log(receiverId)
-
     const connectToPusher = () => {
         let pusherChannel; // Declare pusherChannel variable
 

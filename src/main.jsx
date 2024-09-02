@@ -33,7 +33,7 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect('featured')
+            loader: () => redirect('new')
           },
           {
             path: 'featured',
