@@ -166,7 +166,7 @@ export const ConversationSkeletonLoader = ({ num = 4 }) => {
     )
 };
 
-export const ImageGridLoader = ({ num = 9 }) => {
+export const ImageGridLoader = ({ num = 15 }) => {
     return (
         <div className='w-full grid grid-cols-3 lg:grid-cols-3 gap-1 animate-pulse'>
             {
@@ -178,6 +178,58 @@ export const ImageGridLoader = ({ num = 9 }) => {
                 ))
             }
 
+        </div>
+    )
+}
+
+export const NotificationLoader = ({ num = 8 }) => {
+    return (
+        <div className='w-full flex flex-col gap-3 animate-pulse'>
+            {
+                [...Array(num)].map((_, index) => (
+                    <div className="flex items-start justify-between w-full gap-4">
+                        <section className="flex gap-2">
+                            <div className="w-10 h-10 rounded-full p-1 bg-tgray-100 opacity-10" />
+                            <section className="flex flex-col gap-4">
+                                <div className='bg-tgray-100 opacity-10 rounded-full h-3 w-[200px]' />
+                                <div className='bg-tgray-100 opacity-10 rounded-full h-3 w-[150px]' />
+                                <span className="h-2 bg-tgray-100 rounded-full opacity-10 w-2/5" />
+                            </section>
+                        </section>
+
+                        <div
+                            className="w-[200px] cursor-pointer h-[50px] sm:h-[100px] rounded-lg bg-tgray-100 opacity-10"
+                        />
+                    </div>
+                ))
+            }
+        </div>
+    )
+}
+
+export const CommentsLoader = ({ num = 9 }) => {
+    return (
+        <div className='w-full flex flex-col gap-3 animate-pulse'>
+            {
+                [...Array(num)].map((_, index) => (
+                    <div className="flex items-start justify-between w-full gap-2">
+                        <section className="w-full flex gap-2">
+                            <section className=" w-full flex flex-col gap-3">
+                                <div className='w-full flex flex-col gap-1'>
+                                    <div className='bg-tgray-100 opacity-10 rounded-full h-2 w-2/3' />
+                                    <div className='bg-tgray-100 opacity-10 rounded-full h-2 w-2/3' />
+                                    <div className='bg-tgray-100 opacity-10 rounded-full h-2 w-2/3' />
+                                </div>
+                                <span className="h-2 bg-tgray-100 rounded-full opacity-10 w-1/4" />
+                            </section>
+                        </section>
+
+                        <div
+                            className="w-1/3 cursor-pointer h-[50px] md:h-[100px] rounded-lg bg-tgray-100 opacity-10"
+                        />
+                    </div>
+                ))
+            }
         </div>
     )
 }
