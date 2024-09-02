@@ -170,7 +170,7 @@ export const MainAppLayout = ({ children }) => {
           }`}
         >
           {/* Mobile header */}
-          <div className="border-b bg-white border-tgray-light w-full h-[7dvh] sm:h-[8dvh] flex overflow-hidden items-center">
+          <div className="border-b bg-white border-tgray-light w-full h-[7dvh] sm:h-[8dvh] flex items-center">
             <header
               className={`sticky w-full flex items-center justify-between max-w-screen-2xl mx-auto gap-8 sm:gap-4 z-40 px-[5vw] lg:px-24  py-2 top-0`}
             >
@@ -477,7 +477,7 @@ export const MainAppLayout = ({ children }) => {
               } no-scrollbar`}
             >
               {/* main content */}
-              <div className="flex flex-col flex-1 h-full overflow-x-hidden overflow-auto no-scrollbar  body-font font-normal text-tblack-100">
+              <div className="flex flex-col flex-1 h-full justify-center items-center overflow-x-hidden overflow-auto no-scrollbar  body-font font-normal text-tblack-100">
                 <Outlet />
               </div>
             </main>
