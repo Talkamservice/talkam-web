@@ -4,6 +4,8 @@ import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { useGetUserCommentsQuery } from "../../../services/posts/postsApiSlice";
 import { CommentsLoader } from "../../../components/global/skeletons";
 import { EmptyState } from "../../../components/global/emptystate";
+import { toast } from "sonner";
+import { handleError } from "../../../utils/handleError";
 import moment from "moment";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 
@@ -11,7 +13,18 @@ export const ProfileComments = () => {
 
     const { userId } = useParams();
     const navigate = useNavigate()
-    const { data: comments, isLoading } = useGetUserCommentsQuery(userId);
+    const { data: comments, isLoading, isError, error } = useGetUserCommentsQuery(userId);
+
+    if (isError) {
+        const errorMessage = handleError(error);
+        toast.error(errorMessage);
+        return (
+            <div className="w-full items-center justify-center m-auto text-center text-tgray-150">
+                <p className="text-sm font-normal">Comments aren't loading right now.</p>
+                <p className="text-xs font-normal">Try again.</p>
+            </div>
+        );
+    }
 
     return (
         <main className="flex">
@@ -20,7 +33,7 @@ export const ProfileComments = () => {
                     isLoading ?
                         <CommentsLoader />
                         :
-                        !comments.data?.length ?
+                        !comments?.data?.length ?
                             <section className="w-full py-4">
                                 <EmptyState
                                     icon={EmptyListIcon}

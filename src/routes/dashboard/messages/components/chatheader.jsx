@@ -9,10 +9,12 @@ import { Modal } from '../../../../components/global/modal';
 import { BlockPromptModal } from '../../../../components/global/blockpromptmodal';
 import { usePostController } from '../../../../controllers/postsController';
 import { DeleteChatPromptModal } from './deletechatpromptmodal';
+import { useMediaQuery } from '../../../../hooks/useMediaQuery';
 import * as Icon from 'react-feather'
 
-export const ChatHeader = ({ messageController, currentChat, currentUser, details }) => {
+export const ChatHeader = ({ messageController, currentChat, setCurrentChat, currentUser, details }) => {
 
+    const isMobile = useMediaQuery("(max-width: 1024px)");
     const receiver = details?.members?.find(member => member.id !== currentUser.id);
     const postController = usePostController(null, receiver)
     const popUpRef = useRef();
@@ -26,9 +28,17 @@ export const ChatHeader = ({ messageController, currentChat, currentUser, detail
 
     return (
         <div className={`p-2 flex items-center justify-between space-x-3 w-full border-b border-[#E2E4E9]`}>
-            <div className='cursor-pointer' onClick={() => navigate(`/userprofile/${receiver?.id}`)}>
-                <Avatar src={receiver?.avatar} size="sm" />
-            </div>
+            <section className='flex items-center gap-3'>
+                {
+                    isMobile ?
+                        <Icon.ArrowLeft onClick={() => setCurrentChat(null)} />
+                        :
+                        null
+                }
+                <div className='cursor-pointer' onClick={() => navigate(`/userprofile/${receiver?.id}`)}>
+                    <Avatar src={receiver?.avatar} size="sm" />
+                </div>
+            </section>
             <div className={`flex-1 flex items-center space-x-3`}>
                 <span className="flex-1 inline-flex flex-col text-sm">
                     <span className={`font-semibold text-lg`}>

@@ -29,7 +29,7 @@ export const ConversationCard = ({ avatar, user, lastMessage, time, status, onCl
                     <span className='absolute top-2 left-3'>
                         <Icon.Circle
                             size={10}
-                            fill="#00FF00"
+                            fill="#FF0000"
                             strokeWidth={0}
                             color="#FFF"
                         />
