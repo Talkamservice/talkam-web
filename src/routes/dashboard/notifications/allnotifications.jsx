@@ -1,17 +1,50 @@
 import { toast } from "sonner";
-import { ColoredLoader } from "../../../components/global/loader"
 import { useGetAllNotificationsQuery } from "../../../services/notificationsApiSlice"
 import { handleError } from "../../../utils/handleError";
 import { EmptyState } from "../../../components/global/emptystate";
+import { NotificationCard } from "../../../components/global/notificationcard";
+import { NotificationLoader } from "../../../components/global/skeletons";
+import { useSelector } from "react-redux";
+import { selectCurrentToken, selectCurrentUser } from "../../../services/authSlice";
+import { useEffect } from "react";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 import moment from "moment";
-import { useNavigate } from "react-router-dom";
-import { NotificationCard } from "../../../components/global/notificationcard";
 
 export const AllNotifications = () => {
 
-    const navigate = useNavigate();
-    const { data: notifications, isLoading, isError, error } = useGetAllNotificationsQuery();
+    const token = useSelector(selectCurrentToken)
+    const currentUser = useSelector(selectCurrentUser)
+    const { data: notifications, isLoading, isError, error, refetch: refetchNotification } = useGetAllNotificationsQuery();
+
+    const connectToPusher = () => {
+        let pusherChannel; // Declare pusherChannel variable
+
+        // Unsubscribe from the channel if it's already subscribed
+        if (pusherChannel) {
+            pusherChannel.unbind_all();
+            pusher.unsubscribe('refresh-notification.' + currentUser?.id);
+        }
+
+        const pusher = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
+            cluster: import.meta.env.VITE_PUSHER_CLUSTER,
+            encrypted: true,
+            authEndpoint: `${import.meta.env.VITE_BASE_API_URL}/broadcasting/auth`,
+            auth: {
+                headers: {
+                    'content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        });
+        pusherChannel = pusher.subscribe('refresh-notification.' + currentUser?.id); // Assign pusherChannel
+        pusherChannel.bind('refresh', (data) => {
+            refetchNotification();
+        });
+        return () => {
+            pusherChannel.unbind_all();
+            pusher.unsubscribe('refresh-notification.' + currentUser?.id);
+        };
+    };
 
     if (isError) {
         const errorMessage = handleError(error);
@@ -25,12 +58,17 @@ export const AllNotifications = () => {
         );
     }
 
+    useEffect(() => {
+        connectToPusher();
+    }, [])
+    console.log(notifications)
+
     return (
         <div>
             <section className="w-full py-3 flex flex-col items-center justify-center">
                 {
                     isLoading ?
-                        <ColoredLoader />
+                        <NotificationLoader />
                         :
                         !notifications.data?.length ?
                             <section className="w-full py-4">
@@ -55,6 +93,8 @@ export const AllNotifications = () => {
                                         type={notification?.type}
                                         id={notification?.data_id}
                                         extra={notification?.extra}
+                                        read={notification?.read_at}
+                                        notifyId={notification.id}
                                     />
                                 </div>
                             ))
