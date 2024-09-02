@@ -25,7 +25,10 @@ import {
 } from "../../services/userApiSlice";
 import { ColoredLoader } from "../global/loader";
 import { useSelector } from "react-redux";
-import { selectCurrentToken, selectCurrentUser } from "../../services/authSlice";
+import {
+  selectCurrentToken,
+  selectCurrentUser,
+} from "../../services/authSlice";
 import { Avatar } from "../global/avatar";
 import { motion } from "framer-motion";
 import { downVariants } from "../../helpers/cardanimation";
@@ -37,9 +40,9 @@ import { toast } from "sonner";
 import { handleError } from "../../utils/handleError";
 import { Messages } from "../../routes/dashboard/messages/messages";
 import { DrawerModal } from "../global/drawer";
-import { useGetNotificationStatsQuery } from '../../services/notificationsApiSlice';
+import { useGetNotificationStatsQuery } from "../../services/notificationsApiSlice";
 import * as Icon from "react-feather";
-import Pusher from 'pusher-js';
+import Pusher from "pusher-js";
 
 export const MainAppLayout = ({ children }) => {
   let isMobile = useMediaQuery("(max-width: 1024px)");
@@ -49,7 +52,7 @@ export const MainAppLayout = ({ children }) => {
   const location = useLocation();
   const isHelpAndInfo = location.pathname.includes("help&info");
   const searchParams = new URLSearchParams(location.search);
-    const token = useSelector(selectCurrentToken)
+  const token = useSelector(selectCurrentToken);
   const currentUser = useSelector(selectCurrentUser);
   const popUpRef = useRef();
   const [showPanel, setShowPanel] = useState(false);
@@ -61,49 +64,54 @@ export const MainAppLayout = ({ children }) => {
       sort: "popular",
       categoryId: "",
     });
-    const { data: followingCategories, isLoading: followingCategoriesLoading } = useFollowingCategoriesQuery();
-    const [resendOtp, { isLoading: resendLoading }] = useResendOtpMutation();
-    const { data: user, isSuccess } = useGetUserProfileDetailsQuery(currentUser?.id, {
-        refetchOnFocus: true,
-        refetchOnMountOrArgChange: true,
-        refetchOnReconnect: true
+  const { data: followingCategories, isLoading: followingCategoriesLoading } =
+    useFollowingCategoriesQuery();
+  const [resendOtp, { isLoading: resendLoading }] = useResendOtpMutation();
+  const { data: user, isSuccess } = useGetUserProfileDetailsQuery(
+    currentUser?.id,
+    {
+      refetchOnFocus: true,
+      refetchOnMountOrArgChange: true,
+      refetchOnReconnect: true,
+    }
+  );
+  const { data: notificationStats, refetch: refetchNotification } =
+    useGetNotificationStatsQuery();
+
+  useOnOutsideClick(popUpRef, () => {
+    setProfileMenu(() => false);
+  });
+
+  const connectToPusher = () => {
+    let pusherChannel; // Declare pusherChannel variable
+
+    // Unsubscribe from the channel if it's already subscribed
+    if (pusherChannel) {
+      pusherChannel.unbind_all();
+      pusher.unsubscribe("refresh-notification." + currentUser?.id);
+    }
+
+    const pusher = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
+      cluster: import.meta.env.VITE_PUSHER_CLUSTER,
+      encrypted: true,
+      authEndpoint: `${import.meta.env.VITE_BASE_API_URL}/broadcasting/auth`,
+      auth: {
+        headers: {
+          "content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      },
     });
-    const { data: notificationStats, refetch: refetchNotification } = useGetNotificationStatsQuery();
-
-    useOnOutsideClick(popUpRef, () => {
-        setProfileMenu(() => false)
+    pusherChannel = pusher.subscribe("refresh-notification." + currentUser?.id); // Assign pusherChannel
+    pusherChannel.bind("refresh", (data) => {
+      console.log(data);
+      refetchNotification();
     });
-
-    const connectToPusher = () => {
-        let pusherChannel; // Declare pusherChannel variable
-
-        // Unsubscribe from the channel if it's already subscribed
-        if (pusherChannel) {
-            pusherChannel.unbind_all();
-            pusher.unsubscribe('refresh-notification.' + currentUser?.id);
-        }
-
-        const pusher = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
-            cluster: import.meta.env.VITE_PUSHER_CLUSTER,
-            encrypted: true,
-            authEndpoint: `${import.meta.env.VITE_BASE_API_URL}/broadcasting/auth`,
-            auth: {
-                headers: {
-                    'content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            }
-        });
-        pusherChannel = pusher.subscribe('refresh-notification.' + currentUser?.id); // Assign pusherChannel
-        pusherChannel.bind('refresh', (data) => {
-            console.log(data)
-            refetchNotification();
-        });
-        return () => {
-            pusherChannel.unbind_all();
-            pusher.unsubscribe('refresh-notification.' + currentUser?.id);
-        };
+    return () => {
+      pusherChannel.unbind_all();
+      pusher.unsubscribe("refresh-notification." + currentUser?.id);
     };
+  };
 
   const verifyAccountHandler = async () => {
     try {
@@ -134,7 +142,7 @@ export const MainAppLayout = ({ children }) => {
   };
 
   useEffect(() => {
-        refetchNotification();
+    refetchNotification();
     if (user) {
       if (!user?.data?.email_verified_at) {
         setVerifyModal(() => true);
@@ -142,10 +150,16 @@ export const MainAppLayout = ({ children }) => {
     }
   }, [user]);
 
-    useEffect(() => {
-        connectToPusher();
-    }, [])
+  useEffect(() => {
+    connectToPusher();
+  }, []);
 
+  const activeInfoNavLinkClass = ({ isActive }) =>
+    `relative transition-all duration-300 ${
+      isActive
+        ? "after:block after:absolute after:left-0 after:bottom-[-2px] after:w-full after:h-[3px] after:bg-[#017FC8]"
+        : ""
+    }`;
 
   return (
     <Suspense fallback={<ColoredLoader />}>
