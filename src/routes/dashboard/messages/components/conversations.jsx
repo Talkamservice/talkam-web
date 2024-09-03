@@ -4,7 +4,7 @@ import { ConversationSkeletonLoader } from "../../../../components/global/skelet
 import { ConversationCard } from "../../../../components/messages/conversationcard"
 import EmptyListIcon from "../../../../assets/images/emptylist.png"
 
-export const Conversations = ({ currentChat, setCurrentChat, conversations, isLoading, setSearch, currentUser, refetchConvo }) => {
+export const Conversations = ({ currentChat, setCurrentChat, conversations, isLoading, setSearch, currentUser, refetchConvo, setPage }) => {
 
     return (
         <div className="w-full h-full flex flex-col gap-8">
@@ -43,7 +43,7 @@ export const Conversations = ({ currentChat, setCurrentChat, conversations, isLo
                                         time={convo.last_message?.created_at}
                                         lastMessage={convo.last_message?.message}
                                         status={convo.last_message?.read}
-                                        onClick={() => { setCurrentChat(() => convo); refetchConvo() }}
+                                        onClick={() => { setCurrentChat(() => convo); refetchConvo(), setPage(1) }}
                                         avatar={receiver?.avatar}
                                         activeChat={currentChat && currentChat?.last_message?.conversation_id === convo?.last_message?.conversation_id}
                                         unreadcount={convo.number_of_unread}

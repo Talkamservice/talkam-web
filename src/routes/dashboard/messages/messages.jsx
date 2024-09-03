@@ -27,6 +27,7 @@ export const Messages = ({ onClose }) => {
         { skip: !receiverId, refetchOnFocus: true, refetchOnMountOrArgChange: true }
     );
     const [currentChat, setCurrentChat] = useState(currentConvo && (currentConvo?.data ?? null));
+    const [page, setPage] = useState(1);
     const isMobile = useMediaQuery("(max-width: 1024px)");
     let switchBoxView = currentChat && isMobile === true;
 
@@ -42,6 +43,7 @@ export const Messages = ({ onClose }) => {
                 setSearch={setSearch}
                 currentUser={currentUser}
                 refetchConvo={refetch}
+                setPage={setPage}
             />
         },
         {
@@ -101,6 +103,7 @@ export const Messages = ({ onClose }) => {
         const handleKeyDown = (e) => {
             if (e.key === 'Escape') {
                 setCurrentChat(() => null)
+                setPage(1)
             }
         }
         document.addEventListener("keydown", handleKeyDown);
@@ -124,7 +127,7 @@ export const Messages = ({ onClose }) => {
                             tabs={tabs}
                             headerPadding="px-8"
                         />
-                        <div onClick={() => navigate(-1)} className="absolute top-3 right-0 z-[12] px-5 flex items-center gap-1 cursor-pointer">
+                        <div onClick={() => navigate(-1)} className="absolute top-4 right-0 z-[12] px-5 flex items-center gap-1 cursor-pointer">
                             <X color="#ff0000" size={18} />
                             <span className="text-xs">Close</span>
                         </div>
@@ -135,6 +138,8 @@ export const Messages = ({ onClose }) => {
                     <ChatBox
                         setCurrentChat={setCurrentChat}
                         currentChat={currentChat}
+                        page={page}
+                        setPage={setPage}
                     />
                 </section>
             </main>

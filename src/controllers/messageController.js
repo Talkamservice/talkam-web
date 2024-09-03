@@ -21,7 +21,7 @@ import { formatDate } from "../utils/formatMessageDate";
 import { Storage } from "../app/storage";
 import Pusher from 'pusher-js';
 
-export const useMessagesController = (currentChat, setCurrentChat) => {
+export const useMessagesController = (currentChat, setCurrentChat, page, setPage) => {
 
     //hooks and variable declarations
     const navigate = useNavigate();
@@ -32,7 +32,6 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     const token = useSelector(selectCurrentToken);
     const currentUser = useSelector(selectCurrentUser);
     const receiver = currentChat?.members?.find(member => member.id !== currentUser.id);
-    const [page, setPage] = useState(1);
     const [isFetching, setIsFetching] = useState(false)
     const [imagePreview, setImagePreview] = useState(null);
     const [imageLoading, setImageLoading] = useState(false);
@@ -248,92 +247,66 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
     }
 
     // //infinite scroll functions
-    // const messageIds = new Set();
-    // // Deduplicate new posts
-    // const newResults = (messages || []).filter(message => {
-    //     if (!messageIds.has(message.id)) {
-    //         messageIds.add(message.id);
-    //         return true;
-    //     }
-    //     return false;
-    // });
+    const messageIds = new Set();
+    // Deduplicate new posts
+    const newResults = (messages && messages).filter(message => {
+        if (!messageIds.has(message.id)) {
+            messageIds.add(message.id);
+            return true;
+        }
+        return false;
+    });
 
-    // const appendNewPageData = () => {
-    //     if (chatMessages?.data?.data) {
-    //         setMessages((prevMessages) => {
-    //             const newMessages = new Set([...prevMessages, ...chatMessages?.data?.data]);
-    //             return Array.from(newMessages);
-    //         });
-    //         setIsFetching(false);
-    //     }
-    // };
+    const appendNewPageData = () => {
+        if (chatMessages?.data?.data) {
+            const latestMessages = [...chatMessages?.data?.data].reverse();
+            setMessages((prevMessages) => {
+                const newMessages = new Set([...latestMessages, ...prevMessages]);
+                return Array.from(newMessages);
+            });
+            setIsFetching(false);
+        }
+    };
 
-    // const handleScroll = useCallback((event) => {
-    //     if (isRestoringScroll.current) return;
-    //     const { scrollTop } = event.target;
-    //     const isAtTop = scrollTop <= 20;
+    const handleScroll = useCallback((event) => {
+        if (isRestoringScroll.current) return;
+        const { scrollTop } = event.target;
+        const isAtTop = scrollTop <= 20;
 
-    //     if (isAtTop && !isFetching && chatMessages?.data?.pagination_meta?.can_load_more) {
-    //         setIsFetching(true);
-    //         setPage((prevPage) => prevPage + 1);
-    //     }
-    //     Storage.setItem("scrollPosition_messages", scrollTop);
-    // }, [isFetching, chatMessages]);
+        if (isAtTop && !isFetching && chatMessages?.data?.pagination_meta?.can_load_more) {
+            setIsFetching(true);
+            setPage((prevPage) => prevPage + 1);
+        }
+        Storage.setItem("scrollPosition_messages", scrollTop);
+    }, [isFetching, chatMessages]);
 
-    // const handleScroll = useCallback((event) => {
-    //     if (isRestoringScroll.current) return;
-    //     const { scrollTop, scrollHeight, clientHeight } = event.target;
-    //     const bottom = scrollHeight - scrollTop <= clientHeight + 50;
-    //     if (bottom && !isFetching && chatMessages?.data?.pagination_meta.can_load_more) {
-    //         setIsFetching(true);
-    //         setPage((prevPage) => prevPage + 1);
-    //     }
-    //     Storage.setItem("scrollPosition_messages", scrollTop);
-    // }, [isFetching, chatMessages]);
-
-    // const restoreScrollPosition = () => {
-    //     // const savedScrollPosition = Storage.getItem("scrollPosition_messages");
-    //     if (savedScrollPosition && scrollableRef.current) {
-    //         isRestoringScroll.current = true;
-    //         scrollableRef.current.scrollTop = parseInt(savedScrollPosition, 10);
-    //         setTimeout(() => {
-    //             isRestoringScroll.current = false; // Allow the scroll handler to run again after a short delay
-    //         }, 0);
-    //     }
-    // };
-
-    const updatedMessages = addDateIndicators(messages);
+    const updatedMessages = addDateIndicators(newResults);
 
     //Effects
     useEffect(() => {
-        if (currentChat)
+        if (currentChat) {
             connectToPusher();
+        }
     }, [chatMessages])
 
     useEffect(() => {
-        (currentChat && chatMessages) && setMessages(() => [...chatMessages?.data?.data ?? []]);
+        if (page === 1 && chatMessages?.data?.data) {
+            const newMessages = [...chatMessages?.data?.data].reverse()
+            setMessages(() => [...newMessages ?? []]);
+        }
     }, [chatMessages, currentChat]);
 
-    // useEffect(() => {
-    //     appendNewPageData();
-    // }, [chatMessages]);
+    useEffect(() => {
+        if (page !== 1) {
+            appendNewPageData();
+        }
+    }, [chatMessages]);
 
     useEffect(() => {
         if (page === 1) {
             scrollToBottom();
         }
     }, [chatMessages, messages, currentChat]);
-
-    // useEffect(() => {
-    //     !isUninitialized && refetch()
-    //     chatMessages && scrollToBottom();
-    // }, [refetch, currentChat])
-
-    // useEffect(() => {
-    //     restoreScrollPosition();
-    // }, [restoreScrollPosition, page]);
-
-    // console.log(page, currentChat?.id)
 
     return {
         text,
@@ -361,8 +334,10 @@ export const useMessagesController = (currentChat, setCurrentChat) => {
         handleDeleteConversation,
         deleteLoading,
         handleNotificationStatus,
-        // handleScroll,
+        handleScroll,
         isFetching,
         scrollableRef,
+        newResults,
+        setPage,
     }
 }

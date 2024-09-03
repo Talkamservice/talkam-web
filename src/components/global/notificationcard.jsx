@@ -1,10 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Avatar } from "./avatar";
+import { useLazyShowNotificationQuery } from "../../services/notificationsApiSlice";
 import classNames from "classnames"
 import * as Icon from 'react-feather'
-import { useLazyShowNotificationQuery } from "../../services/notificationsApiSlice";
 
-export const NotificationCard = ({ notification, image, style, time, title, type, id, extra, notifyId }) => {
+export const NotificationCard = ({ notification, image, style, time, title, type, id, extra, notifyId, read, refetch }) => {
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -21,7 +21,7 @@ export const NotificationCard = ({ notification, image, style, time, title, type
 
     return (
         <div
-            onClick={() => { trigger(notifyId); navigate(`${type ? notificationType[type] : location.pathname}`, { state: type === "conversation" ? extra?.sender?.id : id }) }}
+            onClick={() => { trigger(notifyId); refetch(); navigate(`${type ? notificationType[type] : location.pathname}`, { state: type === "conversation" ? extra?.sender?.id : id }) }}
             className="cursor-pointer w-full flex items-start gap-4 justify-between hover:bg-tgray-xlight p-2 relative">
             <section className="flex gap-2">
                 {
@@ -49,7 +49,7 @@ export const NotificationCard = ({ notification, image, style, time, title, type
             />
 
             {
-                notification?.read_at === null ?
+                read === null ?
                     <span className='absolute top-0 left-0'>
                         <Icon.Circle
                             size={10}

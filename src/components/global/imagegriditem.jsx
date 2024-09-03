@@ -21,7 +21,7 @@ export const ImageGridItem = ({ src, style }) => {
         <>
             <div
                 onClick={handleModal}
-                className={classNames(style, `w-full flex items-center justify-center ${src ? 'block' : 'hidden'} cursor-pointer h-[100px] sm:h-[200px] overflow-hidden`)}
+                className={classNames(style, `w-full flex items-center justify-center ${src ? 'block' : 'hidden'} cursor-pointer h-[120px] sm:h-[220px] overflow-hidden`)}
             >
                 <img
                     src={src}
