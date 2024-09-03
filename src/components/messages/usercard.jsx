@@ -78,7 +78,7 @@ export const UserCard = ({ preview, file, text, time, isLoading, messageType }) 
         </li>;
 
     const typeMap = {
-        "Text": TextView,
+        "text": TextView,
         "media": MediaView,
         "file": FileView
     };

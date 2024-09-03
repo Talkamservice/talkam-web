@@ -61,7 +61,6 @@ export const AllNotifications = () => {
     useEffect(() => {
         connectToPusher();
     }, [])
-    console.log(notifications)
 
     return (
         <div>
@@ -95,6 +94,7 @@ export const AllNotifications = () => {
                                         extra={notification?.extra}
                                         read={notification?.read_at}
                                         notifyId={notification.id}
+                                        refetch={refetchNotification}
                                     />
                                 </div>
                             ))
