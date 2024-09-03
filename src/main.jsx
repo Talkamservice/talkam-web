@@ -425,6 +425,27 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "terms",
+        lazy: async () => {
+          let { Terms } = await import("./routes/dashboard/HomeInfo/terms");
+          return { Component: Terms };
+        },
+      },
+      {
+        path: "rules",
+        lazy: async () => {
+          let { Rules } = await import("./routes/dashboard/HomeInfo/rules");
+          return { Component: Rules };
+        },
+      },
+      {
+        path: "privacy-policy",
+        lazy: async () => {
+          let { Privacy } = await import("./routes/dashboard/HomeInfo/privacy");
+          return { Component: Privacy };
+        },
+      },
+      {
         path: "faqs/general",
         lazy: async () => {
           let { AccordionPage } = await import(
