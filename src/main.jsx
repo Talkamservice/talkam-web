@@ -13,6 +13,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AnimatePresence } from "framer-motion";
 import ErrorPage from "./routes/error/error";
 import App from "./App";
+import { HelpIfoLayout } from "./components/layout/helpInfoLayout";
 
 window.addEventListener("vite:preloadError", (event) => {
   window.location.reload(); // for example, refresh the page
@@ -37,7 +38,7 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect('new')
+            loader: () => redirect("new"),
           },
           {
             path: "featured",
@@ -82,20 +83,6 @@ const router = createBrowserRouter([
             "./routes/dashboard/messages/messages"
           );
           return { Component: Messages };
-        },
-      },
-      {
-        path: "help&info/about",
-        lazy: async () => {
-          let { About } = await import("./routes/dashboard/HomeInfo/about");
-          return { Component: About };
-        },
-      },
-      {
-        path: "help&info/faqs",
-        lazy: async () => {
-          let { Faqs } = await import("./routes/dashboard/HomeInfo/faqs");
-          return { Component: Faqs };
         },
       },
       {
@@ -414,6 +401,37 @@ const router = createBrowserRouter([
             },
           },
         ],
+      },
+    ],
+  },
+
+  {
+    path: "/help&info",
+    errorElement: <ErrorPage />,
+    element: <HelpIfoLayout />,
+    children: [
+      {
+        path: "about",
+        lazy: async () => {
+          let { About } = await import("./routes/dashboard/HomeInfo/about");
+          return { Component: About };
+        },
+      },
+      {
+        path: "faqs",
+        lazy: async () => {
+          let { Faqs } = await import("./routes/dashboard/HomeInfo/faqs");
+          return { Component: Faqs };
+        },
+      },
+      {
+        path: "faqs/general",
+        lazy: async () => {
+          let { AccordionPage } = await import(
+            "./routes/dashboard/HomeInfo/accordionPage"
+          );
+          return { Component: AccordionPage };
+        },
       },
     ],
   },
