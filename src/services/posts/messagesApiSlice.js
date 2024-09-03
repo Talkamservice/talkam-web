@@ -29,6 +29,7 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
             providesTags: ["messages"]
         }),
         currentConversation: builder.query({
+            keepUnusedDataFor: 0,
             query: id => ({
                 url: `/user/messaging/conversations/current/fetch?receiver_id=${id}`,
                 method: "get",
@@ -43,6 +44,7 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
             providesTags: ["conversations"]
         }),
         getConversationDetails: builder.query({
+            keepUnusedDataFor: 0,
             query: id => ({
                 url: `/user/messaging/conversations/${id}`,
                 method: 'get'

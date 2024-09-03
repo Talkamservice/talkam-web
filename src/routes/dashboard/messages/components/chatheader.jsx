@@ -31,7 +31,7 @@ export const ChatHeader = ({ messageController, currentChat, setCurrentChat, cur
             <section className='flex items-center gap-3'>
                 {
                     isMobile ?
-                        <Icon.ArrowLeft onClick={() => setCurrentChat(null)} />
+                        <Icon.ArrowLeft className='cursor-pointer' onClick={() => { setCurrentChat(null); messageController.setPage(1) }} />
                         :
                         null
                 }

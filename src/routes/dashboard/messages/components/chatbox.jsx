@@ -10,9 +10,9 @@ import Talkamlogo from '../../../../assets/icons/logo.svg'
 import InputEmoji from "react-input-emoji"
 import * as Icon from 'react-feather'
 
-export const ChatBox = ({ setCurrentChat, currentChat }) => {
+export const ChatBox = ({ setCurrentChat, currentChat, page, setPage }) => {
 
-    const messageController = useMessagesController(currentChat, setCurrentChat);
+    const messageController = useMessagesController(currentChat, setCurrentChat, page, setPage);
 
     const renderMessages = () => {
         return messageController.updatedMessages?.map((message, index) => {
@@ -32,7 +32,7 @@ export const ChatBox = ({ setCurrentChat, currentChat }) => {
                         text={message?.message}
                         time={message?.created_at}
                         file={message?.asset_url}
-                        messageType={message?.message_type}
+                        messageType={message?.message_type?.toLowerCase()}
                         preview={messageController?.imagePreview}
                     // isLoading={message?.imageLoading}
                     />
@@ -44,7 +44,7 @@ export const ChatBox = ({ setCurrentChat, currentChat }) => {
                         text={message?.message}
                         time={message?.created_at}
                         file={message?.asset_url}
-                        messageType={message?.message_type}
+                        messageType={message?.message_type?.toLowerCase()}
                         preview={messageController?.imagePreview}
                     // isLoading={message?.imageLoading}
                     />

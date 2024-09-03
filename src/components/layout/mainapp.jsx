@@ -190,8 +190,7 @@ export const MainAppLayout = ({ children }) => {
                                 />
                                 <div ref={popUpRef} className='cursor-pointer relative'>
                                     <Avatar
-
-                                        onClick={showProfileMenu} src={currentUser?.avatar}
+                                        onClick={showProfileMenu} src={user?.data?.avatar}
                                         size={isMobile ? "xs" : "sm"}
                                     />
                                     {
