@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 function Container({ children }) {
   return (
-    <div className="w-full min-h-full flex flex-col justify-between max-w-screen-2xl mx-auto px-[5vw] lg:px-24 ">
+    <div className="w-full min-h-full flex flex-col justify-between max-w-screen-2xl mx-auto px-[5vw] lg:px-24 pt-5 sm:pt-6 min-[850px]:pt-8 ">
       <div className="w-full max-w-[1080px] mx-auto pt-6 md:pt-10 xl:pt-[60px]">
         {children}
       </div>

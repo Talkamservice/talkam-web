@@ -50,7 +50,6 @@ export const MainAppLayout = ({ children }) => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const isHelpAndInfo = location.pathname.includes("help&info");
   const searchParams = new URLSearchParams(location.search);
   const token = useSelector(selectCurrentToken);
   const currentUser = useSelector(selectCurrentUser);
@@ -154,21 +153,10 @@ export const MainAppLayout = ({ children }) => {
     connectToPusher();
   }, []);
 
-  const activeInfoNavLinkClass = ({ isActive }) =>
-    `relative transition-all duration-300 ${
-      isActive
-        ? "after:block after:absolute after:left-0 after:bottom-[-2px] after:w-full after:h-[3px] after:bg-[#017FC8]"
-        : ""
-    }`;
-
   return (
     <Suspense fallback={<ColoredLoader />}>
       <section className="w-full flex items-center justify-center no-scrollbar">
-        <main
-          className={`w-full relative h-dvh no-scrollbar  no-scrollbar ${
-            isHelpAndInfo ? "bg-[#FAFAFA]" : ""
-          }`}
-        >
+        <main className="w-full relative h-dvh no-scrollbar  no-scrollbar">
           {/* Mobile header */}
           <div className="border-b bg-white border-tgray-light w-full h-[7dvh] sm:h-[8dvh] flex items-center">
             <header
@@ -193,46 +181,80 @@ export const MainAppLayout = ({ children }) => {
                   <span className="font-extraboldNunito">talk</span>AM
                 </p>
               </div>
-              {isHelpAndInfo && (
-                <>
-                  <section
-                    className={` ${
-                      isMobile ? "hidden" : "flex"
-                    } justify-center items-center gap-10`}
-                  >
-                    <div className="*:text-sm *:text-[#212121] *:font-semibold  flex justify-center items-start gap-8">
-                      <NavLink
-                        to="/help&info/about"
-                        className={activeInfoNavLinkClass}
+
+              <section className="w-10/12 md:w-9/12 flex items-center justify-end gap-6 md:gap-8 no-scrollbar">
+                <section
+                  className={`${
+                    isMobile ? "" : "flex-1"
+                  } flex items-center gap-5 md:gap-8`}
+                >
+                  {isMobile ? (
+                    <Icon.Search
+                      onClick={() => navigate("/search")}
+                      className={`${isMobile ? "w-5 h-5" : "w-7 h-7"}`}
+                    />
+                  ) : (
+                    <NavSearch />
+                  )}
+                  <NotificationIcon
+                    onClick={() => navigate("/notifications")}
+                    className={`cursor-pointer ${
+                      isMobile ? "w-5 h-5" : "w-7 h-7"
+                    }`}
+                  />
+                  <InboxIcon
+                    onClick={() => {
+                      navigate({
+                        pathname: `${location.pathname}/`,
+                        search: `messages`,
+                      });
+                      setShowPanel(false);
+                    }}
+                    className={`cursor-pointer ${
+                      isMobile ? "w-5 h-5" : "w-7 h-7"
+                    }`}
+                  />
+                </section>
+                <section className="flex items-center gap-5 md:gap-8">
+                  <Button
+                    children={isMobile ? "" : "Post"}
+                    leftIcon={<Icon.Plus size={isMobile ? 16 : 20} />}
+                    className={
+                      isMobile
+                        ? "!rounded-full !text-base bg-tprimary-50 !p-1"
+                        : "!rounded-full !text-base bg-tprimary-50 !px-4 !py-2.5"
+                    }
+                    onClick={() => {
+                      navigate("/create-post");
+                      setShowPanel(false);
+                    }}
+                  />
+                  <div ref={popUpRef} className="cursor-pointer relative">
+                    <Avatar
+                      onClick={showProfileMenu}
+                      src={currentUser?.avatar}
+                      size={isMobile ? "xs" : "sm"}
+                    />
+                    {profileMenu ? (
+                      <motion.div
+                        variants={downVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{
+                          scrollbarWidth: "none",
+                          msOverflowStyle: "none",
+                        }}
+                        className="absolute top-14 -right-12 z-40"
                       >
-                        About
-                      </NavLink>
-                      <NavLink
-                        to="/help&info/faqs"
-                        className={activeInfoNavLinkClass}
-                      >
-                        FAQs
-                      </NavLink>
-                      <NavLink
-                        to="/help&info/rules"
-                        className={activeInfoNavLinkClass}
-                      >
-                        Rules
-                      </NavLink>
-                      <NavLink
-                        to="/help&info/feedback"
-                        className={activeInfoNavLinkClass}
-                      >
-                        Feedback
-                      </NavLink>
-                    </div>
-                    <Link
-                      to="/home"
-                      className="border border-[#017FC8] text-[#017FC8] text-base font-bold rounded-[22px] px-5 py-2"
-                    >
-                      Go to site
-                    </Link>
-                  </section>
+                        <UserPopUp
+                          currentUser={currentUser}
+                          toggleShowPanel={() => setShowPanel(false)}
+                          close={showProfileMenu}
+                        />
+                      </motion.div>
+                    ) : null}
+                  </div>
                   <Icon.Menu
                     className={`${isMobile ? "block" : "hidden"}`}
                     width={24}
@@ -241,93 +263,8 @@ export const MainAppLayout = ({ children }) => {
                     onClick={toggleShowPanel}
                     size={isMobile ? 15 : 18}
                   />
-                </>
-              )}
-              {!isHelpAndInfo && (
-                <section className="w-10/12 md:w-9/12 flex items-center justify-end gap-6 md:gap-8 no-scrollbar">
-                  <section
-                    className={`${
-                      isMobile ? "" : "flex-1"
-                    } flex items-center gap-5 md:gap-8`}
-                  >
-                    {isMobile ? (
-                      <Icon.Search
-                        onClick={() => navigate("/search")}
-                        className={`${isMobile ? "w-5 h-5" : "w-7 h-7"}`}
-                      />
-                    ) : (
-                      <NavSearch />
-                    )}
-                    <NotificationIcon
-                      onClick={() => navigate("/notifications")}
-                      className={`cursor-pointer ${
-                        isMobile ? "w-5 h-5" : "w-7 h-7"
-                      }`}
-                    />
-                    <InboxIcon
-                      onClick={() => {
-                        navigate({
-                          pathname: `${location.pathname}/`,
-                          search: `messages`,
-                        });
-                        setShowPanel(false);
-                      }}
-                      className={`cursor-pointer ${
-                        isMobile ? "w-5 h-5" : "w-7 h-7"
-                      }`}
-                    />
-                  </section>
-                  <section className="flex items-center gap-5 md:gap-8">
-                    <Button
-                      children={isMobile ? "" : "Post"}
-                      leftIcon={<Icon.Plus size={isMobile ? 16 : 20} />}
-                      className={
-                        isMobile
-                          ? "!rounded-full !text-base bg-tprimary-50 !p-1"
-                          : "!rounded-full !text-base bg-tprimary-50 !px-4 !py-2.5"
-                      }
-                      onClick={() => {
-                        navigate("/create-post");
-                        setShowPanel(false);
-                      }}
-                    />
-                    <div ref={popUpRef} className="cursor-pointer relative">
-                      <Avatar
-                        onClick={showProfileMenu}
-                        src={currentUser?.avatar}
-                        size={isMobile ? "xs" : "sm"}
-                      />
-                      {profileMenu ? (
-                        <motion.div
-                          variants={downVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          style={{
-                            scrollbarWidth: "none",
-                            msOverflowStyle: "none",
-                          }}
-                          className="absolute top-14 -right-12 z-40"
-                        >
-                          <UserPopUp
-                            currentUser={currentUser}
-                            toggleShowPanel={() => setShowPanel(false)}
-                            close={showProfileMenu}
-                          />
-                        </motion.div>
-                      ) : null}
-                    </div>
-                    <Icon.Menu
-                      className={`${isMobile ? "block" : "hidden"}`}
-                      width={24}
-                      height={24}
-                      color="black"
-                      onClick={toggleShowPanel}
-                      size={isMobile ? 15 : 18}
-                    />
-                  </section>
                 </section>
-              )}
+              </section>
             </header>
           </div>
 
@@ -342,142 +279,153 @@ export const MainAppLayout = ({ children }) => {
               onClick={toggleShowPanel}
             ></div>
 
-            {!isHelpAndInfo || (isHelpAndInfo && isMobile) ? (
-              <aside
-                className={`fixed border-r border-tgray-light inset-y-0 z-[38] lg:absolute w-80 sm:w-96 no-scrollbar overflow-y-auto bg-white sm:pl-20 pr-6
+            <aside
+              className={`fixed border-r border-tgray-light inset-y-0 z-[38] lg:absolute w-80 sm:w-96 no-scrollbar overflow-y-auto bg-white sm:pl-20 pr-6
                         ${isMobile && !showPanel && "hidden"}`}
-              >
-                <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
-                  <nav
-                    className={`flex-1 no-scrollbar ${isMobile && "pt-14"} `}
-                  >
-                    <section className="w-full flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
-                      <h1 className="text-base font-bold">
-                        Your subcategories
-                      </h1>
-                      <ul className="w-full flex flex-col gap-2">
-                        {followingCategoriesLoading ? (
-                          <section className="w-full flex items-center justify-center m-auto">
-                            <ColoredLoader />
-                          </section>
-                        ) : (
-                          followingCategories?.data
-                            .slice(0, 5)
-                            .map((item) => (
-                              <SideBarItem
-                                key={item.id}
-                                children={item.name}
-                                image={item.icon_image ?? <LatestEventsIcon />}
-                                url={`/category/${item?.id}`}
-                                onClick={() => setShowPanel(false)}
-                              />
-                            ))
-                        )}
-                      </ul>
-                    </section>
+            >
+              <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
+                <nav className={`flex-1 no-scrollbar ${isMobile && "pt-14"} `}>
+                  <section className="w-full flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
+                    <h1 className="text-base font-bold">Your subcategories</h1>
+                    <ul className="w-full flex flex-col gap-2">
+                      {followingCategoriesLoading ? (
+                        <section className="w-full flex items-center justify-center m-auto">
+                          <ColoredLoader />
+                        </section>
+                      ) : (
+                        followingCategories?.data
+                          .slice(0, 5)
+                          .map((item) => (
+                            <SideBarItem
+                              key={item.id}
+                              children={item.name}
+                              image={item.icon_image ?? <LatestEventsIcon />}
+                              url={`/category/${item?.id}`}
+                              onClick={() => setShowPanel(false)}
+                            />
+                          ))
+                      )}
+                    </ul>
+                  </section>
 
-                    <section className="flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
-                      <h1 className="text-base font-bold">Groups</h1>
-                      <Button
-                        variant="outline"
-                        fullWidth
-                        children="Create group"
-                        rightIcon={<GroupAddIcon />}
-                        className="flex items-center justify-between text-sm !p-2 !px-3"
-                        onClick={() => {
-                          navigate("/create-group");
-                          setShowPanel(false);
-                        }}
-                      />
-                      <Button
-                        variant="outline"
-                        fullWidth
-                        children="See all groups"
-                        rightIcon={<Icon.ArrowRight />}
-                        className="flex items-center justify-between !text-sm !p-2 !px-3 !border-none"
-                        onClick={() => {
-                          navigate("/groups");
-                          setShowPanel(false);
-                        }}
-                      />
-                    </section>
+                  <section className="flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
+                    <h1 className="text-base font-bold">Groups</h1>
+                    <Button
+                      variant="outline"
+                      fullWidth
+                      children="Create group"
+                      rightIcon={<GroupAddIcon />}
+                      className="flex items-center justify-between text-sm !p-2 !px-3"
+                      onClick={() => {
+                        navigate("/create-group");
+                        setShowPanel(false);
+                      }}
+                    />
+                    <Button
+                      variant="outline"
+                      fullWidth
+                      children="See all groups"
+                      rightIcon={<Icon.ArrowRight />}
+                      className="flex items-center justify-between !text-sm !p-2 !px-3 !border-none"
+                      onClick={() => {
+                        navigate("/groups");
+                        setShowPanel(false);
+                      }}
+                    />
+                  </section>
 
-                    <section className="w-full flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
-                      <h1 className="text-base font-bold">
-                        Popular subcategories
-                      </h1>
-                      <ul className="w-full flex flex-col gap-2">
-                        {loadingCategories ? (
-                          <section className="w-full flex items-center justify-center m-auto">
-                            <ColoredLoader />
-                          </section>
-                        ) : (
-                          categories?.data
-                            .slice(0, 5)
-                            .map((item) => (
-                              <SideBarItem
-                                key={item.id}
-                                children={item.name}
-                                image={item.icon_image ?? <LatestEventsIcon />}
-                                url={`/category/${item?.id}`}
-                                onClick={() => setShowPanel(false)}
-                              />
-                            ))
-                        )}
-                      </ul>
-                      <Button
-                        variant="link"
-                        fullWidth
-                        children="See all categories"
-                        rightIcon={<Icon.ArrowRight />}
-                        className="flex items-center justify-between !text-sm !py-0 !px-0"
-                        onClick={() => {
-                          navigate("/categories");
-                          setShowPanel(false);
-                        }}
-                      />
-                    </section>
+                  <section className="w-full flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
+                    <h1 className="text-base font-bold">
+                      Popular subcategories
+                    </h1>
+                    <ul className="w-full flex flex-col gap-2">
+                      {loadingCategories ? (
+                        <section className="w-full flex items-center justify-center m-auto">
+                          <ColoredLoader />
+                        </section>
+                      ) : (
+                        categories?.data
+                          .slice(0, 5)
+                          .map((item) => (
+                            <SideBarItem
+                              key={item.id}
+                              children={item.name}
+                              image={item.icon_image ?? <LatestEventsIcon />}
+                              url={`/category/${item?.id}`}
+                              onClick={() => setShowPanel(false)}
+                            />
+                          ))
+                      )}
+                    </ul>
+                    <Button
+                      variant="link"
+                      fullWidth
+                      children="See all categories"
+                      rightIcon={<Icon.ArrowRight />}
+                      className="flex items-center justify-between !text-sm !py-0 !px-0"
+                      onClick={() => {
+                        navigate("/categories");
+                        setShowPanel(false);
+                      }}
+                    />
+                  </section>
 
-                    <section className="flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
-                      <Button
-                        variant="link"
-                        fullWidth
-                        children="Help & Support"
-                        className="flex items-center justify-between !text-sm !py-0 !px-0"
-                      />
-                      <Button
-                        variant="link"
-                        fullWidth
-                        children="Content policy"
-                        className="flex items-center justify-between !text-sm !py-0 !px-0"
-                      />
-                      <Button
-                        variant="link"
-                        fullWidth
-                        children="About"
-                        className="flex items-center justify-between !text-sm !py-0 !px-0"
-                      />
-                      <Button
-                        variant="link"
-                        fullWidth
-                        children="Report a problem"
-                        className="flex items-center justify-between !text-sm !py-0 !px-0"
-                      />
-                    </section>
-                  </nav>
-                </div>
-              </aside>
-            ) : (
-              ""
-            )}
+                  <section className="flex flex-col items-start gap-3.5 border-b border-tgray-200 py-6 pl-4 pb-4">
+                    <Button
+                      variant="link"
+                      fullWidth
+                      children="Help & Support"
+                      className="flex items-center justify-between !text-sm !py-0 !px-0"
+                    />
+                    <Button
+                      variant="link"
+                      fullWidth
+                      children="Content policy"
+                      className="flex items-center justify-between !text-sm !py-0 !px-0"
+                    />
+
+                    <Link
+                      className="flex items-center justify-between !text-sm !py-0 !px-0"
+                      to="/help&info/about"
+                    >
+                      About
+                    </Link>
+                    <Link
+                      className="flex items-center justify-between !text-sm !py-0 !px-0"
+                      to="/help&info/faqs"
+                    >
+                      FAQs
+                    </Link>
+                    <Link
+                      className="flex items-center justify-between !text-sm !py-0 !px-0"
+                      to="/help&info/rules"
+                    >
+                      Rules
+                    </Link>
+                    <Link
+                      className="flex items-center justify-between !text-sm !py-0 !px-0"
+                      to="/help&info/feedback"
+                    >
+                      Feedback
+                    </Link>
+                    <Button
+                      variant="link"
+                      fullWidth
+                      children="Report a problem"
+                      className="flex items-center justify-between !text-sm !py-0 !px-0"
+                    />
+                  </section>
+                </nav>
+              </div>
+            </aside>
 
             <main
               className={`flex-1 w-full h-full ${
-                !isMobile && (isHelpAndInfo ? "pl-0" : "pl-80 sm:pl-96")
+                !isMobile ? "pl-80 sm:pl-96" : ""
               } no-scrollbar`}
             >
               {/* main content */}
-              <div className="flex flex-col flex-1 h-full justify-center items-center overflow-x-hidden overflow-auto no-scrollbar  body-font font-normal text-tblack-100">
+              <div className="flex flex-col flex-1 h-full overflow-x-hidden overflow-auto no-scrollbar  body-font font-normal text-tblack-100">
                 <Outlet />
               </div>
             </main>
