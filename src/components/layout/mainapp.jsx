@@ -158,9 +158,9 @@ export const MainAppLayout = ({ children }) => {
       <section className="w-full flex items-center justify-center no-scrollbar">
         <main className="w-full relative h-dvh no-scrollbar  no-scrollbar">
           {/* Mobile header */}
-          <div className="border-b bg-white border-tgray-light w-full h-[7dvh] sm:h-[8dvh] flex items-center">
+          <div className="border-b bg-white sticky z-40 top-0 border-tgray-light w-full h-[7dvh] lg:h-[8dvh] flex items-center">
             <header
-              className={`sticky w-full flex items-center justify-between max-w-screen-2xl mx-auto gap-8 sm:gap-4 z-40 px-[5vw] lg:px-24  py-2 top-0`}
+              className={` w-full flex items-center justify-between max-w-screen-2xl mx-auto gap-8 sm:gap-4  px-[5vw] lg:px-24  py-2 `}
             >
               <div
                 onClick={() => {
@@ -268,7 +268,7 @@ export const MainAppLayout = ({ children }) => {
             </header>
           </div>
 
-          <div className=" relative max-w-screen-2xl mx-auto flex no-scrollbar h-[calc(100dvh-7dvh)] sm:h-[calc(100dvh-8dvh)]">
+          <div className=" relative max-w-screen-2xl mx-auto flex no-scrollbar h-[calc(100dvh-7dvh)] lg:h-[calc(100dvh-8dvh)]">
             <div
               className={`fixed inset-0 z-[38] backdrop-blur-sm bg-tgray-300 lg:hidden`}
               style={{
@@ -280,12 +280,18 @@ export const MainAppLayout = ({ children }) => {
             ></div>
 
             <aside
-              className={`fixed border-r border-tgray-light inset-y-0 z-[38] lg:absolute w-80 sm:w-96 no-scrollbar overflow-y-auto bg-white sm:pl-20 pr-6
+              className={`fixed border-r border-tgray-light inset-y-0 z-[38] lg:absolute w-80 sm:w-96 no-scrollbar overflow-y-auto bg-white ${
+                isMobile ? "pl-[5vw]" : "pl-[96px]"
+              } pr-6
                         ${isMobile && !showPanel && "hidden"}`}
             >
               <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
-                <nav className={`flex-1 no-scrollbar ${isMobile && "pt-14"} `}>
-                  <section className="w-full flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
+                <nav
+                  className={`flex-1 no-scrollbar ${
+                    isMobile && "pt-[6dvh] sm:pt-[7dvh]"
+                  } `}
+                >
+                  <section className="w-full flex flex-col items-start gap-3 border-b border-tgray-200 py-6  pb-4">
                     <h1 className="text-base font-bold">Your subcategories</h1>
                     <ul className="w-full flex flex-col gap-2">
                       {followingCategoriesLoading ? (
@@ -308,7 +314,7 @@ export const MainAppLayout = ({ children }) => {
                     </ul>
                   </section>
 
-                  <section className="flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
+                  <section className="flex flex-col items-start gap-3 border-b border-tgray-200 py-6  pb-4">
                     <h1 className="text-base font-bold">Groups</h1>
                     <Button
                       variant="outline"
@@ -334,7 +340,7 @@ export const MainAppLayout = ({ children }) => {
                     />
                   </section>
 
-                  <section className="w-full flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
+                  <section className="w-full flex flex-col items-start gap-3 border-b border-tgray-200 py-6  pb-4">
                     <h1 className="text-base font-bold">
                       Popular subcategories
                     </h1>
@@ -370,7 +376,7 @@ export const MainAppLayout = ({ children }) => {
                     />
                   </section>
 
-                  <section className="flex flex-col items-start gap-3.5 border-b border-tgray-200 py-6 pl-4 pb-4">
+                  <section className="flex flex-col items-start gap-3.5 border-b border-tgray-200 py-6  pb-4">
                     <Button
                       variant="link"
                       fullWidth
