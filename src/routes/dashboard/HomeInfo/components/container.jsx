@@ -9,9 +9,9 @@ function Container({ children }) {
       <div className="border-t w-full border-[#D7D7D7] mt-10 pt-8  flex justify-between items-center">
         <div className="*:text-sm *:text-[#212121] *:font-semibold flex flex-wrap justify-start items-start gap-8 gap-y-5 mb-8 sm:mb-12">
           <Link to="">Copyright</Link>
-          <Link to="">Terms of Use</Link>
+          <Link to="/help&info/terms">Terms of Use</Link>
           <Link to="">Feedback</Link>
-          <Link to="">Privacy Policy</Link>
+          <Link to="/help&info/privacy-policy">Privacy Policy</Link>
         </div>
       </div>
     </div>
