@@ -3,37 +3,37 @@ import { Link } from "react-router-dom";
 function FaqCards() {
   const faqData = [
     {
-      link: "general",
+      link: "/help&info/faqs/general",
       title: "General",
       content:
         "Yes, you can try us for free for 30 days. Our friendly team will work with you to get you up and running as soon as possible.",
     },
     {
-      link: "general",
+      link: "/help&info/faqs/general",
       title: "Posts, Media, and Polls",
       content:
         "Of course. Our pricing scales with your company. Chat to our friendly team to find a solution that works for you.",
     },
     {
-      link: "general",
+      link: "/help&info/faqs/general",
       title: "TalkAM Rules Enforcement",
       content:
         "We understand that things change. You can cancel your plan at any time and we’ll refund you the difference already paid.",
     },
     {
-      link: "general",
+      link: "/help&info/faqs/general",
       title: "Groups and Moderation",
       content:
         "At the moment, the only way to add additional information to invoices is to add the information to the workspace's name.",
     },
     {
-      link: "general",
+      link: "/help&info/faqs/general",
       title: "Privacy & Security",
       content:
         "Plans are per workspace, not per account. You can upgrade one workspace, and still have any number of free workspaces.",
     },
     {
-      link: "general",
+      link: "/help&info/faqs/general",
       title: "How do I change my account email?",
       content:
         "You can change the email address associated with your account by going to untitled.com/account from a laptop or desktop.",
