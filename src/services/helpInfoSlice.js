@@ -20,6 +20,12 @@ export const helpAndInfoSlice = apiSlice.injectEndpoints({
         method: "get",
       }),
     }),
+    rules: builder.query({
+      query: () => ({
+        url: `/user/guidelines`,
+        method: "get",
+      }),
+    }),
   }),
 });
 
@@ -27,4 +33,5 @@ export const {
   useFaqQuestionsQuery,
   useTermsOfUseQuery,
   usePrivacyPolicyQuery,
+  useRulesQuery,
 } = helpAndInfoSlice;
