@@ -25,6 +25,7 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Storage } from "../../../app/storage";
 import { SelectCategoryModal } from "./selectcategorymodal";
 import { useGetFollowingGroupsQuery } from "../../../services/groupApiSlice";
+import Protected from "../../../utils/protected";
 
 const storageKeys = [
     "post_title", "post_comment",
@@ -283,148 +284,150 @@ export const CreatePost = () => {
     }
 
     return (
-        <div className="w-full h-full flex divide-x divide-tgray-light relative">
-            <section className=" w-full md:w-4/6 overflow-auto no-scrollbar">
-                {/*left side card here */}
-                <main className={`flex flex-col gap-3 sm:mx-6 sm:mt-6 p-6 sm:border border-tgray-xlight rounded-tr-xl rounded-tl-xl ${!isChecked && "rounded-xl"} transition-all duration-300 ease-out`}>
-                    <header className="w-full flex flex-col items-start md:flex-row gap-4 md:items-center justify-between">
-                        <h2 className="font-bold text-2xl">Create post</h2>
-                        <div className="w-3/7">
-                            {/* <DropDownSelect
+        <Protected>
+            <div className="w-full h-full flex divide-x divide-tgray-light relative">
+                <section className=" w-full md:w-4/6 overflow-auto no-scrollbar">
+                    {/*left side card here */}
+                    <main className={`flex flex-col gap-3 sm:mx-6 sm:mt-6 p-6 sm:border border-tgray-xlight rounded-tr-xl rounded-tl-xl ${!isChecked && "rounded-xl"} transition-all duration-300 ease-out`}>
+                        <header className="w-full flex flex-col items-start md:flex-row gap-4 md:items-center justify-between">
+                            <h2 className="font-bold text-2xl">Create post</h2>
+                            <div className="w-3/7">
+                                {/* <DropDownSelect
                                 value={post.category?.value}
                                 node={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
                                 defaultValue={ post.category?.value ?? "Select group or category" }
                                 options={transformedCategories}
                                 onChange={handleSelectedCategory}
                             /> */}
-                            <Button
-                                variant="outline"
-                                onClick={toggleCategoryModal}
-                                leftIcon={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
-                            >
-                                {
-                                    (post?.group?.value || post?.category?.value) ?? "Select subcategory/group"
-                                }
-                            </Button>
-                        </div>
-                    </header>
+                                <Button
+                                    variant="outline"
+                                    onClick={toggleCategoryModal}
+                                    leftIcon={<span className="p-2.5 rounded-full bg-[#1F96BC]" />}
+                                >
+                                    {
+                                        (post?.group?.value || post?.category?.value) ?? "Select subcategory/group"
+                                    }
+                                </Button>
+                            </div>
+                        </header>
 
-                    <section className="relative">
-                        <Tabs tabs={tabs} />
-                        <span className="absolute top-2 right-0 z-[12]">
-                            <AnonToggleButton
-                                checked={isChecked}
-                                onChange={(event) => setIsChecked(event.target.checked)}
-                            />
-                        </span>
-                    </section>
-                    <footer className="w-full flex flex-col gap-4 bg-white">
-                        <section className="flex flex-col gap-2">
-                            <label
-                                className='text-sm font-medium text-tblack-100'
-                            >
-                                Tags <span className="text-xs text-tgray-75 px-1">(Maximum: 4)</span>
-                            </label>
-                            <MultiSelect
-                                rounded="rounded-[4px]"
-                                selectedItems={selectedItems}
-                                setSelectedItems={setSelectedItems}
-                                options={convertedtTrendsArray ?? []}
-                            />
+                        <section className="relative">
+                            <Tabs tabs={tabs} />
+                            <span className="absolute top-2 right-0 z-[12]">
+                                <AnonToggleButton
+                                    checked={isChecked}
+                                    onChange={(event) => setIsChecked(event.target.checked)}
+                                />
+                            </span>
                         </section>
+                        <footer className="w-full flex flex-col gap-4 bg-white">
+                            <section className="flex flex-col gap-2">
+                                <label
+                                    className='text-sm font-medium text-tblack-100'
+                                >
+                                    Tags <span className="text-xs text-tgray-75 px-1">(Maximum: 4)</span>
+                                </label>
+                                <MultiSelect
+                                    rounded="rounded-[4px]"
+                                    selectedItems={selectedItems}
+                                    setSelectedItems={setSelectedItems}
+                                    options={convertedtTrendsArray ?? []}
+                                />
+                            </section>
 
-                        <section className="w-full flex flex-col items-start md:flex-row justify-between gap-3">
-                            <div className="flex flex-col gap-3">
-                                <div className="flex items-center gap-4">
-                                    <p className="text-[#272727] font-normal text-base">Schedule this post</p>
-                                    <BasicToggleButton checked={scheduleCheck} onChange={(event) => setScheduleCheck(event.target.checked)} />
+                            <section className="w-full flex flex-col items-start md:flex-row justify-between gap-3">
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center gap-4">
+                                        <p className="text-[#272727] font-normal text-base">Schedule this post</p>
+                                        <BasicToggleButton checked={scheduleCheck} onChange={(event) => setScheduleCheck(event.target.checked)} />
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-8">
-                                <Button
-                                    variant="link"
-                                    children="Drafts"
-                                    className="!rounded-full font-bold !text-base text-tprimary-50"
-                                />
-                                <Button
-                                    children="Post"
-                                    className="!rounded-full !text-base bg-tprimary-50 px-6 !py-1.5 md:!px-8 md:!py-2.5"
-                                    onClick={handleCreatePost}
-                                    isLoading={createLoading}
-                                    disabled={!isValid || createLoading}
-                                />
-                            </div>
-                        </section>
-                    </footer>
-                </main>
-                {
-                    isChecked &&
-                    <motion.p
-                        key="chatbox"
-                        variants={downVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                        className="bg-[#FDD78D] text-xs font-semibold sm:rounded-bl-xl sm:rounded-br-xl p-2 flex items-center justify-center text-center sm:mx-6">
-                        You&apos;re posting anonymously. Your profile won&apos;t be shown.
-                    </motion.p>
-                }
-            </section>
-
-            {/* Right side */}
-            <section className="w-2/6 p-6 hidden md:block py-4 space-y-8 overflow-y-auto no-scrollbar">
-                <section className="flex flex-col gap-8">
-                    <header className="flex flex-col gap-3">
-                        <h2 className="text-base font-boldNunito leading-none border-b border-tgray-50 py-2">TalkAM Rules</h2>
-                        <article className="text-tblack-50 text-sm">
-                            Our community fosters respectful dialogue.
-                            Be kind, avoid hate speech, and refrain from spamming or sharing personal information.
-                        </article>
-                    </header>
-                    <ul className="flex items-start flex-col gap-4">
-                        {talkAmRules.map((rule) => (
-                            <RuleCard
-                                key={rule.id}
-                                rule={rule.rule}
-                                text={rule.text}
-                            />
-                        ))}
-                    </ul>
+                                <div className="flex items-center gap-8">
+                                    <Button
+                                        variant="link"
+                                        children="Drafts"
+                                        className="!rounded-full font-bold !text-base text-tprimary-50"
+                                    />
+                                    <Button
+                                        children="Post"
+                                        className="!rounded-full !text-base bg-tprimary-50 px-6 !py-1.5 md:!px-8 md:!py-2.5"
+                                        onClick={handleCreatePost}
+                                        isLoading={createLoading}
+                                        disabled={!isValid || createLoading}
+                                    />
+                                </div>
+                            </section>
+                        </footer>
+                    </main>
+                    {
+                        isChecked &&
+                        <motion.p
+                            key="chatbox"
+                            variants={downVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                            className="bg-[#FDD78D] text-xs font-semibold sm:rounded-bl-xl sm:rounded-br-xl p-2 flex items-center justify-center text-center sm:mx-6">
+                            You&apos;re posting anonymously. Your profile won&apos;t be shown.
+                        </motion.p>
+                    }
                 </section>
-            </section>
-            <Modal
-                show={scheduleCheck}
-                shouldCloseOnEscPress={false}
-                shouldCloseOnOverlayClick={false}
-                onClose={toggleModal}
-                position='center'
-                contentWidth='w-full md:w-3/6 xl:w-3/12'
-            >
-                <ScheduleModal
-                    setPublishDate={setPublishDate}
-                    onClose={toggleModal}
-                />
-            </Modal>
 
-            <Modal
-                show={categoryModal}
-                shouldCloseOnEscPress={false}
-                shouldCloseOnOverlayClick={false}
-                onClose={toggleCategoryModal}
-                position='center'
-                contentWidth='w-full sm:w-4/5 lg:w-2/5'
-            >
-                <SelectCategoryModal
-                    onClose={(toggleCategoryModal)}
-                    post={post}
-                    setPost={setPost}
-                    transformedCategories={transformedCategories}
-                    onChangeCategory={handleSelectedCategory}
-                    transformedGroups={transformedGroups}
-                    onChangeGroup={handleSelectedGroup}
-                />
-            </Modal>
-        </div>
+                {/* Right side */}
+                <section className="w-2/6 p-6 hidden md:block py-4 space-y-8 overflow-y-auto no-scrollbar">
+                    <section className="flex flex-col gap-8">
+                        <header className="flex flex-col gap-3">
+                            <h2 className="text-base font-boldNunito leading-none border-b border-tgray-50 py-2">TalkAM Rules</h2>
+                            <article className="text-tblack-50 text-sm">
+                                Our community fosters respectful dialogue.
+                                Be kind, avoid hate speech, and refrain from spamming or sharing personal information.
+                            </article>
+                        </header>
+                        <ul className="flex items-start flex-col gap-4">
+                            {talkAmRules.map((rule) => (
+                                <RuleCard
+                                    key={rule.id}
+                                    rule={rule.rule}
+                                    text={rule.text}
+                                />
+                            ))}
+                        </ul>
+                    </section>
+                </section>
+                <Modal
+                    show={scheduleCheck}
+                    shouldCloseOnEscPress={false}
+                    shouldCloseOnOverlayClick={false}
+                    onClose={toggleModal}
+                    position='center'
+                    contentWidth='w-full md:w-3/6 xl:w-3/12'
+                >
+                    <ScheduleModal
+                        setPublishDate={setPublishDate}
+                        onClose={toggleModal}
+                    />
+                </Modal>
+
+                <Modal
+                    show={categoryModal}
+                    shouldCloseOnEscPress={false}
+                    shouldCloseOnOverlayClick={false}
+                    onClose={toggleCategoryModal}
+                    position='center'
+                    contentWidth='w-full sm:w-4/5 lg:w-2/5'
+                >
+                    <SelectCategoryModal
+                        onClose={(toggleCategoryModal)}
+                        post={post}
+                        setPost={setPost}
+                        transformedCategories={transformedCategories}
+                        onChangeCategory={handleSelectedCategory}
+                        transformedGroups={transformedGroups}
+                        onChangeGroup={handleSelectedGroup}
+                    />
+                </Modal>
+            </div>
+        </Protected>
     )
 }

@@ -4,8 +4,8 @@ export const notificationsApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getAllNotifications: builder.query({
             keepUnusedDataFor: 30,
-            query: () => ({
-                url: `user/notifications/list`,
+            query: tab => ({
+                url: `user/notifications/list?tab=${tab}`,
                 method: 'get',
             }),
             providesTags: ["notifications"]
