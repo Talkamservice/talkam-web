@@ -21,9 +21,9 @@ import { handleError } from '../../utils/handleError';
 import { Messages } from '../../routes/dashboard/messages/messages';
 import { DrawerModal } from '../global/drawer';
 import { useGetNotificationStatsQuery } from '../../services/notificationsApiSlice';
+import { useIsAuth } from '../../hooks/useIsAuth';
 import * as Icon from 'react-feather'
 import Pusher from 'pusher-js';
-import { useIsAuth } from '../../hooks/useIsAuth';
 
 export const MainAppLayout = ({ children }) => {
 
@@ -224,7 +224,7 @@ export const MainAppLayout = ({ children }) => {
                                             />
                                             <div ref={popUpRef} className='cursor-pointer relative'>
                                                 <Avatar
-                                                    onClick={showProfileMenu} src={user?.data?.avatar}
+                                                    onClick={showProfileMenu} src={user?.data?.avatar ?? currentUser?.avatar}
                                                     size={isMobile ? "xs" : "sm"}
                                                 />
                                                 {

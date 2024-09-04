@@ -7,10 +7,10 @@ import { Toaster } from 'sonner'
 import { store } from './app/store';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AnimatePresence } from 'framer-motion';
-import ErrorPage from './routes/error/error';
-import App from './App';
 import { ColoredLoader } from './components/global/loader';
 import { HelpIfoLayout } from "./components/layout/helpInfoLayout";
+import ErrorPage from './routes/error/error';
+import App from './App';
 
 window.addEventListener("vite:preloadError", (event) => {
   window.location.reload(); // for example, refresh the page
@@ -521,10 +521,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <Provider store={store}>
-        <AnimatePresence mode='wait'>
-          <RouterProvider router={router} fallbackElement={<ColoredLoader />} />
         <AnimatePresence mode="wait">
-          <RouterProvider router={router} />
+          <RouterProvider router={router} fallbackElement={<ColoredLoader />} />
         </AnimatePresence>
       </Provider>
     </GoogleOAuthProvider>
