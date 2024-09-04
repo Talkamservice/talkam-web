@@ -446,6 +446,15 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "feedback",
+        lazy: async () => {
+          let { Feedback } = await import(
+            "./routes/dashboard/HomeInfo/feedback"
+          );
+          return { Component: Feedback };
+        },
+      },
+      {
         path: "faqs/general",
         lazy: async () => {
           let { AccordionPage } = await import(
