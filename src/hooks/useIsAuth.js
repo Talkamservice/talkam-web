@@ -10,4 +10,4 @@ export const useIsAuth = () => {
     } else {
         return false
     };
-}
+};
