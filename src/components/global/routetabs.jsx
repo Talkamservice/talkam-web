@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
-export const RouteTabs = ({ tabs, data, id }) => {
+export const RouteTabs = ({ tabs, data, id, headerPadding }) => {
 
     const navigate = useNavigate()
     const { pathname } = useLocation()
@@ -17,7 +17,7 @@ export const RouteTabs = ({ tabs, data, id }) => {
 
     return (
         <>
-            <div className='z-[12] sticky top-0 flex items-center justify-start gap-8 overflow-x-auto w-full border-b border-[#DCDCDC] no-scrollbar bg-white mb-2'>
+            <div className={`z-[12] sticky top-0 flex items-center justify-start gap-8 overflow-x-auto w-full border-b border-[#DCDCDC] no-scrollbar ${headerPadding ? headerPadding : null} bg-white mb-2`}>
                 {tabs?.map(item => (
                     <TabButton
                         key={item.title}

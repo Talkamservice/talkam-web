@@ -27,7 +27,7 @@ export const ProfileComments = () => {
     }
 
     return (
-        <main className="flex">
+        <main className="flex px-6">
             <section className="w-full py-3 flex flex-col items-center justify-center gap-4">
                 {
                     isLoading ?
