@@ -1,6 +1,7 @@
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../services/authSlice";
 import { RouteTabs } from "../../../components/global/routetabs";
+import Protected from "../../../utils/protected";
 
 const tabs = [
     {
@@ -30,11 +31,13 @@ export const ProfileSettings = () => {
     const user = useSelector(selectCurrentUser);
 
     return (
-        <div className="w-full lg:w-4/6 h-full">
-            <p className="p-6 text-lg font-bold">Settings</p>
-            <section className="w-full px-6">
-                <RouteTabs tabs={tabs} />
-            </section>
-        </div>
+        <Protected>
+            <div className="w-full lg:w-4/6 h-full">
+                <p className="p-6 text-lg font-bold">Settings</p>
+                <section className="w-full px-6">
+                    <RouteTabs tabs={tabs} />
+                </section>
+            </div>
+        </Protected>
     )
 }

@@ -11,7 +11,7 @@ export const ProfileMedia = () => {
     const { data: media, isLoading } = useGetUserMediaQuery(userId);
 
     return (
-        <section className="w-full">
+        <section className="w-full md:px-6">
             {
                 isLoading ?
                     <ImageGridLoader />

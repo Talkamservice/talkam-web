@@ -84,8 +84,8 @@ export const Profile = () => {
                 </div>
             </section>
 
-            <section className="relative overflow-y-auto w-full no-scrollbar px-6">
-                <RouteTabs tabs={tabs} />
+            <section className="relative overflow-y-auto w-full no-scrollbar">
+                <RouteTabs tabs={tabs} headerPadding="px-6" />
             </section>
 
             <Modal

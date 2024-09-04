@@ -19,6 +19,7 @@ import { NewNotificationIcon, TrashIcon } from "../../assets/icons/generated"
 import { Modal } from "../global/modal"
 import { CommentReportModal } from "./commentreportmodal"
 import { BlockPromptModal } from "../global/blockpromptmodal"
+import { useIsAuth } from "../../hooks/useIsAuth"
 import moment from "moment"
 import * as Icon from "react-feather"
 
@@ -46,6 +47,7 @@ export const CommentCard = ({
     const currentUser = useSelector(selectCurrentUser);
     const isCurrentUser = currentUser && currentUser?.id === parentComment?.user?.id;
 
+    const isAuth = useIsAuth();
     const navigate = useNavigate()
     const popUpRef = useRef();
     const [showBlockModal, setShowBlockModal] = useState(false);
@@ -182,6 +184,13 @@ export const CommentCard = ({
         setUnlikeCount(() => parentComment.unlikes)
     }, []);
 
+    const handleReply = () => {
+        if (!isAuth) {
+            navigate('/login', { replace: true })
+        }
+        setIsReplying(true)
+    }
+
     return (
         <>
             <div className={`w-full border border-tgray-50 rounded-xl p-4 flex flex-col items-start justify-between gap-4 relative`}>
@@ -222,7 +231,7 @@ export const CommentCard = ({
                                 variant="link"
                                 children="Reply"
                                 className="text-[#444444] !text-sm font-boldNunito"
-                                onClick={() => setIsReplying(true)}
+                                onClick={handleReply}
                             />
                             <div className="flex items-center gap-8">
                                 <div onClick={() => handlePostReaction("Like")} className="flex items-center gap-2 cursor-pointer">

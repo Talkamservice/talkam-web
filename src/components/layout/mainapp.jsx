@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { GroupAddIcon, InboxIcon, LatestEventsIcon, NotificationIcon, TalkamLogo, UsersIcon } from '../../assets/icons/generated';
+import { GroupAddIcon, InboxIcon, LatestEventsIcon, LockIcon, NotificationIcon, TalkamLogo, UsersIcon } from '../../assets/icons/generated';
 import { SideBarItem } from '../global/sidebarItem';
 import { Button } from '../forms/button';
 import { NavSearch } from '../forms/navsearchbar';
@@ -21,6 +21,7 @@ import { handleError } from '../../utils/handleError';
 import { Messages } from '../../routes/dashboard/messages/messages';
 import { DrawerModal } from '../global/drawer';
 import { useGetNotificationStatsQuery } from '../../services/notificationsApiSlice';
+import { useIsAuth } from '../../hooks/useIsAuth';
 import * as Icon from 'react-feather'
 import Pusher from 'pusher-js';
 
@@ -32,6 +33,7 @@ export const MainAppLayout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation()
     const searchParams = new URLSearchParams(location.search);
+    const isAuth = useIsAuth();
     const token = useSelector(selectCurrentToken)
     const currentUser = useSelector(selectCurrentUser)
     const popUpRef = useRef();
@@ -78,7 +80,6 @@ export const MainAppLayout = ({ children }) => {
         });
         pusherChannel = pusher.subscribe('refresh-notification.' + currentUser?.id); // Assign pusherChannel
         pusherChannel.bind('refresh', (data) => {
-            console.log(data)
             refetchNotification();
         });
         return () => {
@@ -126,7 +127,6 @@ export const MainAppLayout = ({ children }) => {
         connectToPusher();
     }, [])
 
-
     return (
         <Suspense fallback={<ColoredLoader />}>
             <section className='w-full flex items-center justify-center no-scrollbar'>
@@ -147,72 +147,110 @@ export const MainAppLayout = ({ children }) => {
                                     :
                                     <NavSearch />
                                 }
-                                <div className='relative'>
-                                    <NotificationIcon onClick={() => navigate('/notifications')} className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
-                                    <span
-                                        className={`absolute top-0 right-0 rounded-full bg-red-600 p-[2px] flex items-center justify-center
-                                            ${notificationStats?.data?.unread_notifications > 99 ? "" : "h-3 w-3"}
-                                            ${notificationStats?.data?.unread_notifications ? ' flex' : 'hidden'} text-[6px] text-twhite-100`
-                                        }
-                                    >
-                                        {notificationStats?.data?.unread_notifications}
-                                    </span>
-                                </div>
+                                {
+                                    !isAuth ?
+                                        <section className='flex items-center gap-4'>
+                                            <Button
+                                                variant="outline"
+                                                className="!rounded-full !font-bold !py-2.5 !px-4 text-tprimary-50 border border-tprimary-50"
+                                                onClick={() => navigate("/sign-up")}
+                                            >
+                                                Sign Up
+                                            </Button>
 
-                                <div className='relative'>
-                                    <InboxIcon
-                                        onClick={() => {
-                                            navigate({
-                                                pathname: `${location.pathname}`,
-                                                search: `messages`,
-                                            });
-                                            setShowPanel(false);
-                                        }}
-                                        className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`}
-                                    />
-                                    <span
-                                        className={`absolute top-0 right-0 rounded-full bg-red-600 p-[2px] flex items-center justify-center
-                                            ${notificationStats?.data?.unread_messages > 99 ? "" : "h-3 w-3"}
-                                            ${notificationStats?.data?.unread_messages ? ' flex' : 'hidden'} text-[6px] text-twhite-100`
-                                        }
-                                    >
-                                        {notificationStats?.data?.unread_messages}
-                                    </span>
+                                            <Button
+                                                variant="primary"
+                                                className="!rounded-full !font-bold !py-3 !px-4"
+                                                leftIcon={<LockIcon className="w-5 h-5 text-twhite-100" />}
+                                                onClick={() => navigate("/login")}
+                                            >
+                                                Login
+                                            </Button>
+                                        </section>
+                                        :
+                                        null
+                                }
+                                {
+                                    isAuth ?
+                                        <>
 
-                                </div>
+                                            <div className='relative'>
+                                                <NotificationIcon onClick={() => navigate('/notifications')} className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
+                                                <span
+                                                    className={`absolute top-0 right-0 rounded-full bg-red-600 p-[2px] flex items-center justify-center
+                                                    ${notificationStats?.data?.unread_notifications > 99 ? "" : "h-3 w-3"}
+                                                    ${notificationStats?.data?.unread_notifications ? ' flex' : 'hidden'} text-[6px] text-twhite-100`
+                                                    }
+                                                >
+                                                    {notificationStats?.data?.unread_notifications}
+                                                </span>
+                                            </div>
+
+                                            <div className='relative'>
+                                                <InboxIcon
+                                                    onClick={() => {
+                                                        navigate({
+                                                            pathname: `${location.pathname}`,
+                                                            search: `messages`,
+                                                        });
+                                                        setShowPanel(false);
+                                                    }}
+                                                    className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`}
+                                                />
+                                                <span
+                                                    className={`absolute top-0 right-0 rounded-full bg-red-600 p-[2px] flex items-center justify-center
+                                                    ${notificationStats?.data?.unread_messages > 99 ? "" : "h-3 w-3"}
+                                                    ${notificationStats?.data?.unread_messages ? ' flex' : 'hidden'} text-[6px] text-twhite-100`
+                                                    }
+                                                >
+                                                    {notificationStats?.data?.unread_messages}
+                                                </span>
+
+                                            </div>
+                                        </>
+                                        :
+                                        null
+                                }
                             </section>
                             <section className='flex items-center gap-5 md:gap-8'>
-                                <Button
-                                    children={isMobile ? "" : "Post"}
-                                    leftIcon={< Icon.Plus size={isMobile ? 16 : 20} />}
-                                    className={isMobile ? "!rounded-full !text-base bg-tprimary-50 !p-1" : "!rounded-full !text-base bg-tprimary-50 !px-4 !py-2.5"}
-                                    onClick={() => { navigate('/create-post'); setShowPanel(false) }}
-                                />
-                                <div ref={popUpRef} className='cursor-pointer relative'>
-                                    <Avatar
-                                        onClick={showProfileMenu} src={user?.data?.avatar}
-                                        size={isMobile ? "xs" : "sm"}
-                                    />
-                                    {
-                                        profileMenu ?
-                                            <motion.div
-                                                variants={downVariants}
-                                                initial="initial"
-                                                animate="animate"
-                                                exit="exit"
-                                                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                                                className="absolute top-14 -right-12 z-40"
-                                            >
-                                                <UserPopUp
-                                                    currentUser={currentUser}
-                                                    toggleShowPanel={() => setShowPanel(false)}
-                                                    close={showProfileMenu}
+                                {
+                                    isAuth ?
+                                        <>
+                                            <Button
+                                                children={isMobile ? "" : "Post"}
+                                                leftIcon={< Icon.Plus size={isMobile ? 16 : 20} />}
+                                                className={isMobile ? "!rounded-full !text-base bg-tprimary-50 !p-1" : "!rounded-full !text-base bg-tprimary-50 !px-4 !py-2.5"}
+                                                onClick={() => { navigate('/create-post'); setShowPanel(false) }}
+                                            />
+                                            <div ref={popUpRef} className='cursor-pointer relative'>
+                                                <Avatar
+                                                    onClick={showProfileMenu} src={user?.data?.avatar ?? currentUser?.avatar}
+                                                    size={isMobile ? "xs" : "sm"}
                                                 />
-                                            </motion.div>
-                                            :
-                                            null
-                                    }
-                                </div>
+                                                {
+                                                    profileMenu ?
+                                                        <motion.div
+                                                            variants={downVariants}
+                                                            initial="initial"
+                                                            animate="animate"
+                                                            exit="exit"
+                                                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                                            className="absolute top-14 -right-12 z-40"
+                                                        >
+                                                            <UserPopUp
+                                                                currentUser={currentUser}
+                                                                toggleShowPanel={() => setShowPanel(false)}
+                                                                close={showProfileMenu}
+                                                            />
+                                                        </motion.div>
+                                                        :
+                                                        null
+                                                }
+                                            </div>
+                                        </>
+                                        :
+                                        null
+                                }
                                 <Icon.Menu
                                     className={`${isMobile ? 'block' : 'hidden'}`}
                                     width={24}
@@ -242,9 +280,9 @@ export const MainAppLayout = ({ children }) => {
                         >
                             <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
                                 <nav className={`flex-1 no-scrollbar ${isMobile && 'pt-14'} `}>
-                                    <section className='w-full flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4'>
+                                    <section className='w-full flex flex-col items-start gap-2 border-b border-tgray-200 py-4 pl-4 pb-4'>
                                         <h1 className='text-base font-bold'>Your subcategories</h1>
-                                        <ul className='w-full flex flex-col gap-2'>
+                                        <ul className='w-full flex flex-col'>
                                             {
                                                 followingCategoriesLoading ?
                                                     <section className='w-full flex items-center justify-center m-auto'>
@@ -264,7 +302,7 @@ export const MainAppLayout = ({ children }) => {
                                         </ul>
                                     </section>
 
-                                    <section className='flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4'>
+                                    <section className='flex flex-col items-start gap-3 border-b border-tgray-200 py-4 pl-4 pb-4'>
                                         <h1 className='text-base font-bold'>Groups</h1>
                                         <Button
                                             variant="outline"
@@ -284,9 +322,9 @@ export const MainAppLayout = ({ children }) => {
                                         />
                                     </section>
 
-                                    <section className='w-full flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4'>
+                                    <section className='w-full flex flex-col items-start gap-2 border-b border-tgray-200 py-6 pl-4 pb-4'>
                                         <h1 className='text-base font-bold'>Popular subcategories</h1>
-                                        <ul className='w-full flex flex-col gap-2'>
+                                        <ul className='w-full flex flex-col'>
                                             {
                                                 loadingCategories ?
                                                     <section className='w-full flex items-center justify-center m-auto'>
@@ -327,12 +365,31 @@ export const MainAppLayout = ({ children }) => {
                                             children="Content policy"
                                             className="flex items-center justify-between !text-sm !py-0 !px-0"
                                         />
-                                        <Button
-                                            variant="link"
-                                            fullWidth
-                                            children="About"
+
+                                        <Link
                                             className="flex items-center justify-between !text-sm !py-0 !px-0"
-                                        />
+                                            to="/help&info/about"
+                                        >
+                                            About
+                                        </Link>
+                                        <Link
+                                            className="flex items-center justify-between !text-sm !py-0 !px-0"
+                                            to="/help&info/faqs"
+                                        >
+                                            FAQs
+                                        </Link>
+                                        <Link
+                                            className="flex items-center justify-between !text-sm !py-0 !px-0"
+                                            to="/help&info/rules"
+                                        >
+                                            Rules
+                                        </Link>
+                                        <Link
+                                            className="flex items-center justify-between !text-sm !py-0 !px-0"
+                                            to="/help&info/feedback"
+                                        >
+                                            Feedback
+                                        </Link>
                                         <Button
                                             variant="link"
                                             fullWidth

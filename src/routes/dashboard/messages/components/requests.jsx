@@ -22,7 +22,7 @@ export const Requests = ({ currentChat, setCurrentChat }) => {
                 {
                     isLoading ?
                         <section className="px-2">
-                            <ConversationSkeletonLoader />
+                            <ConversationSkeletonLoader num={9} />
                         </section>
                         :
                         !conversations?.data.length ?
