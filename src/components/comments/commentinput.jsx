@@ -7,6 +7,8 @@ import { AnonToggleButton } from "../global/anonymoustoggle"
 import { Avatar } from "../global/avatar"
 import { motion } from "framer-motion"
 import { selectCurrentUser } from "../../services/authSlice"
+import { useIsAuth } from "../../hooks/useIsAuth"
+import { useNavigate } from "react-router-dom"
 import * as Icon from 'react-feather'
 
 export const CommentInput = ({
@@ -25,11 +27,13 @@ export const CommentInput = ({
     error,
 }) => {
 
+    const navigate = useNavigate();
     const currentUser = useSelector(selectCurrentUser);
+    const isAuth = useIsAuth()
 
     return (
         <>
-            <div className={`w-full border border-tgray-50 rounded-tr-xl rounded-tl-xl ${ !anonChecked && "rounded-xl" } p-3 flex flex-col sm:flex-row items-start justify-between gap-2`}>
+            <div className={`w-full border border-tgray-50 rounded-tr-xl rounded-tl-xl ${!anonChecked && "rounded-xl"} p-3 flex flex-col sm:flex-row items-start justify-between gap-2`}>
                 <section className="w-full flex items-start gap-2">
                     <div className="flex items-start justify-start">
                         <Avatar size="sm" src={currentUser?.avatar} />
@@ -42,7 +46,7 @@ export const CommentInput = ({
                             }}
                             rows={4}
                             className={`
-                                ${error ? 'border border-error-100 focus:ring-error-100 focus:ring-opacity-10 focus:border focus:border-error-100': 'focus:ring-0 focus:border-0'}
+                                ${error ? 'border border-error-100 focus:ring-error-100 focus:ring-opacity-10 focus:border focus:border-error-100' : 'focus:ring-0 focus:border-0'}
                                 border border-tgray-50 placeholder:text-tgray-250
                                 p-3 focus:outline-none w-full text-xs text-tblack-100 no-scrollbar
                             `}
@@ -50,9 +54,9 @@ export const CommentInput = ({
                             value={commentBody?.comment}
                             onChange={handleCommentChange}
                         />
-                        
+
                         {/* Image here */}
-                        { image ? 
+                        {image ?
                             <section className="relative rounded-lg min-h-[170px] h-[250px]">
                                 <img
                                     className="border-none h-full w-full rounded-lg"
@@ -63,11 +67,11 @@ export const CommentInput = ({
                                         objectFit: 'cover',
                                     }}
                                 />
-                                    <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
-                                        <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" onClick={() => setImagePreview(null)}>
-                                            <TrashIcon className=""  style={{paddingLeft: '2px', color:"#FF0000"}} />
-                                        </span>
+                                <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
+                                    <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" onClick={() => setImagePreview(null)}>
+                                        <TrashIcon className="" style={{ paddingLeft: '2px', color: "#FF0000" }} />
                                     </span>
+                                </span>
                             </section>
                             : null
                         }
@@ -89,30 +93,30 @@ export const CommentInput = ({
                         </div>
                     </section>
                 </section>
-                
+
                 <section className=" flex items-center gap-2 self-end">
-                    {cancel ? 
+                    {cancel ?
                         <Button
                             type="button"
                             variant="link"
                             children="Cancel"
                             className="!rounded-full !py-2 !px-3 self-end font-bold !text-error-500"
                             onClick={() => setIsReplying(() => false)}
-                        /> 
-                        : 
+                        />
+                        :
                         null
                     }
-                    <Button 
+                    <Button
                         children="Comment"
                         className="!rounded-full !py-2 !px-3"
-                        onClick={submitComment}
-                        disabled={!isValidComment || isLoading}
-                        // isLoading={isLoading}
+                        onClick={() => isAuth ? submitComment : navigate("/login", { replace: true })}
+                        disabled={!isValidComment || isLoading || isAuth}
+                    // isLoading={isLoading}
                     />
                 </section>
             </div>
             {
-                anonChecked && 
+                anonChecked &&
                 <motion.p
                     key="chatbox"
                     variants={downVariants}

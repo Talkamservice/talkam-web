@@ -51,7 +51,7 @@ export const SaveProfile = () => {
                 accessToken: token,
             }))
             toast.success(res?.message);
-            navigate('/home/featured', { replace: true })
+            navigate('/home/new', { replace: true })
         } catch (err) {
             const errorMessage = handleError(err);
             toast.error(errorMessage)

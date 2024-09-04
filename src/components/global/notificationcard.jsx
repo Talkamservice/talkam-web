@@ -22,7 +22,7 @@ export const NotificationCard = ({ notification, image, style, time, title, type
     return (
         <div
             onClick={() => { trigger(notifyId); refetch(); navigate(`${type ? notificationType[type] : location.pathname}`, { state: type === "conversation" ? extra?.sender?.id : id }) }}
-            className="cursor-pointer w-full flex items-start gap-4 justify-between hover:bg-tgray-xlight p-2 relative">
+            className="cursor-pointer w-full flex items-start gap-4 justify-between hover:bg-tgray-xlight p-2 relative rounded-md">
             <section className="flex gap-2">
                 {
                     type === "conversation" ?

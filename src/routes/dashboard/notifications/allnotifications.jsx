@@ -9,12 +9,13 @@ import { selectCurrentToken, selectCurrentUser } from "../../../services/authSli
 import { useEffect } from "react";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 import moment from "moment";
+import Pusher from 'pusher-js';
 
 export const AllNotifications = () => {
 
     const token = useSelector(selectCurrentToken)
     const currentUser = useSelector(selectCurrentUser)
-    const { data: notifications, isLoading, isError, error, refetch: refetchNotification } = useGetAllNotificationsQuery();
+    const { data: notifications, isLoading, isError, error, refetch: refetchNotification } = useGetAllNotificationsQuery("");
 
     const connectToPusher = () => {
         let pusherChannel; // Declare pusherChannel variable
@@ -69,7 +70,7 @@ export const AllNotifications = () => {
                     isLoading ?
                         <NotificationLoader />
                         :
-                        !notifications.data?.length ?
+                        !notifications?.data?.length ?
                             <section className="w-full py-4">
                                 <EmptyState
                                     icon={EmptyListIcon}
@@ -80,7 +81,7 @@ export const AllNotifications = () => {
                                 />
                             </section>
                             :
-                            notifications.data?.map((notification, index) => (
+                            notifications?.data?.map((notification, index) => (
                                 <div className="w-full flex items-start border-b border-tgray-light py-2">
                                     <NotificationCard
                                         key={notification.id}
