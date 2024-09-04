@@ -10,23 +10,24 @@ import { AnimatePresence } from 'framer-motion';
 import ErrorPage from './routes/error/error';
 import App from './App';
 import { ColoredLoader } from './components/global/loader';
+import { HelpIfoLayout } from "./components/layout/helpInfoLayout";
 
-window.addEventListener('vite:preloadError', (event) => {
-  window.location.reload() // for example, refresh the page
-})
+window.addEventListener("vite:preloadError", (event) => {
+  window.location.reload(); // for example, refresh the page
+});
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     errorElement: <ErrorPage />,
     element: <App />,
     children: [
       {
         index: true,
-        loader: () => redirect('home'),
+        loader: () => redirect("home"),
       },
       {
-        path: 'home',
+        path: "home",
         lazy: async () => {
           let { Home } = await import("./routes/dashboard/home/home");
           return { Component: Home };
@@ -34,168 +35,201 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect('new')
+            loader: () => redirect("new"),
           },
           {
-            path: 'featured',
+            path: "featured",
             lazy: async () => {
-              let { Featured } = await import("./routes/dashboard/home/tabs/featured");
+              let { Featured } = await import(
+                "./routes/dashboard/home/tabs/featured"
+              );
               return { Component: Featured };
-            }
+            },
           },
           {
-            path: 'trending',
+            path: "trending",
             lazy: async () => {
-              let { Trending } = await import("./routes/dashboard/home/tabs/trending");
+              let { Trending } = await import(
+                "./routes/dashboard/home/tabs/trending"
+              );
               return { Component: Trending };
-            }
+            },
           },
           {
-            path: 'new',
+            path: "new",
             lazy: async () => {
               let { New } = await import("./routes/dashboard/home/tabs/new");
               return { Component: New };
-            }
+            },
           },
-        ]
+        ],
       },
       {
-        path: 'create-post',
+        path: "create-post",
         lazy: async () => {
-          let { CreatePost } = await import("./routes/dashboard/create post/createpost");
+          let { CreatePost } = await import(
+            "./routes/dashboard/create post/createpost"
+          );
           return { Component: CreatePost };
-        }
+        },
       },
       {
-        path: '/inbox',
+        path: "/inbox",
         lazy: async () => {
-          let { Messages } = await import("./routes/dashboard/messages/messages");
+          let { Messages } = await import(
+            "./routes/dashboard/messages/messages"
+          );
           return { Component: Messages };
-        }
+        },
       },
       {
-        path: 'userprofile/:userId',
+        path: "userprofile/:userId",
         children: [
           {
             lazy: async () => {
-              let { Profile } = await import("./routes/dashboard/userprofile/userprofile");
+              let { Profile } = await import(
+                "./routes/dashboard/userprofile/userprofile"
+              );
               return { Component: Profile };
             },
             children: [
               {
                 index: true,
-                loader: () => redirect('posts')
+                loader: () => redirect("posts"),
               },
               {
-                path: 'posts',
+                path: "posts",
                 lazy: async () => {
-                  let { ProfilesPosts } = await import("./routes/dashboard/userprofile/profileposts");
+                  let { ProfilesPosts } = await import(
+                    "./routes/dashboard/userprofile/profileposts"
+                  );
                   return { Component: ProfilesPosts };
-                }
+                },
               },
               {
-                path: 'comments',
+                path: "comments",
                 lazy: async () => {
-                  let { ProfileComments } = await import("./routes/dashboard/userprofile/profilecomments");
+                  let { ProfileComments } = await import(
+                    "./routes/dashboard/userprofile/profilecomments"
+                  );
                   return { Component: ProfileComments };
-                }
+                },
               },
               {
-                path: 'upvotes',
+                path: "upvotes",
                 lazy: async () => {
-                  let { ProfileUpvotes } = await import("./routes/dashboard/userprofile/profileupvotes");
+                  let { ProfileUpvotes } = await import(
+                    "./routes/dashboard/userprofile/profileupvotes"
+                  );
                   return { Component: ProfileUpvotes };
-                }
+                },
               },
               {
-                path: 'media',
+                path: "media",
                 lazy: async () => {
-                  let { ProfileMedia } = await import("./routes/dashboard/userprofile/profilemedia");
+                  let { ProfileMedia } = await import(
+                    "./routes/dashboard/userprofile/profilemedia"
+                  );
                   return { Component: ProfileMedia };
-                }
+                },
               },
-            ]
+            ],
           },
-
-        ]
+        ],
       },
       {
-        path: 'settings',
+        path: "settings",
         lazy: async () => {
-          let { ProfileSettings } = await import("./routes/dashboard/settings/profilesettings");
+          let { ProfileSettings } = await import(
+            "./routes/dashboard/settings/profilesettings"
+          );
           return { Component: ProfileSettings };
         },
         children: [
           {
             index: true,
-            loader: () => redirect('account')
+            loader: () => redirect("account"),
           },
           {
-            path: 'account',
+            path: "account",
             lazy: async () => {
-              let { AccountSettings } = await import("./routes/dashboard/settings/account");
+              let { AccountSettings } = await import(
+                "./routes/dashboard/settings/account"
+              );
               return { Component: AccountSettings };
-            }
+            },
           },
           {
-            path: 'profile-notifications',
+            path: "profile-notifications",
             lazy: async () => {
-              let { ProfileNotificationSettings } = await import("./routes/dashboard/settings/notificationsettings");
+              let { ProfileNotificationSettings } = await import(
+                "./routes/dashboard/settings/notificationsettings"
+              );
               return { Component: ProfileNotificationSettings };
-            }
+            },
           },
           {
-            path: 'privacy',
+            path: "privacy",
             lazy: async () => {
-              let { PrivacySettings } = await import("./routes/dashboard/settings/privacysettings");
+              let { PrivacySettings } = await import(
+                "./routes/dashboard/settings/privacysettings"
+              );
               return { Component: PrivacySettings };
-            }
+            },
           },
           {
-            path: 'blocked-users',
+            path: "blocked-users",
             lazy: async () => {
-              let { BlockedUserSettings } = await import("./routes/dashboard/settings/blockedusers");
+              let { BlockedUserSettings } = await import(
+                "./routes/dashboard/settings/blockedusers"
+              );
               return { Component: BlockedUserSettings };
-            }
+            },
           },
-        ]
+        ],
       },
       {
-        path: 'comment/:commentId',
+        path: "comment/:commentId",
         lazy: async () => {
           let { Comment } = await import("./routes/dashboard/coment/comment");
           return { Component: Comment };
-        }
+        },
       },
       {
-        path: 'notifications',
+        path: "notifications",
         lazy: async () => {
-          let { Notifications } = await import("./routes/dashboard/notifications/notifications");
+          let { Notifications } = await import(
+            "./routes/dashboard/notifications/notifications"
+          );
           return { Component: Notifications };
         },
         children: [
           {
             index: true,
-            loader: () => redirect('all')
+            loader: () => redirect("all"),
           },
           {
-            path: 'all',
+            path: "all",
             lazy: async () => {
-              let { AllNotifications } = await import("./routes/dashboard/notifications/allnotifications");
+              let { AllNotifications } = await import(
+                "./routes/dashboard/notifications/allnotifications"
+              );
               return { Component: AllNotifications };
             },
           },
           {
-            path: 'mentions',
+            path: "mentions",
             lazy: async () => {
-              let { Mentions } = await import("./routes/dashboard/notifications/mentions");
+              let { Mentions } = await import(
+                "./routes/dashboard/notifications/mentions"
+              );
               return { Component: Mentions };
             },
           },
-        ]
+        ],
       },
       {
-        path: 'groups',
+        path: "groups",
         lazy: async () => {
           let { Groups } = await import("./routes/dashboard/groups/groups");
           return { Component: Groups };
@@ -203,74 +237,90 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect('recents')
+            loader: () => redirect("recents"),
           },
           {
-            path: 'recents',
+            path: "recents",
             lazy: async () => {
-              let { RecentGroups } = await import("./routes/dashboard/groups/recentgroups");
+              let { RecentGroups } = await import(
+                "./routes/dashboard/groups/recentgroups"
+              );
               return { Component: RecentGroups };
             },
           },
           {
-            path: 'explore',
+            path: "explore",
             lazy: async () => {
-              let { ExploreGroups } = await import("./routes/dashboard/groups/exploregroups");
+              let { ExploreGroups } = await import(
+                "./routes/dashboard/groups/exploregroups"
+              );
               return { Component: ExploreGroups };
             },
           },
-        ]
+        ],
       },
       {
-        path: 'create-group',
+        path: "create-group",
         lazy: async () => {
-          let { CreateGroup } = await import("./routes/dashboard/groups/creategroup");
+          let { CreateGroup } = await import(
+            "./routes/dashboard/groups/creategroup"
+          );
           return { Component: CreateGroup };
         },
       },
       {
-        path: 'categories',
+        path: "categories",
         lazy: async () => {
-          let { Categories } = await import("./routes/dashboard/categories/categories");
+          let { Categories } = await import(
+            "./routes/dashboard/categories/categories"
+          );
           return { Component: Categories };
         },
       },
       {
-        path: 'category/:subCategoryId',
+        path: "category/:subCategoryId",
         lazy: async () => {
-          let { Category } = await import("./routes/dashboard/category/category");
+          let { Category } = await import(
+            "./routes/dashboard/category/category"
+          );
           return { Component: Category };
         },
         children: [
           {
             index: true,
-            loader: () => redirect('featured')
+            loader: () => redirect("featured"),
           },
           {
-            path: 'featured',
+            path: "featured",
             lazy: async () => {
-              let { CategoryFeatured } = await import("./routes/dashboard/category/tabs/categoryfeatured");
+              let { CategoryFeatured } = await import(
+                "./routes/dashboard/category/tabs/categoryfeatured"
+              );
               return { Component: CategoryFeatured };
             },
           },
           {
-            path: 'trending',
+            path: "trending",
             lazy: async () => {
-              let { CategoryTrending } = await import("./routes/dashboard/category/tabs/trending");
+              let { CategoryTrending } = await import(
+                "./routes/dashboard/category/tabs/trending"
+              );
               return { Component: CategoryTrending };
             },
           },
           {
-            path: 'new',
+            path: "new",
             lazy: async () => {
-              let { CategoryJustIn } = await import("./routes/dashboard/category/tabs/justin");
+              let { CategoryJustIn } = await import(
+                "./routes/dashboard/category/tabs/justin"
+              );
               return { Component: CategoryJustIn };
             },
           },
-        ]
+        ],
       },
       {
-        path: 'group/:groupId',
+        path: "group/:groupId",
         lazy: async () => {
           let { Group } = await import("./routes/dashboard/group/group");
           return { Component: Group };
@@ -278,30 +328,36 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect('featured')
+            loader: () => redirect("featured"),
           },
           {
-            path: 'featured',
+            path: "featured",
             lazy: async () => {
-              let { GroupFeatured } = await import("./routes/dashboard/group/groupfeatured");
+              let { GroupFeatured } = await import(
+                "./routes/dashboard/group/groupfeatured"
+              );
               return { Component: GroupFeatured };
             },
           },
           {
-            path: 'trending',
+            path: "trending",
             lazy: async () => {
-              let { GroupTrending } = await import("./routes/dashboard/group/grouptrending");
+              let { GroupTrending } = await import(
+                "./routes/dashboard/group/grouptrending"
+              );
               return { Component: GroupTrending };
             },
           },
           {
-            path: 'new',
+            path: "new",
             lazy: async () => {
-              let { GroupLatest } = await import("./routes/dashboard/group/grouplatest");
+              let { GroupLatest } = await import(
+                "./routes/dashboard/group/grouplatest"
+              );
               return { Component: GroupLatest };
             },
           },
-        ]
+        ],
       },
       {
         path: "search",
@@ -312,104 +368,166 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect('posts'),
+            loader: () => redirect("posts"),
           },
           {
             path: "posts",
             lazy: async () => {
-              let { SearchPosts } = await import("./routes/dashboard/search/searchposts");
+              let { SearchPosts } = await import(
+                "./routes/dashboard/search/searchposts"
+              );
               return { Component: SearchPosts };
             },
           },
           {
             path: "groups",
             lazy: async () => {
-              let { SearchGroup } = await import("./routes/dashboard/search/searchgroups");
+              let { SearchGroup } = await import(
+                "./routes/dashboard/search/searchgroups"
+              );
               return { Component: SearchGroup };
             },
           },
           {
             path: "media",
             lazy: async () => {
-              let { SearchMedia } = await import("./routes/dashboard/search/searchmedia");
+              let { SearchMedia } = await import(
+                "./routes/dashboard/search/searchmedia"
+              );
               return { Component: SearchMedia };
             },
-          }
-        ]
-      }
-    ]
+          },
+        ],
+      },
+    ],
+  },
+
+  {
+    path: "/help&info",
+    errorElement: <ErrorPage />,
+    element: <HelpIfoLayout />,
+    children: [
+      {
+        path: "about",
+        lazy: async () => {
+          let { About } = await import("./routes/dashboard/HomeInfo/about");
+          return { Component: About };
+        },
+      },
+      {
+        path: "faqs",
+        lazy: async () => {
+          let { Faqs } = await import("./routes/dashboard/HomeInfo/faqs");
+          return { Component: Faqs };
+        },
+      },
+      {
+        path: "terms",
+        lazy: async () => {
+          let { Terms } = await import("./routes/dashboard/HomeInfo/terms");
+          return { Component: Terms };
+        },
+      },
+      {
+        path: "rules",
+        lazy: async () => {
+          let { Rules } = await import("./routes/dashboard/HomeInfo/rules");
+          return { Component: Rules };
+        },
+      },
+      {
+        path: "privacy-policy",
+        lazy: async () => {
+          let { Privacy } = await import("./routes/dashboard/HomeInfo/privacy");
+          return { Component: Privacy };
+        },
+      },
+      {
+        path: "faqs/general",
+        lazy: async () => {
+          let { AccordionPage } = await import(
+            "./routes/dashboard/HomeInfo/accordionPage"
+          );
+          return { Component: AccordionPage };
+        },
+      },
+    ],
   },
   {
-    path: 'login',
+    path: "login",
     lazy: async () => {
       let { Login } = await import("./routes/auth/login/login");
       return { Component: Login };
     },
   },
   {
-    path: 'recover-password',
+    path: "recover-password",
     lazy: async () => {
       let { Recovery } = await import("./routes/auth/recovery/recovery");
       return { Component: Recovery };
-    }
+    },
   },
   {
-    path: 'recover-password/mail',
+    path: "recover-password/mail",
     lazy: async () => {
       let { MailSuccess } = await import("./routes/auth/recovery/mailsuccess");
       return { Component: MailSuccess };
-    }
+    },
   },
   {
-    path: 'password-reset',
+    path: "password-reset",
     lazy: async () => {
-      let { PasswordReset } = await import("./routes/auth/recovery/passwordreset");
+      let { PasswordReset } = await import(
+        "./routes/auth/recovery/passwordreset"
+      );
       return { Component: PasswordReset };
-    }
+    },
   },
   {
-    path: 'sign-up',
+    path: "sign-up",
     lazy: async () => {
       let { SignUp } = await import("./routes/auth/signup/signup");
       return { Component: SignUp };
     },
   },
   {
-    path: 'email-verification',
+    path: "email-verification",
     lazy: async () => {
       let { Verification } = await import("./routes/auth/signup/verification");
       return { Component: Verification };
-    }
+    },
   },
   {
-    path: '/get-started/interests',
+    path: "/get-started/interests",
     lazy: async () => {
       let { Interests } = await import("./routes/onboarding/interests");
       return { Component: Interests };
     },
   },
   {
-    path: '/get-started/save-profile',
+    path: "/get-started/save-profile",
     lazy: async () => {
       let { SaveProfile } = await import("./routes/onboarding/saveprofile");
       return { Component: SaveProfile };
     },
   },
   {
-    path: '*',
+    path: "*",
     element: <div>Nothing to see here</div>,
   },
 ]);
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <Provider store={store}>
         <AnimatePresence mode='wait'>
           <RouterProvider router={router} fallbackElement={<ColoredLoader />} />
+        <AnimatePresence mode="wait">
+          <RouterProvider router={router} />
         </AnimatePresence>
       </Provider>
     </GoogleOAuthProvider>
     <Toaster richColors position="bottom-center" />
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
