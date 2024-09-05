@@ -13,7 +13,7 @@ export const Notifications = () => {
     const tabs = [
         {
             id: 0,
-            title: "Post notifications",
+            title: "Post activities",
             text: "post",
         },
         {
