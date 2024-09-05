@@ -19,7 +19,7 @@ export const New = () => {
     const { data: latest, isLoading, isError, error } = useGetAllPostsQuery({
         tab: 'latest',
         page: page
-    });
+    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();
