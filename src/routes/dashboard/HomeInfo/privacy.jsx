@@ -1,8 +1,5 @@
 import { ColoredLoader } from "../../../components/global/loader";
-import {
-  usePrivacyPolicyQuery,
-
-} from "../../../services/helpInfoSlice";
+import { usePrivacyPolicyQuery } from "../../../services/helpInfoSlice";
 import Container from "./components/container";
 
 export const Privacy = () => {
@@ -20,23 +17,18 @@ export const Privacy = () => {
     throw new Error("An error occurred!");
   }
 
-  function stripHtmlTags(html) {
-    const tempElement = document.createElement("div");
-    tempElement.innerHTML = html;
-    return tempElement.innerText || tempElement.textContent || "";
-  }
-
-  const textContent = stripHtmlTags(data?.data?.body);
-
-  console.log(data);
+  const textContent = data?.data?.body;
   return (
     <Container>
       <div className="w-full mx-auto max-w-screen-md">
         <h2 className="text-[#101828] font-bold text-2xl sm:text-4xl text-center ">
           TalkAM Privacy Policy
         </h2>
-        {data?.data.length > 0 && (
-          <div className="mt-9 md:mt-14 xl:mt-[85px]">{textContent}</div>
+        {data?.data && (
+          <div
+            className="mt-9 md:mt-14 xl:mt-[85px]  mb-7 md:mb-12"
+            dangerouslySetInnerHTML={{ __html: textContent }}
+          ></div>
         )}
       </div>
     </Container>

@@ -1,10 +1,10 @@
 import { ColoredLoader } from "../../../components/global/loader";
-import { useTermsOfUseQuery } from "../../../services/helpInfoSlice";
+import { useRulesQuery } from "../../../services/helpInfoSlice";
 
 import Container from "./components/container";
 
 export const Rules = () => {
-  const { data, error, isLoading } = useTermsOfUseQuery();
+  const { data, error, isLoading } = useRulesQuery();
 
   if (isLoading)
     return (
@@ -18,15 +18,6 @@ export const Rules = () => {
     throw new Error("An error occurred!");
   }
 
-  function stripHtmlTags(html) {
-    const tempElement = document.createElement("div");
-    tempElement.innerHTML = html;
-    return tempElement.innerText || tempElement.textContent || "";
-  }
-
-  const textContent = stripHtmlTags(data?.data?.body);
-
-  console.log(data);
   return (
     <Container>
       <div className="w-full mx-auto max-w-screen-md">
@@ -34,7 +25,24 @@ export const Rules = () => {
           TalkAM Rules
         </h2>
         {data?.data.length > 0 && (
-          <div className="mt-9 md:mt-14 xl:mt-[85px]">{textContent}</div>
+          <div className="mt-9 md:mt-14 xl:mt-[85px]  mb-7 md:mb-12">
+            <h2 className=" text-lg font-bold md:text-[22px] text-[#444444]">
+              Community Guidelines
+            </h2>
+            <div className="space-y-5 mt-8">
+              {data?.data.map((item, index) => (
+                <div key={index}>
+                  <h3 className="font-bold text-base md:text-lg text-[#444444] leading-5 md:leading-6 ">
+                    <span>{index + 1}. </span>
+                    {item.title}
+                  </h3>
+                  <p className="text-[#444444] text-base md:text-lg pl-5">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </Container>
