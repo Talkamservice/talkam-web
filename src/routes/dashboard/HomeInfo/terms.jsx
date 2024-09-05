@@ -28,7 +28,7 @@ export const Terms = () => {
         </h2>
         {data?.data && (
           <div
-            className="mt-9 md:mt-14 xl:mt-[85px]  mb-7 md:mb-12"
+            className="mt-9 md:mt-14 xl:mt-16 mb-7 md:mb-12"
             dangerouslySetInnerHTML={{ __html: textContent }}
           ></div>
         )}

@@ -431,12 +431,12 @@ export const MainAppLayout = ({ children }) => {
                     children="Help & Support"
                     className="flex items-center justify-between !text-sm !py-0 !px-0"
                   />
-                  <Button
-                    variant="link"
-                    fullWidth
-                    children="Content policy"
+                  <Link
+                    to="/help&info/privacy-policy"
                     className="flex items-center justify-between !text-sm !py-0 !px-0"
-                  />
+                  >
+                    Content policy
+                  </Link>
 
                   <Link
                     className="flex items-center justify-between !text-sm !py-0 !px-0"

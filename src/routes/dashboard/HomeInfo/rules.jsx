@@ -25,7 +25,7 @@ export const Rules = () => {
           TalkAM Rules
         </h2>
         {data?.data.length > 0 && (
-          <div className="mt-9 md:mt-14 xl:mt-[85px]  mb-7 md:mb-12">
+          <div className="mt-9 md:mt-14 xl:mt-16  mb-7 md:mb-12">
             <h2 className=" text-lg font-bold md:text-[22px] text-[#444444]">
               Community Guidelines
             </h2>
