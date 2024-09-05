@@ -80,7 +80,7 @@ export const CreatePost = () => {
         categoryId: "",
         tab: "",
         search: "",
-        type: ""
+        type: "all"
     });
     const { data: trending } = useGetTrendingTagsQuery();
 
@@ -175,41 +175,6 @@ export const CreatePost = () => {
         Storage.setItem("post_polls", result)
     }
 
-    const tabs = [
-        {
-            id: 0,
-            title: "Text",
-            component: <PostsText post={post} setPost={setPost} />
-        },
-        {
-            id: 1,
-            title: "Media",
-            component:
-                <MediaPost
-                    image={post.image}
-                    onChange={handleFileUpload}
-                    setPost={setPost}
-                    post={post}
-                    imageLoading={imageLoading}
-                />
-        },
-        {
-            id: 2,
-            title: "Poll",
-            component:
-                <CreatePoll
-                    onAddPoll={addPollHandler}
-                    getInputValue={getInputValue}
-                    poll={poll}
-                    post={post}
-                    setPost={setPost}
-                    removePollHandler={removePollHandler}
-                    pollDuration={pollDuration}
-                    setPollDuration={setPollDuration}
-                />
-        },
-    ];
-
     const handleSelectedCategory = (category) => {
         setPost({ ...post, category: category })
         Storage.setItem("post_category", category)
@@ -277,7 +242,42 @@ export const CreatePost = () => {
         })
         // setImagePreview(post_image)
         setSelectedItems(post_tags ?? [])
-    }, [])
+    }, []);
+
+    const tabs = [
+        {
+            id: 0,
+            title: "Text",
+            component: <PostsText post={post} setPost={setPost} />
+        },
+        {
+            id: 1,
+            title: "Media",
+            component:
+                <MediaPost
+                    image={post.image}
+                    onChange={handleFileUpload}
+                    setPost={setPost}
+                    post={post}
+                    imageLoading={imageLoading}
+                />
+        },
+        {
+            id: 2,
+            title: "Poll",
+            component:
+                <CreatePoll
+                    onAddPoll={addPollHandler}
+                    getInputValue={getInputValue}
+                    poll={poll}
+                    post={post}
+                    setPost={setPost}
+                    removePollHandler={removePollHandler}
+                    pollDuration={pollDuration}
+                    setPollDuration={setPollDuration}
+                />
+        },
+    ];
 
     if ((post.comment || post.title) && (post?.category?.id || post?.group?.id)) {
         isValid = true

@@ -3,8 +3,8 @@ import { GroupCard } from "../../../components/global/groupcard";
 import { RouteTabs } from "../../../components/global/routetabs"
 import { GroupSkeletonLoader } from "../../../components/global/skeletons";
 import { useGroupController } from "../../../controllers/groupController";
-import EmptyListIcon from "../../../assets/images/emptylist.png"
 import { useNavigate } from "react-router-dom";
+import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 const tabs = [
     {

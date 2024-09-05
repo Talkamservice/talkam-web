@@ -10,6 +10,7 @@ import { useDebounceValue } from "../../../hooks/useDebounceValue";
 import { useSelector } from "react-redux";
 import { selectCurrentToken, selectCurrentUser } from "../../../services/authSlice";
 import { X } from "react-feather";
+import { useGetNotificationStatsQuery } from "../../../services/notificationsApiSlice";
 import Pusher from 'pusher-js';
 import Protected from "../../../utils/protected";
 
@@ -28,6 +29,7 @@ export const Messages = ({ onClose }) => {
         { skip: !receiverId, refetchOnFocus: true, refetchOnMountOrArgChange: true }
     );
     const [currentChat, setCurrentChat] = useState(currentConvo && (currentConvo?.data ?? null));
+    const { data: notificationStats, refetch: refetchNotification } = useGetNotificationStatsQuery();
     const [page, setPage] = useState(1);
     const isMobile = useMediaQuery("(max-width: 1024px)");
     let switchBoxView = currentChat && isMobile === true;
@@ -53,7 +55,15 @@ export const Messages = ({ onClose }) => {
             component: <Requests
                 setCurrentChat={setCurrentChat}
                 currentChat={currentChat}
-            />
+            />,
+            rightIcon: <span
+                className={`rounded-full bg-red-600 p-[2px] flex items-center justify-center
+                    ${notificationStats?.data?.total_requests > 99 ? "" : "h-4 w-4"}
+                    ${notificationStats?.data?.total_requests ? ' flex' : 'hidden'} text-[8px] text-twhite-100`
+                }
+            >
+                {notificationStats?.data?.total_requests}
+            </span>
         },
     ];
 
@@ -79,7 +89,8 @@ export const Messages = ({ onClose }) => {
         });
         pusherChannel = pusher.subscribe('refresh-notification.' + currentUser?.id); // Assign pusherChannel
         pusherChannel.bind('refresh', (data) => {
-            refetch()
+            refetch();
+            refetchNotification();
         });
         return () => {
             pusherChannel.unbind_all();
