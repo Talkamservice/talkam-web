@@ -29,7 +29,15 @@ export const CommentInput = ({
 
     const navigate = useNavigate();
     const currentUser = useSelector(selectCurrentUser);
-    const isAuth = useIsAuth()
+    const isAuth = useIsAuth();
+
+    const handleSubmit = () => {
+        if (!isAuth) {
+            navigate("/login", { replace: true })
+        } else {
+            submitComment();
+        }
+    }
 
     return (
         <>
@@ -109,8 +117,8 @@ export const CommentInput = ({
                     <Button
                         children="Comment"
                         className="!rounded-full !py-2 !px-3"
-                        onClick={() => isAuth ? submitComment : navigate("/login", { replace: true })}
-                        disabled={!isValidComment || isLoading || isAuth}
+                        onClick={handleSubmit}
+                        disabled={!isValidComment || isLoading || !isAuth}
                     // isLoading={isLoading}
                     />
                 </section>
