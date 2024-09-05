@@ -11,7 +11,7 @@ import EmptyListIcon from "../../../assets/images/emptylist.png"
 import moment from "moment";
 import Pusher from 'pusher-js';
 
-export const Messages = () => {
+export const ConversationNotifications = () => {
 
     const token = useSelector(selectCurrentToken)
     const currentUser = useSelector(selectCurrentUser)

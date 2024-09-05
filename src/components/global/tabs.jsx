@@ -19,6 +19,7 @@ export const Tabs = ({ tabs, headerPadding }) => {
                         active={item.id === activeTab}
                         onClick={() => handleTabClick(item.id)}
                         icon={item.icon}
+                        rightIcon={item.rightIcon}
                     />
                 ))
                 }
@@ -31,7 +32,7 @@ export const Tabs = ({ tabs, headerPadding }) => {
     )
 }
 
-export const TabButton = ({ text, onClick, active, icon }) => {
+export const TabButton = ({ text, onClick, active, icon, rightIcon }) => {
     return (
         <div onClick={onClick}
             className={`
@@ -39,10 +40,27 @@ export const TabButton = ({ text, onClick, active, icon }) => {
                 flex items-center justify-center transition-all ease-linear duration-150`
             }
         >
-            <div className='flex items-center gap-1'>
-                {icon && icon}
+            <div className='flex items-center justify-center gap-1'>
+                {
+                    icon ?
+                        <span>
+                            {icon}
+                        </span>
+                        :
+                        null
+                }
                 <span className='w-full text-sm font-medium px-1.5 py-2 pt-4 z-10 whitespace-nowrap'>{text}</span>
             </div>
+            {
+                rightIcon ?
+                    <div className='flex items-center justify-center gap-1 pt-2'>
+                        <span>
+                            {rightIcon}
+                        </span>
+                    </div>
+                    :
+                    null
+            }
             {
                 active ?
                     <motion.div

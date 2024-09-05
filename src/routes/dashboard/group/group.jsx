@@ -22,21 +22,21 @@ import FallBack from "../../../assets/icons/users.svg"
 const tabs = [
     {
         id: 0,
+        title: "Just In",
+        text: "new",
+        icon: <NewBadgeIcon />
+    },
+    {
+        id: 1,
         title: "Featured",
         text: "featured",
         icon: <FeaturedFireIcon />
     },
     {
-        id: 1,
+        id: 2,
         title: "Trending",
         text: "trending",
         icon: <TrendingIcon />
-    },
-    {
-        id: 2,
-        title: "Just In",
-        text: "new",
-        icon: <NewBadgeIcon />
     },
 ];
 
