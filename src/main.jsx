@@ -220,10 +220,10 @@ const router = createBrowserRouter([
           {
             path: "conversation",
             lazy: async () => {
-              let { Messages } = await import(
-                "./routes/dashboard/notifications/messages"
+              let { ConversationNotifications } = await import(
+                "./routes/dashboard/notifications/conversationnotifications"
               );
-              return { Component: Messages };
+              return { Component: ConversationNotifications };
             },
           },
           {
@@ -297,7 +297,7 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect("featured"),
+            loader: () => redirect("new"),
           },
           {
             path: "featured",
@@ -337,7 +337,7 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect("featured"),
+            loader: () => redirect("new"),
           },
           {
             path: "featured",
