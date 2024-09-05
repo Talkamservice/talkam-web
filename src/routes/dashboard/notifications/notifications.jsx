@@ -13,13 +13,18 @@ export const Notifications = () => {
     const tabs = [
         {
             id: 0,
-            title: "All notifications",
-            text: "all",
+            title: "Post notifications",
+            text: "post",
         },
         {
             id: 1,
-            title: "Mentions",
-            text: "mentions",
+            title: "Conversations",
+            text: "conversation",
+        },
+        {
+            id: 2,
+            title: "System admin",
+            text: "admin",
         },
     ];
 

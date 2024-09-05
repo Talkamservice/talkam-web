@@ -11,11 +11,11 @@ import EmptyListIcon from "../../../assets/images/emptylist.png"
 import moment from "moment";
 import Pusher from 'pusher-js';
 
-export const Mentions = () => {
+export const SystemAdmin = () => {
 
     const token = useSelector(selectCurrentToken)
     const currentUser = useSelector(selectCurrentUser)
-    const { data: notifications, isLoading, isError, error, refetch: refetchNotification } = useGetAllNotificationsQuery("mention");
+    const { data: notifications, isLoading, isError, error, refetch: refetchNotification } = useGetAllNotificationsQuery("system_admin");
 
     const connectToPusher = () => {
         let pusherChannel; // Declare pusherChannel variable
@@ -70,18 +70,18 @@ export const Mentions = () => {
                     isLoading ?
                         <NotificationLoader />
                         :
-                        !notifications.data?.length ?
+                        !notifications?.data?.length ?
                             <section className="w-full py-4">
                                 <EmptyState
                                     icon={EmptyListIcon}
                                     height="h-[50px]"
                                     width="h-[50px]"
-                                    text="You have no mentions"
-                                    subtext="When you have mentions they would appear here."
+                                    text="You have no notifications"
+                                    subtext="When you have notifications they would appear here."
                                 />
                             </section>
                             :
-                            notifications.data?.map((notification, index) => (
+                            notifications?.data?.map((notification, index) => (
                                 <div className="w-full flex items-start border-b border-tgray-light py-2">
                                     <NotificationCard
                                         key={notification.id}

@@ -224,7 +224,7 @@ export const CreatePost = () => {
         const transformedPollOptions = poll && poll.map((item) => [
             item.option
         ]).flat(2);
-        const PostType = poll.some(item => item.option !== "") ? "Poll" : "Text";
+        const PostType = poll.some(item => item.option !== "") ? "Poll" : post?.image !== null ? "File" : "Text";
 
         try {
             const newPost = {
