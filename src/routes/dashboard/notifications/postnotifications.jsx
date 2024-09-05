@@ -87,7 +87,6 @@ export const PostNotifications = () => {
                                         key={notification.id}
                                         title={notification.title}
                                         notification={notification.message}
-                                        image={notification.attachment}
                                         time={moment(notification.created_at).format("lll")}
                                         notificationId={notification.data_id}
                                         type={notification?.type}
@@ -96,6 +95,7 @@ export const PostNotifications = () => {
                                         read={notification?.read_at}
                                         notifyId={notification.id}
                                         refetch={refetchNotification}
+                                        image={notification?.extra?.post_attachements?.[0]?.url}
                                     />
                                 </div>
                             ))
