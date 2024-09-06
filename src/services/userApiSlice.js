@@ -16,8 +16,8 @@ export const authApiSlice = apiSlice.injectEndpoints({
             providesTags: ["category"]
         }),
         getSubCategories: builder.query({
-            query: ({ sort, categoryId }) => ({
-                url: `user/post-categories/sub-categories?sort=${sort}&category_id=${categoryId}`,
+            query: ({ sort, categoryId, search = "" }) => ({
+                url: `user/post-categories/sub-categories?sort=${sort}&category_id=${categoryId}&search=${search}`,
                 method: "get",
             })
         }),

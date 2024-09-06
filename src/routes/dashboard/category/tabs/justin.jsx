@@ -23,7 +23,7 @@ export const CategoryJustIn = () => {
         tab: 'latest',
         page: page,
         categoryId: subCategoryId
-    });
+    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();

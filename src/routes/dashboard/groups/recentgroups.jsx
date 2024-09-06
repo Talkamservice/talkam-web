@@ -26,7 +26,7 @@ export const RecentGroups = () => {
         page: page,
         categoryId: categoryId,
         target: "group"
-    });
+    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 
     // const postIds = new Set();

@@ -3,6 +3,7 @@ import { apiSlice } from "../../app/api/apiSlice"
 
 export const postsApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
+        keepUnusedDataFor: 240,
         getAllPosts: builder.query({
             query: ({ tab, categoryId = "", groupId = "", target, page }) => ({
                 url: `/user/posts/?tab=${tab}&category_id=${categoryId}&group_id=${groupId}&target=${target}&page=${page}`,

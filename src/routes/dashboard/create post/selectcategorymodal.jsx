@@ -6,10 +6,14 @@ import { TextRadioButton } from "../../../components/forms/textradiobutton";
 import { motion } from "framer-motion";
 import { downVariants, PostCardVariants } from "../../../helpers/cardanimation";
 
-export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCategory, onChangeGroup, transformedGroups, post, setPost }) => {
+export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCategory, onChangeGroup, transformedGroups, post, setPost, searchCategories, setSearchCategories, categoriesLoading }) => {
 
     let isValid = false;
     const [showOptions, setShowOptions] = useState(null);
+
+    const handleCategorySearch = (event) => {
+        setSearchCategories(event.target.value)
+    }
 
     const toggleDropdownView = (event) => {
         const { name, checked, value } = event.target;
@@ -83,6 +87,10 @@ export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCa
                                             defaultValue={post.category?.value ?? "Select a subcategory"}
                                             options={transformedCategories}
                                             onChange={onChangeCategory}
+                                            search
+                                            searchChange={handleCategorySearch}
+                                            searchValue={searchCategories}
+                                            isLoading={categoriesLoading}
                                             required
                                         />
                                     </motion.section>

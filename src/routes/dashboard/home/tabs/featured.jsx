@@ -19,7 +19,7 @@ export const Featured = () => {
     const { data: featured, isLoading, isError, error } = useGetAllPostsQuery({
         tab: 'featured',
         page: page
-    });
+    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();

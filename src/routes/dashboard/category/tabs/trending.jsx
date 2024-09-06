@@ -23,7 +23,7 @@ export const CategoryTrending = () => {
         tab: 'trending',
         page: page,
         categoryId: subCategoryId
-    });
+    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();

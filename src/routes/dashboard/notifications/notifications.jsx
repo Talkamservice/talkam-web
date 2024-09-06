@@ -4,11 +4,16 @@ import { RouteTabs } from "../../../components/global/routetabs";
 import { useClearAllNotificationsMutation, useGetNotificationStatsQuery, useMarkAllNotificationsAsReadMutation } from "../../../services/notificationsApiSlice";
 import { handleError } from "../../../utils/handleError";
 import Protected from "../../../utils/protected";
+import * as Icon from 'react-feather'
 
 const clearLoader = ["#FF0000", "#FF0000", "#FF0000", "#FF0000", "#FF0000"];
 const markAllLoader = ["#017FC8", "#017FC8", "#017FC8", "#017FC8", "#017FC8"];
 
 export const Notifications = () => {
+
+    const { data: notificationStats } = useGetNotificationStatsQuery();
+    const [markAllNotificationsAsRead, { isLoading: markAllLoading }] = useMarkAllNotificationsAsReadMutation();
+    const [clearAllNotifications, { isLoading: clearLoading }] = useClearAllNotificationsMutation();
 
     const tabs = [
         {
@@ -20,6 +25,14 @@ export const Notifications = () => {
             id: 1,
             title: "Conversations",
             text: "conversation",
+            icon: <span className={`${(notificationStats?.data.total_requests > 0 || notificationStats?.data?.unread_messages > 0) ? 'flex' : 'hidden'} `}>
+                <Icon.Circle
+                    size={10}
+                    fill="#FF0000"
+                    strokeWidth={0}
+                    color="#FFF"
+                />
+            </span>
         },
         {
             id: 2,
@@ -27,10 +40,7 @@ export const Notifications = () => {
             text: "admin",
         },
     ];
-
-    const { data: notificationStats } = useGetNotificationStatsQuery();
-    const [markAllNotificationsAsRead, { isLoading: markAllLoading }] = useMarkAllNotificationsAsReadMutation();
-    const [clearAllNotifications, { isLoading: clearLoading }] = useClearAllNotificationsMutation();
+    console.log(notificationStats)
 
     const handleMarkAllRead = async () => {
         try {
