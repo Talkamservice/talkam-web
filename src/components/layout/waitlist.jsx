@@ -12,7 +12,7 @@ export const WaitlistPage = () => {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState(false);
 
-  const [joinWaitlist, { isLoading }] = useJoinWaitlistMutation();
+  const [joinWaitlist, { isLoading, isSuccess }] = useJoinWaitlistMutation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,10 +37,12 @@ export const WaitlistPage = () => {
 
         await joinWaitlist(data).unwrap(); // Submit the feedback using the mutation
         toast.success("You are on our waitlist!");
+        setName("");
+        setEmail("");
       }
     } catch (error) {
-      toast.error("An error occured", error?.data?.message);
-      console.error("Failed to Join Waitlist", error);
+      toast.error(`An error occured", ${error.data.message}`);
+      console.error("Failed to Join Waitlist", error.data.message);
     }
   };
 
