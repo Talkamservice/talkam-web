@@ -479,6 +479,13 @@ const router = createBrowserRouter([
     },
   },
   {
+    path: "join-waitlist",
+    lazy: async () => {
+      let { WaitlistPage } = await import("./components/layout/waitlist");
+      return { Component: WaitlistPage };
+    },
+  },
+  {
     path: "recover-password",
     lazy: async () => {
       let { Recovery } = await import("./routes/auth/recovery/recovery");

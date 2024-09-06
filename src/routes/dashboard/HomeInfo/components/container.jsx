@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 
 function Container({ children }) {
   return (
-    <div className="w-full min-h-full flex flex-col justify-between max-w-screen-2xl mx-auto px-[5vw] lg:px-24 pt-5 sm:pt-6 min-[850px]:pt-6 ">
-      <div className="w-full max-w-[1080px] mx-auto pt-6 md:pt-10 xl:pt-[60px]">
+    <div className="w-full min-h-full flex flex-col justify-between max-w-screen-2xl mx-auto px-[5vw] lg:px-24 pt-5 sm:pt-6 min-[850px]:pt-0 ">
+      <div className="w-full max-w-[1080px] mx-auto pt-6 md:pt-10 xl:pt-10">
         {children}
       </div>
       <div className="border-t w-full border-[#D7D7D7] mt-10 pt-8  flex justify-between items-center">
