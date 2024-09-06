@@ -1,48 +1,26 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { TextCheckBox } from "../../../components/forms/textcheckbox"
 import { TextRadioButton } from "../../../components/forms/textradiobutton"
 import { handleError } from "../../../utils/handleError";
 import { toast } from "sonner";
-import { useNotificationSettingsMutation } from "../../../services/settingsApiSlice";
+import { useGetNotificationSettingsQuery, useNotificationSettingsMutation } from "../../../services/settingsApiSlice";
+import { Button } from "../../../components/forms/button";
+
+const updateLoader = ["#017FC8", "#017FC8", "#017FC8", "#017FC8", "#017FC8"];
 
 export const ProfileNotificationSettings = () => {
-    
-    const [ talkAmNews, setTalkAmNews ] = useState({
+
+    const { data: preference } = useGetNotificationSettingsQuery();
+    const [talkAmNews, setTalkAmNews] = useState({
         talkam_news: 0,
         talkam_research: 0
     });
-    const[ comments, setComments ] = useState();
-    const[ moderation, setModeration ] = useState();
-    const[ activity, setActivity ] = useState();
-    const [ notificationSettings, { isLoading } ] = useNotificationSettingsMutation();
+    const [comments, setComments] = useState("");
+    const [moderation, setModeration] = useState(null);
+    const [activity, setActivity] = useState(null);
+    const [notificationSettings, { isLoading }] = useNotificationSettingsMutation();
 
-    const handleTalkAMNews = (event) => {
-        const { name, checked } = event.target;
-        if(checked){
-            setTalkAmNews( {
-                ...talkAmNews,
-                [name]: 1
-            })
-        }
-        if(!checked){
-            setTalkAmNews( {
-                ...talkAmNews,
-                [name]: 0
-            })
-        }
-    }
-
-    const handleComments = (event) => {
-        setComments(() => event.target.value)
-    }
-    const handleModeration = (event) => {
-        setModeration(event.target.value)
-    }
-    const handleActivities = (event) => {
-        setActivity(event.target.value)
-    }
-
-    const UpdateNotificationSettings = async() => {
+    const UpdateNotificationSettings = async () => {
         try {
             const notificationBody = {
                 talkam_news: talkAmNews.talkam_news,
@@ -54,16 +32,64 @@ export const ProfileNotificationSettings = () => {
             const res = await notificationSettings({ ...notificationBody }).unwrap();
             toast.success(res?.message)
 
-        } catch(error) {
+        } catch (error) {
             const errorMessage = handleError(error);
             toast.error(errorMessage)
         }
     }
 
+    const handleTalkAMNews = async (event) => {
+        const { name, checked } = event.target;
+        const checkedState = {
+            ...talkAmNews,
+            [name]: 1
+        }
+        const uncheckedState = {
+            ...talkAmNews,
+            [name]: 0
+        }
+
+        if (checked) {
+            setTalkAmNews(checkedState)
+        }
+        if (!checked) {
+            setTalkAmNews(uncheckedState)
+        }
+    }
+
+    const handleComments = (event) => {
+        setComments(() => event.target.value);
+    }
+    const handleModeration = (event) => {
+        setModeration(event.target.value);
+    }
+    const handleActivities = (event) => {
+        setActivity(event.target.value);
+    }
+
+    useEffect(() => {
+        setTalkAmNews({ ...talkAmNews, talkam_news: preference?.data?.talkam_news, talkam_research: preference?.data?.talkam_research })
+        setActivity(preference?.data?.user_activities)
+        setModeration(preference?.data?.moderation_activities)
+        setComments(preference?.data?.comments)
+    }, [preference]);
+
+    console.log(talkAmNews, preference)
+
     return (
         <div className="flex flex-col p-1">
-            <header className="border-b border-tgray-xlight py-4">
-                <p className="text-sm text-[#475467]">Get notified to find out what&apos;s going on when you&apos;re not online. You can turn them off anytime.</p>
+            <header className="flex items-start gap-2 border-b border-tgray-xlight py-4">
+                <p className="ext-sm text-[#475467]">Get notified to find out what&apos;s going on when you&apos;re not online. You can turn them off anytime.</p>
+                <Button
+                    variant="link"
+                    className="!text-tprimary-50"
+                    isLoading={isLoading}
+                    disabled={isLoading}
+                    loadColor={updateLoader}
+                    onClick={UpdateNotificationSettings}
+                >
+                    Update
+                </Button>
             </header>
 
             <main className="flex flex-col divide-y divide-tgray-xlight">
@@ -85,6 +111,7 @@ export const ProfileNotificationSettings = () => {
                                     <span className="text-sm font-normal text-[#475467]">News about product and feature updates.</span>
                                 </div>
                             }
+                            checked={talkAmNews.talkam_news}
                         />
                         <TextCheckBox
                             onChange={handleTalkAMNews}
@@ -96,6 +123,7 @@ export const ProfileNotificationSettings = () => {
                                     <span className="text-sm font-normal text-[#475467]">Get involved in our beta testing program or participate in paid product user reaserch</span>
                                 </div>
                             }
+                            checked={talkAmNews.talkam_research}
                         />
                     </section>
                 </section>
@@ -112,10 +140,12 @@ export const ProfileNotificationSettings = () => {
                             name="comments"
                             onChange={handleComments}
                             value="off"
+                            checked={comments === "off"}
                         />
                         <TextRadioButton
                             onChange={handleComments}
                             value="mentions"
+                            checked={comments === "mentions"}
                             node={
                                 <div className="flex flex-col">
                                     <h5 className="text-sm font-medium text-[#344054]">Mentions only</h5>
@@ -134,6 +164,7 @@ export const ProfileNotificationSettings = () => {
                                 </div>
                             }
                             name="comments"
+                            checked={comments === "all"}
                         />
                     </section>
                 </section>
@@ -150,6 +181,7 @@ export const ProfileNotificationSettings = () => {
                             name="activites"
                             onChange={handleModeration}
                             value={0}
+                            checked={moderation}
                         />
                         <TextRadioButton
                             node={
@@ -161,6 +193,7 @@ export const ProfileNotificationSettings = () => {
                             name="activites"
                             onChange={handleModeration}
                             value={1}
+                            checked={moderation}
                         />
                     </section>
                 </section>
@@ -177,6 +210,7 @@ export const ProfileNotificationSettings = () => {
                             name="more"
                             onChange={handleActivities}
                             value={0}
+                            checked={activity}
                         />
                         <TextRadioButton
                             node={
@@ -188,6 +222,7 @@ export const ProfileNotificationSettings = () => {
                             onChange={handleActivities}
                             value={1}
                             name="more"
+                            checked={activity}
                         />
                     </section>
                 </section>

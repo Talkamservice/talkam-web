@@ -39,6 +39,7 @@ export const CreatePost = () => {
 
     let isValid = false;
     const navigate = useNavigate();
+    const [searchCategories, setSearchCategories] = useState("")
     const [categoryModal, setCategoryModal] = useState();
     const [imageLoading, setImageLoading] = useState();
     const [isChecked, setIsChecked] = useState(false)
@@ -72,9 +73,10 @@ export const CreatePost = () => {
 
     //server calls
     const [createPost, { isLoading: createLoading }] = useCreatePostMutation()
-    const { data: categories } = useGetSubCategoriesQuery({
+    const { data: categories, isFetching: categoriesLoading } = useGetSubCategoriesQuery({
         sort: "",
-        categoryId: ""
+        categoryId: "",
+        search: searchCategories,
     });
     const { data: following } = useGetFollowingGroupsQuery({
         categoryId: "",
@@ -189,7 +191,7 @@ export const CreatePost = () => {
         const transformedPollOptions = poll && poll.map((item) => [
             item.option
         ]).flat(2);
-        const PostType = poll.some(item => item.option !== "") ? "Poll" : post?.image !== null ? "File" : "Text";
+        const PostType = poll.some(item => item.option !== "") ? "Poll" : post?.image ? "File" : "Text";
 
         try {
             const newPost = {
@@ -425,6 +427,9 @@ export const CreatePost = () => {
                         onChangeCategory={handleSelectedCategory}
                         transformedGroups={transformedGroups}
                         onChangeGroup={handleSelectedGroup}
+                        searchCategories={searchCategories}
+                        setSearchCategories={setSearchCategories}
+                        categoriesLoading={categoriesLoading}
                     />
                 </Modal>
             </div>

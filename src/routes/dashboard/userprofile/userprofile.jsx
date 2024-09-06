@@ -42,7 +42,9 @@ export const Profile = () => {
     const isLoggedInUser = currentUser?.id === Number(userId);
 
     const { data: user } = useGetUserProfileDetailsQuery(userId, {
-        // refetchOnMountOrArgChange: true
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true,
+        refetchOnReconnect: true
     });
 
     const handleEditModal = () => {
@@ -72,21 +74,41 @@ export const Profile = () => {
                         <UploadAvatarIcon />
                         <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Edit Profile</span>
                     </p>
-                    <p onClick={() => {
-                        navigate({
-                            pathname: `${location.pathname}/`,
-                            search: `messages`,
-                        }, { state: userId });
-                    }} className={` ${!isLoggedInUser ? "flex" : "hidden"} cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2`}>
-                        <ChatSquareIcon />
-                        <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Send a DM</span>
-                    </p>
+                    {
+                        !user?.data?.is_blocked ?
+                            <p onClick={() => {
+                                navigate({
+                                    pathname: `${location.pathname}/`,
+                                    search: `messages`,
+                                }, { state: userId });
+                            }} className={` ${!isLoggedInUser ? "flex" : "hidden"} cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2`}>
+                                <ChatSquareIcon />
+                                <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Send a DM</span>
+                            </p>
+                            :
+                            null
+                    }
                 </div>
             </section>
 
-            <section className="relative overflow-y-auto w-full no-scrollbar">
-                <RouteTabs tabs={tabs} headerPadding="px-6" />
-            </section>
+            {
+                user?.data?.is_blocked ?
+                    <section className="w-full flex flex-col items-center justify-center gap-2 py-16">
+                        <p className="text-lg font-bold">@{
+                            user?.data?.username && user?.data?.username !== "" ?
+                                user?.data.username :
+                                user?.data?.name && user?.data?.name !== "" ?
+                                    user?.data?.name :
+                                    user?.data?.email
+                        } {" "} is blocked</p>
+                        <span className="text-sm">Unblock them to view their activities and posts.</span>
+                    </section>
+                    :
+                    <section className="relative overflow-y-auto w-full no-scrollbar">
+                        <RouteTabs tabs={tabs} headerPadding="px-6" />
+                    </section>
+
+            }
 
             <Modal
                 show={editModal}

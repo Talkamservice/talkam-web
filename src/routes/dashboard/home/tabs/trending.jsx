@@ -19,7 +19,7 @@ export const Trending = () => {
     const { data: trending, isLoading, isError, error } = useGetAllPostsQuery({
         tab: 'trending',
         page: page
-    });
+    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();

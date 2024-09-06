@@ -23,7 +23,7 @@ export const GroupTrending = () => {
         tab: 'trending',
         page: page,
         groupId: groupId
-    });
+    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();
