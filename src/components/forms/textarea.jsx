@@ -65,9 +65,9 @@ export const TextArea = (props) => {
               ${
                 error
                   ? "border border-error-100 focus:ring-error-100 focus:ring-opacity-10 focus:border focus:border-error-100"
-                  : "focus:ring-tblue-100 focus:border-tprimary-100"
+                  : "focus:ring-tblue-100 border-tgray-50 focus:border-tprimary-100"
               }
-              border border-tgray-50 placeholder:text-tgray-250 ${
+              border  placeholder:text-tgray-250 ${
                 rounded ? rounded : "rounded-xl"
               }
               p-3 focus:ring-4 focus:outline-none w-full ${

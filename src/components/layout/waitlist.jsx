@@ -3,10 +3,46 @@ import logo from "../../assets/images/waitlist-logo.png";
 import sideImg from "../../assets/images/waitlist-side.svg";
 import { Input } from "../forms/input";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useJoinWaitlistMutation } from "../../services/waitlistSlice";
 
 export const WaitlistPage = () => {
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState(false);
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState(false);
+
+  const [joinWaitlist, { isLoading }] = useJoinWaitlistMutation();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      if (!name) {
+        setNameError(true);
+      } else {
+        setNameError(false);
+      }
+      if (!email) {
+        setEmailError(true);
+      } else {
+        setEmailError(false);
+      }
+
+      if (name && email) {
+        const data = {
+          name: name,
+          email: email,
+        };
+
+        await joinWaitlist(data).unwrap(); // Submit the feedback using the mutation
+        toast.success("You are on our waitlist!");
+      }
+    } catch (error) {
+      toast.error("An error occured", error?.data?.message);
+      console.error("Failed to Join Waitlist", error);
+    }
+  };
 
   return (
     <div className="w-full min-h-screen bg-transparent flex justify-center flex-col xl:flex-row *:xl:min-h-[500px] *:xl:h-screen">
@@ -22,7 +58,10 @@ export const WaitlistPage = () => {
             <p className="text-[#212121] text-lg text-center pt-1">
               Get notified when we launch.
             </p>
-            <form className="mt-6 bg-white w-full max-w-[433px] mx-auto rounded-lg px-5 py-[30px] sm:px-6 sm:py-8 border space-y-5 border-[#DDDDDD]">
+            <form
+              onSubmit={handleSubmit}
+              className="mt-6 bg-white w-full max-w-[433px] mx-auto rounded-lg px-5 py-[30px] sm:px-6 sm:py-8 border space-y-5 border-[#DDDDDD]"
+            >
               <Input
                 type="text"
                 label="Please tell us your name"
@@ -32,6 +71,8 @@ export const WaitlistPage = () => {
                 value={name}
                 height="h-[44px]"
                 textSize="text-sm"
+                error={nameError}
+                errorText={nameError ? "Your name is required" : ""}
               />
               <Input
                 type="email"
@@ -42,10 +83,15 @@ export const WaitlistPage = () => {
                 value={email}
                 height="h-[44px]"
                 textSize="text-sm"
+                error={emailError}
+                errorText={emailError ? "Your email is required" : ""}
               />
 
-              <button className="bg-[#0365A1] text-center h-[44px] rounded-md text-white font-bold text-base px-3 w-full">
-                Join Waitlist
+              <button
+                type="submit"
+                className="bg-[#0365A1] text-center h-[44px] rounded-md text-white font-bold text-base px-3 w-full"
+              >
+                {isLoading ? "Joining..." : "Join Waitlist"}
               </button>
               <p className="text-[#212121] text-center text-sm font-medium">
                 By continuing, you consent to and agree to TalkAM’s{" "}
