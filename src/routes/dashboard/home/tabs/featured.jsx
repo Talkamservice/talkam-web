@@ -18,7 +18,8 @@ export const Featured = () => {
     const [isFetching, setIsFetching] = useState(false);
     const { data: featured, isLoading, isError, error } = useGetAllPostsQuery({
         tab: 'featured',
-        page: page
+        page: page,
+        target: "",
     }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 

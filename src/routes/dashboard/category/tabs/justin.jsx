@@ -22,7 +22,8 @@ export const CategoryJustIn = () => {
     const { data: latest, isLoading, isError, error } = useGetAllPostsQuery({
         tab: 'latest',
         page: page,
-        categoryId: subCategoryId
+        categoryId: subCategoryId,
+        target: "",
     }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 

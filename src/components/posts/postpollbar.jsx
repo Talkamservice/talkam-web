@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { AuthWrapper } from "../../utils/authWrapper";
 import * as Icon from 'react-feather'
 
 export const PostPollBar = ({ color, option, selected, percentage, handlePollVote, id, selectedPoll, hasExpired }) => {
@@ -28,36 +29,37 @@ export const PostPollBar = ({ color, option, selected, percentage, handlePollVot
   };
 
   return (
-    <div
-      style={containerStyles}
-      className={` ${(selectedPoll || hasExpired) ? "border border-[#D2D2D2]" : "border border-[#86AAEE]" }
-        border border-[#86AAEE] ${ (selectedPoll || hasExpired) ? "cursor-default" : "cursor-pointer" } transition-all duration-700 ease-in-out overflow-hidden flex items-center
+    <AuthWrapper onClick={() => (!selectedPoll && !hasExpired) && handlePollVote(id)}>
+      <div
+        style={containerStyles}
+        className={` ${(selectedPoll || hasExpired) ? "border border-[#D2D2D2]" : "border border-[#86AAEE]"}
+        border border-[#86AAEE] ${(selectedPoll || hasExpired) ? "cursor-default" : "cursor-pointer"} transition-all duration-700 ease-in-out overflow-hidden flex items-center
         ${(selectedPoll || hasExpired) ? "justify-between" : "justify-center"} px-3`
-      }
-      onClick={() => (!selectedPoll && !hasExpired ) && handlePollVote(id)}
-    >
-      {selectedPoll || hasExpired ? (
-        <motion.div
-          style={fillerStyles}
-          className="absolute inset-0 w-full flex items-center justify-between"
-          initial="initial"
-          animate="animate"
-          variants={fillerVariants}
-          transition={{ duration: 0.7, ease: "easeInOut" }}
-        ></motion.div>
-      ) : null}
-      <span className="z-[9] text-sm p-0 font-medium text-black px-1 flex items-center gap-2">{option}{ selected ? <Icon.CheckCircle color="#444444" size={15} /> : null }</span>
-      {selectedPoll || hasExpired ? (
-        <motion.span
-          className="z-[9] text-sm p-0 font-medium text-black px-1"
-          initial="initial"
-          animate="animate"
-          variants={textVariants}
-          transition={{ duration: 0.5 }}
-        >
-          {`${percentage.toFixed(0)}%`}
-        </motion.span>
-      ) : null}
-    </div>
+        }
+      >
+        {selectedPoll || hasExpired ? (
+          <motion.div
+            style={fillerStyles}
+            className="absolute inset-0 w-full flex items-center justify-between"
+            initial="initial"
+            animate="animate"
+            variants={fillerVariants}
+            transition={{ duration: 0.7, ease: "easeInOut" }}
+          ></motion.div>
+        ) : null}
+        <span className="z-[9] text-sm p-0 font-medium text-black px-1 flex items-center gap-2">{option}{selected ? <Icon.CheckCircle color="#444444" size={15} /> : null}</span>
+        {selectedPoll || hasExpired ? (
+          <motion.span
+            className="z-[9] text-sm p-0 font-medium text-black px-1"
+            initial="initial"
+            animate="animate"
+            variants={textVariants}
+            transition={{ duration: 0.5 }}
+          >
+            {`${percentage.toFixed(0)}%`}
+          </motion.span>
+        ) : null}
+      </div>
+    </AuthWrapper>
   );
 };

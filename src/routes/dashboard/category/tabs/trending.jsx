@@ -22,7 +22,8 @@ export const CategoryTrending = () => {
     const { data: trending, isLoading, isError, error } = useGetAllPostsQuery({
         tab: 'trending',
         page: page,
-        categoryId: subCategoryId
+        categoryId: subCategoryId,
+        target: "",
     }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 

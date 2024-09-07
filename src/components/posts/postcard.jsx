@@ -20,6 +20,7 @@ import { Link } from "react-router-dom"
 import { ImageModalView } from "../global/imagemodalview"
 import moment from "moment"
 import * as Icon from 'react-feather'
+import { AuthWrapper } from "../../utils/authWrapper"
 
 export const PostCard = ({
     id,
@@ -118,13 +119,17 @@ export const PostCard = ({
                                         <Icon.Link2 className='-rotate-45' size={15} color='#000000' strokeWidth={2} />
                                         <p>Copy link</p>
                                     </li>
-                                    <li
-                                        className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
-                                    >
-                                        <NewNotificationIcon className="w-4 h-4" />
-                                        <p>Get notifications for this thread</p>
+                                    <li>
+                                        <AuthWrapper>
+                                            <li
+                                                className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                            >
+                                                <NewNotificationIcon className="w-4 h-4" />
+                                                <p>Get notifications for this thread</p>
+                                            </li>
+                                        </AuthWrapper>
                                     </li>
-                                    <li onClick={postController.handleShowBlockModal}
+                                    {/* <li onClick={postController.handleShowBlockModal}
                                         className={`
                                         bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight
                                         ${(!postController.anonymous) ? "block" : 'hidden'}
@@ -133,12 +138,16 @@ export const PostCard = ({
                                     >
                                         <Icon.Slash size={15} color='#000000' strokeWidth={2} />
                                         <p>Block @{author}</p>
-                                    </li>
-                                    <li onClick={postController.handleReportModal}
-                                        className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
-                                    >
-                                        <Icon.Flag size={15} color='#000000' strokeWidth={2} />
-                                        <p>Report this post</p>
+                                    </li> */}
+                                    <li className="w-full">
+                                        <AuthWrapper onClick={postController.handleReportModal}>
+                                            <li
+                                                className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                            >
+                                                <Icon.Flag size={15} color='#000000' strokeWidth={2} />
+                                                <p>Report this post</p>
+                                            </li>
+                                        </AuthWrapper>
                                     </li>
                                     <li onClick={() => handleDeletePost(id)}
                                         className={` ${postController.isCurrentUser ? 'block' : 'hidden'}  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}

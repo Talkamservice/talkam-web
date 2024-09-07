@@ -22,6 +22,7 @@ import { Messages } from '../../routes/dashboard/messages/messages';
 import { DrawerModal } from '../global/drawer';
 import { useGetNotificationStatsQuery } from '../../services/notificationsApiSlice';
 import { useIsAuth } from '../../hooks/useIsAuth';
+import { AuthWrapper } from '../../utils/authWrapper';
 import * as Icon from 'react-feather'
 import Pusher from 'pusher-js';
 
@@ -44,8 +45,16 @@ export const MainAppLayout = ({ children }) => {
     const { data: categories, isLoading: loadingCategories } = useGetSubCategoriesQuery({
         sort: "popular",
         categoryId: ""
+    }, {
+        refetchOnFocus: true,
+        refetchOnMountOrArgChange: true,
+        refetchOnReconnect: true
     });
-    const { data: followingCategories, isLoading: followingCategoriesLoading } = useFollowingCategoriesQuery();
+    const { data: followingCategories, isLoading: followingCategoriesLoading } = useFollowingCategoriesQuery({
+        refetchOnFocus: true,
+        refetchOnMountOrArgChange: true,
+        refetchOnReconnect: true
+    });
     const [resendOtp, { isLoading: resendLoading }] = useResendOtpMutation();
     const { data: user, isSuccess } = useGetUserProfileDetailsQuery(currentUser?.id, {
         refetchOnFocus: true,
@@ -121,7 +130,7 @@ export const MainAppLayout = ({ children }) => {
                 setVerifyModal(() => true)
             }
         };
-    }, [user]);
+    }, [currentUser, user]);
 
     useEffect(() => {
         connectToPusher();
@@ -304,14 +313,17 @@ export const MainAppLayout = ({ children }) => {
 
                                 <section className='flex flex-col items-start gap-3 border-b border-tgray-200 py-4 pl-4 pb-4'>
                                     <h1 className='text-base font-bold'>Groups</h1>
-                                    <Button
-                                        variant="outline"
-                                        fullWidth
-                                        children="Create group"
-                                        rightIcon={<GroupAddIcon />}
-                                        className="flex items-center justify-between text-sm !p-2 !px-3"
-                                        onClick={() => { navigate('/create-group'); setShowPanel(false); }}
-                                    />
+                                    <div className='w-full'>
+                                        <AuthWrapper onClick={() => { navigate('/create-group'); setShowPanel(false); }}>
+                                            <Button
+                                                variant="outline"
+                                                fullWidth
+                                                children="Create group"
+                                                rightIcon={<GroupAddIcon />}
+                                                className="flex items-center justify-between text-sm !p-2 !px-3"
+                                            />
+                                        </AuthWrapper>
+                                    </div>
                                     <Button
                                         variant="outline"
                                         fullWidth

@@ -18,7 +18,8 @@ export const New = () => {
     const [isFetching, setIsFetching] = useState(false);
     const { data: latest, isLoading, isError, error } = useGetAllPostsQuery({
         tab: 'latest',
-        page: page
+        page: page,
+        target: "",
     }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 

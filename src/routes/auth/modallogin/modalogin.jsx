@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Input } from '../../../components/forms/input'
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../../../components/forms/button';
 import { TalkamLogo } from '../../../assets/icons/generated';
@@ -20,8 +20,9 @@ import { handleError } from '../../../utils/handleError';
 import FacebookLogin from '@greatsumini/react-facebook-login';
 import * as Icon from 'react-feather'
 
-export const Login = () => {
+export const ModalLogin = ({ onClose }) => {
 
+    const { pathname } = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [showPassword, setShowPassword] = useState(false);
@@ -41,6 +42,12 @@ export const Login = () => {
     const togglePasswordVisibility = () => {
         setShowPassword(prev => !prev)
     };
+
+    const handleCloseModal = (event) => {
+        event.stopPropagation();
+        onClose()
+    }
+
     const [login, { isLoading }] = useLoginMutation();
     const [OauthLogin, { isLoading: OauthLoading }] = useOauthLoginMutation();
 
@@ -65,7 +72,8 @@ export const Login = () => {
             resetEmail();
             resetPassword();
             toast.success("Logged in successfully!");
-            navigate("/", { replace: true })
+            navigate(`${pathname}`, { replace: true })
+            onClose()
         } catch (error) {
             const errorMessage = handleError(error)
             toast.error(errorMessage);
@@ -134,7 +142,7 @@ export const Login = () => {
     };
 
     return (
-        <main className='w-full h-dvh flex items-center justify-center m-auto bg-twhite-100 p-2 sm:p-12 no-scrollbar'>
+        <main className='w-full flex items-center justify-center m-auto bg-twhite-100 p-2 sm:p-8 no-scrollbar'>
             <motion.div
                 key="chatbox"
                 variants={CardVariants}
@@ -142,7 +150,7 @@ export const Login = () => {
                 animate="animate"
                 exit="exit"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                className='w-full h-full md:h-fit max-w-screen-2xl flex items-center justify-center md:w-2/3 xl:w-5/12 bg-twhite-100 p-4 md:p-12 rounded-2xl flex-col gap-6 md:shadow-box'
+                className='w-full h-full flex items-center justify-center bg-twhite-100 p-4 rounded-2xl flex-col gap-6'
             >
                 <header className='w-full flex items-center justify-center flex-col gap-4'>
                     <div className='flex items-center gap-2'>
@@ -153,9 +161,6 @@ export const Login = () => {
                         <p className='text-lg font-bold text-tblack-100'>Login</p>
                         <p className='text-sm text-tblack-100'>
                             Don&apos;t have an account? <Link to="/sign-up" className='text-[#017FC8] text-sm font-bold'>Create one</Link>.
-                        </p>
-                        <p className='text-xs text-tblack-100'>
-                            Continue to <Link to="/" className='text-[#017FC8] text-xs underline font-bold'>homepage</Link>.
                         </p>
                     </div>
                 </header>
@@ -218,6 +223,14 @@ export const Login = () => {
                         />
                         {/* <AppleAuthButton /> */}
                         {/* <TiktokAuthButton onClick={handleTikTokLogin} /> */}
+                        <Button
+                            type="button"
+                            variant="error-outline"
+                            fullWidth
+                            onClick={(event) => handleCloseModal(event)}
+                        >
+                            Cancel
+                        </Button>
                     </section>
                 </form>
             </motion.div>

@@ -39,7 +39,8 @@ export const CreatePost = () => {
 
     let isValid = false;
     const navigate = useNavigate();
-    const [searchCategories, setSearchCategories] = useState("")
+    const [searchCategories, setSearchCategories] = useState("");
+    const [searchGroup, setSearchGroup] = useState("");
     const [categoryModal, setCategoryModal] = useState();
     const [imageLoading, setImageLoading] = useState();
     const [isChecked, setIsChecked] = useState(false)
@@ -78,10 +79,10 @@ export const CreatePost = () => {
         categoryId: "",
         search: searchCategories,
     });
-    const { data: following } = useGetFollowingGroupsQuery({
+    const { data: following, isFetching: groupsLoading } = useGetFollowingGroupsQuery({
         categoryId: "",
         tab: "",
-        search: "",
+        search: searchGroup,
         type: "all"
     });
     const { data: trending } = useGetTrendingTagsQuery();
@@ -430,6 +431,9 @@ export const CreatePost = () => {
                         searchCategories={searchCategories}
                         setSearchCategories={setSearchCategories}
                         categoriesLoading={categoriesLoading}
+                        searchGroups={searchGroup}
+                        setSearchGroups={setSearchGroup}
+                        groupsLoading={groupsLoading}
                     />
                 </Modal>
             </div>
