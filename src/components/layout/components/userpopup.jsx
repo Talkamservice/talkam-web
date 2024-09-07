@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { logOut } from "../../../services/authSlice";
 import { apiSlice } from "../../../app/api/apiSlice";
 import { Storage } from "../../../app/storage";
+import * as Icon from 'react-feather'
 
 export const UserPopUp = ({ currentUser, toggleShowPanel, close }) => {
 
@@ -32,8 +33,9 @@ export const UserPopUp = ({ currentUser, toggleShowPanel, close }) => {
                     Settings
                 </li>
                 <li onClick={handleLogOut}
-                    className="bg-white w-full px-4 flex items-start gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight font-semibold whitespace-nowrap"
+                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#E85E51] hover:bg-tgray-xlight font-semibold whitespace-nowrap"
                 >
+                    <Icon.LogOut size={18} color="#E85E51" />
                     Log out
                 </li>
             </ul>
