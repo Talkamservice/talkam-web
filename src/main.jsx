@@ -452,6 +452,15 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "feedback",
+        lazy: async () => {
+          let { Feedback } = await import(
+            "./routes/dashboard/HomeInfo/feedback"
+          );
+          return { Component: Feedback };
+        },
+      },
+      {
         path: "faqs/general",
         lazy: async () => {
           let { AccordionPage } = await import(
@@ -467,6 +476,13 @@ const router = createBrowserRouter([
     lazy: async () => {
       let { Login } = await import("./routes/auth/login/login");
       return { Component: Login };
+    },
+  },
+  {
+    path: "join-waitlist",
+    lazy: async () => {
+      let { WaitlistPage } = await import("./components/layout/waitlist");
+      return { Component: WaitlistPage };
     },
   },
   {

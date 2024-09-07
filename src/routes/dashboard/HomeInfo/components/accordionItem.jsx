@@ -32,9 +32,10 @@ function AccordionItem({ index, isOpenArray, setIsOpen, question, answer }) {
         }`}
       >
         <div className="overflow-hidden">
-          <p className="text-[#555973] text-base md:text-lg mt-7 md:leading-[26px]   ">
-            {answer}
-          </p>
+          <p
+            className="text-[#555973] text-base md:text-lg mt-7 md:leading-[26px]   "
+            dangerouslySetInnerHTML={{ __html: answer }}
+          ></p>
         </div>
       </div>
     </div>
