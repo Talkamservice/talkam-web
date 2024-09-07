@@ -6,10 +6,28 @@ import { TextRadioButton } from "../../../components/forms/textradiobutton";
 import { motion } from "framer-motion";
 import { downVariants, PostCardVariants } from "../../../helpers/cardanimation";
 
-export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCategory, onChangeGroup, transformedGroups, post, setPost, searchCategories, setSearchCategories, categoriesLoading }) => {
+export const SelectCategoryModal = ({
+    onClose,
+    transformedCategories,
+    onChangeCategory,
+    onChangeGroup,
+    transformedGroups,
+    post,
+    setPost,
+    searchCategories,
+    setSearchCategories,
+    categoriesLoading,
+    searchGroups,
+    setSearchGroups,
+    groupsLoading,
+}) => {
 
     let isValid = false;
     const [showOptions, setShowOptions] = useState(null);
+
+    const handleGroupSearch = (event) => {
+        setSearchGroups(event.target.value)
+    }
 
     const handleCategorySearch = (event) => {
         setSearchCategories(event.target.value)
@@ -116,6 +134,11 @@ export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCa
                                             defaultValue={post.group?.value ?? "Select a group"}
                                             options={transformedGroups}
                                             onChange={onChangeGroup}
+                                            search
+                                            searchChange={handleGroupSearch}
+                                            searchValue={searchGroups}
+                                            isLoading={groupsLoading}
+                                            required
                                         />
                                     </motion.section>
                                     :
@@ -131,19 +154,19 @@ export const SelectCategoryModal = ({ onClose, transformedCategories, onChangeCa
             {/* Footer */}
             <div className="w-full flex items-center gap-4 px-6">
                 <Button
-                    onClick={onClose}
-                    fullWidth
-                    disabled={!isValid}
-                >
-                    Done
-                </Button>
-
-                <Button
                     variant="error-outline"
                     onClick={handleCancel}
                     fullWidth
                 >
                     Cancel
+                </Button>
+
+                <Button
+                    onClick={onClose}
+                    fullWidth
+                    disabled={!isValid}
+                >
+                    Done
                 </Button>
             </div>
         </div>

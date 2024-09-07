@@ -18,7 +18,8 @@ export const Trending = () => {
     const [isFetching, setIsFetching] = useState(false);
     const { data: trending, isLoading, isError, error } = useGetAllPostsQuery({
         tab: 'trending',
-        page: page
+        page: page,
+        target: "",
     }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 

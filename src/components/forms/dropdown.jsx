@@ -45,7 +45,7 @@ export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnl
           {
             search ?
               <section onClick={(event) => event.stopPropagation()} className='p-2 sticky top-0 z-[11] bg-white w-full border-x border-t border-tgray-50 rounded-t-lg'>
-                <Search onClick={(event) => event.stopPropagation()} onChange={searchChange} value={searchValue} placeholder='search subcategories' />
+                <Search onClick={(event) => event.stopPropagation()} onChange={searchChange} value={searchValue} placeholder='search' />
               </section>
               :
               null

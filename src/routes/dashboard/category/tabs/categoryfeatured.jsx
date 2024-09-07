@@ -23,7 +23,8 @@ export const CategoryFeatured = () => {
     const { data: featured, isLoading, isError, error, refetch } = useGetAllPostsQuery({
         tab: 'featured',
         page: page,
-        categoryId: subCategoryId
+        categoryId: subCategoryId,
+        target: "",
     }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
     const [deletePost] = useDeletePostMutation();
 

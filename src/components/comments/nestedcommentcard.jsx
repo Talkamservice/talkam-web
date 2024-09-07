@@ -18,9 +18,9 @@ import { useOnOutsideClick } from "../../hooks/useOnOutsideClick"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "../../services/authSlice"
 import { PostCardVariants } from "../../helpers/cardanimation"
-import { useIsAuth } from "../../hooks/useIsAuth"
 import moment from "moment"
 import * as Icon from "react-feather"
+import { AuthWrapper } from "../../utils/authWrapper"
 
 export const NestedCommentCard = ({
     parentComment,
@@ -37,7 +37,6 @@ export const NestedCommentCard = ({
     const currentUser = useSelector(selectCurrentUser);
     const isCurrentUser = currentUser && currentUser?.id === parentComment?.user?.id;
 
-    const isAuth = useIsAuth();
     const navigate = useNavigate();
     const popUpRef = useRef();
     const [showBlockModal, setShowBlockModal] = useState(false);
@@ -160,6 +159,7 @@ export const NestedCommentCard = ({
         setShowBlockModal((prev) => !prev)
     }
     const handleReportModal = () => {
+        setShowPopUp(() => false)
         setOpenReport((prev) => !prev)
     }
 
@@ -175,9 +175,6 @@ export const NestedCommentCard = ({
     }, []);
 
     const handleReply = () => {
-        if (!isAuth) {
-            navigate('/login', { replace: true })
-        }
         setIsReplying(true)
     }
 
@@ -217,21 +214,26 @@ export const NestedCommentCard = ({
                         </section>
 
                         <section className="w-full flex items-center gap-6 sm:gap-12 pt-2">
-                            <Button
-                                variant="link"
-                                children="Reply"
-                                className="text-[#444444] !text-sm font-boldNunito"
-                                onClick={handleReply}
-                            />
+                            <AuthWrapper onClick={handleReply}>
+                                <Button
+                                    variant="link"
+                                    children="Reply"
+                                    className="text-[#444444] !text-sm font-boldNunito"
+                                />
+                            </AuthWrapper>
                             <section className="flex items-center gap-8">
-                                <div onClick={() => handlePostReaction("Like")} className="flex items-center gap-2 cursor-pointer">
-                                    <span className="font-boldNunito text-sm text-[#444444]">{likeCount}</span>
-                                    <Icon.ThumbsUp size={20} fill={action === "Like" ? "#017FC8" : "#FFFFFF"} />
-                                </div>
-                                <div onClick={() => handlePostReaction("Dislike")} className="flex items-center gap-2 cursor-pointer">
-                                    <span className="font-boldNunito text-sm text-[#444444]">{unlikeCount}</span>
-                                    <Icon.ThumbsDown size={20} fill={action === "Dislike" ? "#FF0000" : "#FFFFFF"} />
-                                </div>
+                                <AuthWrapper onClick={() => handlePostReaction("Like")}>
+                                    <div className="flex items-center gap-2 cursor-pointer">
+                                        <span className="font-boldNunito text-sm text-[#444444]">{likeCount}</span>
+                                        <Icon.ThumbsUp size={20} fill={action === "Like" ? "#017FC8" : "#FFFFFF"} />
+                                    </div>
+                                </AuthWrapper>
+                                <AuthWrapper onClick={() => handlePostReaction("Dislike")}>
+                                    <div className="flex items-center gap-2 cursor-pointer">
+                                        <span className="font-boldNunito text-sm text-[#444444]">{unlikeCount}</span>
+                                        <Icon.ThumbsDown size={20} fill={action === "Dislike" ? "#FF0000" : "#FFFFFF"} />
+                                    </div>
+                                </AuthWrapper>
                             </section>
 
                             {/* more icon and popup */}
@@ -254,28 +256,36 @@ export const NestedCommentCard = ({
                                                     <Icon.Link2 className='-rotate-45' size={15} color='#000000' strokeWidth={2} />
                                                     <p>Copy link</p>
                                                 </li>
-                                                <li onClick={() => { }}
-                                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
-                                                >
-                                                    <NewNotificationIcon className="w-4 h-4" />
-                                                    <p>Get notifications for this thread</p>
+                                                <li className="w-full">
+                                                    <AuthWrapper>
+                                                        <li
+                                                            className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                                        >
+                                                            <NewNotificationIcon className="w-4 h-4" />
+                                                            <p>Get notifications for this thread</p>
+                                                        </li>
+                                                    </AuthWrapper>
                                                 </li>
-                                                <li onClick={handleShowBlockModal}
+                                                {/* <li onClick={handleShowBlockModal}
                                                     className={`
-                                                bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight
-                                                ${(!parentComment.is_anonymous) ? "block" : 'hidden'}
-                                                ${(!isCurrentUser) ? "block" : 'hidden'}
-                                                
-                                            `}
+                                                        bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight
+                                                        ${(!parentComment.is_anonymous) ? "block" : 'hidden'}
+                                                        ${(!isCurrentUser) ? "block" : 'hidden'}
+                                                        
+                                                    `}
                                                 >
                                                     <Icon.Slash size={15} color='#000000' strokeWidth={2} />
                                                     <p>Block @{parentComment?.user?.username ?? parentComment?.user?.name}</p>
-                                                </li>
-                                                <li onClick={handleReportModal}
-                                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
-                                                >
-                                                    <Icon.Flag size={15} color='#000000' strokeWidth={2} />
-                                                    <p>Report this post</p>
+                                                </li> */}
+                                                <li className="w-full">
+                                                    <AuthWrapper onClick={handleReportModal}>
+                                                        <li
+                                                            className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                                        >
+                                                            <Icon.Flag size={15} color='#000000' strokeWidth={2} />
+                                                            <p>Report this post</p>
+                                                        </li>
+                                                    </AuthWrapper>
                                                 </li>
                                                 <li onClick={() => handleDeleteComment(parentComment?.id)}
                                                     className={` ${isCurrentUser ? 'block' : 'hidden'}  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}

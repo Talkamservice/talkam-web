@@ -20,8 +20,8 @@ export const ProfileMedia = () => {
                         <section className="w-full flex items-center justify-center m-auto py-1">
                             <EmptyState
                                 icon={EmptyListIcon}
-                                height="h-[30px]"
-                                width="h-[30px]"
+                                height="h-[50px]"
+                                width="h-[50px]"
                                 text="No media"
                                 subtext="When media is added they would appear here"
                             />

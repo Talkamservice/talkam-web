@@ -19,7 +19,7 @@ import { NewNotificationIcon, TrashIcon } from "../../assets/icons/generated"
 import { Modal } from "../global/modal"
 import { CommentReportModal } from "./commentreportmodal"
 import { BlockPromptModal } from "../global/blockpromptmodal"
-import { useIsAuth } from "../../hooks/useIsAuth"
+import { AuthWrapper } from "../../utils/authWrapper"
 import moment from "moment"
 import * as Icon from "react-feather"
 
@@ -47,7 +47,6 @@ export const CommentCard = ({
     const currentUser = useSelector(selectCurrentUser);
     const isCurrentUser = currentUser && currentUser?.id === parentComment?.user?.id;
 
-    const isAuth = useIsAuth();
     const navigate = useNavigate()
     const popUpRef = useRef();
     const [showBlockModal, setShowBlockModal] = useState(false);
@@ -59,11 +58,11 @@ export const CommentCard = ({
     const [isReplying, setIsReplying] = useState(false);
     const [showMore, setShowMore] = useState(false);
     const [imagePreview, setImagePreview] = useState(null);
+    // const [login, setLogin] = useState(false)
 
     const [commentReaction] = useCommentReactionMutation();
     const [blockUser, { isLoading: blockLoading }] = useBlockUserMutation();
     const [deleteComment] = useDeleteCommentMutation();
-
 
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
@@ -171,6 +170,7 @@ export const CommentCard = ({
         setShowBlockModal((prev) => !prev)
     }
     const handleReportModal = () => {
+        setShowPopUp(() => false)
         setOpenReport((prev) => !prev)
     }
 
@@ -185,9 +185,6 @@ export const CommentCard = ({
     }, []);
 
     const handleReply = () => {
-        if (!isAuth) {
-            navigate('/login', { replace: true })
-        }
         setIsReplying(true)
     }
 
@@ -227,21 +224,26 @@ export const CommentCard = ({
                         </section>
 
                         <section className="w-full flex items-center gap-6 sm:gap-12 pt-2">
-                            <Button
-                                variant="link"
-                                children="Reply"
-                                className="text-[#444444] !text-sm font-boldNunito"
-                                onClick={handleReply}
-                            />
+                            <AuthWrapper onClick={handleReply}>
+                                <Button
+                                    variant="link"
+                                    children="Reply"
+                                    className="text-[#444444] !text-sm font-boldNunito"
+                                />
+                            </AuthWrapper>
                             <div className="flex items-center gap-8">
-                                <div onClick={() => handlePostReaction("Like")} className="flex items-center gap-2 cursor-pointer">
-                                    <span className="font-boldNunito text-sm text-[#444444]">{likeCount}</span>
-                                    <Icon.ThumbsUp size={20} fill={action === "Like" ? "#017FC8" : "#FFFFFF"} />
-                                </div>
-                                <div onClick={() => handlePostReaction("Dislike")} className="flex items-center gap-2 cursor-pointer">
-                                    <span className="font-boldNunito text-sm text-[#444444]">{unlikeCount}</span>
-                                    <Icon.ThumbsDown size={20} fill={action === "Dislike" ? "#FF0000" : "#FFFFFF"} />
-                                </div>
+                                <AuthWrapper onClick={() => handlePostReaction("Like")}>
+                                    <div className="flex items-center gap-2 cursor-pointer">
+                                        <span className="font-boldNunito text-sm text-[#444444]">{likeCount}</span>
+                                        <Icon.ThumbsUp size={20} fill={action === "Like" ? "#017FC8" : "#FFFFFF"} />
+                                    </div>
+                                </AuthWrapper>
+                                <AuthWrapper onClick={() => handlePostReaction("Dislike")}>
+                                    <div className="flex items-center gap-2 cursor-pointer">
+                                        <span className="font-boldNunito text-sm text-[#444444]">{unlikeCount}</span>
+                                        <Icon.ThumbsDown size={20} fill={action === "Dislike" ? "#FF0000" : "#FFFFFF"} />
+                                    </div>
+                                </AuthWrapper>
                             </div>
 
                             {/* more icon and popup */}
@@ -264,28 +266,34 @@ export const CommentCard = ({
                                                     <Icon.Link2 className='-rotate-45' size={15} color='#000000' strokeWidth={2} />
                                                     <p>Copy link</p>
                                                 </li>
-                                                <li onClick={() => onClick(item, id)}
-                                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
-                                                >
-                                                    <NewNotificationIcon className="w-4 h-4" />
-                                                    <p>Get notifications for this thread</p>
+                                                <li className="w-full">
+                                                    <AuthWrapper onClick={() => console.log("something")}>
+                                                        <li
+                                                            className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                                        >
+                                                            <NewNotificationIcon className="w-4 h-4" />
+                                                            <p>Get notifications for this thread</p>
+                                                        </li>
+                                                    </AuthWrapper>
                                                 </li>
-                                                <li onClick={handleShowBlockModal}
+                                                {/* <li onClick={handleShowBlockModal}
                                                     className={`
-                                                bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight
-                                                ${(!parentComment.is_anonymous) ? "block" : 'hidden'}
-                                                ${(!isCurrentUser) ? "block" : 'hidden'}
+                                                    bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight
+                                                    ${(!parentComment.is_anonymous) ? "block" : 'hidden'}
+                                                    ${(!isCurrentUser) ? "block" : 'hidden'}
                                                 
-                                            `}
+                                                    `}
                                                 >
                                                     <Icon.Slash size={15} color='#000000' strokeWidth={2} />
                                                     <p>Block @{parentComment?.user?.username ?? parentComment?.user?.name}</p>
-                                                </li>
-                                                <li onClick={handleReportModal}
-                                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
-                                                >
-                                                    <Icon.Flag size={15} color='#000000' strokeWidth={2} />
-                                                    <p>Report this post</p>
+                                                </li> */}
+                                                <li className="w-full">
+                                                    <AuthWrapper ref={popUpRef} onClick={handleReportModal} >
+                                                        <li className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight">
+                                                            <Icon.Flag size={15} color='#000000' strokeWidth={2} />
+                                                            <p>Report this post</p>
+                                                        </li>
+                                                    </AuthWrapper>
                                                 </li>
                                                 <li onClick={() => handleDeleteComment(parentComment?.id)}
                                                     className={` ${isCurrentUser ? 'block' : 'hidden'}  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}

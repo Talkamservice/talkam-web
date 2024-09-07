@@ -55,7 +55,8 @@ export const Modal = ({
   const containerId = document.getElementsByTagName('body')[0];
 
   //when overlay is clicked
-  const handleOverlayClick = React.useCallback(() => {
+  const handleOverlayClick = React.useCallback((event) => {
+    event.stopPropagation()
     if (shouldCloseOnOverlayClick && !!onClose) onClose();
   }, [onClose, shouldCloseOnOverlayClick]);
 

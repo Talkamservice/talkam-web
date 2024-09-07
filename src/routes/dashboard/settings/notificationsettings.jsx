@@ -74,8 +74,6 @@ export const ProfileNotificationSettings = () => {
         setComments(preference?.data?.comments)
     }, [preference]);
 
-    console.log(talkAmNews, preference)
-
     return (
         <div className="flex flex-col p-1">
             <header className="flex items-start gap-2 border-b border-tgray-xlight py-4">
