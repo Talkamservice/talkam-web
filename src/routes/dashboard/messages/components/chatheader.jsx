@@ -80,8 +80,8 @@ export const ChatHeader = ({ messageController, currentChat, setCurrentChat, cur
                                 </li>
                                 <li onClick={() => postController.handleShowBlockModal()}
                                     className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight`}>
-                                    <Icon.Slash size={15} color='#000000' strokeWidth={2} />
-                                    <p>Block @{receiver?.username ?? receiver?.name}</p>
+                                    <Icon.Slash size={15} color='#FF0000' strokeWidth={2} />
+                                    <p className='text-[#FF0000]'>Block @{receiver?.username ?? receiver?.name}</p>
                                 </li>
                             </ul>
                         </motion.div>

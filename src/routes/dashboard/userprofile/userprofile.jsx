@@ -86,7 +86,7 @@ export const Profile = () => {
 
     const copyTextToClipboard = async () => {
         try {
-            await navigator.clipboard.writeText(`https://web.talkam.prodevs.io/userprofile/${userId}/posts`);
+            await navigator.clipboard.writeText(`https://web.talkam.prodevs.io/userprofile/${userId}`);
             toast.success("Copied to Clipboard")
         } catch (error) {
             const errorMessage = handleError(error);
@@ -148,7 +148,7 @@ export const Profile = () => {
                                                         !user?.data?.is_blocked ?
                                                             <p className={` ${!isLoggedInUser ? "flex" : "hidden"} bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap `}>
                                                                 <ChatSquareIcon />
-                                                                <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Send a direct message</span>
+                                                                <span className='text-tblack-100 text-sm whitespace-nowrap'>Send direct message</span>
                                                             </p>
                                                             :
                                                             null
@@ -168,8 +168,8 @@ export const Profile = () => {
                                                             ${(!isLoggedInUser) ? "block" : 'hidden'}
                                                         `}
                                                     >
-                                                        <Icon.Slash size={15} color='#000000' strokeWidth={2} />
-                                                        <p>Block @{username}</p>
+                                                        <Icon.Slash size={15} color='#FF0000' strokeWidth={2} />
+                                                        <p className="text-[#FF0000]">Block @{username}</p>
                                                     </li>
                                                 </AuthWrapper>
                                             </li>
