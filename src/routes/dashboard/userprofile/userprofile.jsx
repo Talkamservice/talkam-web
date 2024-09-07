@@ -121,7 +121,7 @@ export const Profile = () => {
                         <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Edit Profile</span>
                     </p>
 
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 ${!isLoggedInUser ? "flex" : "hidden"}`}>
                         <section ref={popUpRef} className={`relative cursor-pointer hover:bg-tgray-xlight p-1 rounded-full ${user?.data?.is_blocked ? 'hidden' : 'blocked'} `}>
                             <Icon.MoreVertical onClick={() => setPopUp(prev => !prev)} color="#212121" />
                             {
