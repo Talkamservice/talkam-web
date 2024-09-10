@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { handleError } from "../../../utils/handleError";
 import { motion } from "framer-motion";
 import { PostCardVariants } from "../../../helpers/cardanimation";
+import { ColoredLoader } from "../../../components/global/loader";
 import * as Icon from 'react-feather'
 
 const tabs = [
@@ -122,63 +123,88 @@ export const Profile = () => {
                     </p>
 
                     <div className={`flex items-center gap-2 ${!isLoggedInUser ? "flex" : "hidden"}`}>
-                        <section ref={popUpRef} className={`relative cursor-pointer hover:bg-tgray-xlight p-1 rounded-full ${user?.data?.is_blocked ? 'hidden' : 'blocked'} `}>
-                            <Icon.MoreVertical onClick={() => setPopUp(prev => !prev)} color="#212121" />
-                            {
-                                popUp ?
-                                    <motion.div
-                                        variants={PostCardVariants}
-                                        initial="initial"
-                                        animate="animate"
-                                        exit="exit"
-                                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                                        className="absolute top-5 right-2 z-20"
-                                    >
-                                        <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
-                                            <li className="w-full">
-                                                <AuthWrapper
-                                                    onClick={() => {
-                                                        navigate({
-                                                            pathname: `${location.pathname}/`,
-                                                            search: `messages`,
-                                                        }, { state: userId });
-                                                    }}
-                                                >
+                        {
+                            user?.data?.is_blocked ?
+                                <p
+                                    onClick={handleBlockUser}
+                                    className={`
+                                        border border-[#FF0000] text-xs font-medium text-[#FF0000] p-2 rounded-full cursor-pointer
+                                        flex items-center gap-2 whitespace-nowrap
+                                        ${isLoading ? "pointer-events-none" : ""}
+                                    `}
+                                >
+                                    {isLoading ? <ColoredLoader colors={["#FF0000", "#FF0000", "#FF0000", "#FF0000", "#FF0000"]} /> : null}
+                                    Unblock @{username}
+                                </p>
+                                :
+                                <section ref={popUpRef} className={`relative cursor-pointer hover:bg-tgray-xlight p-1 rounded-full ${user?.data?.is_blocked ? 'hidden' : 'blocked'} `}>
+                                    <Icon.MoreVertical onClick={() => setPopUp(prev => !prev)} color="#212121" />
+                                    {
+                                        popUp ?
+                                            <motion.div
+                                                variants={PostCardVariants}
+                                                initial="initial"
+                                                animate="animate"
+                                                exit="exit"
+                                                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                                className="absolute top-5 right-2 z-20"
+                                            >
+                                                <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
                                                     {
-                                                        !user?.data?.is_blocked ?
-                                                            <p className={` ${!isLoggedInUser ? "flex" : "hidden"} bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap `}>
-                                                                <ChatSquareIcon />
-                                                                <span className='text-tblack-100 text-sm whitespace-nowrap'>Send direct message</span>
-                                                            </p>
+                                                        !user?.data?.i_am_blocked ?
+                                                            <li className="w-full">
+                                                                <AuthWrapper
+                                                                    onClick={() => {
+                                                                        navigate({
+                                                                            pathname: `${location.pathname}`,
+                                                                            search: `messages&u=${userId}`,
+                                                                        }, { state: userId });
+                                                                    }}
+                                                                >
+                                                                    {
+                                                                        !user?.data?.is_blocked ?
+                                                                            <p className={` ${!isLoggedInUser ? "flex" : "hidden"} bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap `}>
+                                                                                <ChatSquareIcon />
+                                                                                <span className='text-tblack-100 text-sm whitespace-nowrap'>Send direct message</span>
+                                                                            </p>
+                                                                            :
+                                                                            null
+                                                                    }
+                                                                </AuthWrapper>
+                                                            </li>
                                                             :
                                                             null
                                                     }
-                                                </AuthWrapper>
-                                            </li>
-                                            <li onClick={() => copyTextToClipboard()}
-                                                className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap"
-                                            >
-                                                <Icon.Link2 className='-rotate-45' size={18} color='#000000' strokeWidth={2} />
-                                                <p>Copy profile link</p>
-                                            </li>
-                                            <li className="w-full">
-                                                <AuthWrapper onClick={handleShowBlockModal}>
-                                                    <li className={`
+                                                    <li onClick={() => copyTextToClipboard()}
+                                                        className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap"
+                                                    >
+                                                        <Icon.Link2 className='-rotate-45' size={18} color='#000000' strokeWidth={2} />
+                                                        <p>Copy profile link</p>
+                                                    </li>
+                                                    {
+                                                        !user?.data?.i_am_blocked ?
+                                                            <li className="w-full">
+                                                                <AuthWrapper onClick={handleShowBlockModal}>
+                                                                    <li className={`
                                                             bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap
                                                             ${(!isLoggedInUser) ? "block" : 'hidden'}
                                                         `}
-                                                    >
-                                                        <Icon.Slash size={15} color='#FF0000' strokeWidth={2} />
-                                                        <p className="text-[#FF0000]">Block @{username}</p>
-                                                    </li>
-                                                </AuthWrapper>
-                                            </li>
-                                        </ul>
-                                    </motion.div>
-                                    :
-                                    null
-                            }
-                        </section>
+                                                                    >
+                                                                        <Icon.Slash size={15} color='#FF0000' strokeWidth={2} />
+                                                                        <p className="text-[#FF0000]">Block @{username}</p>
+                                                                    </li>
+                                                                </AuthWrapper>
+                                                            </li>
+                                                            :
+                                                            null
+                                                    }
+                                                </ul>
+                                            </motion.div>
+                                            :
+                                            null
+                                    }
+                                </section>
+                        }
                     </div>
 
 
@@ -192,9 +218,15 @@ export const Profile = () => {
                         <span className="text-sm">Unblock them to view their activities and posts.</span>
                     </section>
                     :
-                    <section className="relative overflow-y-auto w-full no-scrollbar">
-                        <RouteTabs tabs={tabs} headerPadding="px-6" />
-                    </section>
+                    user?.data?.i_am_blocked ?
+                        <section className="w-full flex flex-col items-center justify-center gap-2 py-16">
+                            <p className="text-lg font-bold">@{username} blocked you</p>
+                            <span className="text-sm">You won&apos;t be able to view their activities and posts.</span>
+                        </section>
+                        :
+                        <section className="relative overflow-y-auto w-full no-scrollbar">
+                            <RouteTabs tabs={tabs} headerPadding="px-6" />
+                        </section>
 
             }
 

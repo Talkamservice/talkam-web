@@ -18,9 +18,10 @@ import { useOnOutsideClick } from "../../hooks/useOnOutsideClick"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "../../services/authSlice"
 import { PostCardVariants } from "../../helpers/cardanimation"
+import { AuthWrapper } from "../../utils/authWrapper"
+import { ImageModalView } from "../global/imagemodalview"
 import moment from "moment"
 import * as Icon from "react-feather"
-import { AuthWrapper } from "../../utils/authWrapper"
 
 export const NestedCommentCard = ({
     parentComment,
@@ -30,7 +31,10 @@ export const NestedCommentCard = ({
     isLoading,
     anonChecked,
     setAnonChecked,
-    originalPostId
+    originalPostId,
+    internal,
+    internalImagePreview,
+    setInternalImagePreview
 }) => {
 
     let isValidComment = false
@@ -46,7 +50,8 @@ export const NestedCommentCard = ({
     const [likeCount, setLikeCount] = useState();
     const [unlikeCount, setUnlikeCount] = useState();
     const [isReplying, setIsReplying] = useState();
-    const [imagePreview, setImagePreview] = useState(null);
+    const [imageModal, setImageModal] = useState(false);
+    const [imageLoading, setImageLoading] = useState(false);
 
     const [commentReaction] = useCommentReactionMutation();
     const [blockUser, { isLoading: blockLoading }] = useBlockUserMutation();
@@ -64,16 +69,18 @@ export const NestedCommentCard = ({
         event.preventDefault()
         const { files } = event.target;
         if (!files[0]) return;
-        setImagePreview(() => URL.createObjectURL(files[0]))
+        setInternalImagePreview(() => URL.createObjectURL(files[0]))
         savePostImage(files[0])
     };
     const savePostImage = async (file) => {
+        setImageLoading(true)
         const imageRef = ref(storageDB, `web-images/${randomId()}`);
         const snapshot = await uploadBytes(imageRef, file);
         const url = await getDownloadURL(
             ref(storageDB, snapshot.metadata.fullPath)
         );
-        setNestedComment({ ...nestedComment, image: url })
+        setNestedComment({ ...nestedComment, image: url });
+        setImageLoading(false)
     }
 
     const handlePostReaction = async (reaction) => {
@@ -155,6 +162,10 @@ export const NestedCommentCard = ({
         setShowPopUp(() => false)
     }
 
+    const toggleImageModal = () => {
+        setImageModal(prev => !prev)
+    }
+
     const handleShowBlockModal = () => {
         setShowBlockModal((prev) => !prev)
     }
@@ -163,8 +174,11 @@ export const NestedCommentCard = ({
         setOpenReport((prev) => !prev)
     }
 
+    const handleReply = () => {
+        setIsReplying(true)
+    }
 
-    if (nestedComment?.comment || nestedComment?.image) {
+    if ((nestedComment?.comment || nestedComment?.image) && !imageLoading) {
         isValidComment = true
     }
 
@@ -174,9 +188,6 @@ export const NestedCommentCard = ({
         setUnlikeCount(() => parentComment.unlikes)
     }, []);
 
-    const handleReply = () => {
-        setIsReplying(true)
-    }
 
     return (
         <>
@@ -198,7 +209,7 @@ export const NestedCommentCard = ({
                         </pre>
                         <section className="">
                             {parentComment.attachment ?
-                                <section className="relative rounded-lg min-h-[170px] h-[250px]">
+                                <section onClick={toggleImageModal} className="relative rounded-lg min-h-[170px] h-[250px] cursor-pointer">
                                     <img
                                         className="border-none h-full w-full rounded-lg bg-[#444444]"
                                         src={parentComment.attachment ?? null}
@@ -309,14 +320,17 @@ export const NestedCommentCard = ({
                             anonChecked={anonChecked}
                             setAnonChecked={setAnonChecked}
                             nestedComment={nestedComment}
-                            setImagePreview={setImagePreview}
-                            image={imagePreview}
+                            setCommentBody={setNestedComment}
+                            imagePreview={internalImagePreview}
+                            setImagePreview={setInternalImagePreview}
+                            image={nestedComment?.image}
                             onChange={handleFileUpload}
                             handleCommentChange={handleAddNewComment}
                             submitComment={() => { submitNestedCommentResponse(); setIsReplying(() => false) }}
                             setIsReplying={setIsReplying}
                             isValidComment={isValidComment}
                             isLoading={isLoading}
+                            imageLoading={imageLoading}
                             cancel
                         />
                     </motion.section>
@@ -354,6 +368,20 @@ export const NestedCommentCard = ({
                     handleShowBlockModal={handleShowBlockModal}
                     handleBlockUser={handleBlockUser}
                     isLoading={blockLoading}
+                />
+            </Modal>
+
+            <Modal
+                show={imageModal}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={toggleImageModal}
+                position='center'
+                contentWidth='w-full'
+            >
+                <ImageModalView
+                    file={parentComment.attachment}
+                    handleImageModal={toggleImageModal}
                 />
             </Modal>
         </>

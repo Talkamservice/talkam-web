@@ -20,7 +20,7 @@ export const Featured = () => {
         tab: 'featured',
         page: page,
         target: "",
-    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
+    },);
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();

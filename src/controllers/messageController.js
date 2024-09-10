@@ -20,6 +20,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { formatDate } from "../utils/formatMessageDate";
 import { Storage } from "../app/storage";
 import Pusher from 'pusher-js';
+import { useBlockUserMutation } from "../services/posts/postsApiSlice";
 
 export const useMessagesController = (currentChat, setCurrentChat, page, setPage) => {
 
@@ -32,6 +33,7 @@ export const useMessagesController = (currentChat, setCurrentChat, page, setPage
     const token = useSelector(selectCurrentToken);
     const currentUser = useSelector(selectCurrentUser);
     const receiver = currentChat?.members?.find(member => member.id !== currentUser.id);
+    const [showBlockModal, setShowBlockModal] = useState(false);
     const [isFetching, setIsFetching] = useState(false)
     const [imagePreview, setImagePreview] = useState(null);
     const [imageLoading, setImageLoading] = useState(false);
@@ -45,9 +47,11 @@ export const useMessagesController = (currentChat, setCurrentChat, page, setPage
     }, { skip: !currentChat?.id, refetchOnMountOrArgChange: true });
     const [sendMessage, { isLoading: sendLoading }] = useSendMessageMutation();
     const [updateRequestStatus, { isLoading: requestLoading }] = useUpdateRequestStatusMutation();
-    const { data: conversationdetails, isLoading: detailsLoading } = useGetConversationDetailsQuery(currentChat?.id, { skip: !currentChat?.id });
+    const { data: conversationdetails, isLoading: detailsLoading, refetch: refetchDetails } = useGetConversationDetailsQuery(currentChat?.id, { skip: !currentChat?.id }, { refetchOnMountOrArgChange: true });
     const [deleteConversation, { isLoading: deleteLoading }] = useDeleteConversationMutation();
-    const [updateNotificationStatus, { isLoading: notifyLoading }] = useUpdateNotificationStatusMutation()
+    const [updateNotificationStatus, { isLoading: notifyLoading }] = useUpdateNotificationStatusMutation();
+    const [blockUser, { isLoading: blockLoading }] = useBlockUserMutation();
+
 
     if (isError) {
         const errorMessage = handleError(error);
@@ -244,7 +248,23 @@ export const useMessagesController = (currentChat, setCurrentChat, page, setPage
             const errorMessage = handleError(error);
             toast.error(errorMessage)
         }
-    }
+    };
+
+    const handleBlockUser = async () => {
+        try {
+            const blockRes = await blockUser({ blocked_user_id: receiver?.id }).unwrap();
+            toast.success(blockRes.message);
+            setShowBlockModal(() => false);
+            refetchDetails()
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    };
+
+    const handleShowBlockModal = () => {
+        setShowBlockModal((prev) => !prev)
+    };
 
     // //infinite scroll functions
     const messageIds = new Set();
@@ -339,5 +359,9 @@ export const useMessagesController = (currentChat, setCurrentChat, page, setPage
         scrollableRef,
         newResults,
         setPage,
+        showBlockModal,
+        handleBlockUser,
+        blockLoading,
+        handleShowBlockModal
     }
 }

@@ -39,7 +39,7 @@ export const BlockedUserSettings = () => {
                                     icon={EmptyListIcon}
                                     height="h-[50px]"
                                     width="h-[50px]"
-                                    text="No blocked user"
+                                    text="No blocked users"
                                     subtext="When users are blocked they would appear here"
                                 />
                             </section>

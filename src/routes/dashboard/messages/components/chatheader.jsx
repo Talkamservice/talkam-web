@@ -7,22 +7,22 @@ import { PostCardVariants } from '../../../../helpers/cardanimation';
 import { useOnOutsideClick } from '../../../../hooks/useOnOutsideClick';
 import { Modal } from '../../../../components/global/modal';
 import { BlockPromptModal } from '../../../../components/global/blockpromptmodal';
-import { usePostController } from '../../../../controllers/postsController';
 import { DeleteChatPromptModal } from './deletechatpromptmodal';
 import { useMediaQuery } from '../../../../hooks/useMediaQuery';
+import { ColoredLoader } from '../../../../components/global/loader';
 import * as Icon from 'react-feather'
 
 export const ChatHeader = ({ messageController, currentChat, setCurrentChat, currentUser, details }) => {
 
     const isMobile = useMediaQuery("(max-width: 1024px)");
     const receiver = details?.members?.find(member => member.id !== currentUser.id);
-    const postController = usePostController(null, receiver)
     const popUpRef = useRef();
     const navigate = useNavigate();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showPopUp, setShowPopUp] = useState(false);
 
-    const [showPopUp, setShowPopUp] = useState();
     useOnOutsideClick(popUpRef, () => {
+        console.log("EVENT")
         setShowPopUp(false);
     });
 
@@ -65,7 +65,7 @@ export const ChatHeader = ({ messageController, currentChat, setCurrentChat, cur
                                     <SingleUserIcon className='' size={15} color='#000000' strokeWidth={2} />
                                     <p>View Profile</p>
                                 </li>
-                                <li onClick={() => { messageController.handleNotificationStatus(currentChat?.notification_status ? 0 : 1) }}
+                                <li onClick={() => { messageController.handleNotificationStatus(currentChat?.notification_status ? 0 : 1); setShowPopUp(false); }}
                                     className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                 >
                                     {currentChat?.notification_status ? <Icon.BellOff className='' size={15} color='#000000' strokeWidth={2} /> : <Icon.Bell className='' size={15} color='#000000' strokeWidth={2} />}
@@ -78,11 +78,20 @@ export const ChatHeader = ({ messageController, currentChat, setCurrentChat, cur
                                     <TrashIcon className="w-4 h-4 text-[#ff0000]" />
                                     <p>Delete Chat</p>
                                 </li>
-                                <li onClick={() => postController.handleShowBlockModal()}
-                                    className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight`}>
-                                    <Icon.Slash size={15} color='#FF0000' strokeWidth={2} />
-                                    <p className='text-[#FF0000]'>Block @{receiver?.username ?? receiver?.name}</p>
-                                </li>
+                                {
+                                    messageController?.conversationdetails?.data?.user_blocked ?
+                                        <li onClick={() => { messageController.handleBlockUser(); setShowPopUp(false); }}
+                                            className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight`}>
+                                            {messageController?.blockLoading ? <ColoredLoader colors={["#FF0000", "#FF0000", "#FF0000", "#FF0000", "#FF0000"]} /> : null}
+                                            <p className='text-[#FF0000]'>Unblock @{receiver?.username ?? receiver?.name}</p>
+                                        </li>
+                                        :
+                                        <li onClick={() => { messageController.handleShowBlockModal(); setShowPopUp(false); }}
+                                            className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight`}>
+                                            <Icon.Slash size={15} color='#FF0000' strokeWidth={2} />
+                                            <p className='text-[#FF0000]'>Block @{receiver?.username ?? receiver?.name}</p>
+                                        </li>
+                                }
                             </ul>
                         </motion.div>
                         :
@@ -91,17 +100,17 @@ export const ChatHeader = ({ messageController, currentChat, setCurrentChat, cur
             </section>
 
             <Modal
-                show={postController.showBlockModal}
+                show={messageController.showBlockModal}
                 shouldCloseOnEscPress={false}
                 shouldCloseOnOverlayClick={false}
-                onClose={postController.handleShowBlockModal}
+                onClose={messageController.handleShowBlockModal}
                 position='center'
                 contentWidth='w-full sm:w-3/5 md:w-5/12 xl:w-3/12 '
             >
                 <BlockPromptModal
-                    handleBlockUser={postController.handleBlockUser}
-                    isLoading={postController.isLoading}
-                    handleShowBlockModal={postController.handleShowBlockModal}
+                    handleBlockUser={messageController.handleBlockUser}
+                    isLoading={messageController.blockLoading}
+                    handleShowBlockModal={messageController.handleShowBlockModal}
                     user={receiver?.username ?? receiver?.name}
                 />
             </Modal>

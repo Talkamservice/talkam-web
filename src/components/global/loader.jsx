@@ -5,32 +5,33 @@ export const Loader = () => {
 
   let isMonitor = useMediaQuery("(min-width: 2560px)");
 
-    return (
-        <ColorRing
-          colors={["#FFF", "#FFF", "#FFF", "#FFF", "#FFF"]}
-          ariaLabel="blocks-loading"
-          animationDuration="0.75"
-          width={isMonitor ? 40 : 20}
-          height={isMonitor ? 40 : 20}
-          wrapperClass="blocks-wrapper"
-          visible={true}
-        />
-    )
+  return (
+    <ColorRing
+      colors={["#FFF", "#FFF", "#FFF", "#FFF", "#FFF"]}
+      ariaLabel="blocks-loading"
+      animationDuration="0.75"
+      width={isMonitor ? 40 : 20}
+      height={isMonitor ? 40 : 20}
+      wrapperClass="blocks-wrapper"
+      visible={true}
+    />
+  )
 }
 
-export const ColoredLoader = () => {
+export const ColoredLoader = ({ colors }) => {
 
+  const fallbackColors = ["#0365A1", "#0365A1", "#0365A1", "#0365A1", "#0365A1"]
   let isMonitor = useMediaQuery("(min-width: 2560px)");
 
-    return (
-        <ColorRing
-          colors={["#0365A1", "#0365A1", "#0365A1", "#0365A1", "#0365A1"]}
-          ariaLabel="blocks-loading"
-          animationDuration="0.75"
-          width={isMonitor ? 40 : 20}
-          height={isMonitor ? 40 : 20}
-          wrapperClass="blocks-wrapper"
-          visible={true}
-        />
-    )
+  return (
+    <ColorRing
+      colors={colors ?? fallbackColors}
+      ariaLabel="blocks-loading"
+      animationDuration="0.75"
+      width={isMonitor ? 40 : 20}
+      height={isMonitor ? 40 : 20}
+      wrapperClass="blocks-wrapper"
+      visible={true}
+    />
+  )
 }

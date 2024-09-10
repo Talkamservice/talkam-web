@@ -18,9 +18,9 @@ import { PostReportModal } from "./postreportmodal"
 import { usePostController } from "../../controllers/postsController"
 import { Link } from "react-router-dom"
 import { ImageModalView } from "../global/imagemodalview"
+import { AuthWrapper } from "../../utils/authWrapper"
 import moment from "moment"
 import * as Icon from 'react-feather'
-import { AuthWrapper } from "../../utils/authWrapper"
 
 export const PostCard = ({
     id,

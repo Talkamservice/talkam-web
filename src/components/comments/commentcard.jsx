@@ -20,6 +20,7 @@ import { Modal } from "../global/modal"
 import { CommentReportModal } from "./commentreportmodal"
 import { BlockPromptModal } from "../global/blockpromptmodal"
 import { AuthWrapper } from "../../utils/authWrapper"
+import { ImageModalView } from "../global/imagemodalview"
 import moment from "moment"
 import * as Icon from "react-feather"
 
@@ -41,6 +42,10 @@ export const CommentCard = ({
     avatar,
     isLoading,
     originalPostId,
+    imagePreview,
+    setImagePreview,
+    internalImagePreview,
+    setInternalImagePreview
 }) => {
 
     let isValidComment = false;
@@ -57,7 +62,8 @@ export const CommentCard = ({
     const [unlikeCount, setUnlikeCount] = useState();
     const [isReplying, setIsReplying] = useState(false);
     const [showMore, setShowMore] = useState(false);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [imageModal, setImageModal] = useState(false);
+    const [imageLoading, setImageLoading] = useState(false)
     // const [login, setLogin] = useState(false)
 
     const [commentReaction] = useCommentReactionMutation();
@@ -79,12 +85,14 @@ export const CommentCard = ({
         savePostImage(files[0])
     };
     const savePostImage = async (file) => {
+        setImageLoading(true)
         const imageRef = ref(storageDB, `web-images/${randomId()}`);
         const snapshot = await uploadBytes(imageRef, file);
         const url = await getDownloadURL(
             ref(storageDB, snapshot.metadata.fullPath)
         );
         setComment({ ...comment, image: url })
+        setImageLoading(false)
     }
 
     const handlePostReaction = async (reaction) => {
@@ -166,6 +174,10 @@ export const CommentCard = ({
         setShowPopUp(() => false)
     }
 
+    const toggleImageModal = () => {
+        setImageModal(prev => !prev)
+    }
+
     const handleShowBlockModal = () => {
         setShowBlockModal((prev) => !prev)
     }
@@ -174,7 +186,7 @@ export const CommentCard = ({
         setOpenReport((prev) => !prev)
     }
 
-    if (comment.comment || comment.image) {
+    if ((comment.comment || comment.image) && !imageLoading) {
         isValidComment = true
     };
 
@@ -208,7 +220,7 @@ export const CommentCard = ({
                         </article>
                         <section className="w-full">
                             {parentComment.attachment ?
-                                <section className="relative rounded-lg min-h-[170px] h-[250px]">
+                                <section onClick={toggleImageModal} className="relative rounded-lg min-h-[170px] h-[250px] cursor-pointer">
                                     <img
                                         className="border-none h-full w-full rounded-lg bg-[#444444]"
                                         src={parentComment.attachment ?? null}
@@ -332,14 +344,17 @@ export const CommentCard = ({
                             anonChecked={anonChecked}
                             setAnonChecked={setAnonChecked}
                             comment={comment}
+                            setCommentBody={setComment}
+                            imagePreview={imagePreview}
                             setImagePreview={setImagePreview}
-                            image={imagePreview}
+                            image={comment.image}
                             onChange={handleFileUpload}
                             handleCommentChange={handleAddNewComment}
                             submitComment={() => { submitCommentResponse(); setIsReplying(false); setShowMore(true) }}
                             setIsReplying={setIsReplying}
                             isValidComment={isValidComment}
                             isLoading={isLoading}
+                            imageLoading={imageLoading}
                             cancel
                         />
                     </motion.section>
@@ -370,6 +385,8 @@ export const CommentCard = ({
                                         setAnonChecked={setNestedAnonChecked}
                                         parentIsAnon={parentComment.is_anonymous}
                                         originalPostId={originalPostId}
+                                        internalImagePreview={internalImagePreview}
+                                        setInternalImagePreview={setInternalImagePreview}
                                     />
                                 ))
                             }
@@ -406,6 +423,20 @@ export const CommentCard = ({
                     handleShowBlockModal={handleShowBlockModal}
                     handleBlockUser={handleBlockUser}
                     isLoading={blockLoading}
+                />
+            </Modal>
+
+            <Modal
+                show={imageModal}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={toggleImageModal}
+                position='center'
+                contentWidth='w-full'
+            >
+                <ImageModalView
+                    file={parentComment.attachment}
+                    handleImageModal={toggleImageModal}
                 />
             </Modal>
         </>

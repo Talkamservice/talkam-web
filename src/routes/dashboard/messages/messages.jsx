@@ -19,18 +19,20 @@ export const Messages = ({ onClose }) => {
     const currentUser = useSelector(selectCurrentUser)
     const token = useSelector(selectCurrentToken);
     const navigate = useNavigate();
-    const { state: receiverId } = useLocation();
+    const location = useLocation();
+    const userFrom = location?.search.split("u=")[1];
     const [search, setSearch] = useState("");
     const debounceValue = useDebounceValue(search);
     const { data: conversations, isLoading, refetch } = useGetAllConversationsBareQuery(
         debounceValue ?? ""
     );
-    const { data: currentConvo, isLoading: currentLoading, isSuccess } = useCurrentConversationQuery(receiverId,
-        { skip: !receiverId, refetchOnFocus: true, refetchOnMountOrArgChange: true }
+    const { data: currentConvo, isLoading: currentLoading, isSuccess } = useCurrentConversationQuery((userFrom),
+        { skip: !userFrom, refetchOnFocus: true, refetchOnMountOrArgChange: true }
     );
     const [currentChat, setCurrentChat] = useState(currentConvo && (currentConvo?.data ?? null));
     const { data: notificationStats, refetch: refetchNotification } = useGetNotificationStatsQuery();
     const [page, setPage] = useState(1);
+
     const isMobile = useMediaQuery("(max-width: 1024px)");
     let switchBoxView = currentChat && isMobile === true;
 

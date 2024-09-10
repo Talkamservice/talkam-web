@@ -20,7 +20,7 @@ export const New = () => {
         tab: 'latest',
         page: page,
         target: "",
-    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
+    }, { refetchOnMountOrArgChange: 420 });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();

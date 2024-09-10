@@ -119,47 +119,56 @@ export const ChatBox = ({ setCurrentChat, currentChat, page, setPage }) => {
                                                 />
                                             </div>
                                             :
-                                            <form onSubmit={() => messageController.handleSubmit()} className={`w-full flex items-center gap-4 border rounded-full px-4`}>
-                                                <section className="flex-1">
-                                                    <InputEmoji
-                                                        value={messageController.text}
-                                                        onChange={messageController.setText}
-                                                        cleanOnEnter
-                                                        onEnter={messageController.handleSubmit}
-                                                        placeholder="Type a message..."
-                                                        borderColor="transparent"
-                                                        theme="auto"
-                                                        keepOpened
-                                                        fontSize={12}
-                                                    />
-                                                </section>
-                                                <section className="flex items-center gap-4 flex-2">
-                                                    {
-                                                        messageController?.imageLoading ?
-                                                            <ColoredLoader />
-                                                            :
-                                                            <label className=' cursor-pointer rounded-full'>
-                                                                <input
-                                                                    className='hidden'
-                                                                    type='file'
-                                                                    name="file"
-                                                                    onChange={messageController.uploadFile}
+                                            <section>
+                                                {
+                                                    messageController?.conversationdetails?.data?.i_am_blocked || messageController?.conversationdetails?.data?.user_blocked ?
+                                                        <section className="w-full flex items-center justify-center text-tgray-300 text-sm py-4">
+                                                            You can no longer send messages to this person.
+                                                        </section>
+                                                        :
+                                                        <form onSubmit={() => messageController.handleSubmit()} className={`w-full flex items-center gap-4 border rounded-full px-4`}>
+                                                            <section className="flex-1">
+                                                                <InputEmoji
+                                                                    value={messageController.text}
+                                                                    onChange={messageController.setText}
+                                                                    cleanOnEnter
+                                                                    onEnter={messageController.handleSubmit}
+                                                                    placeholder="Type a message..."
+                                                                    borderColor="transparent"
+                                                                    theme="auto"
+                                                                    keepOpened
+                                                                    fontSize={12}
                                                                 />
-                                                                <Icon.Paperclip
-                                                                    size={18}
-                                                                    color="gray"
-                                                                />
-                                                            </label>
-                                                    }
+                                                            </section>
+                                                            <section className="flex items-center gap-4 flex-2">
+                                                                {
+                                                                    messageController?.imageLoading ?
+                                                                        <ColoredLoader />
+                                                                        :
+                                                                        <label className=' cursor-pointer rounded-full'>
+                                                                            <input
+                                                                                className='hidden'
+                                                                                type='file'
+                                                                                name="file"
+                                                                                onChange={messageController.uploadFile}
+                                                                            />
+                                                                            <Icon.Paperclip
+                                                                                size={18}
+                                                                                color="gray"
+                                                                            />
+                                                                        </label>
+                                                                }
 
-                                                    <button onClick={messageController.handleSubmit} type="button">
-                                                        <Icon.Send
-                                                            size={18}
-                                                            color="gray"
-                                                        />
-                                                    </button>
-                                                </section>
-                                            </form>
+                                                                <button onClick={messageController.handleSubmit} type="button">
+                                                                    <Icon.Send
+                                                                        size={18}
+                                                                        color="gray"
+                                                                    />
+                                                                </button>
+                                                            </section>
+                                                        </form>
+                                                }
+                                            </section>
                                     }
                                 </section>
                                 :

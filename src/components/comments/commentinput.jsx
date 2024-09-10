@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux"
-import { TrashIcon, UploadGifIcon } from "../../assets/icons/generated"
+import { TrashIcon, UploadGifIcon, UploadImageIcon } from "../../assets/icons/generated"
 import { downVariants } from "../../helpers/cardanimation"
 import { Button } from "../forms/button"
 import { Input } from "../forms/input"
@@ -9,13 +9,16 @@ import { motion } from "framer-motion"
 import { selectCurrentUser } from "../../services/authSlice"
 import { useIsAuth } from "../../hooks/useIsAuth"
 import { useNavigate } from "react-router-dom"
+import { ColoredLoader } from "../global/loader"
 import * as Icon from 'react-feather'
 
 export const CommentInput = ({
     anonChecked,
     setAnonChecked,
     commentBody,
+    setCommentBody,
     setImagePreview,
+    imagePreview,
     onChange,
     handleCommentChange,
     submitComment,
@@ -24,6 +27,7 @@ export const CommentInput = ({
     cancel,
     isValidComment,
     isLoading,
+    imageLoading,
     error,
 }) => {
 
@@ -64,24 +68,50 @@ export const CommentInput = ({
                         />
 
                         {/* Image here */}
-                        {image ?
-                            <section className="relative rounded-lg min-h-[170px] h-[250px]">
-                                <img
-                                    className="border-none h-full w-full rounded-lg"
-                                    src={image ?? null}
-                                    style={{
-                                        backgroundRepeat: 'no-repeat',
-                                        backgroundSize: "cover",
-                                        objectFit: 'cover',
-                                    }}
-                                />
-                                <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
-                                    <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" onClick={() => setImagePreview(null)}>
-                                        <TrashIcon className="" style={{ paddingLeft: '2px', color: "#FF0000" }} />
-                                    </span>
-                                </span>
-                            </section>
-                            : null
+                        {
+                            imagePreview ?
+                                <section className="relative rounded-lg min-h-[170px] h-[250px]">
+                                    {
+                                        image ?
+                                            <>
+                                                <img
+                                                    className="border-none h-full w-full rounded-lg"
+                                                    src={image ?? null}
+                                                    style={{
+                                                        backgroundRepeat: 'no-repeat',
+                                                        backgroundSize: "cover",
+                                                        objectFit: 'cover',
+                                                    }}
+                                                />
+                                                <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
+                                                    <span className="absolute top-2 right-2 text-white bg-white p-2 rounded-full" onClick={() => {
+                                                        setCommentBody({ ...commentBody, image: null })
+                                                        setImagePreview(() => null)
+                                                    }}>
+                                                        <TrashIcon className="" style={{ paddingLeft: '2px', color: "#FF0000" }} />
+                                                    </span>
+                                                </span>
+                                            </>
+                                            :
+                                            null
+                                    }
+                                    {
+                                        imageLoading ?
+                                            <div
+                                                style={{
+                                                    backgroundImage: `linear-gradient(0deg, rgba(0, 0, 0, 0.50) 0%, rgba(0, 0, 0, 0.50) 100%),url(${imagePreview})`,
+                                                    backgroundRepeat: 'no-repeat',
+                                                    backgroundSize: 'cover',
+                                                    objectFit: "contain",
+                                                }}
+                                                className="w-full h-full bg-gradient-to-b from-[#a99daa45] to-[#eee6ef1e] absolute flex items-center justify-center m-auto pointer-events-none rounded-md">
+                                                <ColoredLoader />
+                                            </div>
+                                            : null
+                                    }
+                                </section>
+                                :
+                                null
                         }
                         <div className="flex items-center gap-3">
                             <label

@@ -20,7 +20,7 @@ export const Trending = () => {
         tab: 'trending',
         page: page,
         target: "",
-    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
+    });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();
