@@ -5,9 +5,11 @@ import FaqCards from "./components/faqCards";
 import InTouchCard from "./components/inTouchCard";
 import { useFaqQuestionsQuery } from "../../../services/helpInfoSlice";
 import { ColoredLoader } from "../../../components/global/loader";
+import { useParams } from "react-router-dom";
 
 export const AccordionPage = () => {
-  //   const data = [
+  const { name } = useParams();
+
   //     {
   //       question: "Is there a subscription fee for talents on Prodevs?",
   //       answer:
@@ -81,8 +83,8 @@ export const AccordionPage = () => {
   return (
     <Container>
       <div className="text-center">
-        <h2 className="font-semibold text-3xl md:text-4xl text-[#101828]">
-          General FAQs
+        <h2 className="font-semibold capitalize text-3xl md:text-4xl text-[#101828]">
+          {name} FAQs
         </h2>
         <p className=" pt-3 md:pt-5 text-lg md:text-xl leading-[30px] text-[#475467]">
           Everything you need to know.
@@ -90,16 +92,18 @@ export const AccordionPage = () => {
       </div>
       <div className="w-full max-w-screen-md mx-auto mt-12 md:mt-[74px] xl:mt-[110px]">
         <div className="w-full mt-7 space-y-7 ">
-          {faqData?.data?.map((item, index) => (
-            <AccordionItem
-              key={index}
-              index={index}
-              isOpenArray={isOpen}
-              setIsOpen={setIsOpen}
-              question={item.question}
-              answer={item.answer}
-            />
-          ))}
+          {faqData?.data
+            ?.filter((item) => item.name.toLowerCase() === name.toLowerCase())
+            .map((item, index) => (
+              <AccordionItem
+                key={index}
+                index={index}
+                isOpenArray={isOpen}
+                setIsOpen={setIsOpen}
+                question={item.question}
+                answer={item.answer}
+              />
+            ))}
         </div>
       </div>
       <div className="mt-8 md:mt-12 xl:mt-[75px] border-t border-[#EAECF0] pt-9 md:pt-14 xl:pt-[95px]">

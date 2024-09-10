@@ -256,24 +256,28 @@ export const HelpIfoLayout = ({ children }) => {
                       />
 
                       <Link
+                        onClick={() => setShowPanel(false)}
                         className="flex items-center justify-between  !py-0 !px-0"
                         to="/help&info/about"
                       >
                         About
                       </Link>
                       <Link
+                        onClick={() => setShowPanel(false)}
                         className="flex items-center justify-between  !py-0 !px-0"
                         to="/help&info/faqs"
                       >
                         FAQs
                       </Link>
                       <Link
+                        onClick={() => setShowPanel(false)}
                         className="flex items-center justify-between  !py-0 !px-0"
                         to="/help&info/rules"
                       >
                         Rules
                       </Link>
                       <Link
+                        onClick={() => setShowPanel(false)}
                         className="flex items-center justify-between  !py-0 !px-0"
                         to="/help&info/feedback"
                       >
@@ -286,6 +290,7 @@ export const HelpIfoLayout = ({ children }) => {
                         className="flex items-center justify-between  !py-0 !px-0"
                       />
                       <Link
+                        onClick={() => setShowPanel(false)}
                         className="flex items-center justify-between  !py-0 !px-0"
                         to="/home"
                       >

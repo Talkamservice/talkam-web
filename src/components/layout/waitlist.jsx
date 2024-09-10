@@ -1,5 +1,12 @@
 import { Link } from "react-router-dom";
 import logo from "../../assets/images/waitlist-logo.png";
+import supportImg from "../../assets/svgs/support_icon.svg";
+import twitter from "../../assets/svgs/twitter_wait.svg";
+import facebook from "../../assets/svgs/facebook_wait.svg";
+import instagram from "../../assets/svgs/instagram_wait.svg";
+import tiktok from "../../assets/svgs/tiktok_wait.svg";
+import whatsapp from "../../assets/svgs/whatsapp_wait.svg";
+import youtube from "../../assets/svgs/youtube_wait.svg";
 import sideImg from "../../assets/images/waitlist-side.svg";
 import { Input } from "../forms/input";
 import { useState } from "react";
@@ -44,6 +51,32 @@ export const WaitlistPage = () => {
       toast.error(`An error occured", ${error.data.message}`);
       console.error("Failed to Join Waitlist", error.data.message);
     }
+  };
+
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy:", error);
+      toast.error("Failed to copy ID");
+    }
+  };
+
+  // Function to check if the user is on a mobile device
+  const isMobileDevice = () => {
+    return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  };
+
+  // Event handler for the click event
+  const handleClick = (event) => {
+    // phone number to copy to clipboard
+    const phoneNumber = "+2349121192945";
+    if (!isMobileDevice()) {
+      event.preventDefault();
+      copyToClipboard(phoneNumber);
+    }
+    // On mobile devices, it will proceed to open the phone app due to the "tel:" link
   };
 
   return (
@@ -121,12 +154,70 @@ export const WaitlistPage = () => {
               What talkAm offers you
             </p>
           </div>
-          <div className="w-full h-fit xl:h-[calc(100vh-94px)] xl:min-h-[650px] flex items-center justify-center">
+          <div className="w-full h-fit xl:h-[calc(100vh-146px)] xl:min-h-[550px] flex items-center justify-center">
             <img
               src={sideImg}
               alt="what we offer"
-              className="w-full max-w-[546px] xl:max-h-[calc(100vh-94px)] xl:min-h-[600px] mx-auto xl:ml-auto"
+              className="w-full max-w-[546px] xl:max-h-[calc(100vh-146px)] xl:min-h-[500px] mx-auto xl:ml-auto"
             />
+          </div>
+          <div className="flex flex-col justify-start w-full items-start gap-7 xl:flex-row xl:justify-between xl:items-center mt-7 ">
+            <a
+              href="tel:+2349121192945"
+              className="flex justify-center items-center gap-2"
+              onClick={handleClick}
+            >
+              <img
+                src={supportImg}
+                alt="contact us"
+                className="w-[26px] xl:w-6"
+              />
+              <p className="text-sm text-white text-medium">Contact support</p>
+            </a>
+            <div className="*:*:w-[26px] xl:*:*:w-6 flex justify-between sm:justify-start gap-2 sm:gap-7 xl:gap-5 items-center w-full xl:w-fit">
+              <a
+                href="https://www.instagram.com/talkamtechservices?igsh=MXJhdG9hcThpbTVlaw=="
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img src={instagram} alt="instagram" />
+              </a>
+              <a
+                href="https://www.facebook.com/profile.php?id=61565345395891&mibextid=ZbWKwL"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img src={facebook} alt="facebook" />
+              </a>
+              <a
+                href="https://youtube.com/@talkamtechservice?si=RJDCt_yP7GGtPfxT"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img src={youtube} alt="youtube" />
+              </a>
+              <a
+                href="https://x.com/TalkAM_?t=mjLzdDE8RfMkF2vFHKBc4A&s=09"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img src={twitter} alt="X" />
+              </a>
+              <a
+                href="https://www.tiktok.com/@talkamtechservices?_t=8pYnLh9yTAM&_r=1"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img src={tiktok} alt="tiktok" />
+              </a>
+              <a
+                href="https://wa.me/2349162483641"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img src={whatsapp} alt="whatsapp" />
+              </a>
+            </div>
           </div>
 
           <div className="border-t w-full border-[#0C374D] pt-5 mt-10  flex xl:hidden justify-between flex-wrap gap-5 items-center *:text-sm *:text-white *:font-semibold">

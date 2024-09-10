@@ -30,7 +30,8 @@ export const helpAndInfoSlice = apiSlice.injectEndpoints({
       query: (feedbackData) => ({
         url: "/user/feedback",
         method: "post",
-        body: { ...feedbackData },
+        body: feedbackData,
+        formData: true,
       }),
     }),
   }),
@@ -41,5 +42,5 @@ export const {
   useTermsOfUseQuery,
   usePrivacyPolicyQuery,
   useRulesQuery,
-  useGiveFeedbackMutation
+  useGiveFeedbackMutation,
 } = helpAndInfoSlice;

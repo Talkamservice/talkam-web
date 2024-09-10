@@ -87,9 +87,15 @@ export const Feedback = () => {
 
         await giveFeedback(formData).unwrap(); // Submit the feedback using the mutation
         toast.success("Feedback submitted successfully!");
+
+        setFullName("");
+        setEmail("");
+        setPlatform("");
+        setMessage("");
+        setFiles([]);
       }
     } catch (error) {
-      toast.error("Failed to submit feedback", error?.data?.message);
+      toast.error(`Failed to submit feedback, ${error?.data?.message}`);
       console.error("Failed to submit feedback", error);
     }
   };
@@ -102,7 +108,7 @@ export const Feedback = () => {
         </h2>
         <form
           onSubmit={handleSubmit}
-          className="mt-7 md:mt-8 xl:mt-[35px] mb-7 md:mb-12 bg-white w-full max-w-[624px] mx-auto rounded-lg p-4 sm:p-6 border space-y-5 border-[#DDDDDD]"
+          className="mt-6 mb-7 md:mb-12 bg-white w-full max-w-[624px] mx-auto rounded-lg p-4 sm:p-6 border space-y-5 border-[#DDDDDD]"
         >
           <DropDownSelect
             buttonStyles="!py-2 h-[44px]"
