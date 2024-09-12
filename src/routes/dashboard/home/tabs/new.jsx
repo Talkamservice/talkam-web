@@ -103,7 +103,7 @@ export const New = () => {
     }
 
     return (
-        <main className="flex h-full">
+        <main className="flex flex-col h-full relative gap-2 px-6">
             <section
                 onScroll={handleScroll}
                 ref={scrollableRef}

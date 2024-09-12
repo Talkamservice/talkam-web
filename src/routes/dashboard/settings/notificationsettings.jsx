@@ -106,7 +106,7 @@ export const ProfileNotificationSettings = () => {
                 <p className="ext-sm text-[#475467]">Get notified to find out what&apos;s going on when you&apos;re not online. You can turn them off anytime.</p>
                 <Button
                     variant="link"
-                    className="!text-tprimary-50"
+                    className="!text-tprimary-50 !underline"
                     isLoading={isLoading}
                     disabled={isLoading}
                     loadColor={updateLoader}
@@ -155,7 +155,7 @@ export const ProfileNotificationSettings = () => {
                 <section className="flex flex-col gap-8 md:flex-row items-start justify-between py-4">
                     <div className="w-full md:w-1/2 flex items-start flex-col gap-2">
                         <h4 className="font-semibold text-sm text-[#344054]">Notifications preference</h4>
-                        <p className="text-[#475467] font-normal text-sm">Receive notifications in your mail or as push notifictions</p>
+                        <p className="text-[#475467] font-normal text-sm">Receive notifications in your mail or as push notifications</p>
                     </div>
 
                     <section className="w-full md:w-1/2 flex flex-col gap-4">
@@ -258,7 +258,7 @@ export const ProfileNotificationSettings = () => {
 
                 <section className="flex flex-col gap-8 md:flex-row items-start justify-between py-4">
                     <div className="w-full md:w-1/2 flex items-start flex-col gap-2">
-                        <h4 className="font-semibold text-sm text-[#344054]">More ativity about you</h4>
+                        <h4 className="font-semibold text-sm text-[#344054]">More activity about you</h4>
                         <p className="text-[#475467] font-normal text-sm">These are notifications for posts on your profile, upvotes and other reactions to your posts and more.</p>
                     </div>
 

@@ -30,6 +30,7 @@ import SingleUserIcon from "../icons/singleuser.svg?react";
 import HandIcon from "../icons/suspend.svg?react";
 import HasReadIcon from "../icons/read.svg?react";
 import UnreadIcon from "../icons/unread.svg?react";
+import NewsIcon from "../icons/news.svg?react";
 
 export {
     TalkamLogo,
@@ -64,4 +65,5 @@ export {
     HandIcon,
     HasReadIcon,
     UnreadIcon,
+    NewsIcon,
 }

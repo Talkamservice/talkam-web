@@ -103,7 +103,7 @@ export const Featured = () => {
     }
 
     return (
-        <main className="flex h-full">
+        <main className="flex h-full px-6">
             <section
                 onScroll={handleScroll}
                 ref={scrollableRef}
