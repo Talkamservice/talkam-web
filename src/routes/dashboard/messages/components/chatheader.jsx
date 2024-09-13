@@ -22,7 +22,6 @@ export const ChatHeader = ({ messageController, currentChat, setCurrentChat, cur
     const [showPopUp, setShowPopUp] = useState(false);
 
     useOnOutsideClick(popUpRef, () => {
-        console.log("EVENT")
         setShowPopUp(false);
     });
 

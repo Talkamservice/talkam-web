@@ -38,7 +38,14 @@ export const notificationsApiSlice = apiSlice.injectEndpoints({
                 method: "get"
             }),
             invalidatesTags: ["notifications", "notificationstats"]
-        })
+        }),
+        getAnnouncements: builder.query({
+            query: () => ({
+                url: `user/announcements`,
+                method: "get"
+            }),
+            invalidatesTags: ["notifications", "notificationstats"]
+        }),
     })
 })
 
@@ -49,4 +56,5 @@ export const {
     useClearAllNotificationsMutation,
     useShowNotificationQuery,
     useLazyShowNotificationQuery,
+    useGetAnnouncementsQuery,
 } = notificationsApiSlice

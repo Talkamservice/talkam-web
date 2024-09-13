@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react"
 import { ChevronLeft, ChevronRight } from "react-feather"
 
-export const Carousel = ({ children: slides, autoSlide = false, autoSlideInterval }) => {
+export const Carousel = ({ children: slides, autoSlide = false, autoSlideInterval = 5000 }) => {
 
     const [currentSlide, setCurrentSlide] = useState(0);
 
     const goToPrevious = () => {
-        setCurrentSlide((curr) => (curr === 0 ? slides.length - 1 : curr - 1))
+        setCurrentSlide((curr) => (curr === 0 ? slides?.length - 1 : curr - 1))
     }
 
     const goToNext = () => {
-        setCurrentSlide((curr) => (curr === slides.length - 1 ? 0 : curr + 1))
+        setCurrentSlide((curr) => (curr === slides?.length - 1 ? 0 : curr + 1))
     }
 
     useEffect(() => {
@@ -18,7 +18,7 @@ export const Carousel = ({ children: slides, autoSlide = false, autoSlideInterva
 
         const slideInterval = setInterval(goToNext, autoSlideInterval);
         return () => clearInterval(slideInterval)
-    }, [])
+    }, []);
 
     return (
         <div className="">
@@ -35,12 +35,13 @@ export const Carousel = ({ children: slides, autoSlide = false, autoSlideInterva
                         </div>
                     ))}
                 </div>
-                <div className="absolute inset-0 flex items-center justify-between p-2">
+
+                <div className={`absolute inset-0 flex items-center justify-between p-2 ${slides?.length <= 1 ? 'hidden' : 'flex'} `}>
                     <ChevronLeft onClick={goToPrevious} size={23} className="bg-white rounded-full p-1.5 cursor-pointer hover:bg-opacity-50 border border-tgray-xlight" />
                     <ChevronRight onClick={goToNext} size={23} className="bg-white rounded-full p-1.5 cursor-pointer hover:bg-opacity-50 border border-tgray-xlight" />
                 </div>
 
-                <div className="absolute bottom-2 right-3">
+                <div className={`absolute bottom-2 right-3 ${slides?.length <= 1 ? 'hidden' : 'flex'}`}>
                     <div className="flex items-center justify-center gap-1">
                         {
                             slides?.map((_, index) => (

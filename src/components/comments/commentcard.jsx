@@ -5,7 +5,7 @@ import { CommentInput } from "./commentinput"
 import { motion } from "framer-motion"
 import { NestedCommentCard } from "./nestedcommentcard"
 import { downVariants, PostCardVariants } from "../../helpers/cardanimation"
-import { useBlockUserMutation, useCommentReactionMutation, useDeleteCommentMutation } from "../../services/posts/postsApiSlice"
+import { useBlockUserMutation, useCommentReactionMutation, useDeleteCommentMutation, useUpdatePostNotificationsMutation } from "../../services/posts/postsApiSlice"
 import { toast } from "sonner"
 import { handleError } from "../../utils/handleError"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
@@ -45,7 +45,9 @@ export const CommentCard = ({
     imagePreview,
     setImagePreview,
     internalImagePreview,
-    setInternalImagePreview
+    setInternalImagePreview,
+    notification,
+    isReported,
 }) => {
 
     let isValidComment = false;
@@ -69,6 +71,7 @@ export const CommentCard = ({
     const [commentReaction] = useCommentReactionMutation();
     const [blockUser, { isLoading: blockLoading }] = useBlockUserMutation();
     const [deleteComment] = useDeleteCommentMutation();
+    const [updatePostNotifications] = useUpdatePostNotificationsMutation()
 
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
@@ -161,6 +164,20 @@ export const CommentCard = ({
             toast.error(errorMessage);
         }
         setShowPopUp(() => false)
+    }
+
+    const handleNotificationPreference = async (postId) => {
+        const toastId = toast("Updating...");
+        try {
+            const res = await updatePostNotifications({ post_id: postId }).unwrap();
+            toast.dismiss(toastId);
+            toast.success(res?.message);
+        } catch (error) {
+            toast.dismiss(toastId);
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+        setShowPopUp(false)
     }
 
     const copyTextToClipboard = async () => {
@@ -279,12 +296,12 @@ export const CommentCard = ({
                                                     <p>Copy link</p>
                                                 </li>
                                                 <li className="w-full">
-                                                    <AuthWrapper onClick={() => console.log("something")}>
+                                                    <AuthWrapper onClick={() => handleNotificationPreference(parentComment?.id)}>
                                                         <li
                                                             className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                                         >
                                                             <NewNotificationIcon className="w-4 h-4" />
-                                                            <p>Get notifications for this thread</p>
+                                                            <p>{notification ? "Mute notifications for this thread" : "Get notifications for this thread"}</p>
                                                         </li>
                                                     </AuthWrapper>
                                                 </li>
@@ -299,14 +316,19 @@ export const CommentCard = ({
                                                     <Icon.Slash size={15} color='#000000' strokeWidth={2} />
                                                     <p>Block @{parentComment?.user?.username ?? parentComment?.user?.name}</p>
                                                 </li> */}
-                                                <li className="w-full">
-                                                    <AuthWrapper ref={popUpRef} onClick={handleReportModal} >
-                                                        <li className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight">
-                                                            <Icon.Flag size={15} color='#000000' strokeWidth={2} />
-                                                            <p>Report this post</p>
+                                                {
+                                                    !isReported ?
+                                                        <li className="w-full">
+                                                            <AuthWrapper ref={popUpRef} onClick={handleReportModal} >
+                                                                <li className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight">
+                                                                    <Icon.Flag size={15} color='#000000' strokeWidth={2} />
+                                                                    <p>Report this post</p>
+                                                                </li>
+                                                            </AuthWrapper>
                                                         </li>
-                                                    </AuthWrapper>
-                                                </li>
+                                                        :
+                                                        null
+                                                }
                                                 <li onClick={() => handleDeleteComment(parentComment?.id)}
                                                     className={` ${isCurrentUser ? 'block' : 'hidden'}  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}
                                                 >
@@ -387,6 +409,8 @@ export const CommentCard = ({
                                         originalPostId={originalPostId}
                                         internalImagePreview={internalImagePreview}
                                         setInternalImagePreview={setInternalImagePreview}
+                                        notification={comment?.enabled_notification}
+                                        isReported={comment?.is_reported}
                                     />
                                 ))
                             }
