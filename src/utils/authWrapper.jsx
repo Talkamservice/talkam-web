@@ -3,7 +3,7 @@ import { useIsAuth } from "../hooks/useIsAuth"
 import { Modal } from "../components/global/modal";
 import { ModalLogin } from "../routes/auth/modallogin/modalogin";
 
-export const AuthWrapper = ({ children, onClick, ref }) => {
+export const AuthWrapper = ({ children, onClick }) => {
 
     const isAuth = useIsAuth();
     const [showLogin, setShowLogin] = useState(false);
@@ -21,7 +21,7 @@ export const AuthWrapper = ({ children, onClick, ref }) => {
     }
 
     return (
-        <div ref={ref} className="" onClick={handleEventClick}>
+        <div className="" onClick={handleEventClick}>
             {children}
             <Modal
                 show={showLogin}

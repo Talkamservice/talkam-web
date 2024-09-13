@@ -44,10 +44,12 @@ export const PostCard = ({
     handleDeletePost,
     parentCategory,
     group,
+    isReported,
+    notification,
     home,
 }) => {
 
-    const postController = usePostController(isAnon, user, reaction, likes, polls, id);
+    const postController = usePostController(isAnon, user, reaction, likes, polls, isReported, notification, id);
 
     return (
         <motion.div
@@ -120,12 +122,12 @@ export const PostCard = ({
                                         <p>Copy link</p>
                                     </li>
                                     <li>
-                                        <AuthWrapper>
+                                        <AuthWrapper onClick={() => postController?.handleNotificationPreference()}>
                                             <li
                                                 className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                             >
                                                 <NewNotificationIcon className="w-4 h-4" />
-                                                <p>Get notifications for this thread</p>
+                                                <p>{postController?.isNotificationEnabled ? "Mute notifications for this thread" : "Get notifications for this thread"}</p>
                                             </li>
                                         </AuthWrapper>
                                     </li>
@@ -139,7 +141,7 @@ export const PostCard = ({
                                         <Icon.Slash size={15} color='#000000' strokeWidth={2} />
                                         <p>Block @{author}</p>
                                     </li> */}
-                                    <li className="w-full">
+                                    <li className={`w-full ${postController?.isPostReported ? 'hidden' : 'block'} `}>
                                         <AuthWrapper onClick={postController.handleReportModal}>
                                             <li
                                                 className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"

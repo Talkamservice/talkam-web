@@ -38,9 +38,16 @@ export const Notifications = () => {
             id: 2,
             title: "System admin",
             text: "admin",
+            icon: <span className={`${notificationStats?.data.system_admin > 0 ? 'flex' : 'hidden'} `}>
+                <Icon.Circle
+                    size={10}
+                    fill="#FF0000"
+                    strokeWidth={0}
+                    color="#FFF"
+                />
+            </span>
         },
     ];
-    console.log(notificationStats)
 
     const handleMarkAllRead = async () => {
         try {

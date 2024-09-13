@@ -4,11 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
 import { useTruncatedElement } from "../hooks/useTruncated";
 import { useOnOutsideClick } from "../hooks/useOnOutsideClick";
-import { useBlockUserMutation, usePostReactionMutation, useReportPostMutation, useSelectPollOptionMutation } from "../services/posts/postsApiSlice";
+import { useBlockUserMutation, usePostReactionMutation, useReportPostMutation, useSelectPollOptionMutation, useUpdatePostNotificationsMutation } from "../services/posts/postsApiSlice";
 import { toast } from "sonner";
 import { handleError } from "../utils/handleError";
 
-export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
+export const usePostController = (isAnon, user, reaction, likes, polls, isReported, notification, id) => {
 
     let noOfDaysLeft = 0
     let totalVoteCount = 0
@@ -32,6 +32,8 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
     const [showImagePreview, setShowImagePreview] = useState(false)
     const [pollOptions, setPollOptions] = useState(polls);
     const [selectedPoll, setSelectedPoll] = useState(pollOptions && pollOptions.some(option => option.selected));
+    const [isPostReported, setIsPostReported] = useState(isReported);
+    const [isNotificationEnabled, setIsNotificationEnabled] = useState(notification);
 
     const { isTruncated, isReadingMore, toggleIsShowingMore } = useTruncatedElement(commentRef);
     useOnOutsideClick(popUpRef, () => {
@@ -42,6 +44,7 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
     const [selectPollOption] = useSelectPollOptionMutation();
     const [blockUser, { isLoading }] = useBlockUserMutation();
     const [reportPost, { isLoading: reportLoading }] = useReportPostMutation();
+    const [updatePostNotifications, { isLoading: updateNotificationLoading }] = useUpdatePostNotificationsMutation();
 
     const calculatePercentages = (options) => {
         const totalVotes = options.reduce((sum, option) => sum + option.count, 0);
@@ -112,6 +115,7 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
     };
 
     const handleReportPost = async () => {
+        setIsPostReported(true)
         try {
             const reportDetails = {
                 reason: checkedValue,
@@ -136,6 +140,25 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
             toast.error(errorMessage)
         }
     };
+
+    const handleNotificationPreference = async () => {
+        const toastId = toast("Updating...");
+        try {
+            const res = await updatePostNotifications({ post_id: id }).unwrap();
+            toast.dismiss(toastId);
+            toast.success(res?.message);
+            if (isNotificationEnabled) {
+                setIsNotificationEnabled(false)
+            } else {
+                setIsNotificationEnabled(true)
+            }
+        } catch (error) {
+            toast.dismiss(toastId);
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+        setShowPopUp(false)
+    }
 
     const copyTextToClipboard = async () => {
         try {
@@ -208,6 +231,9 @@ export const usePostController = (isAnon, user, reaction, likes, polls, id) => {
         handleReportPost,
         reportLoading,
         confirmationModal,
-        setConfirmationModal
+        setConfirmationModal,
+        isPostReported,
+        isNotificationEnabled,
+        handleNotificationPreference,
     }
 }

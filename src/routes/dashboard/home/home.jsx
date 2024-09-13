@@ -6,8 +6,8 @@ import { GallerySkeletons, PillSkeletonLoader } from "../../../components/global
 import { useGetRecentPostsQuery } from "../../../services/posts/postsApiSlice"
 import { useGetTrendingTagsQuery } from "../../../services/userApiSlice"
 import { Carousel } from "../../../components/global/carousel"
-import { randomId } from "../../../helpers/randomid"
 import { AnnouncementCard } from "../../../components/global/announcementcard"
+import { useGetAnnouncementsQuery } from "../../../services/notificationsApiSlice"
 
 
 const tabs = [
@@ -35,14 +35,19 @@ export const Home = () => {
 
     const { data: recents, isLoading: recentLoading } = useGetRecentPostsQuery();
     const { data: tags, isLoading: trendLoad } = useGetTrendingTagsQuery();
+    const { data: announcements } = useGetAnnouncementsQuery();
 
     return (
         <div className="w-full flex divide-x divide-tgray-light h-full">
             <section className="relative w-full lg:w-4/6 overflow-y-auto no-scrollbar">
-                <Carousel autoSlide autoSlideInterval={5000}>
+                <Carousel autoSlide={announcements && announcements?.data?.length > 1} autoSlideInterval={5000} >
                     {
-                        [...Array(4)].map((_, index) => (
-                            <AnnouncementCard key={index} />
+                        announcements?.data?.map((info, index) => (
+                            <AnnouncementCard
+                                key={index}
+                                title={info?.title}
+                                subtitle={info?.description}
+                            />
                         ))
                     }
                 </Carousel>

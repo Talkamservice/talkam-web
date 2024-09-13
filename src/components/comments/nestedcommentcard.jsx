@@ -32,9 +32,10 @@ export const NestedCommentCard = ({
     anonChecked,
     setAnonChecked,
     originalPostId,
-    internal,
     internalImagePreview,
-    setInternalImagePreview
+    setInternalImagePreview,
+    isReported,
+    notification
 }) => {
 
     let isValidComment = false
@@ -273,7 +274,7 @@ export const NestedCommentCard = ({
                                                             className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                                         >
                                                             <NewNotificationIcon className="w-4 h-4" />
-                                                            <p>Get notifications for this thread</p>
+                                                            <p>{notification ? "Mute notifications for this thread" : "Get notifications for this thread"}</p>
                                                         </li>
                                                     </AuthWrapper>
                                                 </li>
@@ -288,16 +289,21 @@ export const NestedCommentCard = ({
                                                     <Icon.Slash size={15} color='#000000' strokeWidth={2} />
                                                     <p>Block @{parentComment?.user?.username ?? parentComment?.user?.name}</p>
                                                 </li> */}
-                                                <li className="w-full">
-                                                    <AuthWrapper onClick={handleReportModal}>
-                                                        <li
-                                                            className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
-                                                        >
-                                                            <Icon.Flag size={15} color='#000000' strokeWidth={2} />
-                                                            <p>Report this post</p>
+                                                {
+                                                    !isReported ?
+                                                        <li className="w-full">
+                                                            <AuthWrapper onClick={handleReportModal}>
+                                                                <li
+                                                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                                                >
+                                                                    <Icon.Flag size={15} color='#000000' strokeWidth={2} />
+                                                                    <p>Report this post</p>
+                                                                </li>
+                                                            </AuthWrapper>
                                                         </li>
-                                                    </AuthWrapper>
-                                                </li>
+                                                        :
+                                                        null
+                                                }
                                                 <li onClick={() => handleDeleteComment(parentComment?.id)}
                                                     className={` ${isCurrentUser ? 'block' : 'hidden'}  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}
                                                 >

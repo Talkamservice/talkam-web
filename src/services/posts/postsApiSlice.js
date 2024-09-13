@@ -177,6 +177,14 @@ export const postsApiSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ['comments', 'postDetail']
         }),
+        updatePostNotifications: builder.mutation({
+            query: id => ({
+                url: `/user/notifications/thread/add`,
+                method: 'post',
+                body: { ...id }
+            }),
+            invalidatesTags: ["posts", "comments", "postDetail"]
+        })
     })
 })
 
@@ -201,4 +209,5 @@ export const {
     useReportPostMutation,
     useReportCommentMutation,
     useGetUserMediaQuery,
+    useUpdatePostNotificationsMutation,
 } = postsApiSlice

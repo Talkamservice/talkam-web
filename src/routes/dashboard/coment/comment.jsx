@@ -190,6 +190,8 @@ export const Comment = () => {
                             user={postDetails?.data.user}
                             group={postDetails?.data?.group}
                             parentCategory={postDetails?.data?.category?.parent_category}
+                            isReported={postDetails?.data?.is_reported}
+                            notification={postDetails?.data?.enabled_notification}
                             home
                         />
                 }
@@ -246,6 +248,8 @@ export const Comment = () => {
                                         setImagePreview={setNestedImagePreview}
                                         internalImagePreview={internalImagePreview}
                                         setInternalImagePreview={setInternalImagePreview}
+                                        notification={parentcomment?.enabled_notification}
+                                        isReported={parentcomment?.is_reported}
                                     />
                                 ))
                     }
