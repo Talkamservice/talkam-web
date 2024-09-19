@@ -3,7 +3,7 @@ import { Button } from "../forms/button"
 import { GroupCard } from "./groupcard"
 import { AuthWrapper } from "../../utils/authWrapper";
 
-export const JoinGroupCard = ({ avatar, groupName, membersCount, groupId }) => {
+export const JoinGroupCard = ({ avatar, groupName, membersCount, groupId, access }) => {
 
     const navigate = useNavigate();
 
@@ -13,6 +13,7 @@ export const JoinGroupCard = ({ avatar, groupName, membersCount, groupId }) => {
                 img={avatar}
                 group={groupName}
                 members={membersCount}
+                access={access}
             />
 
             <AuthWrapper onClick={() => navigate(`/group/${groupId}`)}>

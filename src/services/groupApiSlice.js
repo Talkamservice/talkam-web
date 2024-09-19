@@ -131,7 +131,15 @@ export const groupApiSlice = apiSlice.injectEndpoints({
                 body: { ...body }
             }),
             invalidatesTags: ["requests", "members", "details"]
-        })
+        }),
+        reportGroupMutation: builder.mutation({
+            query: body => ({
+                url: `/user/groups/reports/create`,
+                method: 'post',
+                body: body
+            }),
+            invalidatesTags: ["details"]
+        }),
     })
 })
 
@@ -153,4 +161,5 @@ export const {
     useRequestFollowMutation,
     useGetGroupRequestsQuery,
     useUpdateMemberRequestsMutation,
+    useReportGroupMutationMutation,
 } = groupApiSlice

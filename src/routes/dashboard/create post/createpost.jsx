@@ -26,13 +26,16 @@ import { Storage } from "../../../app/storage";
 import { SelectCategoryModal } from "./selectcategorymodal";
 import { useGetFollowingGroupsQuery } from "../../../services/groupApiSlice";
 import Protected from "../../../utils/protected";
+import { getFileExtension } from "../../../helpers/getFileExtension";
+import { allowedVideoExtensions } from "../../../helpers/extensions";
 
 const storageKeys = [
     "post_title", "post_comment",
     "post_image", "post_tags",
     "post_publish", "post_anonymous",
     "post_polls", "post_category",
-    "post_group", "post_image_url"
+    "post_group", "post_image_url",
+    "post_video_url"
 ];
 
 export const CreatePost = () => {
@@ -67,6 +70,7 @@ export const CreatePost = () => {
         title: "",
         comment: "",
         image: null,
+        video: null,
         category: "",
         group: "",
         tags: ""
@@ -127,20 +131,30 @@ export const CreatePost = () => {
         event.preventDefault()
         const { files } = event.target;
         if (!files[0]) return;
+        const maxAllowedSize = 10 * 1024 * 1024;
+        if (files[0].size > maxAllowedSize) {
+            toast.error("File is larger than 10mb!");
+            return;
+        }
         // setImagePreview(() => URL.createObjectURL(files[0]))
         // Storage.setItem("post_image", URL.createObjectURL(files[0]))
-        savePostImage(files[0]);
+        savePostImage(files[0], allowedVideoExtensions.includes(getFileExtension(files[0].type.toLowerCase())));
     };
 
-    const savePostImage = async (file) => {
+    const savePostImage = async (file, bool) => {
         setImageLoading(true)
         const imageRef = ref(storageDB, `web-images/${randomId()}`);
         const snapshot = await uploadBytes(imageRef, file);
         const url = await getDownloadURL(
             ref(storageDB, snapshot.metadata.fullPath)
         );
-        setPost({ ...post, image: url })
-        Storage.setItem("post_image_url", url)
+        if (bool) {
+            setPost({ ...post, video: url })
+            Storage.setItem("post_video_url", url)
+        } else {
+            setPost({ ...post, image: url })
+            Storage.setItem("post_image_url", url)
+        }
         setImageLoading(false)
     }
 
@@ -192,7 +206,7 @@ export const CreatePost = () => {
         const transformedPollOptions = poll && poll.map((item) => [
             item.option
         ]).flat(2);
-        const PostType = poll.some(item => item.option !== "") ? "Poll" : post?.image ? "File" : "Text";
+        const PostType = poll.some(item => item.option !== "") ? "Poll" : post?.image ? "Image" : post?.video ? "Video" : "Text";
 
         try {
             const newPost = {
@@ -204,7 +218,7 @@ export const CreatePost = () => {
                 status: "Active",
                 publish_at: publishDate ?? null,
                 is_anonymous: isChecked ? 1 : 0,
-                attachments: !post.image ? null : [{ url: post.image, type: "Image" }],
+                attachments: PostType === "Image" ? [{ url: post.image, type: "Image" }] : [{ url: post.video, type: "Video" }],
                 poll: PostType === "Poll" ? {
                     duration: convertedTime(pollDuration.days, pollDuration.hours),
                     options: transformedPollOptions,
@@ -228,6 +242,7 @@ export const CreatePost = () => {
         const post_comment = Storage.getItem('post_comment');
         // const post_image = Storage.getItem('post_image');
         const post_image_url = Storage.getItem('post_image_url');
+        const post_video_url = Storage.getItem('post_video_url');
         const post_tags = Storage.getItem('post_tags');
         const post_category = Storage.getItem('post_category');
         const post_group = Storage.getItem('post_group');
@@ -238,6 +253,7 @@ export const CreatePost = () => {
                 title: post_title,
                 comment: post_comment,
                 image: post_image_url,
+                video: post_video_url,
                 tags: post_tags,
                 category: post_category,
                 group: post_group
@@ -259,6 +275,7 @@ export const CreatePost = () => {
             component:
                 <MediaPost
                     image={post.image}
+                    video={post.video}
                     onChange={handleFileUpload}
                     setPost={setPost}
                     post={post}

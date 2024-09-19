@@ -12,7 +12,7 @@ export const AnnouncementCard = ({ title, subtitle, duration }) => {
                     </div>
                 </section>
 
-                <span className="text-[10px] text-[#858585] italic flex-none">Expires in 2 days</span>
+                {/* <span className="text-[10px] text-[#858585] italic flex-none">Expires in 2 days</span> */}
             </div>
         </div>
     )
