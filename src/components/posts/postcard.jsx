@@ -1,6 +1,6 @@
 import { Avatar } from "../global/avatar"
 import { PostComment } from "./postcomment"
-import { PostImage } from "./postimage"
+import { PostMedia } from "./postmedia"
 import { PostTags } from "./posttags"
 import { PostCommentCount } from "./postcommentcount"
 import { PostActionButton } from "./postactionbutton"
@@ -28,7 +28,7 @@ export const PostCard = ({
     title,
     comment,
     tags,
-    image,
+    image: src,
     category,
     time,
     author,
@@ -192,10 +192,11 @@ export const PostCard = ({
                                         />
                                     )}
                                 </article>
-                                <PostImage
+                                <PostMedia
                                     onClick={postController.toggleModal}
                                     side={side}
-                                    src={image}
+                                    type={type}
+                                    src={src}
                                 />
                             </>
                             :
@@ -275,7 +276,7 @@ export const PostCard = ({
                 contentWidth='w-full'
             >
                 <ImageModalView
-                    file={image}
+                    file={src}
                     handleImageModal={postController.toggleModal}
                 />
             </Modal>
@@ -291,7 +292,7 @@ export const PostCard = ({
                     onClose={postController.toggleShareModal}
                     title={title}
                     comment={comment}
-                    image={image}
+                    image={src}
                     id={id}
                 />
             </Modal>

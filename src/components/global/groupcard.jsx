@@ -1,7 +1,8 @@
-import FallBack from '../../assets/icons/groupicon.svg'
 import { AuthWrapper } from '../../utils/authWrapper';
+import FallBack from '../../assets/icons/groupicon.svg'
+import { LockIcon } from '../../assets/icons/generated';
 
-export const GroupCard = ({ group, members, img, onClick }) => {
+export const GroupCard = ({ group, members, img, access, onClick }) => {
 
     let membersPluralization;
 
@@ -29,7 +30,10 @@ export const GroupCard = ({ group, members, img, onClick }) => {
                     }}
                 />
                 <div className="flex flex-col items-start gap-1">
-                    <p className="font-bold text-base">{group}</p>
+                    <div className='flex items-center gap-2'>
+                        <p className="font-bold text-base">{group}</p>
+                        {access === "Closed" ? <LockIcon /> : null}
+                    </div>
                     <span className="text-sm font-normal">{membersPluralization}</span>
                 </div>
             </section>

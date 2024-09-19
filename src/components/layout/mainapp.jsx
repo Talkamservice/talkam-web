@@ -199,7 +199,7 @@ export const MainAppLayout = ({ children }) => {
                                         </div>
 
                                         <div className='relative'>
-                                            <InboxIcon
+                                            <Icon.Mail
                                                 onClick={() => {
                                                     navigate({
                                                         pathname: `${location.pathname}`,

@@ -60,6 +60,7 @@ export const Groups = () => {
                                                 img={group.image}
                                                 members={group.total_members}
                                                 group={group.name}
+                                                access={group.group_access}
                                             />
                                         ))
                             }

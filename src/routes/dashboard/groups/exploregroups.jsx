@@ -57,6 +57,7 @@ export const ExploreGroups = () => {
                                     membersCount={group.total_members}
                                     groupName={group.name}
                                     groupId={group.id}
+                                    access={group.group_access}
                                 />
                             ))
                 }

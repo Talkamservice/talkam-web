@@ -12,10 +12,15 @@ import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../services/authSlice";
 import { IsRole } from "../../../utils/isRole";
 import { Modal } from "../../../components/global/modal";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ColoredLoader } from "../../../components/global/loader";
 import { EditGroupHeader } from "./groupdetails/modals/editgroupheader";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { motion } from "framer-motion";
+import { PostCardVariants } from "../../../helpers/cardanimation";
+import { useOnOutsideClick } from "../../../hooks/useOnOutsideClick";
+import { useGroupController } from "../../../controllers/groupController";
+import { GroupReportModal } from "./groupreportmodal";
 import * as Icon from 'react-feather'
 import FallBack from "../../../assets/icons/users.svg"
 
@@ -43,16 +48,23 @@ const tabs = [
 export const Group = () => {
 
     let isMobile = useMediaQuery("(max-width: 768px)");
+    const popUpRef = useRef();
     const navigate = useNavigate();
     const currentUser = useSelector(selectCurrentUser);
     const { groupId } = useParams();
     const [showEditHeaderModal, setShowEditHeaderMdal] = useState();
     const [showInfo, setShowInfo] = useState(false);
+    const [showReportPop, setShowReportPop] = useState(false);
 
     const { data: groupDetails, isLoading } = useGetGroupDetailsQuery(groupId);
     const [followGroup, { isLoading: followLoading }] = useFollowGroupMutation();
     const [unFollowGroup, { isLoading: unFollowLoading }] = useUnFollowGroupMutation();
-    const [requestFollow, { isLoading: requestLoading }] = useRequestFollowMutation()
+    const [requestFollow, { isLoading: requestLoading }] = useRequestFollowMutation();
+    const groupController = useGroupController(null, groupId);
+
+    useOnOutsideClick(popUpRef, () => {
+        setShowReportPop(false);
+    });
 
     const toggleHeaderModal = () => {
         setShowEditHeaderMdal((prev) => !prev)
@@ -99,6 +111,7 @@ export const Group = () => {
         setShowInfo((prev) => !prev)
     };
 
+    console.log(groupDetails)
     return (
         <section className="h-full flex divide-x divide-tgray-xlight">
             <div className="w-full flex flex-col gap-2 md:w-4/6 h-full p-2 md:px-6 md:pt-6">
@@ -203,6 +216,31 @@ export const Group = () => {
                                         }
                                     </section>
                             }
+                            <section ref={popUpRef} className="cursor-pointer relative">
+                                <Icon.MoreVertical onClick={() => setShowReportPop(prev => !prev)} size={35} className="hover:bg-tgray-xlight p-2 rounded-full cursor-pointer" />
+                                {
+                                    showReportPop ?
+                                        <motion.div
+                                            variants={PostCardVariants}
+                                            initial="initial"
+                                            animate="animate"
+                                            exit="exit"
+                                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                            className="absolute top-12 right-4 z-[15]"
+                                        >
+                                            <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
+                                                <li onClick={groupController.handleReportModal}
+                                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap"
+                                                >
+                                                    <Icon.Flag className='' size={15} color='#000000' strokeWidth={2} />
+                                                    <p>Report Group</p>
+                                                </li>
+                                            </ul>
+                                        </motion.div>
+                                        :
+                                        null
+                                }
+                            </section>
                         </section>
                         <div className="w-full flex flex-col gap-2">
                             <article className="w-full text-xs md:text-sm">{groupDetails?.data.about}</article>
@@ -269,6 +307,25 @@ export const Group = () => {
                     banner={groupDetails?.data.image}
                     name={groupDetails?.data?.name}
                     info={groupDetails?.data.about}
+                />
+            </Modal>
+
+            <Modal
+                show={groupController.openReport}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={groupController.handleReportModal}
+                position='center'
+                contentWidth='w-full md:w-2/4'
+            >
+                <GroupReportModal
+                    onClose={groupController.handleReportModal}
+                    checkedValue={groupController.checkedValue}
+                    setCheckedValue={groupController.setCheckedValue}
+                    handleReport={groupController?.handleReportGroup}
+                    isLoading={groupController?.reportLoading}
+                    confirmationModal={groupController?.confirmationModal}
+                    setConfirmationModal={groupController?.setConfirmationModal}
                 />
             </Modal>
         </section>

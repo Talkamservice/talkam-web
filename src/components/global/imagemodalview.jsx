@@ -1,5 +1,5 @@
-import TalkamLogo from "../../assets/icons/logo.svg"
 import { X } from "react-feather";
+import TalkamLogo from "../../assets/icons/logo.svg"
 
 export const ImageModalView = ({ file, handleImageModal }) => {
     return (
