@@ -38,7 +38,8 @@ export const PostMedia = ({ src, style, side, onClick, type }) => {
     const typeMap = {
         "Image": ImageView,
         "Video": VideoView,
-        "File": ImageView
+        "File": ImageView,
+        "Text": ImageView
     }
 
     return (

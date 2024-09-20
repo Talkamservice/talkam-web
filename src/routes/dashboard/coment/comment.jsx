@@ -70,9 +70,10 @@ export const Comment = () => {
 
     const submitComment = async () => {
         try {
+            const formattedComment = commentBody.comment.replace(/@(\w+)/g, '$@$1$');
             const newComment = {
                 post_id: commentId,
-                comment: commentBody.comment,
+                comment: formattedComment,
                 attachment: commentBody.image,
                 parent_id: null,
                 reply_comment_id: null,
@@ -93,9 +94,10 @@ export const Comment = () => {
 
     const submitCommentResponse = async (replyId) => {
         try {
+            const formattedComment = comment.comment.replace(/@(\w+)/g, '$@$1$');
             const newComment = {
                 post_id: commentId,
-                comment: comment.comment,
+                comment: formattedComment,
                 attachment: comment.image,
                 parent_id: replyId,
                 reply_comment_id: replyId,
@@ -115,9 +117,10 @@ export const Comment = () => {
 
     const submitNestedCommentResponse = async (parentId, replyId) => {
         try {
+            const formattedComment = nestedComment.comment.replace(/@(\w+)/g, '$@$1$');
             const newComment = {
                 post_id: commentId,
-                comment: nestedComment.comment,
+                comment: formattedComment,
                 attachment: nestedComment.image,
                 parent_id: parentId,
                 reply_comment_id: replyId,

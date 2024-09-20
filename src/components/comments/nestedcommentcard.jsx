@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { Button } from "../forms/button"
 import { Avatar } from "../global/avatar"
 import { CommentInput } from "./commentinput"
@@ -206,7 +206,32 @@ export const NestedCommentCard = ({
                         </div>
 
                         <pre className="text-sm font-normal text-wrap break-words whitespace-normal pr-2 w-full">
-                            <span className="text-xs font-bold pr-2">Replying @{!parentComment.reply_to ? "Anonymous" : (parentComment?.reply_to?.username || parentComment?.reply_to?.name)}</span>{parentComment.comment}
+                            <span className="text-xs font-bold pr-2">
+                                Replying @{!parentComment.reply_to ? "Anonymous" : (parentComment?.reply_to?.username || parentComment?.reply_to?.name)}
+                            </span>
+                            <span className="text-sm font-normal text-wrap whitespace-pre-wrap break-words w-full">
+                                {parentComment.comment.split(/(@\w+)/g).map((part, index) => {
+                                    // Clean up any leading or trailing `$` character around mentions
+                                    part = part.replace(/\$/g, ''); // Remove all occurrences of '$'
+
+                                    // Check if the part is a mention
+                                    if (part.startsWith('@')) {
+                                        const username = part.substring(1); // Remove the '@'
+                                        return (
+                                            <span
+                                                key={index}
+                                                onClick={() => navigate(`/profile/${username}`)} // Link to the user's profile
+                                                className="text-blue-700 font-semibold cursor-pointer"
+                                            >
+                                                {part}
+                                            </span>
+                                        );
+                                    }
+
+                                    // Render regular text
+                                    return <Fragment key={index}>{part}</Fragment>;
+                                })}
+                            </span>
                         </pre>
                         <section className="">
                             {parentComment.attachment ?
@@ -325,7 +350,7 @@ export const NestedCommentCard = ({
                         <CommentInput
                             anonChecked={anonChecked}
                             setAnonChecked={setAnonChecked}
-                            nestedComment={nestedComment}
+                            commentBody={nestedComment}
                             setCommentBody={setNestedComment}
                             imagePreview={internalImagePreview}
                             setImagePreview={setInternalImagePreview}

@@ -227,5 +227,6 @@ export const useGroupController = (groupTab, groupId) => {
         setCheckedValue,
         handleReportGroup,
         handleReportModal,
+        navigate,
     }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { Button } from "../forms/button"
 import { Avatar } from "../global/avatar"
 import { CommentInput } from "./commentinput"
@@ -233,8 +233,31 @@ export const CommentCard = ({
                         </div>
 
                         <article className="text-sm font-normal text-wrap whitespace-pre-wrap break-words w-full">
-                            {parentComment.comment}
+                            {parentComment.comment.split(/(@\w+)/g).map((part, index) => {
+                                // Clean up any leading or trailing `$` character around mentions
+                                part = part.replace(/\$/g, ''); // Remove all occurrences of '$'
+
+                                // Check if the part is a mention
+                                if (part.startsWith('@')) {
+                                    const username = part.substring(1); // Remove the '@'
+                                    return (
+                                        <span
+                                            key={index}
+                                            onClick={() => navigate(`/profile/${username}`)} // Link to the user's profile
+                                            className="text-blue-700 font-semibold cursor-pointer"
+                                        >
+                                            {part}
+                                        </span>
+                                    );
+                                }
+
+                                // Render regular text
+                                return <Fragment key={index}>{part}</Fragment>;
+                            })}
                         </article>
+
+
+
                         <section className="w-full">
                             {parentComment.attachment ?
                                 <section onClick={toggleImageModal} className="relative rounded-lg min-h-[170px] h-[250px] cursor-pointer">
@@ -365,7 +388,7 @@ export const CommentCard = ({
                         <CommentInput
                             anonChecked={anonChecked}
                             setAnonChecked={setAnonChecked}
-                            comment={comment}
+                            commentBody={comment}
                             setCommentBody={setComment}
                             imagePreview={imagePreview}
                             setImagePreview={setImagePreview}

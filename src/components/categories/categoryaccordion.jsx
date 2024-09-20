@@ -12,8 +12,8 @@ export const CategoryAccordion = ({ title, children, icon }) => {
     }
 
     return (
-        <div onClick={toggleAccordion} className="w-full flex flex-col items-start jusitfy-between gap-4 py-2 border-b border-tgray-50 cursor-pointer">
-            <header className="w-full flex items-center justify-between gap-4">
+        <div className="w-full flex flex-col items-start jusitfy-between gap-4 py-2 border-b border-tgray-50 cursor-pointer">
+            <header onClick={toggleAccordion} className="w-full flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <img
                         src={icon ?? Fallback}
