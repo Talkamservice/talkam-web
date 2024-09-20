@@ -20,14 +20,17 @@ export const GroupRequests = ({ setMemberView }) => {
     const [updateMemberRequests, { isLoading: updateLoading }] = useUpdateMemberRequestsMutation();
 
     const handleRequests = async (memberId, action) => {
+        const toastId = toast("updating...");
         try {
             const requestDetails = {
                 member_id: memberId,
                 action: action
             }
             const res = await updateMemberRequests({ id: groupId, body: { ...requestDetails } }).unwrap();
+            toast.dismiss(toastId);
             toast.success(res?.message)
         } catch (error) {
+            toast.dismiss(toastId);
             const errorMessage = handleError(error);
             toast.error(errorMessage);
         }
@@ -61,16 +64,21 @@ export const GroupRequests = ({ setMemberView }) => {
                                 />
                             </section>
                             :
-                            requestMembers?.data?.data?.map((member) => (
-                                <GroupRequestCard
-                                    key={member?.user.id}
-                                    avatar={member?.user.avatar}
-                                    user={member?.user?.username}
-                                    onApprove={() => handleRequests(member.id, "Approved")}
-                                    onDecline={() => togglePrompt(member?.id)}
-                                    isLoading={updateLoading}
-                                />
-                            ))
+                            <section className="flex flex-col gap-3">
+                                {
+                                    requestMembers?.data?.data?.map((member) => (
+                                        <GroupRequestCard
+                                            key={member?.user.id}
+                                            avatar={member?.user.avatar}
+                                            user={member?.user?.username}
+                                            onApprove={() => handleRequests(member.id, "Approved")}
+                                            onDecline={() => togglePrompt(member?.id)}
+                                            isLoading={updateLoading}
+                                            id={member?.user.id}
+                                        />
+                                    ))
+                                }
+                            </section>
                 }
             </section>
 

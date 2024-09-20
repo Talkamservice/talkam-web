@@ -218,15 +218,21 @@ export const Profile = () => {
                         <span className="text-sm">Unblock them to view their activities and posts.</span>
                     </section>
                     :
-                    user?.data?.i_am_blocked ?
+                    user?.data?.status === "Banned" ?
                         <section className="w-full flex flex-col items-center justify-center gap-2 py-16">
-                            <p className="text-lg font-bold">@{username} blocked you</p>
-                            <span className="text-sm">You won&apos;t be able to view their activities and posts.</span>
+                            <p className="text-lg font-bold">@{username} {" "} is banned</p>
+                            <span className="text-sm">You would not be able to view their activities and posts.</span>
                         </section>
                         :
-                        <section className="relative overflow-y-auto w-full no-scrollbar">
-                            <RouteTabs tabs={tabs} headerPadding="px-6" />
-                        </section>
+                        user?.data?.i_am_blocked ?
+                            <section className="w-full flex flex-col items-center justify-center gap-2 py-16">
+                                <p className="text-lg font-bold">@{username} blocked you</p>
+                                <span className="text-sm">You won&apos;t be able to view their activities and posts.</span>
+                            </section>
+                            :
+                            <section className="relative overflow-y-auto w-full no-scrollbar">
+                                <RouteTabs tabs={tabs} headerPadding="px-6" />
+                            </section>
 
             }
 

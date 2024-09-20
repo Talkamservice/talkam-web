@@ -35,6 +35,7 @@ export const SubCategories = ({ id }) => {
                                     name={category?.name}
                                     id={category?.id}
                                     type={category?.type}
+                                    isSuspended={category?.type === "Group" ? category?.is_suspended : null}
                                 />
                             ))}
                         </section>

@@ -1,4 +1,4 @@
-import { X } from "react-feather";
+import { X, Download } from "react-feather";
 import TalkamLogo from "../../assets/icons/logo.svg"
 
 export const ImageModalView = ({ file, handleImageModal }) => {
@@ -29,6 +29,19 @@ export const ImageModalView = ({ file, handleImageModal }) => {
                         e.target.src = TalkamLogo;
                     }}
                 />
+            </div>
+
+            <div className="absolute bottom-0 bg-black backdrop-blur-sm bg-opacity-50 w-full flex items-center justify-end py-4 px-12 cursor-pointer">
+                <div className="flex items-center gap-2">
+                    <p className="text-sm text-white">Download Image</p>
+                    <a
+                        href={file}
+                        download
+                        className="rounded-full cursor-pointer"
+                    >
+                        <Download size={28} color="#FFFFFF" />
+                    </a>
+                </div>
             </div>
         </div>
     )

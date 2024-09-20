@@ -2,6 +2,7 @@ import { EmptyState } from "../../../components/global/emptystate";
 import { JoinGroupCard } from "../../../components/global/joingroupcard"
 import { GroupSkeletonLoader, PillSkeletonLoader } from "../../../components/global/skeletons";
 import { useGroupController } from "../../../controllers/groupController";
+import { IsBanned } from "../../../utils/isBanned";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 
@@ -51,14 +52,16 @@ export const ExploreGroups = () => {
                             </section>
                             :
                             groupController.allGroups?.data?.data?.map((group) => (
-                                <JoinGroupCard
-                                    key={group.id}
-                                    avatar={group.image}
-                                    membersCount={group.total_members}
-                                    groupName={group.name}
-                                    groupId={group.id}
-                                    access={group.group_access}
-                                />
+                                <IsBanned isBanned={group?.is_suspended} onClick={() => groupController.navigate(`/group/${group.id}`)} >
+                                    <JoinGroupCard
+                                        key={group.id}
+                                        avatar={group.image}
+                                        membersCount={group.total_members}
+                                        groupName={group.name}
+                                        groupId={group.id}
+                                        access={group.group_access}
+                                    />
+                                </IsBanned>
                             ))
                 }
             </section>

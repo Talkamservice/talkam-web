@@ -184,6 +184,12 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 body: { ...id }
             }),
             invalidatesTags: ["posts", "comments", "postDetail"]
+        }),
+        getTagSuggestions: builder.query({
+            query: search => ({
+                url: `/user/search/username?search=${search}`,
+                method: 'get'
+            })
         })
     })
 })
@@ -210,4 +216,5 @@ export const {
     useReportCommentMutation,
     useGetUserMediaQuery,
     useUpdatePostNotificationsMutation,
+    useGetTagSuggestionsQuery,
 } = postsApiSlice
