@@ -68,6 +68,12 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 body: interest
             }),
             invalidatesTags: ['category']
+        }),
+        getUserFromUsername: builder.query({
+            query: username => ({
+                url: `/user/profile/fetch?username=${username}`,
+                method: "get"
+            })
         })
     })
 })
@@ -83,4 +89,6 @@ export const {
     useGetUserProfileDetailsQuery,
     useFollowingCategoriesQuery,
     useAddInterestMutation,
+    useGetUserFromUsernameQuery,
+    useLazyGetUserFromUsernameQuery,
 } = authApiSlice

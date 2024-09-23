@@ -20,6 +20,7 @@ import { selectCurrentUser } from "../../services/authSlice"
 import { PostCardVariants } from "../../helpers/cardanimation"
 import { AuthWrapper } from "../../utils/authWrapper"
 import { ImageModalView } from "../global/imagemodalview"
+import { useLazyGetUserFromUsernameQuery } from "../../services/userApiSlice"
 import moment from "moment"
 import * as Icon from "react-feather"
 
@@ -57,6 +58,7 @@ export const NestedCommentCard = ({
     const [commentReaction] = useCommentReactionMutation();
     const [blockUser, { isLoading: blockLoading }] = useBlockUserMutation();
     const [deleteComment] = useDeleteCommentMutation();
+    const [trigger, { isLoading: userLoading }] = useLazyGetUserFromUsernameQuery();
 
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
@@ -163,6 +165,16 @@ export const NestedCommentCard = ({
         setShowPopUp(() => false)
     }
 
+    const handleNavigateToProfile = async (username) => {
+        try {
+            const res = await trigger(username);
+            navigate(`/userprofile/${res?.data?.data?.id}`)
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    }
+
     const toggleImageModal = () => {
         setImageModal(prev => !prev)
     }
@@ -220,7 +232,7 @@ export const NestedCommentCard = ({
                                         return (
                                             <span
                                                 key={index}
-                                                onClick={() => navigate(`/profile/${username}`)} // Link to the user's profile
+                                                onClick={() => handleNavigateToProfile(username)} // Link to the user's profile
                                                 className="text-blue-700 font-semibold cursor-pointer"
                                             >
                                                 {part}

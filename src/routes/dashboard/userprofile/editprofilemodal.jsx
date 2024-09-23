@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { selectCurrentToken, selectCurrentUser, setCredentials } from '../../../services/authSlice';
 import { useForm } from '../../../hooks/useForm';
-import { isNotEmpty } from '../../../utils/formValidations';
+import { isNotEmptyAndNoSpaces } from '../../../utils/formValidations';
 import { useGetAvatarsQuery, useUpdateProfileMutation } from '../../../services/userApiSlice';
 import { toast } from 'sonner';
 import { handleError } from '../../../utils/handleError';
@@ -26,7 +27,7 @@ export const EditProfileModal = ({ onClose, user }) => {
         hasError: userNameHasError, inputBlurHandler: userNameBlurHandler,
         value: userNameValue, valueChangeHandler: userNameChangeHandler,
         reset: resetUserName, isValid: userNameIsValid,
-    } = useForm(isNotEmpty);
+    } = useForm(isNotEmptyAndNoSpaces);
 
     const { data: avatars, isLoading: loadingAvatars } = useGetAvatarsQuery();
     const [updateProfile, { isLoading }] = useUpdateProfileMutation();
@@ -102,9 +103,9 @@ export const EditProfileModal = ({ onClose, user }) => {
                         onBlur={userNameBlurHandler}
                         onChange={userNameChangeHandler}
                         value={userNameValue}
-                        // error={userNameHasError}
+                        error={userNameHasError}
                         required
-                    // errorText={userNameHasError ? "Please Enter a valid username" : ""}
+                        errorText={userNameHasError ? "Please Enter a valid username" : ""}
                     />
 
                     <footer className='w-full flex item-center gap-4'>
@@ -119,7 +120,7 @@ export const EditProfileModal = ({ onClose, user }) => {
                             children="Save & Continue"
                             variant="primary"
                             fullWidth
-                            disabled={isLoading}
+                            disabled={(userNameValue && !userNameIsValid || !profileImage) || isLoading}
                             isLoading={isLoading}
                         />
                     </footer>
