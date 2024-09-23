@@ -2,13 +2,15 @@ import { JoinGroupCard } from "../../../components/global/joingroupcard"
 import { PostCardVariants } from "../../../helpers/cardanimation"
 import { motion } from "framer-motion"
 import { useSearchQuery } from "../../../services/seachApiSlice";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { GroupSkeletonLoader } from "../../../components/global/skeletons";
 import { EmptyState } from "../../../components/global/emptystate";
 import SearchIcon from '../../../assets/images/searchicon.jpg'
+import { IsBanned } from "../../../utils/isBanned";
 
 export const SearchGroup = () => {
 
+    const navigate = useNavigate()
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
     const searchTerm = searchParams.get('search') || '';
@@ -43,13 +45,17 @@ export const SearchGroup = () => {
                             </section>
                             :
                             searchResult?.data.data.map((group) => (
-                                <JoinGroupCard
-                                    key={group.id}
-                                    avatar={group.image}
-                                    membersCount={group.total_members}
-                                    groupName={group.name}
-                                    groupId={group.id}
-                                />
+                                <IsBanned isBanned={group?.is_suspended} onClick={() => navigate(`/group/${group.id}`)} >
+                                    <JoinGroupCard
+                                        key={group.id}
+                                        avatar={group.image}
+                                        membersCount={group.total_members}
+                                        groupName={group.name}
+                                        groupId={group.id}
+                                        access={group.group_access}
+                                        isSuspended={group.is_suspended}
+                                    />
+                                </IsBanned>
                             ))
                 }
             </section>
