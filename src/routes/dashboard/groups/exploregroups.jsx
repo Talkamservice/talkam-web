@@ -60,6 +60,7 @@ export const ExploreGroups = () => {
                                         groupName={group.name}
                                         groupId={group.id}
                                         access={group.group_access}
+                                        isSuspended={group.is_suspended}
                                     />
                                 </IsBanned>
                             ))

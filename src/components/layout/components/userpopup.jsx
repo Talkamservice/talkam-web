@@ -16,7 +16,7 @@ export const UserPopUp = ({ currentUser, toggleShowPanel, close }) => {
         dispatch(apiSlice.util.resetApiState());
         dispatch(logOut());
         Storage.clearItem();
-        navigate("/login", { replace: true })
+        navigate("/", { replace: true })
     }
 
     return (

@@ -21,8 +21,10 @@ import { CommentReportModal } from "./commentreportmodal"
 import { BlockPromptModal } from "../global/blockpromptmodal"
 import { AuthWrapper } from "../../utils/authWrapper"
 import { ImageModalView } from "../global/imagemodalview"
+import { useLazyGetUserFromUsernameQuery } from "../../services/userApiSlice"
 import moment from "moment"
 import * as Icon from "react-feather"
+import LoadingBar from "react-top-loading-bar"
 
 export const CommentCard = ({
     parentComment,
@@ -65,13 +67,14 @@ export const CommentCard = ({
     const [isReplying, setIsReplying] = useState(false);
     const [showMore, setShowMore] = useState(false);
     const [imageModal, setImageModal] = useState(false);
-    const [imageLoading, setImageLoading] = useState(false)
+    const [imageLoading, setImageLoading] = useState(false);
     // const [login, setLogin] = useState(false)
 
     const [commentReaction] = useCommentReactionMutation();
     const [blockUser, { isLoading: blockLoading }] = useBlockUserMutation();
     const [deleteComment] = useDeleteCommentMutation();
-    const [updatePostNotifications] = useUpdatePostNotificationsMutation()
+    const [updatePostNotifications] = useUpdatePostNotificationsMutation();
+    const [trigger, { isLoading: userLoading }] = useLazyGetUserFromUsernameQuery();
 
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
@@ -189,6 +192,17 @@ export const CommentCard = ({
             toast.error(errorMessage);
         }
         setShowPopUp(() => false)
+    };
+
+
+    const handleNavigateToProfile = async (username) => {
+        try {
+            const res = await trigger(username);
+            navigate(`/userprofile/${res?.data?.data?.id}`)
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
     }
 
     const toggleImageModal = () => {
@@ -219,6 +233,7 @@ export const CommentCard = ({
 
     return (
         <>
+            <LoadingBar height={3} color="#017FC8" progress={userLoading ? 75 : 100} />
             <div className={`w-full border border-tgray-50 rounded-xl p-4 flex flex-col items-start justify-between gap-4 relative`}>
                 <section className="w-full flex gap-3">
                     <div onClick={() => navigate(`/userprofile/${parentComment?.user.id}`)}
@@ -243,7 +258,7 @@ export const CommentCard = ({
                                     return (
                                         <span
                                             key={index}
-                                            onClick={() => navigate(`/profile/${username}`)} // Link to the user's profile
+                                            onClick={() => handleNavigateToProfile(username)} // Link to the user's profile
                                             className="text-blue-700 font-semibold cursor-pointer"
                                         >
                                             {part}

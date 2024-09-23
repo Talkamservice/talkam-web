@@ -6,7 +6,7 @@ import { Avatar } from '../../components/global/avatar';
 import { CardVariants } from '../../helpers/cardanimation';
 import { motion } from 'framer-motion';
 import { useForm } from '../../hooks/useForm';
-import { isNotEmpty } from '../../utils/formValidations';
+import { isNotEmptyAndNoSpaces } from '../../utils/formValidations';
 import { useGetAvatarsQuery, useUpdateProfileMutation } from '../../services/userApiSlice';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -28,7 +28,7 @@ export const SaveProfile = () => {
         hasError: userNameHasError, inputBlurHandler: userNameBlurHandler,
         value: userNameValue, valueChangeHandler: userNameChangeHandler,
         reset: resetUserName, isValid: userNameIsValid,
-    } = useForm(isNotEmpty);
+    } = useForm(isNotEmptyAndNoSpaces);
 
     const { data: avatars, isLoading: loadingAvatars } = useGetAvatarsQuery();
     const [updateProfile, { isLoading }] = useUpdateProfileMutation();
@@ -101,8 +101,8 @@ export const SaveProfile = () => {
                         </section>
                         <Input
                             wrapperClassName='relative w-full'
-                            label='Username'
-                            placeholder='Chuck Norris'
+                            label='Username (No spaces)'
+                            placeholder='Chuck_Norris'
                             type="text"
                             onBlur={userNameBlurHandler}
                             onChange={userNameChangeHandler}
@@ -134,6 +134,7 @@ export const SaveProfile = () => {
                     avatars={avatars}
                     isLoading={loadingAvatars}
                     handleAvatarSelect={handleAvatarSelect}
+                    onClose={toggleModal}
                 />
             </Modal>
         </Protected>
