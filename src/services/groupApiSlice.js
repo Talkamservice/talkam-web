@@ -3,6 +3,7 @@ import { apiSlice } from "../app/api/apiSlice"
 export const groupApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getAllGroups: builder.query({
+            keepUnusedDataFor: 180,
             query: ({ categoryId, tab, search }) => ({
                 url: `/user/groups?category_id=${categoryId}&tab=${tab}&search=${search}`,
                 method: "get",
@@ -10,6 +11,7 @@ export const groupApiSlice = apiSlice.injectEndpoints({
             providesTags: ["groups"]
         }),
         getFollowingGroups: builder.query({
+            keepUnusedDataFor: 180,
             query: ({ categoryId, tab, search, type }) => ({
                 url: `/user/groups/members/following?type=${type}&category_id=${categoryId}&tab=${tab}&search=${search}`,
                 method: "get",
@@ -129,7 +131,15 @@ export const groupApiSlice = apiSlice.injectEndpoints({
                 body: { ...body }
             }),
             invalidatesTags: ["requests", "members", "details"]
-        })
+        }),
+        reportGroupMutation: builder.mutation({
+            query: body => ({
+                url: `/user/groups/reports/create`,
+                method: 'post',
+                body: body
+            }),
+            invalidatesTags: ["details"]
+        }),
     })
 })
 
@@ -151,4 +161,5 @@ export const {
     useRequestFollowMutation,
     useGetGroupRequestsQuery,
     useUpdateMemberRequestsMutation,
+    useReportGroupMutationMutation,
 } = groupApiSlice

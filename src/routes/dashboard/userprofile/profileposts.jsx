@@ -164,6 +164,8 @@ export const ProfilesPosts = () => {
                                     handleDeletePost={handleDeletePost}
                                     group={post?.group}
                                     parentCategory={post?.category?.parent_category}
+                                    isReported={post?.is_reported}
+                                    notification={post?.enabled_notification}
                                     home
                                 />
                             ))

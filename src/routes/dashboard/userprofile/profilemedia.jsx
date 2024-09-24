@@ -32,6 +32,7 @@ export const ProfileMedia = () => {
                                 <ImageGridItem
                                     key={item?.id}
                                     src={item.url}
+                                    type={item.type}
                                 />
                             ))}
                         </section>

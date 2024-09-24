@@ -5,6 +5,10 @@ import { PostTags } from "../../../components/posts/posttags"
 import { GallerySkeletons, PillSkeletonLoader } from "../../../components/global/skeletons"
 import { useGetRecentPostsQuery } from "../../../services/posts/postsApiSlice"
 import { useGetTrendingTagsQuery } from "../../../services/userApiSlice"
+import { Carousel } from "../../../components/global/carousel"
+import { AnnouncementCard } from "../../../components/global/announcementcard"
+import { useGetAnnouncementsQuery } from "../../../services/notificationsApiSlice"
+
 
 const tabs = [
     {
@@ -31,11 +35,24 @@ export const Home = () => {
 
     const { data: recents, isLoading: recentLoading } = useGetRecentPostsQuery();
     const { data: tags, isLoading: trendLoad } = useGetTrendingTagsQuery();
+    const { data: announcements } = useGetAnnouncementsQuery();
 
     return (
         <div className="w-full flex divide-x divide-tgray-light h-full">
-            <section className="relative w-full lg:w-4/6 overflow-y-auto no-scrollbar px-6">
+            <section className="relative w-full lg:w-4/6 overflow-y-auto no-scrollbar">
+                <Carousel autoSlide={announcements && announcements?.data?.length > 1} autoSlideInterval={5000} >
+                    {
+                        announcements?.data?.map((info, index) => (
+                            <AnnouncementCard
+                                key={index}
+                                title={info?.title}
+                                subtitle={info?.description}
+                            />
+                        ))
+                    }
+                </Carousel>
                 <RouteTabs
+                    headerPadding="px-6"
                     tabs={tabs}
                 />
             </section>

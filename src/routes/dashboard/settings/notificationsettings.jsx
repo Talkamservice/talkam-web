@@ -11,20 +11,26 @@ const updateLoader = ["#017FC8", "#017FC8", "#017FC8", "#017FC8", "#017FC8"];
 export const ProfileNotificationSettings = () => {
 
     const { data: preference } = useGetNotificationSettingsQuery();
-    const [talkAmNews, setTalkAmNews] = useState({
-        talkam_news: 0,
-        talkam_research: 0
-    });
+    // const [talkAmNews, setTalkAmNews] = useState({
+    //     talkam_news: 0,
+    //     talkam_research: 0
+    // });
     const [comments, setComments] = useState("");
     const [moderation, setModeration] = useState(null);
     const [activity, setActivity] = useState(null);
     const [notificationSettings, { isLoading }] = useNotificationSettingsMutation();
+    const [receiveMode, setReceiveMode] = useState({
+        push: 0,
+        mail: 0
+    });
 
     const UpdateNotificationSettings = async () => {
         try {
             const notificationBody = {
-                talkam_news: talkAmNews.talkam_news,
-                talkam_research: talkAmNews.talkam_research,
+                // talkam_news: talkAmNews.talkam_news,
+                // talkam_research: talkAmNews.talkam_research,
+                can_receive_push: receiveMode.push,
+                can_receive_mail: receiveMode.mail,
                 moderation_activities: moderation,
                 user_activities: activity,
                 comments: comments
@@ -38,22 +44,41 @@ export const ProfileNotificationSettings = () => {
         }
     }
 
-    const handleTalkAMNews = async (event) => {
+    // const handleTalkAMNews = async (event) => {
+    //     const { name, checked } = event.target;
+    //     const checkedState = {
+    //         ...talkAmNews,
+    //         [name]: 1
+    //     }
+    //     const uncheckedState = {
+    //         ...talkAmNews,
+    //         [name]: 0
+    //     }
+
+    //     if (checked) {
+    //         setTalkAmNews(checkedState)
+    //     }
+    //     if (!checked) {
+    //         setTalkAmNews(uncheckedState)
+    //     }
+    // }
+
+    const handlePrefence = async (event) => {
         const { name, checked } = event.target;
         const checkedState = {
-            ...talkAmNews,
+            ...receiveMode,
             [name]: 1
         }
         const uncheckedState = {
-            ...talkAmNews,
+            ...receiveMode,
             [name]: 0
         }
 
         if (checked) {
-            setTalkAmNews(checkedState)
+            setReceiveMode(checkedState)
         }
         if (!checked) {
-            setTalkAmNews(uncheckedState)
+            setReceiveMode(uncheckedState)
         }
     }
 
@@ -61,14 +86,15 @@ export const ProfileNotificationSettings = () => {
         setComments(() => event.target.value);
     }
     const handleModeration = (event) => {
-        setModeration(event.target.value);
+        setModeration(Number(event.target.value));
     }
     const handleActivities = (event) => {
-        setActivity(event.target.value);
+        setActivity(Number(event.target.value));
     }
 
     useEffect(() => {
-        setTalkAmNews({ ...talkAmNews, talkam_news: preference?.data?.talkam_news, talkam_research: preference?.data?.talkam_research })
+        // setTalkAmNews({ ...talkAmNews, talkam_news: preference?.data?.talkam_news, talkam_research: preference?.data?.talkam_research })
+        setReceiveMode({ ...receiveMode, push: preference?.data?.can_receive_push, mail: preference?.data?.can_receive_mail })
         setActivity(preference?.data?.user_activities)
         setModeration(preference?.data?.moderation_activities)
         setComments(preference?.data?.comments)
@@ -80,7 +106,7 @@ export const ProfileNotificationSettings = () => {
                 <p className="ext-sm text-[#475467]">Get notified to find out what&apos;s going on when you&apos;re not online. You can turn them off anytime.</p>
                 <Button
                     variant="link"
-                    className="!text-tprimary-50"
+                    className="!text-tprimary-50 !underline"
                     isLoading={isLoading}
                     disabled={isLoading}
                     loadColor={updateLoader}
@@ -92,7 +118,7 @@ export const ProfileNotificationSettings = () => {
 
             <main className="flex flex-col divide-y divide-tgray-xlight">
 
-                <section className="flex flex-col gap-8 md:flex-row items-start justify-between py-4">
+                {/* <section className="flex flex-col gap-8 md:flex-row items-start justify-between py-4">
                     <div className="w-full md:w-1/2 flex items-start flex-col gap-2">
                         <h4 className="font-semibold text-sm text-[#344054]">Notifications from us</h4>
                         <p className="text-[#475467] font-normal text-sm">Receive the latest news, updates and industry tutorials from us.</p>
@@ -122,6 +148,40 @@ export const ProfileNotificationSettings = () => {
                                 </div>
                             }
                             checked={talkAmNews.talkam_research}
+                        />
+                    </section>
+                </section> */}
+
+                <section className="flex flex-col gap-8 md:flex-row items-start justify-between py-4">
+                    <div className="w-full md:w-1/2 flex items-start flex-col gap-2">
+                        <h4 className="font-semibold text-sm text-[#344054]">Notifications preference</h4>
+                        <p className="text-[#475467] font-normal text-sm">Receive notifications in your mail or as push notifications</p>
+                    </div>
+
+                    <section className="w-full md:w-1/2 flex flex-col gap-4">
+                        <TextCheckBox
+                            onChange={handlePrefence}
+                            value="push"
+                            name="push"
+                            node={
+                                <div className="flex flex-col">
+                                    <h5 className="text-sm font-medium text-[#344054]">Push Notifications</h5>
+                                    <span className="text-sm font-normal text-[#475467]">Get your notifications as push notifications.</span>
+                                </div>
+                            }
+                            checked={receiveMode.push}
+                        />
+                        <TextCheckBox
+                            onChange={handlePrefence}
+                            value="mail"
+                            name="mail"
+                            node={
+                                <div className="flex flex-col">
+                                    <h5 className="text-sm font-medium text-[#344054]">Mail</h5>
+                                    <span className="text-sm font-normal text-[#475467]">Get my notifications in my mail.</span>
+                                </div>
+                            }
+                            checked={receiveMode.mail}
                         />
                     </section>
                 </section>
@@ -179,7 +239,7 @@ export const ProfileNotificationSettings = () => {
                             name="activites"
                             onChange={handleModeration}
                             value={0}
-                            checked={moderation}
+                            checked={moderation === 0}
                         />
                         <TextRadioButton
                             node={
@@ -198,7 +258,7 @@ export const ProfileNotificationSettings = () => {
 
                 <section className="flex flex-col gap-8 md:flex-row items-start justify-between py-4">
                     <div className="w-full md:w-1/2 flex items-start flex-col gap-2">
-                        <h4 className="font-semibold text-sm text-[#344054]">More ativity about you</h4>
+                        <h4 className="font-semibold text-sm text-[#344054]">More activity about you</h4>
                         <p className="text-[#475467] font-normal text-sm">These are notifications for posts on your profile, upvotes and other reactions to your posts and more.</p>
                     </div>
 
@@ -208,7 +268,7 @@ export const ProfileNotificationSettings = () => {
                             name="more"
                             onChange={handleActivities}
                             value={0}
-                            checked={activity}
+                            checked={!activity}
                         />
                         <TextRadioButton
                             node={

@@ -1,13 +1,14 @@
 import { useCallback, useState } from "react";
 import { useGetCategoriesQuery } from "../services/userApiSlice";
-import { useCreateGroupMutation, useGetAllGroupsQuery, useGetFollowingGroupsQuery } from "../services/groupApiSlice";
+import { useCreateGroupMutation, useGetAllGroupsQuery, useGetFollowingGroupsQuery, useReportGroupMutationMutation } from "../services/groupApiSlice";
 import { randomId } from "../helpers/randomid";
 import { storageDB } from "../utils/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { handleError } from "../utils/handleError";
 
-export const useGroupController = (groupTab) => {
+export const useGroupController = (groupTab, groupId) => {
 
     let isValid = false;
     let isRuleValid = false;
@@ -16,6 +17,9 @@ export const useGroupController = (groupTab) => {
     const [categoryId, setCategoryId] = useState("")
     const [imageLoading, setImageLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [openReport, setOpenReport] = useState(false);
+    const [confirmationModal, setConfirmationModal] = useState();
+    const [checkedValue, setCheckedValue] = useState("");
     const [groupDetails, setGroupDetails] = useState({
         name: "",
         banner: null,
@@ -58,6 +62,7 @@ export const useGroupController = (groupTab) => {
         search: "",
         type: "all"
     });
+    const [reportGroup, { isLoading: reportLoading }] = useReportGroupMutationMutation()
 
     const transformedCategories = categories && categories?.data?.map((category) => {
         return {
@@ -66,6 +71,21 @@ export const useGroupController = (groupTab) => {
             value: category.name
         }
     });
+
+    const handleReportGroup = async () => {
+        try {
+            const reportDetails = {
+                reason: checkedValue,
+                group_id: groupId
+            }
+            const res = await reportGroup({ ...reportDetails }).unwrap();
+            toast.success(res?.message);
+            setConfirmationModal(true)
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage);
+        }
+    }
 
     const handleFileUpload = (event) => {
         event.preventDefault()
@@ -147,6 +167,9 @@ export const useGroupController = (groupTab) => {
     const toggleModal = () => {
         setShowModal((prev) => !prev)
     }
+    const handleReportModal = () => {
+        setOpenReport((prev) => !prev)
+    }
     if (groupDetails.banner && groupDetails.name
         && groupDetails.access && groupDetails.information
         && groupDetails.purpose && groupDetails.categoryId
@@ -194,5 +217,16 @@ export const useGroupController = (groupTab) => {
         isRuleValid,
         search,
         setSearch,
+        reportLoading,
+        openReport,
+        setOpenReport,
+        checkedValue,
+        setCheckedValue,
+        confirmationModal,
+        setConfirmationModal,
+        setCheckedValue,
+        handleReportGroup,
+        handleReportModal,
+        navigate,
     }
 }

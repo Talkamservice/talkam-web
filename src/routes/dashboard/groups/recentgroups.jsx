@@ -26,7 +26,7 @@ export const RecentGroups = () => {
         page: page,
         categoryId: categoryId,
         target: "group"
-    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
+    });
     const [deletePost] = useDeletePostMutation();
 
     // const postIds = new Set();
@@ -139,7 +139,7 @@ export const RecentGroups = () => {
                 className="w-full py-3 flex flex-col gap-3 overflow-y-auto no-scrollbar"
             >
                 {
-                    isLoading || postFetching ?
+                    isLoading ?
                         <GallerySkeletons />
                         :
                         !featured?.data?.data.length ?
@@ -176,6 +176,8 @@ export const RecentGroups = () => {
                                     handleDeletePost={handleDeletePost}
                                     group={post?.group}
                                     parentCategory={post?.category?.parent_category}
+                                    isReported={post?.is_reported}
+                                    notification={post?.enabled_notification}
                                     home
                                 />
                             ))

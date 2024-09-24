@@ -1,38 +1,29 @@
-import { useNavigate } from "react-router-dom"
-import { AuthWrapper } from "../../utils/authWrapper"
-import { useState } from "react";
-import { Button } from "../forms/button";
-import { Modal } from "../global/modal";
+import { useState } from "react"
+import { Modal } from "../components/global/modal"
+import { Button } from "../components/forms/button";
 import * as Icon from 'react-feather'
 
-export const SubCategoryCard = ({ name, followercount, id, type, isSuspended }) => {
+export const IsBanned = ({ isBanned, children, onClick }) => {
 
-    const navigate = useNavigate();
     const [showPrompt, setShowPrompt] = useState(false);
 
     const toggleModal = () => {
         setShowPrompt((prev) => !prev)
     }
 
-    const goToSubCategory = () => {
-        if (isSuspended) {
+    const handleEventClick = () => {
+        if (isBanned) {
             setShowPrompt(true)
         } else {
-            navigate(`${type === "Category" ? `/category/${id}` : `/group/${id}`}`)
+            onClick()
         }
     }
 
     return (
         <>
-            <AuthWrapper onClick={goToSubCategory}>
-                <div className="w-full flex flex-col gap-2 border border-[#E0F1FE] bg-[#F0F9FF] px-3 py-3 rounded-md cursor-pointer">
-                    <p className="text-sm font-medium whitespace-nowrap truncate">{name}</p>
-                    <p className="flex items-center gap-1 text-[#888888] text-xs font-medium">
-                        {followercount} {!followercount ? 'Followers' : followercount > 1 ? "Followers" : "Follower"}
-                    </p>
-                </div>
-            </AuthWrapper>
-
+            <div onClick={handleEventClick}>
+                {children}
+            </div>
             <Modal
                 show={showPrompt}
                 shouldCloseOnEscPress={false}

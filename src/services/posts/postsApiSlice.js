@@ -3,7 +3,7 @@ import { apiSlice } from "../../app/api/apiSlice"
 
 export const postsApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
-        keepUnusedDataFor: 240,
+        keepUnusedDataFor: 420,
         getAllPosts: builder.query({
             query: ({ tab, categoryId = "", groupId = "", target, page }) => ({
                 url: `/user/posts/?tab=${tab}&category_id=${categoryId}&group_id=${groupId}&target=${target}&page=${page}`,
@@ -12,6 +12,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
             providesTags: ["posts"]
         }),
         getRecentPosts: builder.query({
+            keepUnusedDataFor: 420,
             query: () => ({
                 url: `/user/recents/fetch?sort=post`,
                 method: "get",
@@ -176,6 +177,20 @@ export const postsApiSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ['comments', 'postDetail']
         }),
+        updatePostNotifications: builder.mutation({
+            query: id => ({
+                url: `/user/notifications/thread/add`,
+                method: 'post',
+                body: { ...id }
+            }),
+            invalidatesTags: ["posts", "comments", "postDetail"]
+        }),
+        getTagSuggestions: builder.query({
+            query: search => ({
+                url: `/user/search/username?search=${search}`,
+                method: 'get'
+            })
+        })
     })
 })
 
@@ -200,4 +215,6 @@ export const {
     useReportPostMutation,
     useReportCommentMutation,
     useGetUserMediaQuery,
+    useUpdatePostNotificationsMutation,
+    useGetTagSuggestionsQuery,
 } = postsApiSlice

@@ -7,7 +7,6 @@ import { Toaster } from 'sonner'
 import { store } from './app/store';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AnimatePresence } from 'framer-motion';
-import { ColoredLoader } from './components/global/loader';
 import { HelpIfoLayout } from "./components/layout/helpInfoLayout";
 import ErrorPage from './routes/error/error';
 import App from './App';
@@ -547,7 +546,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <Provider store={store}>
         <AnimatePresence mode="wait">
-          <RouterProvider router={router} fallbackElement={<div className='w-full h-[dvh] absolute top-50 left-50'><ColoredLoader /></div>} />
+          <RouterProvider router={router} />
         </AnimatePresence>
       </Provider>
     </GoogleOAuthProvider>

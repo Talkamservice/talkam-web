@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { Button } from "../forms/button"
 import { Avatar } from "../global/avatar"
 import { CommentInput } from "./commentinput"
 import { motion } from "framer-motion"
 import { NestedCommentCard } from "./nestedcommentcard"
 import { downVariants, PostCardVariants } from "../../helpers/cardanimation"
-import { useBlockUserMutation, useCommentReactionMutation, useDeleteCommentMutation } from "../../services/posts/postsApiSlice"
+import { useBlockUserMutation, useCommentReactionMutation, useDeleteCommentMutation, useUpdatePostNotificationsMutation } from "../../services/posts/postsApiSlice"
 import { toast } from "sonner"
 import { handleError } from "../../utils/handleError"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
@@ -20,8 +20,11 @@ import { Modal } from "../global/modal"
 import { CommentReportModal } from "./commentreportmodal"
 import { BlockPromptModal } from "../global/blockpromptmodal"
 import { AuthWrapper } from "../../utils/authWrapper"
+import { ImageModalView } from "../global/imagemodalview"
+import { useLazyGetUserFromUsernameQuery } from "../../services/userApiSlice"
 import moment from "moment"
 import * as Icon from "react-feather"
+import LoadingBar from "react-top-loading-bar"
 
 export const CommentCard = ({
     parentComment,
@@ -41,6 +44,12 @@ export const CommentCard = ({
     avatar,
     isLoading,
     originalPostId,
+    imagePreview,
+    setImagePreview,
+    internalImagePreview,
+    setInternalImagePreview,
+    notification,
+    isReported,
 }) => {
 
     let isValidComment = false;
@@ -57,12 +66,15 @@ export const CommentCard = ({
     const [unlikeCount, setUnlikeCount] = useState();
     const [isReplying, setIsReplying] = useState(false);
     const [showMore, setShowMore] = useState(false);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [imageModal, setImageModal] = useState(false);
+    const [imageLoading, setImageLoading] = useState(false);
     // const [login, setLogin] = useState(false)
 
     const [commentReaction] = useCommentReactionMutation();
     const [blockUser, { isLoading: blockLoading }] = useBlockUserMutation();
     const [deleteComment] = useDeleteCommentMutation();
+    const [updatePostNotifications] = useUpdatePostNotificationsMutation();
+    const [trigger, { isLoading: userLoading }] = useLazyGetUserFromUsernameQuery();
 
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
@@ -79,12 +91,14 @@ export const CommentCard = ({
         savePostImage(files[0])
     };
     const savePostImage = async (file) => {
+        setImageLoading(true)
         const imageRef = ref(storageDB, `web-images/${randomId()}`);
         const snapshot = await uploadBytes(imageRef, file);
         const url = await getDownloadURL(
             ref(storageDB, snapshot.metadata.fullPath)
         );
         setComment({ ...comment, image: url })
+        setImageLoading(false)
     }
 
     const handlePostReaction = async (reaction) => {
@@ -155,6 +169,20 @@ export const CommentCard = ({
         setShowPopUp(() => false)
     }
 
+    const handleNotificationPreference = async (postId) => {
+        const toastId = toast("Updating...");
+        try {
+            const res = await updatePostNotifications({ post_id: postId }).unwrap();
+            toast.dismiss(toastId);
+            toast.success(res?.message);
+        } catch (error) {
+            toast.dismiss(toastId);
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+        setShowPopUp(false)
+    }
+
     const copyTextToClipboard = async () => {
         try {
             await navigator.clipboard.writeText(`https://web.talkam.prodevs.io/comment/${parentComment?.post?.id}`);
@@ -164,6 +192,21 @@ export const CommentCard = ({
             toast.error(errorMessage);
         }
         setShowPopUp(() => false)
+    };
+
+
+    const handleNavigateToProfile = async (username) => {
+        try {
+            const res = await trigger(username);
+            navigate(`/userprofile/${res?.data?.data?.id}`)
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    }
+
+    const toggleImageModal = () => {
+        setImageModal(prev => !prev)
     }
 
     const handleShowBlockModal = () => {
@@ -174,7 +217,7 @@ export const CommentCard = ({
         setOpenReport((prev) => !prev)
     }
 
-    if (comment.comment || comment.image) {
+    if ((comment.comment || comment.image) && !imageLoading) {
         isValidComment = true
     };
 
@@ -190,6 +233,7 @@ export const CommentCard = ({
 
     return (
         <>
+            <LoadingBar height={3} color="#017FC8" progress={userLoading ? 75 : 100} />
             <div className={`w-full border border-tgray-50 rounded-xl p-4 flex flex-col items-start justify-between gap-4 relative`}>
                 <section className="w-full flex gap-3">
                     <div onClick={() => navigate(`/userprofile/${parentComment?.user.id}`)}
@@ -204,11 +248,34 @@ export const CommentCard = ({
                         </div>
 
                         <article className="text-sm font-normal text-wrap whitespace-pre-wrap break-words w-full">
-                            {parentComment.comment}
+                            {parentComment.comment.split(/(@\w+)/g).map((part, index) => {
+                                // Clean up any leading or trailing `$` character around mentions
+                                part = part.replace(/\$/g, ''); // Remove all occurrences of '$'
+
+                                // Check if the part is a mention
+                                if (part.startsWith('@')) {
+                                    const username = part.substring(1); // Remove the '@'
+                                    return (
+                                        <span
+                                            key={index}
+                                            onClick={() => handleNavigateToProfile(username)} // Link to the user's profile
+                                            className="text-blue-700 font-semibold cursor-pointer"
+                                        >
+                                            {part}
+                                        </span>
+                                    );
+                                }
+
+                                // Render regular text
+                                return <Fragment key={index}>{part}</Fragment>;
+                            })}
                         </article>
+
+
+
                         <section className="w-full">
                             {parentComment.attachment ?
-                                <section className="relative rounded-lg min-h-[170px] h-[250px]">
+                                <section onClick={toggleImageModal} className="relative rounded-lg min-h-[170px] h-[250px] cursor-pointer">
                                     <img
                                         className="border-none h-full w-full rounded-lg bg-[#444444]"
                                         src={parentComment.attachment ?? null}
@@ -267,12 +334,12 @@ export const CommentCard = ({
                                                     <p>Copy link</p>
                                                 </li>
                                                 <li className="w-full">
-                                                    <AuthWrapper onClick={() => console.log("something")}>
+                                                    <AuthWrapper onClick={() => handleNotificationPreference(parentComment?.id)}>
                                                         <li
                                                             className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                                         >
                                                             <NewNotificationIcon className="w-4 h-4" />
-                                                            <p>Get notifications for this thread</p>
+                                                            <p>{notification ? "Mute notifications for this thread" : "Get notifications for this thread"}</p>
                                                         </li>
                                                     </AuthWrapper>
                                                 </li>
@@ -287,14 +354,19 @@ export const CommentCard = ({
                                                     <Icon.Slash size={15} color='#000000' strokeWidth={2} />
                                                     <p>Block @{parentComment?.user?.username ?? parentComment?.user?.name}</p>
                                                 </li> */}
-                                                <li className="w-full">
-                                                    <AuthWrapper ref={popUpRef} onClick={handleReportModal} >
-                                                        <li className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight">
-                                                            <Icon.Flag size={15} color='#000000' strokeWidth={2} />
-                                                            <p>Report this post</p>
+                                                {
+                                                    !isReported ?
+                                                        <li className="w-full">
+                                                            <AuthWrapper ref={popUpRef} onClick={handleReportModal} >
+                                                                <li className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight">
+                                                                    <Icon.Flag size={15} color='#000000' strokeWidth={2} />
+                                                                    <p>Report this post</p>
+                                                                </li>
+                                                            </AuthWrapper>
                                                         </li>
-                                                    </AuthWrapper>
-                                                </li>
+                                                        :
+                                                        null
+                                                }
                                                 <li onClick={() => handleDeleteComment(parentComment?.id)}
                                                     className={` ${isCurrentUser ? 'block' : 'hidden'}  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}
                                                 >
@@ -331,15 +403,18 @@ export const CommentCard = ({
                         <CommentInput
                             anonChecked={anonChecked}
                             setAnonChecked={setAnonChecked}
-                            comment={comment}
+                            commentBody={comment}
+                            setCommentBody={setComment}
+                            imagePreview={imagePreview}
                             setImagePreview={setImagePreview}
-                            image={imagePreview}
+                            image={comment.image}
                             onChange={handleFileUpload}
                             handleCommentChange={handleAddNewComment}
                             submitComment={() => { submitCommentResponse(); setIsReplying(false); setShowMore(true) }}
                             setIsReplying={setIsReplying}
                             isValidComment={isValidComment}
                             isLoading={isLoading}
+                            imageLoading={imageLoading}
                             cancel
                         />
                     </motion.section>
@@ -370,6 +445,10 @@ export const CommentCard = ({
                                         setAnonChecked={setNestedAnonChecked}
                                         parentIsAnon={parentComment.is_anonymous}
                                         originalPostId={originalPostId}
+                                        internalImagePreview={internalImagePreview}
+                                        setInternalImagePreview={setInternalImagePreview}
+                                        notification={comment?.enabled_notification}
+                                        isReported={comment?.is_reported}
                                     />
                                 ))
                             }
@@ -406,6 +485,20 @@ export const CommentCard = ({
                     handleShowBlockModal={handleShowBlockModal}
                     handleBlockUser={handleBlockUser}
                     isLoading={blockLoading}
+                />
+            </Modal>
+
+            <Modal
+                show={imageModal}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={toggleImageModal}
+                position='center'
+                contentWidth='w-full'
+            >
+                <ImageModalView
+                    file={parentComment.attachment}
+                    handleImageModal={toggleImageModal}
                 />
             </Modal>
         </>

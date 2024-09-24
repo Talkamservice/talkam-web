@@ -147,6 +147,8 @@ export const CategoryJustIn = () => {
                                     time={post.created_at}
                                     id={post.id}
                                     isAnon={post.is_anonymous}
+                                    isReported={post?.is_reported}
+                                    notification={post?.enabled_notification}
                                     routeChange={() => navigate(`/comment/${post.id}`)}
                                     handleDeletePost={handleDeletePost}
                                 />

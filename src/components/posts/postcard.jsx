@@ -1,6 +1,6 @@
 import { Avatar } from "../global/avatar"
 import { PostComment } from "./postcomment"
-import { PostImage } from "./postimage"
+import { PostMedia } from "./postmedia"
 import { PostTags } from "./posttags"
 import { PostCommentCount } from "./postcommentcount"
 import { PostActionButton } from "./postactionbutton"
@@ -18,9 +18,9 @@ import { PostReportModal } from "./postreportmodal"
 import { usePostController } from "../../controllers/postsController"
 import { Link } from "react-router-dom"
 import { ImageModalView } from "../global/imagemodalview"
+import { AuthWrapper } from "../../utils/authWrapper"
 import moment from "moment"
 import * as Icon from 'react-feather'
-import { AuthWrapper } from "../../utils/authWrapper"
 
 export const PostCard = ({
     id,
@@ -28,7 +28,7 @@ export const PostCard = ({
     title,
     comment,
     tags,
-    image,
+    image: src,
     category,
     time,
     author,
@@ -44,10 +44,12 @@ export const PostCard = ({
     handleDeletePost,
     parentCategory,
     group,
+    isReported,
+    notification,
     home,
 }) => {
 
-    const postController = usePostController(isAnon, user, reaction, likes, polls, id);
+    const postController = usePostController(isAnon, user, reaction, likes, polls, isReported, notification, id);
 
     return (
         <motion.div
@@ -120,12 +122,12 @@ export const PostCard = ({
                                         <p>Copy link</p>
                                     </li>
                                     <li>
-                                        <AuthWrapper>
+                                        <AuthWrapper onClick={() => postController?.handleNotificationPreference()}>
                                             <li
                                                 className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                             >
                                                 <NewNotificationIcon className="w-4 h-4" />
-                                                <p>Get notifications for this thread</p>
+                                                <p>{postController?.isNotificationEnabled ? "Mute notifications for this thread" : "Get notifications for this thread"}</p>
                                             </li>
                                         </AuthWrapper>
                                     </li>
@@ -139,7 +141,7 @@ export const PostCard = ({
                                         <Icon.Slash size={15} color='#000000' strokeWidth={2} />
                                         <p>Block @{author}</p>
                                     </li> */}
-                                    <li className="w-full">
+                                    <li className={`w-full ${postController?.isPostReported ? 'hidden' : 'block'} `}>
                                         <AuthWrapper onClick={postController.handleReportModal}>
                                             <li
                                                 className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
@@ -190,10 +192,11 @@ export const PostCard = ({
                                         />
                                     )}
                                 </article>
-                                <PostImage
+                                <PostMedia
                                     onClick={postController.toggleModal}
                                     side={side}
-                                    src={image}
+                                    type={type}
+                                    src={src}
                                 />
                             </>
                             :
@@ -273,7 +276,7 @@ export const PostCard = ({
                 contentWidth='w-full'
             >
                 <ImageModalView
-                    file={image}
+                    file={src}
                     handleImageModal={postController.toggleModal}
                 />
             </Modal>
@@ -289,7 +292,7 @@ export const PostCard = ({
                     onClose={postController.toggleShareModal}
                     title={title}
                     comment={comment}
-                    image={image}
+                    image={src}
                     id={id}
                 />
             </Modal>

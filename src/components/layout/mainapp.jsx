@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { GroupAddIcon, InboxIcon, LatestEventsIcon, LockIcon, NotificationIcon, TalkamLogo, UsersIcon } from '../../assets/icons/generated';
+import { GroupAddIcon, InboxIcon, LatestEventsIcon, LockIcon, NotificationIcon, TalkamLogo } from '../../assets/icons/generated';
 import { SideBarItem } from '../global/sidebarItem';
 import { Button } from '../forms/button';
 import { NavSearch } from '../forms/navsearchbar';
@@ -23,14 +23,17 @@ import { DrawerModal } from '../global/drawer';
 import { useGetNotificationStatsQuery } from '../../services/notificationsApiSlice';
 import { useIsAuth } from '../../hooks/useIsAuth';
 import { AuthWrapper } from '../../utils/authWrapper';
+import { useGlobalLoader } from '../../hooks/useCheckLoader';
 import * as Icon from 'react-feather'
 import Pusher from 'pusher-js';
+import LoadingBar from 'react-top-loading-bar';
 
 export const MainAppLayout = ({ children }) => {
 
     let isMobile = useMediaQuery("(max-width: 1024px)");
     let isLogoMobile = useMediaQuery("(max-width: 425px)");
 
+    const state = useGlobalLoader()
     const navigate = useNavigate();
     const location = useLocation()
     const searchParams = new URLSearchParams(location.search);
@@ -134,11 +137,11 @@ export const MainAppLayout = ({ children }) => {
 
     useEffect(() => {
         connectToPusher();
-    }, [])
+    }, []);
 
     return (
-
         <section className='w-full flex items-center justify-center no-scrollbar'>
+            <LoadingBar height={3} color="#017FC8" progress={state === "loading" ? 75 : 100} />
             <main className='w-full relative h-dvh no-scrollbar max-w-screen-2xl no-scrollbar'>
                 {/* Mobile header */}
                 <header className={`sticky w-full flex items-center justify-between gap-8 sm:gap-4 border-b border-tgray-light bg-white z-40 px-6 lg:px-24 h-[7dvh] py-2 top-0`}>
@@ -196,7 +199,7 @@ export const MainAppLayout = ({ children }) => {
                                         </div>
 
                                         <div className='relative'>
-                                            <InboxIcon
+                                            <Icon.Mail
                                                 onClick={() => {
                                                     navigate({
                                                         pathname: `${location.pathname}`,

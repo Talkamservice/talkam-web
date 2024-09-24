@@ -11,9 +11,9 @@ import EmptyListIcon from "../../../../assets/images/emptylist.png"
 
 export const GroupRules = ({ groupDetails, isLoading }) => {
 
-    const [ showRuleModal, setShowRuleModal ] = useState();
-    const [ showPrompt, setShowPrompt ] = useState();
-    const [ ruleId, setRuleId ] = useState();
+    const [showRuleModal, setShowRuleModal] = useState();
+    const [showPrompt, setShowPrompt] = useState();
+    const [ruleId, setRuleId] = useState();
 
     const toggleRuleModal = () => {
         setShowRuleModal((prev) => !prev)
@@ -25,7 +25,7 @@ export const GroupRules = ({ groupDetails, isLoading }) => {
 
     return (
         <div className="w-full flex flex-col gap-4">
-           <header className="flex items-center justify-between gap-4">
+            <header className="flex items-center justify-between gap-4">
 
                 <div className="w-full flex items-center gap-2">
                     <NoteIcon />
@@ -35,12 +35,12 @@ export const GroupRules = ({ groupDetails, isLoading }) => {
                 <IsRole currentRole={groupDetails?.data?.user_role ?? "Member"} allowedRoles={["Owner", "Admin"]}>
                     <div onClick={toggleRuleModal} className='cursor-pointer border border-tgray-50 rounded-full px-3 py-1 flex items-center justify-between gap-2'>
                         <UploadAvatarIcon />
-                        <span className='text-tblack-100 text-sm'>Edit</span>
+                        <span className='text-tblack-100 text-sm'>Add</span>
                     </div>
                 </IsRole>
             </header>
 
-           <section className="w-full h-full flex flex-col gap-4">
+            <section className="w-full h-full flex flex-col gap-4">
                 <header className="flex flex-col gap-4">
                     <article className="text-sm font-normal ">
                         Rules unique to this group and enforced by the moderators.
@@ -53,44 +53,44 @@ export const GroupRules = ({ groupDetails, isLoading }) => {
                 <ul className="flex flex-col gap-2">
                     {
                         isLoading ?
-                        <ListSkeleton />
-                        :
-                        !groupDetails?.data?.guidelines.length ?
-                        <section className="w-full py-4">
-                            <EmptyState
-                                icon={EmptyListIcon}
-                                height="h-[50px]"
-                                width="h-[50px]"
-                                text="No Rules"
-                                subtext="When rules are added to the group they would appear here"
-                            />
-                        </section>
-                        :
-                        groupDetails?.data?.guidelines.map((rule, index) => (
-                            <div key={rule.id} className="w-full flex items-start gap-3 border-b border-tgray-50 py-2">
-                                <span className="flex items-center justify-center w-3 h-3 p-3 border border-tgray-50 rounded-full text-sm font-boldNunito">
-                                    {index + 1}
-                                </span>
-                    
-                                <section className="w-full flex flex-col gap-3">
-                                    <header className="w-full flex items-center justify-between gap-4">
-                                        <h2 className="text-sm font-bold !text-wrap !whitespace-pre-line !break-word">{rule.title}</h2>
-                                        <IsRole currentRole={groupDetails?.data?.user_role ?? "Member"} allowedRoles={["Owner", "Admin"]}>
-                                            <span className="cursor-pointer" onClick={() => togglePrompt(rule?.id)}>
-                                                <TrashIcon style={{color:"#F95555"}} />
-                                            </span>
-                                        </IsRole>
-                                    </header>
-                                    <article className="w-full overflow-hidden text-sm font-normal !text-wrap !whitespace-pre-line !break-words">
-                                        {rule.description}
-                                    </article>
+                            <ListSkeleton />
+                            :
+                            !groupDetails?.data?.guidelines.length ?
+                                <section className="w-full py-4">
+                                    <EmptyState
+                                        icon={EmptyListIcon}
+                                        height="h-[50px]"
+                                        width="h-[50px]"
+                                        text="No Rules"
+                                        subtext="When rules are added to the group they would appear here"
+                                    />
                                 </section>
-                            </div>
-                        ))
+                                :
+                                groupDetails?.data?.guidelines.map((rule, index) => (
+                                    <div key={rule.id} className="w-full flex items-start gap-3 border-b border-tgray-50 py-2">
+                                        <span className="flex items-center justify-center w-3 h-3 p-3 border border-tgray-50 rounded-full text-sm font-boldNunito">
+                                            {index + 1}
+                                        </span>
+
+                                        <section className="w-full flex flex-col gap-3">
+                                            <header className="w-full flex items-center justify-between gap-4">
+                                                <h2 className="text-sm font-bold !text-wrap !whitespace-pre-line !break-word">{rule.title}</h2>
+                                                <IsRole currentRole={groupDetails?.data?.user_role ?? "Member"} allowedRoles={["Owner", "Admin"]}>
+                                                    <span className="cursor-pointer" onClick={() => togglePrompt(rule?.id)}>
+                                                        <TrashIcon style={{ color: "#F95555" }} />
+                                                    </span>
+                                                </IsRole>
+                                            </header>
+                                            <article className="w-full overflow-hidden text-sm font-normal !text-wrap !whitespace-pre-line !break-words">
+                                                {rule.description}
+                                            </article>
+                                        </section>
+                                    </div>
+                                ))
                     }
                 </ul>
-           </section>
-           <Modal
+            </section>
+            <Modal
                 show={showRuleModal}
                 shouldCloseOnEscPress={false}
                 shouldCloseOnOverlayClick={false}

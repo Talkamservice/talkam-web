@@ -148,6 +148,7 @@ export const GroupTrending = () => {
                                     isAnon={post.is_anonymous}
                                     routeChange={() => navigate(`/comment/${post.id}`)}
                                     handleDeletePost={handleDeletePost}
+                                    notification={post?.enabled_notification}
                                 />
                             ))
                 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { Button } from "../forms/button"
 import { Avatar } from "../global/avatar"
 import { CommentInput } from "./commentinput"
@@ -18,9 +18,11 @@ import { useOnOutsideClick } from "../../hooks/useOnOutsideClick"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "../../services/authSlice"
 import { PostCardVariants } from "../../helpers/cardanimation"
+import { AuthWrapper } from "../../utils/authWrapper"
+import { ImageModalView } from "../global/imagemodalview"
+import { useLazyGetUserFromUsernameQuery } from "../../services/userApiSlice"
 import moment from "moment"
 import * as Icon from "react-feather"
-import { AuthWrapper } from "../../utils/authWrapper"
 
 export const NestedCommentCard = ({
     parentComment,
@@ -30,7 +32,11 @@ export const NestedCommentCard = ({
     isLoading,
     anonChecked,
     setAnonChecked,
-    originalPostId
+    originalPostId,
+    internalImagePreview,
+    setInternalImagePreview,
+    isReported,
+    notification
 }) => {
 
     let isValidComment = false
@@ -46,11 +52,13 @@ export const NestedCommentCard = ({
     const [likeCount, setLikeCount] = useState();
     const [unlikeCount, setUnlikeCount] = useState();
     const [isReplying, setIsReplying] = useState();
-    const [imagePreview, setImagePreview] = useState(null);
+    const [imageModal, setImageModal] = useState(false);
+    const [imageLoading, setImageLoading] = useState(false);
 
     const [commentReaction] = useCommentReactionMutation();
     const [blockUser, { isLoading: blockLoading }] = useBlockUserMutation();
     const [deleteComment] = useDeleteCommentMutation();
+    const [trigger, { isLoading: userLoading }] = useLazyGetUserFromUsernameQuery();
 
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
@@ -64,16 +72,18 @@ export const NestedCommentCard = ({
         event.preventDefault()
         const { files } = event.target;
         if (!files[0]) return;
-        setImagePreview(() => URL.createObjectURL(files[0]))
+        setInternalImagePreview(() => URL.createObjectURL(files[0]))
         savePostImage(files[0])
     };
     const savePostImage = async (file) => {
+        setImageLoading(true)
         const imageRef = ref(storageDB, `web-images/${randomId()}`);
         const snapshot = await uploadBytes(imageRef, file);
         const url = await getDownloadURL(
             ref(storageDB, snapshot.metadata.fullPath)
         );
-        setNestedComment({ ...nestedComment, image: url })
+        setNestedComment({ ...nestedComment, image: url });
+        setImageLoading(false)
     }
 
     const handlePostReaction = async (reaction) => {
@@ -155,6 +165,20 @@ export const NestedCommentCard = ({
         setShowPopUp(() => false)
     }
 
+    const handleNavigateToProfile = async (username) => {
+        try {
+            const res = await trigger(username);
+            navigate(`/userprofile/${res?.data?.data?.id}`)
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    }
+
+    const toggleImageModal = () => {
+        setImageModal(prev => !prev)
+    }
+
     const handleShowBlockModal = () => {
         setShowBlockModal((prev) => !prev)
     }
@@ -163,8 +187,11 @@ export const NestedCommentCard = ({
         setOpenReport((prev) => !prev)
     }
 
+    const handleReply = () => {
+        setIsReplying(true)
+    }
 
-    if (nestedComment?.comment || nestedComment?.image) {
+    if ((nestedComment?.comment || nestedComment?.image) && !imageLoading) {
         isValidComment = true
     }
 
@@ -174,9 +201,6 @@ export const NestedCommentCard = ({
         setUnlikeCount(() => parentComment.unlikes)
     }, []);
 
-    const handleReply = () => {
-        setIsReplying(true)
-    }
 
     return (
         <>
@@ -194,11 +218,36 @@ export const NestedCommentCard = ({
                         </div>
 
                         <pre className="text-sm font-normal text-wrap break-words whitespace-normal pr-2 w-full">
-                            <span className="text-xs font-bold pr-2">Replying @{!parentComment.reply_to ? "Anonymous" : (parentComment?.reply_to?.username || parentComment?.reply_to?.name)}</span>{parentComment.comment}
+                            <span className="text-xs font-bold pr-2">
+                                Replying @{!parentComment.reply_to ? "Anonymous" : (parentComment?.reply_to?.username || parentComment?.reply_to?.name)}
+                            </span>
+                            <span className="text-sm font-normal text-wrap whitespace-pre-wrap break-words w-full">
+                                {parentComment.comment.split(/(@\w+)/g).map((part, index) => {
+                                    // Clean up any leading or trailing `$` character around mentions
+                                    part = part.replace(/\$/g, ''); // Remove all occurrences of '$'
+
+                                    // Check if the part is a mention
+                                    if (part.startsWith('@')) {
+                                        const username = part.substring(1); // Remove the '@'
+                                        return (
+                                            <span
+                                                key={index}
+                                                onClick={() => handleNavigateToProfile(username)} // Link to the user's profile
+                                                className="text-blue-700 font-semibold cursor-pointer"
+                                            >
+                                                {part}
+                                            </span>
+                                        );
+                                    }
+
+                                    // Render regular text
+                                    return <Fragment key={index}>{part}</Fragment>;
+                                })}
+                            </span>
                         </pre>
                         <section className="">
                             {parentComment.attachment ?
-                                <section className="relative rounded-lg min-h-[170px] h-[250px]">
+                                <section onClick={toggleImageModal} className="relative rounded-lg min-h-[170px] h-[250px] cursor-pointer">
                                     <img
                                         className="border-none h-full w-full rounded-lg bg-[#444444]"
                                         src={parentComment.attachment ?? null}
@@ -262,7 +311,7 @@ export const NestedCommentCard = ({
                                                             className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                                         >
                                                             <NewNotificationIcon className="w-4 h-4" />
-                                                            <p>Get notifications for this thread</p>
+                                                            <p>{notification ? "Mute notifications for this thread" : "Get notifications for this thread"}</p>
                                                         </li>
                                                     </AuthWrapper>
                                                 </li>
@@ -277,16 +326,21 @@ export const NestedCommentCard = ({
                                                     <Icon.Slash size={15} color='#000000' strokeWidth={2} />
                                                     <p>Block @{parentComment?.user?.username ?? parentComment?.user?.name}</p>
                                                 </li> */}
-                                                <li className="w-full">
-                                                    <AuthWrapper onClick={handleReportModal}>
-                                                        <li
-                                                            className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
-                                                        >
-                                                            <Icon.Flag size={15} color='#000000' strokeWidth={2} />
-                                                            <p>Report this post</p>
+                                                {
+                                                    !isReported ?
+                                                        <li className="w-full">
+                                                            <AuthWrapper onClick={handleReportModal}>
+                                                                <li
+                                                                    className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
+                                                                >
+                                                                    <Icon.Flag size={15} color='#000000' strokeWidth={2} />
+                                                                    <p>Report this post</p>
+                                                                </li>
+                                                            </AuthWrapper>
                                                         </li>
-                                                    </AuthWrapper>
-                                                </li>
+                                                        :
+                                                        null
+                                                }
                                                 <li onClick={() => handleDeleteComment(parentComment?.id)}
                                                     className={` ${isCurrentUser ? 'block' : 'hidden'}  bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight `}
                                                 >
@@ -308,15 +362,18 @@ export const NestedCommentCard = ({
                         <CommentInput
                             anonChecked={anonChecked}
                             setAnonChecked={setAnonChecked}
-                            nestedComment={nestedComment}
-                            setImagePreview={setImagePreview}
-                            image={imagePreview}
+                            commentBody={nestedComment}
+                            setCommentBody={setNestedComment}
+                            imagePreview={internalImagePreview}
+                            setImagePreview={setInternalImagePreview}
+                            image={nestedComment?.image}
                             onChange={handleFileUpload}
                             handleCommentChange={handleAddNewComment}
                             submitComment={() => { submitNestedCommentResponse(); setIsReplying(() => false) }}
                             setIsReplying={setIsReplying}
                             isValidComment={isValidComment}
                             isLoading={isLoading}
+                            imageLoading={imageLoading}
                             cancel
                         />
                     </motion.section>
@@ -354,6 +411,20 @@ export const NestedCommentCard = ({
                     handleShowBlockModal={handleShowBlockModal}
                     handleBlockUser={handleBlockUser}
                     isLoading={blockLoading}
+                />
+            </Modal>
+
+            <Modal
+                show={imageModal}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={toggleImageModal}
+                position='center'
+                contentWidth='w-full'
+            >
+                <ImageModalView
+                    file={parentComment.attachment}
+                    handleImageModal={toggleImageModal}
                 />
             </Modal>
         </>

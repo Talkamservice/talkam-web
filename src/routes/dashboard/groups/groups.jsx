@@ -3,6 +3,7 @@ import { GroupCard } from "../../../components/global/groupcard";
 import { RouteTabs } from "../../../components/global/routetabs"
 import { GroupSkeletonLoader } from "../../../components/global/skeletons";
 import { useGroupController } from "../../../controllers/groupController";
+import { IsBanned } from "../../../utils/isBanned";
 import { useNavigate } from "react-router-dom";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 import Protected from "../../../utils/protected";
@@ -54,13 +55,16 @@ export const Groups = () => {
                                         </section>
                                         :
                                         groupController.following?.data?.data.map((group) => (
-                                            <GroupCard
-                                                onClick={() => navigate(`/group/${group.id}`)}
-                                                key={group.id}
-                                                img={group.image}
-                                                members={group.total_members}
-                                                group={group.name}
-                                            />
+                                            <IsBanned isBanned={group?.is_suspended} onClick={() => navigate(`/group/${group.id}`)}>
+                                                <GroupCard
+                                                    key={group.id}
+                                                    img={group.image}
+                                                    members={group.total_members}
+                                                    group={group.name}
+                                                    access={group.group_access}
+                                                    isSuspended={group.is_suspended}
+                                                />
+                                            </IsBanned>
                                         ))
                             }
                         </ul>

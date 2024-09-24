@@ -23,22 +23,25 @@ export const Comment = () => {
     const [makeComment, { isLoading: newCommentLoading }] = useMakeCommentMutation()
 
     // LOCAL STATE HERE
+    const [imageLoading, setImageLoading] = useState(false);
     const [imagePreview, setImagePreview] = useState(null)
     const [anonChecked, setAnonChecked] = useState(false);
     const [commentBody, setCommentBody] = useState({
-        image: "",
+        image: null,
         comment: "",
         comments: []
     });
     //LOCAL COMMENTCARD STATE HERE
+    const [nestedImagePreview, setNestedImagePreview] = useState(null);
     const [commentAnonChecked, setCommentAnonChecked] = useState(false);
     const [comment, setComment] = useState({
-        image: "",
+        image: null,
         comment: "",
     });
+    const [internalImagePreview, setInternalImagePreview] = useState(null);
     const [nestedCommentAnonChecked, setNestedCommentAnonChecked] = useState(false);
     const [nestedComment, setNestedComment] = useState({
-        image: "",
+        image: null,
         comment: "",
     });
 
@@ -55,19 +58,22 @@ export const Comment = () => {
         savePostImage(files[0])
     };
     const savePostImage = async (file) => {
+        setImageLoading(true)
         const imageRef = ref(storageDB, `web-images/${randomId()}`);
         const snapshot = await uploadBytes(imageRef, file);
         const url = await getDownloadURL(
             ref(storageDB, snapshot.metadata.fullPath)
         );
         setCommentBody({ ...commentBody, image: url })
+        setImageLoading(false)
     }
 
     const submitComment = async () => {
         try {
+            const formattedComment = commentBody.comment.replace(/@(\w+)/g, '$@$1$');
             const newComment = {
                 post_id: commentId,
-                comment: commentBody.comment,
+                comment: formattedComment,
                 attachment: commentBody.image,
                 parent_id: null,
                 reply_comment_id: null,
@@ -88,9 +94,10 @@ export const Comment = () => {
 
     const submitCommentResponse = async (replyId) => {
         try {
+            const formattedComment = comment.comment.replace(/@(\w+)/g, '$@$1$');
             const newComment = {
                 post_id: commentId,
-                comment: comment.comment,
+                comment: formattedComment,
                 attachment: comment.image,
                 parent_id: replyId,
                 reply_comment_id: replyId,
@@ -98,8 +105,10 @@ export const Comment = () => {
             }
             const response = await makeComment(newComment).unwrap();
         } catch (error) {
-            toast.error(error?.data?.message)
+            const errorMessage = handleError(error)
+            toast.error(errorMessage)
         }
+        setNestedImagePreview(null)
         setComment({
             image: "",
             comment: "",
@@ -108,9 +117,10 @@ export const Comment = () => {
 
     const submitNestedCommentResponse = async (parentId, replyId) => {
         try {
+            const formattedComment = nestedComment.comment.replace(/@(\w+)/g, '$@$1$');
             const newComment = {
                 post_id: commentId,
-                comment: nestedComment.comment,
+                comment: formattedComment,
                 attachment: nestedComment.image,
                 parent_id: parentId,
                 reply_comment_id: replyId,
@@ -118,15 +128,17 @@ export const Comment = () => {
             }
             const response = await makeComment(newComment).unwrap();
         } catch (error) {
-            toast.error(error?.data?.message)
+            const errorMessage = handleError(error)
+            toast.error(errorMessage)
         }
+        setInternalImagePreview(null)
         setNestedComment({
             image: "",
             comment: "",
         });
     }
 
-    if (commentBody.comment || commentBody.image) {
+    if ((commentBody.comment || commentBody.image) && !imageLoading) {
         isValidComment = true
     }
 
@@ -181,6 +193,8 @@ export const Comment = () => {
                             user={postDetails?.data.user}
                             group={postDetails?.data?.group}
                             parentCategory={postDetails?.data?.category?.parent_category}
+                            isReported={postDetails?.data?.is_reported}
+                            notification={postDetails?.data?.enabled_notification}
                             home
                         />
                 }
@@ -189,13 +203,16 @@ export const Comment = () => {
                         anonChecked={anonChecked}
                         setAnonChecked={setAnonChecked}
                         commentBody={commentBody}
+                        setCommentBody={setCommentBody}
                         setImagePreview={setImagePreview}
+                        imagePreview={imagePreview}
                         onChange={handleFileUpload}
                         handleCommentChange={handleAddNewComment}
-                        image={imagePreview}
+                        image={commentBody.image}
                         submitComment={submitComment}
                         isValidComment={isValidComment}
                         isLoading={newCommentLoading}
+                        imageLoading={imageLoading}
                     />
                     <p className="text-xs text-[#676767] border-b border-tgray-50 py-1 pt-3">
                         Please be respectful and follow the <span className="text-tprimary-50 font-bold">Community Guidelines</span>
@@ -230,6 +247,12 @@ export const Comment = () => {
                                         nestedAnonChecked={nestedCommentAnonChecked}
                                         setNestedAnonChecked={setNestedCommentAnonChecked}
                                         originalPostId={postDetails?.data?.id}
+                                        imagePreview={nestedImagePreview}
+                                        setImagePreview={setNestedImagePreview}
+                                        internalImagePreview={internalImagePreview}
+                                        setInternalImagePreview={setInternalImagePreview}
+                                        notification={parentcomment?.enabled_notification}
+                                        isReported={parentcomment?.is_reported}
                                     />
                                 ))
                     }

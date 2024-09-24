@@ -131,10 +131,9 @@ export const HelpIfoLayout = ({ children }) => {
   }, []);
 
   const activeInfoNavLinkClass = ({ isActive }) =>
-    `relative transition-all duration-300 ${
-      isActive
-        ? "after:block after:absolute after:left-0 after:bottom-[-2px] after:w-full after:h-[3px] after:bg-[#017FC8]"
-        : ""
+    `relative transition-all duration-300 ${isActive
+      ? "after:block after:absolute after:left-0 after:bottom-[-2px] after:w-full after:h-[3px] after:bg-[#017FC8]"
+      : ""
     }`;
 
   return (
@@ -160,9 +159,8 @@ export const HelpIfoLayout = ({ children }) => {
                   height={isMobile ? 30 : 40}
                 />
                 <p
-                  className={` ${
-                    !isLogoMobile ? "block" : "hidden"
-                  } flex items-center text-xl font-regularNunito`}
+                  className={` ${!isLogoMobile ? "block" : "hidden"
+                    } flex items-center text-xl font-regularNunito`}
                 >
                   <span className="font-extraboldNunito">talk</span>AM
                 </p>
@@ -170,9 +168,8 @@ export const HelpIfoLayout = ({ children }) => {
               {isHelpAndInfo && (
                 <>
                   <section
-                    className={` ${
-                      isMobile ? "hidden" : "flex"
-                    } justify-center items-center gap-10`}
+                    className={` ${isMobile ? "hidden" : "flex"
+                      } justify-center items-center gap-10`}
                   >
                     <div className="*:text-sm *:text-[#212121] *:font-semibold  flex justify-center items-start gap-8">
                       <NavLink
@@ -237,9 +234,8 @@ export const HelpIfoLayout = ({ children }) => {
               >
                 <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
                   <nav
-                    className={`flex-1 no-scrollbar ${
-                      isMobile && "pt-[80px] sm:pt-[110px]"
-                    } `}
+                    className={`flex-1 no-scrollbar ${isMobile && "pt-[80px] sm:pt-[110px]"
+                      } `}
                   >
                     <section className="flex flex-col items-start gap-4 sm:gap-5 border-b *:!text-sm *:sm:!text-lg border-tgray-200 pb-10 sm:pb-12">
                       <Button

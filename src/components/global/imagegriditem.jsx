@@ -10,38 +10,52 @@ const colorAtRandom = () => {
     return bgColors[randomIndex];
 }
 
-export const ImageGridItem = ({ src, style }) => {
+export const ImageGridItem = ({ src, type, style }) => {
 
     const [showImage, setShowImage] = useState(false);
+
     const handleModal = () => {
         setShowImage((prev) => !prev)
+    };
+
+    const ImageView =
+
+        <img
+            onClick={handleModal}
+            src={src}
+            className="w-full h-full"
+            loading="lazy"
+            style={{
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: "100% 100%",
+                objectFit: 'cover',
+                objectPosition: "center",
+                backgroundColor: colorAtRandom(),
+                backgroundPosition: "center"
+            }}
+            onError={(e) => {
+                e.target.onerror = Broken;
+                e.target.src = Broken;
+            }}
+        />
+
+
+    const VideoView =
+        <video controls className="w-full h-full bg-black">
+            <source src={src} />
+        </video>
+
+    const fileMap = {
+        "Image": ImageView,
+        "Video": VideoView
     }
 
     return (
-        <>
-            <div
-                onClick={handleModal}
-                className={classNames(style, `w-full flex items-center justify-center ${src ? 'block' : 'hidden'} cursor-pointer h-[120px] sm:h-[220px] overflow-hidden`)}
-            >
-                <img
-                    src={src}
-                    className="w-full h-full"
-                    loading="lazy"
-                    style={{
-                        backgroundRepeat: 'no-repeat',
-                        backgroundSize: "100% 100%",
-                        objectFit: 'cover',
-                        objectPosition: "center",
-                        backgroundColor: colorAtRandom(),
-                        backgroundPosition: "center"
-                    }}
-                    onError={(e) => {
-                        e.target.onerror = Broken;
-                        e.target.src = Broken;
-                    }}
-                />
+        <div
+            className={classNames(style, `w-full flex items-center justify-center ${src ? 'block' : 'hidden'} cursor-pointer h-[120px] sm:h-[220px] overflow-hidden`)}
+        >
+            {fileMap[type]}
 
-            </div>
             <Modal
                 show={showImage}
                 shouldCloseOnEscPress={false}
@@ -55,6 +69,6 @@ export const ImageGridItem = ({ src, style }) => {
                     handleImageModal={handleModal}
                 />
             </Modal>
-        </>
+        </div>
     )
 }

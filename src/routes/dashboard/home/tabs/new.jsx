@@ -20,7 +20,7 @@ export const New = () => {
         tab: 'latest',
         page: page,
         target: "",
-    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
+    }, { refetchOnMountOrArgChange: 420 });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();
@@ -103,7 +103,7 @@ export const New = () => {
     }
 
     return (
-        <main className="flex h-full">
+        <main className="flex flex-col h-full relative gap-2 px-6">
             <section
                 onScroll={handleScroll}
                 ref={scrollableRef}
@@ -136,6 +136,8 @@ export const New = () => {
                                 handleDeletePost={handleDeletePost}
                                 group={post?.group}
                                 parentCategory={post?.category?.parent_category}
+                                isReported={post?.is_reported}
+                                notification={post?.enabled_notification}
                                 home
                             />
                         ))

@@ -10,6 +10,8 @@ import { useEffect } from "react";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 import moment from "moment";
 import Pusher from 'pusher-js';
+import { Modal } from "../../../components/global/modal";
+import { AnnouncementModal } from "./modals/announcementmodal";
 
 export const SystemAdmin = () => {
 
@@ -101,6 +103,19 @@ export const SystemAdmin = () => {
                             ))
                 }
             </section>
+
+            {/* <Modal
+                show={true}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                // onClose={toggleVerifyModal}
+                position='center'
+                contentWidth='w-full md:w-3/5 lg:w-2/5'
+
+            >
+                <AnnouncementModal>
+                </AnnouncementModal>
+            </Modal> */}
         </div>
     )
 }

@@ -20,7 +20,7 @@ export const Trending = () => {
         tab: 'trending',
         page: page,
         target: "",
-    }, { refetchOnFocus: true, refetchOnMountOrArgChange: true, refetchOnReconnect: true });
+    });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();
@@ -103,7 +103,7 @@ export const Trending = () => {
     }
 
     return (
-        <main className="flex h-full">
+        <main className="flex h-full px-6">
             <section
                 onScroll={handleScroll}
                 ref={scrollableRef}
@@ -136,6 +136,8 @@ export const Trending = () => {
                                 handleDeletePost={handleDeletePost}
                                 group={post?.group}
                                 parentCategory={post?.category?.parent_category}
+                                isReported={post?.is_reported}
+                                notification={post?.enabled_notification}
                                 home
                             />
                         ))
