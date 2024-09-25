@@ -29,11 +29,11 @@ export const PostPollBar = ({ color, option, selected, percentage, handlePollVot
   };
 
   return (
-    <AuthWrapper onClick={() => (!selectedPoll && !hasExpired) && handlePollVote(id)}>
+    <AuthWrapper onClick={() => (!selected && !hasExpired) && handlePollVote(id)}>
       <div
         style={containerStyles}
         className={` ${(selectedPoll || hasExpired) ? "border border-[#D2D2D2]" : "border border-[#86AAEE]"}
-        border border-[#86AAEE] ${(selectedPoll || hasExpired) ? "cursor-default" : "cursor-pointer"} transition-all duration-700 ease-in-out overflow-hidden flex items-center
+        border border-[#86AAEE] ${(selectedPoll || hasExpired) ? "cursor-pointer" : "cursor-pointer"} transition-all duration-700 ease-in-out overflow-hidden flex items-center
         ${(selectedPoll || hasExpired) ? "justify-between" : "justify-center"} px-3`
         }
       >

@@ -38,7 +38,7 @@ export const GroupCard = ({ group, members, img, access, onClick, isSuspended })
                     <span className="text-sm font-normal">{membersPluralization}</span>
                     {
                         isSuspended ?
-                            <p className='flex items-center gap-1 border border-[#FF0000] py-1 px-1.5 rounded-full'>
+                            <p className='flex items-center gap-1 rounded-full'>
                                 <Icon.AlertCircle color='#FF0000' size={10} />
                                 <span className="text-[10px] font-normal text-[#FF0000]">Suspended</span>
                             </p>

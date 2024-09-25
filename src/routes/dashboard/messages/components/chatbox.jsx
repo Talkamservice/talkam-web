@@ -13,6 +13,7 @@ import * as Icon from 'react-feather'
 export const ChatBox = ({ setCurrentChat, currentChat, page, setPage }) => {
 
     const messageController = useMessagesController(currentChat, setCurrentChat, page, setPage);
+    console.log(messageController.conversationdetails)
 
     const renderMessages = () => {
         return messageController.updatedMessages?.map((message, index) => {
@@ -121,7 +122,7 @@ export const ChatBox = ({ setCurrentChat, currentChat, page, setPage }) => {
                                             :
                                             <section>
                                                 {
-                                                    messageController?.conversationdetails?.data?.i_am_blocked || messageController?.conversationdetails?.data?.user_blocked ?
+                                                    messageController?.conversationdetails?.data?.i_am_blocked || messageController?.conversationdetails?.data?.user_blocked || messageController?.conversationdetails?.data?.user_is_banned ?
                                                         <section className="w-full flex items-center justify-center text-tgray-300 text-sm py-4">
                                                             You can no longer send messages to this person.
                                                         </section>

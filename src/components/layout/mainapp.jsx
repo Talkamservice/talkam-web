@@ -7,8 +7,8 @@ import { Button } from '../forms/button';
 import { NavSearch } from '../forms/navsearchbar';
 import { useFollowingCategoriesQuery, useGetSubCategoriesQuery, useGetUserProfileDetailsQuery } from '../../services/userApiSlice';
 import { ColoredLoader } from '../global/loader';
-import { useSelector } from 'react-redux';
-import { selectCurrentToken, selectCurrentUser } from '../../services/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { logOut, selectCurrentToken, selectCurrentUser } from '../../services/authSlice';
 import { Avatar } from '../global/avatar';
 import { motion } from 'framer-motion';
 import { downVariants } from '../../helpers/cardanimation';
@@ -24,6 +24,8 @@ import { useGetNotificationStatsQuery } from '../../services/notificationsApiSli
 import { useIsAuth } from '../../hooks/useIsAuth';
 import { AuthWrapper } from '../../utils/authWrapper';
 import { useGlobalLoader } from '../../hooks/useCheckLoader';
+import { Storage } from '../../app/storage';
+import { apiSlice } from '../../app/api/apiSlice';
 import * as Icon from 'react-feather'
 import Pusher from 'pusher-js';
 import LoadingBar from 'react-top-loading-bar';
@@ -33,6 +35,7 @@ export const MainAppLayout = ({ children }) => {
     let isMobile = useMediaQuery("(max-width: 1024px)");
     let isLogoMobile = useMediaQuery("(max-width: 425px)");
 
+    const dispatch = useDispatch();
     const state = useGlobalLoader()
     const navigate = useNavigate();
     const location = useLocation()
@@ -131,6 +134,18 @@ export const MainAppLayout = ({ children }) => {
         if (user) {
             if (!user?.data?.email_verified_at) {
                 setVerifyModal(() => true)
+            }
+        };
+    }, [currentUser, user]);
+
+    useEffect(() => {
+        refetchNotification();
+        if (user) {
+            if (!user?.data?.status === "Banned") {
+                dispatch(apiSlice.util.resetApiState());
+                dispatch(logOut());
+                Storage.clearItem();
+                navigate("/", { replace: true })
             }
         };
     }, [currentUser, user]);

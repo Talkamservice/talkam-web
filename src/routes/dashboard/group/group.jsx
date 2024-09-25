@@ -21,10 +21,10 @@ import { PostCardVariants } from "../../../helpers/cardanimation";
 import { useOnOutsideClick } from "../../../hooks/useOnOutsideClick";
 import { useGroupController } from "../../../controllers/groupController";
 import { GroupReportModal } from "./groupreportmodal";
+import { IsSuspended } from "../../../utils/isSuspended";
 import * as Icon from 'react-feather'
 import FallBack from "../../../assets/icons/users.svg"
 import Protected from "../../../utils/protected";
-import { IsSuspended } from "../../../utils/isSuspended";
 
 const tabs = [
     {
@@ -112,6 +112,10 @@ export const Group = () => {
     const toggleInfoView = () => {
         setShowInfo((prev) => !prev)
     };
+
+    const isPrivateMember = groupDetails?.data?.is_following && groupDetails?.data.group_access === "Closed"
+
+    console.log(isPrivateMember)
 
     return (
         <Protected>
@@ -222,7 +226,7 @@ export const Group = () => {
                                                 }
                                             </section>
                                     }
-                                    <section ref={popUpRef} className="cursor-pointer relative">
+                                    {groupDetails?.data?.is_following || isPrivateMember ? <section ref={popUpRef} className="cursor-pointer relative">
                                         <Icon.MoreVertical onClick={() => setShowReportPop(prev => !prev)} size={35} className="hover:bg-tgray-xlight p-2 rounded-full cursor-pointer" />
                                         {
                                             showReportPop ?
@@ -246,7 +250,7 @@ export const Group = () => {
                                                 :
                                                 null
                                         }
-                                    </section>
+                                    </section> : null}
                                 </section>
                                 <div className="w-full flex flex-col gap-2">
                                     <article className="w-full text-xs md:text-sm">{groupDetails?.data.about}</article>
@@ -281,22 +285,30 @@ export const Group = () => {
                                         groupDetails?.data.is_suspended ?
                                             <p className="flex items-center justify-center m-auto">You have been suspended from this group!</p>
                                             :
-                                            <section className="relative overflow-y-auto w-full no-scrollbar">
-                                                <RouteTabs
-                                                    tabs={tabs}
-                                                />
-                                            </section>
+                                            (groupDetails?.data.group_access === "Closed" && !isPrivateMember) ?
+                                                <p className="flex items-center justify-center m-auto font-bold">Only group members can view content within</p>
+                                                :
+                                                <section className="relative overflow-y-auto w-full no-scrollbar">
+                                                    <RouteTabs
+                                                        tabs={tabs}
+                                                    />
+                                                </section>
                                     }
                                 </>
                         }
                     </div>
 
                     <section className={`w-full hidden md:block md:w-2/6 h-full p-2 md:px-6 relative`}>
-                        <GroupDetails
-                            currentUserRole={groupDetails?.data?.user_role ?? "Member"}
-                            groupDetails={groupDetails}
-                            isLoading={isLoading}
-                        />
+                        {
+                            (groupDetails?.data.group_access === "Closed" && !isPrivateMember) ?
+                                <p className="flex items-center justify-center m-auto font-bold">Only group members can view content within</p>
+                                :
+                                <GroupDetails
+                                    currentUserRole={groupDetails?.data?.user_role ?? "Member"}
+                                    groupDetails={groupDetails}
+                                    isLoading={isLoading}
+                                />
+                        }
                     </section>
 
                     <Modal
@@ -336,6 +348,6 @@ export const Group = () => {
                     </Modal>
                 </section>
             </IsSuspended>
-        </Protected>
+        </Protected >
     )
 } 

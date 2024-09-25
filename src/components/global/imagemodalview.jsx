@@ -1,7 +1,30 @@
 import { X, Download } from "react-feather";
+import { toast } from "sonner";
 import TalkamLogo from "../../assets/icons/logo.svg"
 
 export const ImageModalView = ({ file, handleImageModal }) => {
+
+    const handleDownload = async () => {
+        try {
+            // Fetch the image as a blob, using `no-cors` mode to handle potential CORS issues
+            const response = await fetch(file, { mode: 'no-cors' });
+            const blob = await response.blob();
+
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = 'talkam-image.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            toast.error("Failed to download image");
+        }
+    };
+
+
     return (
         <div className="relative h-[90dvh] w-full">
 
@@ -32,15 +55,9 @@ export const ImageModalView = ({ file, handleImageModal }) => {
             </div>
 
             <div className="absolute bottom-0 bg-black backdrop-blur-sm bg-opacity-50 w-full flex items-center justify-end py-4 px-12 cursor-pointer">
-                <div className="flex items-center gap-2">
+                <div onClick={handleDownload} className="flex items-center gap-2">
                     <p className="text-sm text-white">Download Image</p>
-                    <a
-                        href={file}
-                        download
-                        className="rounded-full cursor-pointer"
-                    >
-                        <Download size={28} color="#FFFFFF" />
-                    </a>
+                    <Download size={28} color="#FFFFFF" />
                 </div>
             </div>
         </div>
