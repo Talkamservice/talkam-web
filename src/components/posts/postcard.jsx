@@ -91,7 +91,7 @@ export const PostCard = ({
                                 category && home && !group ?
                                     <p className="items-center whitespace-nowrap inline-flex gap-1 pl-1">
                                         to{" "}
-                                        <Link to={`/category/${category?.id}`} className="text-tprimary-50 cursor-pointer">
+                                        <Link to={`/category/${category?.id}`} className="text-tprimary-50 cursor-pointer truncate">
                                             {category?.name}
                                         </Link>
                                     </p>

@@ -87,6 +87,13 @@ export const groupApiSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ["members", "details"]
         }),
+        suspendMember: builder.mutation({
+            query: id => ({
+                url: `/user/groups/members/${id}/suspend`,
+                method: 'post',
+            }),
+            invalidatesTags: ["members", "details"]
+        }),
         updateGroupDetails: builder.mutation({
             query: ({ id, body }) => ({
                 url: `/user/groups/${id}`,
@@ -155,6 +162,7 @@ export const {
     useMakeModeratorMutation,
     useRemoveModeratorMutation,
     useDeleteMemberMutation,
+    useSuspendMemberMutation,
     useUpdateGroupDetailsMutation,
     useUpdateGuidelinesMutation,
     useDeleteGuidelineMutation,

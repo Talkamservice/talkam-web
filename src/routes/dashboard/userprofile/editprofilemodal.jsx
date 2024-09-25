@@ -97,7 +97,7 @@ export const EditProfileModal = ({ onClose, user }) => {
                     </section>
                     <Input
                         wrapperClassName='relative w-full'
-                        label='Username'
+                        label='Username (No spaces)'
                         placeholder={user?.data?.username ?? user?.data?.name}
                         type="text"
                         onBlur={userNameBlurHandler}

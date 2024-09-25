@@ -41,7 +41,7 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
     });
 
     const [postReaction] = usePostReactionMutation();
-    const [selectPollOption] = useSelectPollOptionMutation();
+    const [selectPollOption, { isLoading: submittingPoll }] = useSelectPollOptionMutation();
     const [blockUser, { isLoading }] = useBlockUserMutation();
     const [reportPost, { isLoading: reportLoading }] = useReportPostMutation();
     const [updatePostNotifications, { isLoading: updateNotificationLoading }] = useUpdatePostNotificationsMutation();
@@ -54,34 +54,73 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
         }));
     };
 
+    // const updatePollHandler = async (pollId) => {
+    //     if (submittingPoll) return;
+    //     const newOptions = pollOptions.map((poll) => {
+    //         console.log(pollId, poll.id)
+    //         if (poll.id === pollId) {
+    //             return {
+    //                 ...poll,
+    //                 selected: true,
+    //                 count: poll.count + 1,
+    //             }
+    //         }
+    //         return poll
+    //     });
+    //     console.log(newOptions)
+    //     setPollOptions(() => calculatePercentages(newOptions));
+    //     try {
+    //         await selectPollOption({ poll_id: pollId }).unwrap();
+    //         toast.success("Vote submitted")
+    //     } catch (error) {
+    //         const errorMessage = handleError(error);
+    //         toast.error(errorMessage)
+    //     }
+
+    //     setSelectedPoll(true);
+    // }
+
     const updatePollHandler = (pollId) => {
-        if (selectedPoll) return;
+        if (submittingPoll) return;
+
+        const previouslySelected = pollOptions.find(poll => poll.selected);
         const newOptions = pollOptions.map((poll) => {
             if (poll.id === pollId) {
+                // If the poll was not previously selected, mark it and increment count
                 return {
                     ...poll,
                     selected: true,
                     count: poll.count + 1,
                 }
             }
-            return poll
+            // If the user had selected another option, revert its count and selection
+            if (previouslySelected && poll.id === previouslySelected.id) {
+                return {
+                    ...poll,
+                    selected: false,
+                    count: poll.count - 1,
+                }
+            }
+            return poll;
         });
+
+        // Update state optimistically
         setPollOptions(() => calculatePercentages(newOptions));
         submitPoll();
 
-        //Creating this as a closure so the UI updates immediately before the server response returns ( Optimistic UI updates ==> better UX )
         async function submitPoll() {
             try {
                 await selectPollOption({ poll_id: pollId }).unwrap();
-                toast.success("Vote submitted")
+                toast.success("Vote updated");
             } catch (error) {
                 const errorMessage = handleError(error);
-                toast.error(errorMessage)
+                toast.error(errorMessage);
             }
         }
 
         setSelectedPoll(true);
-    }
+    };
+
 
     const handlePostReaction = async (reaction) => {
         // Check if the new reaction is the same as the current action
