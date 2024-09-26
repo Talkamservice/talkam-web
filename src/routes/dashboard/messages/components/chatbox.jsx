@@ -121,7 +121,7 @@ export const ChatBox = ({ setCurrentChat, currentChat, page, setPage }) => {
                                             :
                                             <section>
                                                 {
-                                                    messageController?.conversationdetails?.data?.i_am_blocked || messageController?.conversationdetails?.data?.user_blocked ?
+                                                    messageController?.conversationdetails?.data?.i_am_blocked || messageController?.conversationdetails?.data?.user_blocked || messageController?.conversationdetails?.data?.user_is_banned ?
                                                         <section className="w-full flex items-center justify-center text-tgray-300 text-sm py-4">
                                                             You can no longer send messages to this person.
                                                         </section>

@@ -120,7 +120,7 @@ export const Category = () => {
                                 }
                             </div>
 
-                            <div>Tags here</div>
+                            <div className="text-sm font-bold">{subCategoryDetails?.data.followers_count} {!subCategoryDetails?.data.followers_count ? 'followers' : subCategoryDetails?.data.followers_count > 1 ? "followers" : "follower"}</div>
                         </section>
                     </section>
 

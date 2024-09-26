@@ -193,12 +193,12 @@ export const CreatePost = () => {
     }
 
     const handleSelectedCategory = (category) => {
-        setPost({ ...post, category: category })
+        setPost({ ...post, category: category, group: null })
         Storage.setItem("post_category", category)
     }
 
     const handleSelectedGroup = (group) => {
-        setPost({ ...post, group: group })
+        setPost({ ...post, group: group, category: null })
         Storage.setItem("post_group", group)
     }
 
@@ -218,7 +218,7 @@ export const CreatePost = () => {
                 status: "Active",
                 publish_at: publishDate ?? null,
                 is_anonymous: isChecked ? 1 : 0,
-                attachments: PostType === "Image" ? [{ url: post.image, type: "Image" }] : [{ url: post.video, type: "Video" }],
+                attachments: PostType === "Image" ? [{ url: post.image, type: "Image" }] : PostType === "Video" ? [{ url: post.video, type: "Video" }] : null,
                 poll: PostType === "Poll" ? {
                     duration: convertedTime(pollDuration.days, pollDuration.hours),
                     options: transformedPollOptions,
@@ -319,6 +319,7 @@ export const CreatePost = () => {
                                 options={transformedCategories}
                                 onChange={handleSelectedCategory}
                             /> */}
+                                <span className="text-[10px] pr-1">required <span className="text-red-600 text-base">*</span></span>
                                 <Button
                                     variant="outline"
                                     onClick={toggleCategoryModal}

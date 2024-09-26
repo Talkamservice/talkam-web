@@ -7,8 +7,8 @@ import { Button } from '../forms/button';
 import { NavSearch } from '../forms/navsearchbar';
 import { useFollowingCategoriesQuery, useGetSubCategoriesQuery, useGetUserProfileDetailsQuery } from '../../services/userApiSlice';
 import { ColoredLoader } from '../global/loader';
-import { useSelector } from 'react-redux';
-import { selectCurrentToken, selectCurrentUser } from '../../services/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { logOut, selectCurrentToken, selectCurrentUser } from '../../services/authSlice';
 import { Avatar } from '../global/avatar';
 import { motion } from 'framer-motion';
 import { downVariants } from '../../helpers/cardanimation';
@@ -24,15 +24,20 @@ import { useGetNotificationStatsQuery } from '../../services/notificationsApiSli
 import { useIsAuth } from '../../hooks/useIsAuth';
 import { AuthWrapper } from '../../utils/authWrapper';
 import { useGlobalLoader } from '../../hooks/useCheckLoader';
+import { Storage } from '../../app/storage';
+import { apiSlice } from '../../app/api/apiSlice';
 import * as Icon from 'react-feather'
 import Pusher from 'pusher-js';
 import LoadingBar from 'react-top-loading-bar';
+import PushIcon from "../../assets/icons/logo.svg"
+import PushSound from "../../assets/audio/notify.wav"
 
 export const MainAppLayout = ({ children }) => {
 
     let isMobile = useMediaQuery("(max-width: 1024px)");
     let isLogoMobile = useMediaQuery("(max-width: 425px)");
 
+    const dispatch = useDispatch();
     const state = useGlobalLoader()
     const navigate = useNavigate();
     const location = useLocation()
@@ -70,6 +75,18 @@ export const MainAppLayout = ({ children }) => {
         setProfileMenu(() => false)
     });
 
+    const showPushNotification = (data) => {
+        if (Notification.permission === 'granted') {
+            new Notification("TalkAM", {
+                body: "You have new notifications on TalkAM",
+                icon: PushIcon,
+                badge: PushIcon
+            });
+            const notificationSound = new Audio(PushSound);
+            notificationSound.play();
+        }
+    };
+
     const connectToPusher = () => {
         let pusherChannel; // Declare pusherChannel variable
 
@@ -92,7 +109,11 @@ export const MainAppLayout = ({ children }) => {
         });
         pusherChannel = pusher.subscribe('refresh-notification.' + currentUser?.id); // Assign pusherChannel
         pusherChannel.bind('refresh', (data) => {
+            if (document.visibilityState === 'hidden') {
+                showPushNotification(data);
+            }
             refetchNotification();
+
         });
         return () => {
             pusherChannel.unbind_all();
@@ -136,7 +157,31 @@ export const MainAppLayout = ({ children }) => {
     }, [currentUser, user]);
 
     useEffect(() => {
+        refetchNotification();
+        if (user) {
+            if (!user?.data?.status === "Banned") {
+                dispatch(apiSlice.util.resetApiState());
+                dispatch(logOut());
+                Storage.clearItem();
+                navigate("/", { replace: true })
+            }
+        };
+    }, [currentUser, user]);
+
+    useEffect(() => {
         connectToPusher();
+    }, []);
+
+    useEffect(() => {
+        if ("Notification" in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    return;
+                } else {
+                    toast.info("Notification permission denied.");
+                }
+            });
+        }
     }, []);
 
     return (

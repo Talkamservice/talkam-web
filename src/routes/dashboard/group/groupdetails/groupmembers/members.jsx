@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useDeleteMemberMutation, useGetGroupMembersQuery, useMakeModeratorMutation, useRemoveModeratorMutation } from "../../../../../services/groupApiSlice"
+import { useDeleteMemberMutation, useGetGroupMembersQuery, useMakeModeratorMutation, useRemoveModeratorMutation, useSuspendMemberMutation } from "../../../../../services/groupApiSlice"
 import { Avatar } from "../../../../../components/global/avatar";
 import { motion } from "framer-motion";
 import { PostCardVariants } from "../../../../../helpers/cardanimation";
@@ -25,9 +25,10 @@ export const Members = ({ currentUserRole, setMemberView, requestCount }) => {
     const [makeModerator, { isLoading: makeModeratorLoading }] = useMakeModeratorMutation();
     const [removeModerator, { isLoading: removeModeratorLoading }] = useRemoveModeratorMutation();
     const [deleteMember, { isLoading: deleteLoading }] = useDeleteMemberMutation();
+    const [suspendMember, { isLoading: suspendLoading }] = useSuspendMemberMutation()
 
     const handleMakeModerator = async (memberId) => {
-
+        const toastId = toast("Updating...");
         const body = {
             role: "Admin"
         }
@@ -38,12 +39,14 @@ export const Members = ({ currentUserRole, setMemberView, requestCount }) => {
             const errorMessage = handleError(error);
             toast.error(errorMessage);
         }
+        toast.dismiss(toastId)
     }
 
     const handleRemoveModerator = async (memberId) => {
         const body = {
             role: "Member"
         }
+        const toastId = toast("Updating...");
         try {
             const res = await removeModerator({ id: memberId, body }).unwrap()
             toast.success(res?.message)
@@ -51,15 +54,31 @@ export const Members = ({ currentUserRole, setMemberView, requestCount }) => {
             const errorMessage = handleError(errorMessage);
             toast.error(errorMessage);
         }
+        toast.dismiss(toastId)
     }
 
     const handleDeleteMember = async (memberId) => {
+        const toastId = toast("Updating...");
         try {
             const res = await deleteMember(memberId).unwrap()
             toast.success(res?.message)
         } catch (error) {
             const errorMessage = handleError(errorMessage);
             toast.error(errorMessage);
+        }
+        toast.dismiss(toastId)
+    }
+
+    const handleSuspendMember = async (memberId) => {
+        const toastId = toast("Updating...");
+        try {
+            const res = await suspendMember(memberId).unwrap();
+            toast.success(res?.message)
+            toast.dismiss(toastId)
+        } catch (error) {
+            const errorMessage = handleError(errorMessage);
+            toast.error(errorMessage);
+            toast.dismiss(toastId)
         }
     }
 
@@ -125,8 +144,10 @@ export const Members = ({ currentUserRole, setMemberView, requestCount }) => {
                                     poppostion={"bottom-0"}
                                     handleDeleteMember={() => handleDeleteMember(admin?.id)}
                                     handleRemoveModerator={() => handleRemoveModerator(admin?.id)}
+                                    handleSuspendMember={() => handleSuspendMember(admin?.id)}
                                     userId={admin?.user?.id}
                                     role={admin?.role}
+                                    suspended={admin?.is_suspended}
                                 />
                             ))
                 }
@@ -183,8 +204,10 @@ export const Members = ({ currentUserRole, setMemberView, requestCount }) => {
                                     poppostion={"bottom-0"}
                                     handleDeleteMember={() => handleDeleteMember(member?.id)}
                                     handleMakeModerator={() => handleMakeModerator(member?.id)}
+                                    handleSuspendMember={() => handleSuspendMember(member?.id)}
                                     userId={member?.user?.id}
                                     role={member?.role}
+                                    suspended={member?.is_suspended}
                                 />
                             ))
                 }
@@ -193,7 +216,7 @@ export const Members = ({ currentUserRole, setMemberView, requestCount }) => {
     )
 }
 
-export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, poppostion, handleDeleteMember, handleMakeModerator, handleRemoveModerator, userId }) => {
+export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, poppostion, handleDeleteMember, handleMakeModerator, handleRemoveModerator, handleSuspendMember, userId, suspended }) => {
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -212,7 +235,10 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
             <section className="flex items-center gap-2">
                 <Avatar src={avatar} size="sm" />
                 <div className="flex flex-col">
-                    <p className="text-base font-medium">{user}</p>
+                    <div className="flex items-center gap-3">
+                        <p className="text-base font-medium">{user}</p>
+                        {suspended ? <span className="text-xs text-red-600 flex items-center gap-1"><Icon.AlertTriangle size={10} /> suspended</span> : null}
+                    </div>
                     <span className="text-xs font-semibold text-[#787878]">Member since {moment(joined).format("MMMM YYYY") ?? ' --/--/--'}</span>
                 </div>
             </section>
@@ -249,13 +275,34 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
                                     <ChatSquareIcon className="w-4 h-4" />
                                     <p>Send Message</p>
                                 </li>
-
                                 {
                                     role === "Member" || role === "Admin" && role !== "Owner" ?
                                         <IsRole currentRole={currentUserRole} allowedRoles={["Owner", "Admin"]}>
                                             <li onClick={handleDeleteMember} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
                                                 <Icon.Slash size={15} />
                                                 <p>Remove {user}</p>
+                                            </li>
+                                        </IsRole>
+                                        :
+                                        null
+                                }
+                                {
+                                    (role === "Member" || (role === "Admin" && role !== "Owner")) && !suspended ?
+                                        <IsRole currentRole={currentUserRole} allowedRoles={["Owner", "Admin"]}>
+                                            <li onClick={handleSuspendMember} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
+                                                <Icon.AlertTriangle size={18} className="text-[#AC4242]" />
+                                                <p>Suspend {user}</p>
+                                            </li>
+                                        </IsRole>
+                                        :
+                                        null
+                                }
+                                {
+                                    (role === "Member" || (role === "Admin" && role !== "Owner")) && suspended ?
+                                        <IsRole currentRole={currentUserRole} allowedRoles={["Owner", "Admin"]}>
+                                            <li onClick={handleSuspendMember} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
+                                                <Icon.AlertTriangle size={18} className="text-[#AC4242]" />
+                                                <p>Unsuspend {user}</p>
                                             </li>
                                         </IsRole>
                                         :

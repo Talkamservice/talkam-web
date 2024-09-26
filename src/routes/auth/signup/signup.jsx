@@ -5,7 +5,7 @@ import { Button } from '../../../components/forms/button';
 import { TalkamLogo } from '../../../assets/icons/generated';
 import { useSignupMutation } from '../../../services/authApiSlice';
 import { useForm } from '../../../hooks/useForm';
-import { isEmail, isNotEmpty } from '../../../utils/formValidations';
+import { isEmail, isNotEmptyAndNoSpaces } from '../../../utils/formValidations';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../../services/authSlice';
@@ -30,7 +30,7 @@ export const SignUp = () => {
         hasError: passwordHasError, inputBlurHandler: passwordBlurHandler,
         value: passwordValue, valueChangeHandler: passwordChangeHandler,
         reset: resetPassword, isValid: passwordIsValid,
-    } = useForm(isNotEmpty);
+    } = useForm(isNotEmptyAndNoSpaces);
 
     const togglePasswordVisibility = () => {
         setShowPassword(prev => !prev)

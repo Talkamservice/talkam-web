@@ -12,7 +12,7 @@ import ErrorPage from './routes/error/error';
 import App from './App';
 
 window.addEventListener("vite:preloadError", (event) => {
-  window.location.reload(); // for example, refresh the page
+  window.location.reload();
 });
 
 const router = createBrowserRouter([
