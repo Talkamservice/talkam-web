@@ -79,6 +79,7 @@ export const MainAppLayout = ({ children }) => {
             console.log("granted")
             new Notification("TalkAm", {
                 body: "You have new notifications on TalkAm",
+                icon: PushIcon
             });
         }
     };
