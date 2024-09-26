@@ -29,6 +29,7 @@ import { apiSlice } from '../../app/api/apiSlice';
 import * as Icon from 'react-feather'
 import Pusher from 'pusher-js';
 import LoadingBar from 'react-top-loading-bar';
+import PushIcon from "../../assets/icons/logo.svg"
 
 export const MainAppLayout = ({ children }) => {
 
@@ -73,6 +74,16 @@ export const MainAppLayout = ({ children }) => {
         setProfileMenu(() => false)
     });
 
+    const showPushNotification = (data) => {
+        if (Notification.permission === 'granted') {
+            console.log("granted")
+            new Notification("TalkAm", {
+                body: "You have new notifications on TalkAm",
+                icon: "../../assets/icons/logo.svg"
+            });
+        }
+    };
+
     const connectToPusher = () => {
         let pusherChannel; // Declare pusherChannel variable
 
@@ -95,7 +106,13 @@ export const MainAppLayout = ({ children }) => {
         });
         pusherChannel = pusher.subscribe('refresh-notification.' + currentUser?.id); // Assign pusherChannel
         pusherChannel.bind('refresh', (data) => {
-            refetchNotification();
+            console.log(document.visibilityState)
+            if (document.visibilityState === 'hidden') {
+                console.log("Notification received")
+                showPushNotification(data);
+            }
+            // refetchNotification();
+
         });
         return () => {
             pusherChannel.unbind_all();
@@ -152,6 +169,18 @@ export const MainAppLayout = ({ children }) => {
 
     useEffect(() => {
         connectToPusher();
+    }, []);
+
+    useEffect(() => {
+        if ("Notification" in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    console.log("Notification permission granted.");
+                } else {
+                    console.log("Notification permission denied.");
+                }
+            });
+        }
     }, []);
 
     return (
