@@ -26,6 +26,12 @@ export const helpAndInfoSlice = apiSlice.injectEndpoints({
         method: "get",
       }),
     }),
+    feedbackOptions: builder.query({
+      query: () => ({
+        url: `/user/feedback-options`,
+        method: "get",
+      }),
+    }),
     giveFeedback: builder.mutation({
       query: (feedbackData) => ({
         url: "/user/feedback",
@@ -43,4 +49,5 @@ export const {
   usePrivacyPolicyQuery,
   useRulesQuery,
   useGiveFeedbackMutation,
+  useFeedbackOptionsQuery,
 } = helpAndInfoSlice;
