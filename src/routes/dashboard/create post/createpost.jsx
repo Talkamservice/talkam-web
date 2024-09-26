@@ -193,12 +193,12 @@ export const CreatePost = () => {
     }
 
     const handleSelectedCategory = (category) => {
-        setPost({ ...post, category: category })
+        setPost({ ...post, category: category, group: null })
         Storage.setItem("post_category", category)
     }
 
     const handleSelectedGroup = (group) => {
-        setPost({ ...post, group: group })
+        setPost({ ...post, group: group, category: null })
         Storage.setItem("post_group", group)
     }
 
