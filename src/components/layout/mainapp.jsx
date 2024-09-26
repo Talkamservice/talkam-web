@@ -30,6 +30,7 @@ import * as Icon from 'react-feather'
 import Pusher from 'pusher-js';
 import LoadingBar from 'react-top-loading-bar';
 import PushIcon from "../../assets/icons/logo.svg"
+import PushSound from "../../assets/audio/notify.wav"
 
 export const MainAppLayout = ({ children }) => {
 
@@ -76,11 +77,13 @@ export const MainAppLayout = ({ children }) => {
 
     const showPushNotification = (data) => {
         if (Notification.permission === 'granted') {
-            console.log("granted")
-            new Notification("TalkAm", {
+            new Notification("TalkAM", {
                 body: "You have new notifications on TalkAm",
-                icon: PushIcon
+                icon: PushIcon,
+                badge: PushIcon
             });
+            const notificationSound = new Audio(PushSound);
+            notificationSound.play();
         }
     };
 
@@ -106,12 +109,10 @@ export const MainAppLayout = ({ children }) => {
         });
         pusherChannel = pusher.subscribe('refresh-notification.' + currentUser?.id); // Assign pusherChannel
         pusherChannel.bind('refresh', (data) => {
-            console.log(document.visibilityState)
             if (document.visibilityState === 'hidden') {
-                console.log("Notification received")
                 showPushNotification(data);
             }
-            // refetchNotification();
+            refetchNotification();
 
         });
         return () => {
@@ -175,9 +176,9 @@ export const MainAppLayout = ({ children }) => {
         if ("Notification" in window) {
             Notification.requestPermission().then(permission => {
                 if (permission === "granted") {
-                    console.log("Notification permission granted.");
+                    return;
                 } else {
-                    console.log("Notification permission denied.");
+                    toast.info("Notification permission denied.");
                 }
             });
         }

@@ -52,8 +52,6 @@ export const Category = () => {
         }
     }
 
-    console.log(subCategoryDetails)
-
     return (
         <Protected>
             <section className="h-full flex divide-x divide-tgray-xlight">
