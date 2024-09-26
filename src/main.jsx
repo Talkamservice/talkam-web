@@ -460,7 +460,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "faqs/general",
+        path: "faqs/:name",
         lazy: async () => {
           let { AccordionPage } = await import(
             "./routes/dashboard/HomeInfo/accordionPage"
