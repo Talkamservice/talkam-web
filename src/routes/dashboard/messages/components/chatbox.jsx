@@ -13,7 +13,6 @@ import * as Icon from 'react-feather'
 export const ChatBox = ({ setCurrentChat, currentChat, page, setPage }) => {
 
     const messageController = useMessagesController(currentChat, setCurrentChat, page, setPage);
-    console.log(messageController.conversationdetails)
 
     const renderMessages = () => {
         return messageController.updatedMessages?.map((message, index) => {

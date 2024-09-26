@@ -77,7 +77,6 @@ export const Members = ({ currentUserRole, setMemberView, requestCount }) => {
             toast.dismiss(toastId)
         } catch (error) {
             const errorMessage = handleError(errorMessage);
-            console.log(errorMessage)
             toast.error(errorMessage);
             toast.dismiss(toastId)
         }

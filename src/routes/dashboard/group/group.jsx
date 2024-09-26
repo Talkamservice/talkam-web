@@ -115,8 +115,6 @@ export const Group = () => {
 
     const isPrivateMember = groupDetails?.data?.is_following && groupDetails?.data.group_access === "Closed"
 
-    console.log(isPrivateMember)
-
     return (
         <Protected>
             <IsSuspended isSuspended={groupDetails?.data?.is_suspended}>
