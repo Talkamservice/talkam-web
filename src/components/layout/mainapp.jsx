@@ -78,7 +78,7 @@ export const MainAppLayout = ({ children }) => {
     const showPushNotification = (data) => {
         if (Notification.permission === 'granted') {
             new Notification("TalkAM", {
-                body: "You have new notifications on TalkAm",
+                body: "You have new notifications on TalkAM",
                 icon: PushIcon,
                 badge: PushIcon
             });
