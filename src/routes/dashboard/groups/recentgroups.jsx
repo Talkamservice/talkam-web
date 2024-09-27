@@ -148,7 +148,7 @@ export const RecentGroups = () => {
                                     icon={EmptyListIcon}
                                     height="h-[30px]"
                                     width="h-[30px]"
-                                    text="No Posts within that category"
+                                    text="No Posts"
                                     subtext="When posts are added they would appear here"
                                 />
                             </section>
