@@ -120,7 +120,7 @@ export const EditProfileModal = ({ onClose, user }) => {
                             children="Save & Continue"
                             variant="primary"
                             fullWidth
-                            disabled={(userNameValue && !userNameIsValid || !profileImage) || isLoading}
+                            disabled={(!userNameIsValid || isLoading)}
                             isLoading={isLoading}
                         />
                     </footer>

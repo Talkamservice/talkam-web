@@ -241,8 +241,19 @@ export const PostCard = ({
                                                 )
                                             })
                                         }
-                                        <span className="text-sm font-medium">
+                                        <span className="text-sm font-medium flex items-center gap-4">
                                             {(postController.selectedPoll || postController.hasExpired) ? postController.pluralization : !postController.noOfDaysLeft ? 0 : postController.noOfDaysLeft + ' left'}
+                                            {
+                                                postController.hasExpired ?
+                                                    <>
+                                                        <span className="bg-tprimary-50 rounded-full w-1 h-1" />
+                                                        <span className="text-xs text-tgray-250">
+                                                            Ended
+                                                        </span>
+                                                    </>
+                                                    :
+                                                    null
+                                            }
                                         </span>
                                     </div>
                                 </section>

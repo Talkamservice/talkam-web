@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { GroupAddIcon, InboxIcon, LatestEventsIcon, LockIcon, NotificationIcon, TalkamLogo } from '../../assets/icons/generated';
+import { GroupAddIcon, LatestEventsIcon, LockIcon, NotificationIcon, TalkamLogo } from '../../assets/icons/generated';
 import { SideBarItem } from '../global/sidebarItem';
 import { Button } from '../forms/button';
 import { NavSearch } from '../forms/navsearchbar';
@@ -56,20 +56,26 @@ export const MainAppLayout = ({ children }) => {
     }, {
         refetchOnFocus: true,
         refetchOnMountOrArgChange: true,
-        refetchOnReconnect: true
+        refetchOnReconnect: true,
+        skip: !token
     });
     const { data: followingCategories, isLoading: followingCategoriesLoading } = useFollowingCategoriesQuery({
         refetchOnFocus: true,
         refetchOnMountOrArgChange: true,
-        refetchOnReconnect: true
+        refetchOnReconnect: true,
+    }, {
+        skip: !token
     });
     const [resendOtp, { isLoading: resendLoading }] = useResendOtpMutation();
     const { data: user, isSuccess } = useGetUserProfileDetailsQuery(currentUser?.id, {
         refetchOnFocus: true,
         refetchOnMountOrArgChange: true,
-        refetchOnReconnect: true
+        refetchOnReconnect: true,
+        skip: !token
     });
-    const { data: notificationStats, refetch: refetchNotification } = useGetNotificationStatsQuery();
+    const { data: notificationStats, refetch: refetchNotification } = useGetNotificationStatsQuery(null, {
+        skip: !token
+    });
 
     useOnOutsideClick(popUpRef, () => {
         setProfileMenu(() => false)
@@ -148,8 +154,8 @@ export const MainAppLayout = ({ children }) => {
     }
 
     useEffect(() => {
-        refetchNotification();
         if (user) {
+            refetchNotification();
             if (!user?.data?.email_verified_at) {
                 setVerifyModal(() => true)
             }
@@ -157,8 +163,8 @@ export const MainAppLayout = ({ children }) => {
     }, [currentUser, user]);
 
     useEffect(() => {
-        refetchNotification();
         if (user) {
+            refetchNotification();
             if (!user?.data?.status === "Banned") {
                 dispatch(apiSlice.util.resetApiState());
                 dispatch(logOut());

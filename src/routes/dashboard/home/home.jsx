@@ -8,6 +8,8 @@ import { useGetTrendingTagsQuery } from "../../../services/userApiSlice"
 import { Carousel } from "../../../components/global/carousel"
 import { AnnouncementCard } from "../../../components/global/announcementcard"
 import { useGetAnnouncementsQuery } from "../../../services/notificationsApiSlice"
+import { useSelector } from "react-redux"
+import { selectCurrentToken } from "../../../services/authSlice"
 
 
 const tabs = [
@@ -33,8 +35,9 @@ const tabs = [
 
 export const Home = () => {
 
-    const { data: recents, isLoading: recentLoading } = useGetRecentPostsQuery();
-    const { data: tags, isLoading: trendLoad } = useGetTrendingTagsQuery();
+    const token = useSelector(selectCurrentToken);
+    const { data: recents, isLoading: recentLoading } = useGetRecentPostsQuery(null, { skip: !token });
+    const { data: tags, isLoading: trendLoad } = useGetTrendingTagsQuery(null, { skip: !token });
     const { data: announcements } = useGetAnnouncementsQuery();
 
     return (
