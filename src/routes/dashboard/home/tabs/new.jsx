@@ -115,18 +115,8 @@ export const New = () => {
                     isLoading ?
                         <GallerySkeletons />
                         :
-                        !newResults.length ?
-                            <section className="w-full py-1">
-                                <EmptyState
-                                    icon={EmptyListIcon}
-                                    height="h-[30px]"
-                                    width="h-[30px]"
-                                    text="No new Posts"
-                                    subtext="Latest posts would appear here"
-                                />
-                            </section>
-                            :
-                            newResults.map((post) => (
+                        newResults?.length > 0 ?
+                            newResults?.map((post) => (
                                 <PostCard
                                     key={post.id}
                                     type={post.type}
@@ -154,7 +144,21 @@ export const New = () => {
                                     home
                                 />
                             ))
+                            :
+                            !isLoading && !isFetching && latest.data.data.length === 0 ?
+                                <section className="w-full py-1">
+                                    <EmptyState
+                                        icon={EmptyListIcon}
+                                        height="h-[30px]"
+                                        width="h-[30px]"
+                                        text="No New Posts"
+                                        subtext="Latest posts would appear here"
+                                    />
+                                </section>
+                                :
+                                null
                 }
+
                 {isFetching ?
                     <div className="w-full flex items-center justify-center py-24">
                         <ColoredLoader />

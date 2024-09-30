@@ -115,17 +115,7 @@ export const Trending = () => {
                     isLoading ?
                         <GallerySkeletons />
                         :
-                        !newResults.length ?
-                            <section className="w-full py-1">
-                                <EmptyState
-                                    icon={EmptyListIcon}
-                                    height="h-[30px]"
-                                    width="h-[30px]"
-                                    text="No trending Posts"
-                                    subtext="Trending posts would appear here"
-                                />
-                            </section>
-                            :
+                        newResults.length > 0 ?
                             newResults.map((post) => (
                                 <PostCard
                                     key={post.id}
@@ -154,6 +144,19 @@ export const Trending = () => {
                                     home
                                 />
                             ))
+                            :
+                            !isLoading && !isFetching && trending.data.data.length === 0 ?
+                                <section className="w-full py-1">
+                                    <EmptyState
+                                        icon={EmptyListIcon}
+                                        height="h-[30px]"
+                                        width="h-[30px]"
+                                        text="No Trending Posts"
+                                        subtext="Trending posts would appear here"
+                                    />
+                                </section>
+                                :
+                                null
                 }
                 {isFetching ?
                     <div className="w-full flex items-center justify-center py-24">

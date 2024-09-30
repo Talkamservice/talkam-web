@@ -131,17 +131,7 @@ export const CategoryFeatured = () => {
                     isLoading ?
                         <GallerySkeletons />
                         :
-                        !newResults.length ?
-                            <section className="w-full py-1">
-                                <EmptyState
-                                    icon={EmptyListIcon}
-                                    height="h-[30px]"
-                                    width="h-[30px]"
-                                    text="No Featured Posts within this subcategory"
-                                    subtext="Featured posts within the group would appear here"
-                                />
-                            </section>
-                            :
+                        newResults?.length > 0 ?
                             newResults && newResults?.map((post) => (
                                 <PostCard
                                     key={post.id}
@@ -167,6 +157,19 @@ export const CategoryFeatured = () => {
                                     handleDeletePost={handleDeletePost}
                                 />
                             ))
+                            :
+                            !isLoading && !isFetching && featured.data.data.length === 0 ?
+                                <section className="w-full py-1">
+                                    <EmptyState
+                                        icon={EmptyListIcon}
+                                        height="h-[30px]"
+                                        width="h-[30px]"
+                                        text="No Featured Posts"
+                                        subtext="When posts are made they would appear here"
+                                    />
+                                </section>
+                                :
+                                null
                 }
                 {isFetching ?
                     <div className="w-full flex items-center justify-center py-24">

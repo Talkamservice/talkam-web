@@ -115,17 +115,7 @@ export const Featured = () => {
                     isLoading ?
                         <GallerySkeletons />
                         :
-                        !newResults.length ?
-                            <section className="w-full py-1">
-                                <EmptyState
-                                    icon={EmptyListIcon}
-                                    height="h-[30px]"
-                                    width="h-[30px]"
-                                    text="No featured Posts"
-                                    subtext="Featured posts would appear here"
-                                />
-                            </section>
-                            :
+                        newResults.length > 0 ?
                             newResults.map((post) => (
                                 <PostCard
                                     key={post.id}
@@ -154,6 +144,19 @@ export const Featured = () => {
                                     home
                                 />
                             ))
+                            :
+                            !isLoading && !isFetching && featured.data.data.length === 0 ?
+                                <section className="w-full py-1">
+                                    <EmptyState
+                                        icon={EmptyListIcon}
+                                        height="h-[30px]"
+                                        width="h-[30px]"
+                                        text="No Featured Posts"
+                                        subtext="Featured posts would appear here"
+                                    />
+                                </section>
+                                :
+                                null
                 }
                 {isFetching ?
                     <div className="w-full flex items-center justify-center py-24">

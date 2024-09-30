@@ -116,17 +116,7 @@ export const GroupLatest = () => {
                     isLoading ?
                         <GallerySkeletons />
                         :
-                        !newResults.length ?
-                            <section className="w-full py-1">
-                                <EmptyState
-                                    icon={EmptyListIcon}
-                                    height="h-[30px]"
-                                    width="h-[30px]"
-                                    text="No Latest Posts within this group"
-                                    subtext="Latest posts within the group would appear here"
-                                />
-                            </section>
-                            :
+                        newResults?.length > 0 ?
                             newResults.map((post) => (
                                 <PostCard
                                     key={post.id}
@@ -152,6 +142,19 @@ export const GroupLatest = () => {
                                     handleDeletePost={handleDeletePost}
                                 />
                             ))
+                            :
+                            !isLoading && !isFetching && latest.data.data.length === 0 ?
+                                <section className="w-full py-1">
+                                    <EmptyState
+                                        icon={EmptyListIcon}
+                                        height="h-[30px]"
+                                        width="h-[30px]"
+                                        text="No New Posts"
+                                        subtext="When posts are made they would appear here"
+                                    />
+                                </section>
+                                :
+                                null
                 }
                 {isFetching ?
                     <div className="w-full flex items-center justify-center py-24">
