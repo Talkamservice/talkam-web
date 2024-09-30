@@ -222,7 +222,7 @@ export const NestedCommentCard = ({
                                 Replying @{!parentComment.reply_to ? "Anonymous" : (parentComment?.reply_to?.username || parentComment?.reply_to?.name)}
                             </span>
                             <span className="text-sm font-normal text-wrap whitespace-pre-wrap break-words w-full">
-                                {parentComment.comment.split(/(@\w+)/g).map((part, index) => {
+                                {parentComment?.comment?.split(/(@\w+)/g).map((part, index) => {
                                     // Clean up any leading or trailing `$` character around mentions
                                     part = part.replace(/\$/g, ''); // Remove all occurrences of '$'
 
