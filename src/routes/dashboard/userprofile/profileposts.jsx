@@ -130,17 +130,7 @@ export const ProfilesPosts = () => {
                     isLoading ?
                         <GallerySkeletons />
                         :
-                        !newResults.length ?
-                            <section className="w-full py-1">
-                                <EmptyState
-                                    icon={EmptyListIcon}
-                                    height="h-[50px]"
-                                    width="h-[50px]"
-                                    text="No posts yet"
-                                    subtext="When posts are made they would appear here"
-                                />
-                            </section>
-                            :
+                        newResults?.length > 0 ?
                             newResults.map((post) => (
                                 <PostCard
                                     key={post.id}
@@ -169,6 +159,19 @@ export const ProfilesPosts = () => {
                                     home
                                 />
                             ))
+                            :
+                            !isLoading && !isFetching && userPosts.data.data.length === 0 ?
+                                <section className="w-full py-1">
+                                    <EmptyState
+                                        icon={EmptyListIcon}
+                                        height="h-[30px]"
+                                        width="h-[30px]"
+                                        text="No Posts"
+                                        subtext="When this user makes a post they would appear here"
+                                    />
+                                </section>
+                                :
+                                null
                 }
                 {isFetching ?
                     <div className="w-full flex items-center justify-center py-24">

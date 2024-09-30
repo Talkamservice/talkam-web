@@ -10,6 +10,8 @@ import { AnnouncementCard } from "../../../components/global/announcementcard"
 import { useGetAnnouncementsQuery } from "../../../services/notificationsApiSlice"
 import { useSelector } from "react-redux"
 import { selectCurrentToken } from "../../../services/authSlice"
+import { EmptyState } from "../../../components/global/emptystate"
+import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 
 const tabs = [
@@ -88,27 +90,38 @@ export const Home = () => {
                             recentLoading ?
                                 <GallerySkeletons side />
                                 :
-                                recents?.data?.map((post) => (
-                                    <PostCard
-                                        key={post.id}
-                                        type={post.type}
-                                        user={post.user}
-                                        polls={post.polls}
-                                        avatar={post.user.avatar}
-                                        category={post.category?.name}
-                                        author={post.user.username ?? post.user.name}
-                                        title={post.title}
-                                        comment={post.body}
-                                        image={post.attachments?.[0]?.url}
-                                        commentcount={post.comments_count}
-                                        likes={post.likes_count}
-                                        tags={post.tags}
-                                        time={post.created_at}
-                                        id={post.id}
-                                        isAnon={post.is_anonymous}
-                                        side
-                                    />
-                                ))
+                                !recents?.data.length ?
+                                    <section className="w-full py-1">
+                                        <EmptyState
+                                            icon={EmptyListIcon}
+                                            height="h-[30px]"
+                                            width="h-[30px]"
+                                            text="No Recently Viewed Posts"
+                                            subtext="Recently viewed posts would appear here"
+                                        />
+                                    </section>
+                                    :
+                                    recents?.data?.map((post) => (
+                                        <PostCard
+                                            key={post.id}
+                                            type={post.type}
+                                            user={post.user}
+                                            polls={post.polls}
+                                            avatar={post.user.avatar}
+                                            category={post.category?.name}
+                                            author={post.user.username ?? post.user.name}
+                                            title={post.title}
+                                            comment={post.body}
+                                            image={post.attachments?.[0]?.url}
+                                            commentcount={post.comments_count}
+                                            likes={post.likes_count}
+                                            tags={post.tags}
+                                            time={post.created_at}
+                                            id={post.id}
+                                            isAnon={post.is_anonymous}
+                                            side
+                                        />
+                                    ))
                         }
                     </ul>
                 </section>
