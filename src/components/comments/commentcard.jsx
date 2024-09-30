@@ -248,7 +248,7 @@ export const CommentCard = ({
                         </div>
 
                         <article className="text-sm font-normal text-wrap whitespace-pre-wrap break-words w-full">
-                            {parentComment.comment.split(/(@\w+)/g).map((part, index) => {
+                            {parentComment?.comment?.split(/(@\w+)/g).map((part, index) => {
                                 // Clean up any leading or trailing `$` character around mentions
                                 part = part.replace(/\$/g, ''); // Remove all occurrences of '$'
 
