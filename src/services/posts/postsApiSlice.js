@@ -190,7 +190,13 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 url: `/user/search/username?search=${search}`,
                 method: 'get'
             })
-        })
+        }),
+        getScheduledPosts: builder.query({
+            query: () => ({
+                url: `/user/post-schedules`,
+                method: 'get'
+            })
+        }),
     })
 })
 
@@ -217,4 +223,5 @@ export const {
     useGetUserMediaQuery,
     useUpdatePostNotificationsMutation,
     useGetTagSuggestionsQuery,
+    useGetScheduledPostsQuery,
 } = postsApiSlice

@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 import { PostCardVariants } from "../../../helpers/cardanimation";
 import { ColoredLoader } from "../../../components/global/loader";
 import * as Icon from 'react-feather'
+import { ScheduledPosts } from "./scheduledposts";
 
 const tabs = [
     {
@@ -45,15 +46,21 @@ const tabs = [
 export const Profile = () => {
 
     const popUpRef = useRef();
+    const userPopRef = useRef();
     const currentUser = useSelector(selectCurrentUser);
     const navigate = useNavigate()
     const { userId } = useParams();
     const [editModal, setEditModal] = useState();
     const [popUp, setPopUp] = useState(false);
+    const [userPop, setUserPop] = useState(false);
     const [showBlockModal, setShowBlockModal] = useState(false)
+    const [viewScheduled, setViewScheduled] = useState(false)
 
     useOnOutsideClick(popUpRef, () => {
         setPopUp(false);
+    })
+    useOnOutsideClick(userPopRef, () => {
+        setUserPop(false);
     })
     const isLoggedInUser = currentUser?.id === Number(userId);
 
@@ -104,6 +111,11 @@ export const Profile = () => {
         setEditModal((prev) => !prev)
     }
 
+    const handleScheduledModal = () => {
+        setViewScheduled((prev) => !prev)
+        setUserPop(false)
+    }
+
     return (
         <div className="w-full flex flex-col lg:w-4/6 h-full">
             <section className="w-full flex flex-col">
@@ -118,10 +130,36 @@ export const Profile = () => {
                         <p className={`text-base font-bold text-tblack-100 ${isLoggedInUser ? "block" : "hidden"} `}>My Profile</p>
                     </section>
 
-                    <p onClick={handleEditModal} className={` ${isLoggedInUser ? "flex" : "hidden"} cursor-pointer border border-tgray-50 rounded-full px-2 py-1 flex items-center justify-between gap-2`}>
-                        <UploadAvatarIcon />
-                        <span className='text-tblack-100 text-xs md:text-sm whitespace-nowrap'>Edit Profile</span>
-                    </p>
+                    <section ref={userPopRef} className={`relative ${isLoggedInUser ? "flex" : "hidden"}  hover:bg-tgray-xlight p-1 rounded-full`}>
+                        <Icon.MoreVertical onClick={() => setUserPop((prev) => !prev)} color="#212121" />
+                        {
+                            userPop ?
+                                <motion.section
+                                    variants={PostCardVariants}
+                                    initial="initial"
+                                    animate="animate"
+                                    exit="exit"
+                                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                    className="absolute top-6 right-2 z-20">
+                                    <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
+                                        <li onClick={() => { handleEditModal(); setUserPop(false) }}
+                                            className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap cursor-pointer"
+                                        >
+                                            <UploadAvatarIcon />
+                                            <span className='text-tblack-100 text-xs md:text-sm whitespace- cursor-pointer'>Edit Profile</span>
+                                        </li>
+                                        <li onClick={() => handleScheduledModal()}
+                                            className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap cursor-pointer"
+                                        >
+                                            <Icon.Save className='' size={18} color='#000000' strokeWidth={2} />
+                                            <p>View Scheduled Posts</p>
+                                        </li>
+                                    </ul>
+                                </motion.section>
+                                :
+                                null
+                        }
+                    </section>
 
                     <div className={`flex items-center gap-2 ${(!isLoggedInUser && user?.data?.status !== "Banned") ? "flex" : "hidden"}`}>
                         {
@@ -265,6 +303,17 @@ export const Profile = () => {
                     handleShowBlockModal={handleShowBlockModal}
                     user={username}
                 />
+            </Modal>
+
+            <Modal
+                show={viewScheduled}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={handleScheduledModal}
+                position='center'
+                contentWidth='w-full sm:w-3/5 md:w-7/12 xl:w-8/12 '
+            >
+                <ScheduledPosts onClose={handleScheduledModal} />
             </Modal>
         </div>
     )

@@ -10,7 +10,7 @@ import { talkAmRules } from "../../../constants/talkamrules";
 import { RuleCard } from "../../../components/global/rulecard";
 import { AnonToggleButton } from "../../../components/global/anonymoustoggle";
 import { BasicToggleButton } from "../../../components/global/basictoggle";
-import { downVariants } from "../../../helpers/cardanimation";
+import { downVariants, PostCardVariants } from "../../../helpers/cardanimation";
 import { motion } from "framer-motion";
 import { useGetSubCategoriesQuery, useGetTrendingTagsQuery } from "../../../services/userApiSlice";
 import { useCreatePostMutation } from "../../../services/posts/postsApiSlice";
@@ -25,9 +25,10 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Storage } from "../../../app/storage";
 import { SelectCategoryModal } from "./selectcategorymodal";
 import { useGetFollowingGroupsQuery } from "../../../services/groupApiSlice";
-import Protected from "../../../utils/protected";
 import { getFileExtension } from "../../../helpers/getFileExtension";
 import { allowedVideoExtensions } from "../../../helpers/extensions";
+import Protected from "../../../utils/protected";
+import moment from "moment";
 
 const storageKeys = [
     "post_title", "post_comment",
@@ -48,6 +49,7 @@ export const CreatePost = () => {
     const [imageLoading, setImageLoading] = useState();
     const [isChecked, setIsChecked] = useState(false)
     const [scheduleCheck, setScheduleCheck] = useState(false);
+    const [isScheduling, setIscheduling] = useState(false);
     const [publishDate, setPublishDate] = useState(null);
     const [selectedItems, setSelectedItems] = useState([]);
     const [imagePreview, setImagePreview] = useState(null);
@@ -360,15 +362,42 @@ export const CreatePost = () => {
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-4">
                                         <p className="text-[#272727] font-normal text-base">Schedule this post</p>
-                                        <BasicToggleButton checked={scheduleCheck} onChange={(event) => setScheduleCheck(event.target.checked)} />
+                                        <BasicToggleButton checked={isScheduling}
+                                            onChange={(event) => {
+                                                console.log(event.target.checked)
+                                                if (event.target.checked === false) {
+                                                    setIscheduling(event.target.checked)
+                                                    setPublishDate(null)
+                                                }
+                                                setIscheduling(event.target.checked)
+                                            }} />
                                     </div>
+                                    {
+                                        isScheduling ?
+                                            <motion.div
+                                                variants={downVariants}
+                                                initial="initial"
+                                                animate="animate"
+                                                exit="exit"
+                                                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                            >
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setScheduleCheck(prev => !prev)}
+                                                >
+                                                    {publishDate ? `${moment(publishDate).format("DD MMMM YYYY")} - ${moment(publishDate).format("LT")}` : " Select Date and Time"}
+                                                </Button>
+                                            </motion.div>
+                                            :
+                                            null
+                                    }
                                 </div>
                                 <div className="flex items-center gap-8">
-                                    <Button
+                                    {/* <Button
                                         variant="link"
                                         children="Drafts"
                                         className="!rounded-full font-bold !text-base text-tprimary-50"
-                                    />
+                                    /> */}
                                     <Button
                                         children="Post"
                                         className="!rounded-full !text-base bg-tprimary-50 px-6 !py-1.5 md:!px-8 md:!py-2.5"
