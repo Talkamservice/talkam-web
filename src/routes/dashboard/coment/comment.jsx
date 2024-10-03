@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 import { PostCard } from "../../../components/posts/postcard"
 import { CommentInput } from "../../../components/comments/commentinput"
 import { useState } from "react"
@@ -214,9 +214,9 @@ export const Comment = () => {
                         isLoading={newCommentLoading}
                         imageLoading={imageLoading}
                     />
-                    <p className="text-xs text-[#676767] border-b border-tgray-50 py-1 pt-3">
+                    <Link to={"/help&info/rules"} className="text-xs text-[#676767] border-b border-tgray-50 py-1 pt-3">
                         Please be respectful and follow the <span className="text-tprimary-50 font-bold">Community Guidelines</span>
-                    </p>
+                    </Link>
                 </section>
 
                 <section className="w-full flex items-center justify-center flex-col gap-4">

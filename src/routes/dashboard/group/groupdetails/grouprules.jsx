@@ -44,7 +44,7 @@ export const GroupRules = ({ groupDetails, isLoading }) => {
                 <header className="flex flex-col gap-4">
                     <article className="text-sm font-normal ">
                         Rules unique to this group and enforced by the moderators.
-                        <Link className="font-bold text-sm text-tprimary-50">TalkAM guidelines and rules</Link> still apply in addition to these.
+                        <Link to={"/help&info/rules"} className="font-bold text-sm text-tprimary-50">TalkAM guidelines and rules</Link> still apply in addition to these.
                     </article>
 
                     <p className="text-sm font-normal">{groupDetails?.data.description}</p>

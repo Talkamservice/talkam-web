@@ -46,6 +46,7 @@ export const PostCard = ({
     group,
     isReported,
     notification,
+    published,
     home,
 }) => {
 
@@ -277,6 +278,15 @@ export const PostCard = ({
                     </div>
                     <PostShareButton onClick={postController.toggleShareModal} />
                 </footer>
+                {
+                    published && !moment(published, "YYYY-MM-DD HH:mm:ss").isSameOrBefore(new Date()) ?
+                        <section className="flex items-center justify-between py-2 px-4 rounded-full bg-tprimary-50">
+                            <p className="text-sm text-white">Scheduled Post</p>
+                            <p className="text-sm text-white">{`${moment(published).format("DD MMMM YYYY")} - ${moment(published).format("LT")}`}</p>
+                        </section>
+                        :
+                        null
+                }
             </main>
             <Modal
                 show={postController.showImagePreview}

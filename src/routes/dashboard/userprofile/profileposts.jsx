@@ -156,6 +156,7 @@ export const ProfilesPosts = () => {
                                     parentCategory={post?.category?.parent_category}
                                     isReported={post?.is_reported}
                                     notification={post?.enabled_notification}
+                                    published={post?.publish_at}
                                     home
                                 />
                             ))
