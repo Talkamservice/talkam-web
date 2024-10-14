@@ -23,6 +23,9 @@ export const Feedback = () => {
   const [messageError, setMessageError] = useState(false);
   const [files, setFiles] = useState([]);
   const [filesMaxed, setFilesMaxed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const baseURL = import.meta.env.VITE_BASE_API_URL;
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -52,8 +55,6 @@ export const Feedback = () => {
     { id: 1, name: "desktop", value: "Desktop Web" },
     { id: 2, name: "mobile", value: "Mobile" },
   ];
-
-  const [giveFeedback, { isLoading }] = useGiveFeedbackMutation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,7 +95,15 @@ export const Feedback = () => {
           formData.append(`attachments[${index}]`, file);
         });
 
-        await giveFeedback(formData).unwrap(); // Submit the feedback using the mutation
+        setIsLoading(true);
+
+        // await giveFeedback(formData).unwrap();
+        const response = await fetch(`${baseURL}/user/feedback`, {
+          method: "POST",
+          body: formData,
+        });
+        const formMessage = await response.json();
+        console.log(formMessage);
         toast.success("Feedback submitted successfully!");
 
         setFullName("");
@@ -107,6 +116,8 @@ export const Feedback = () => {
     } catch (error) {
       toast.error(`Failed to submit feedback: ${error?.data?.message}`);
       console.error("Failed to submit feedback", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
