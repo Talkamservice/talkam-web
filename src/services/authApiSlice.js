@@ -6,7 +6,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
             query: credentials => ({
                 url: `/auth/login`,
                 method: "post",
-                body: {...credentials}
+                body: { ...credentials }
             })
         }),
         tikTokLogin: builder.mutation({
@@ -19,48 +19,48 @@ export const authApiSlice = apiSlice.injectEndpoints({
             query: credentials => ({
                 url: `/auth/oauth-login`,
                 method: "post",
-                body: {...credentials}
+                body: { ...credentials }
             })
         }),
         signup: builder.mutation({
             query: credentials => ({
                 url: `/auth/register`,
                 method: "post",
-                body: {...credentials}
+                body: { ...credentials }
             })
         }),
         forgotPassword: builder.mutation({
             query: credentials => ({
                 url: `/auth/password/forgot`,
                 method: "post",
-                body: {...credentials}
+                body: { ...credentials }
             })
         }),
         verifyOtp: builder.mutation({
             query: credentials => ({
                 url: `/auth/otp/verify`,
                 method: "post",
-                body: {...credentials}
+                body: { ...credentials }
             })
         }),
         resendOtp: builder.mutation({
             query: credentials => ({
                 url: `/auth/otp/request`,
                 method: "post",
-                body: {...credentials}
+                body: { ...credentials }
             })
         }),
         resetPassword: builder.mutation({
             query: credentials => ({
                 url: `/auth/password/reset`,
                 method: "post",
-                body: {...credentials}
+                body: { ...credentials }
             })
         }),
     })
 })
 
-export const { 
+export const {
     useLoginMutation,
     useOauthLoginMutation,
     useSignupMutation,
