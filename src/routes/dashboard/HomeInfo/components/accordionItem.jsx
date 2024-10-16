@@ -2,6 +2,8 @@ import openImage from "../../../../assets/images/acc-plus.png";
 import closeImage from "../../../../assets/images/acc-minus.png";
 
 function AccordionItem({ index, isOpenArray, setIsOpen, question, answer }) {
+
+
   function handleClick(index) {
     if (isOpenArray.includes(index)) {
       setIsOpen((opens) => opens.filter((num) => num !== index));

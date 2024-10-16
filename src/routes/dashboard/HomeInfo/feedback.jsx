@@ -6,10 +6,15 @@ import { TextArea } from "../../../components/forms/textarea";
 import addImg from "../../../assets/images/file-add.png";
 import removeImg from "../../../assets/images/file-remove.png";
 import { toast } from "sonner";
-import { useGiveFeedbackMutation } from "../../../services/helpInfoSlice";
+import {
+  useFeedbackOptionsQuery,
+  useGiveFeedbackMutation,
+} from "../../../services/helpInfoSlice";
+import { ColoredLoader } from "../../../components/global/loader";
 
 export const Feedback = () => {
   const [platform, setPlatform] = useState("");
+  const [feedBackType, setFeedBackType] = useState("");
   const [fullName, setFullName] = useState("");
   const [fullNameError, setFullNameError] = useState(false);
   const [email, setEmail] = useState("");
@@ -18,6 +23,9 @@ export const Feedback = () => {
   const [messageError, setMessageError] = useState(false);
   const [files, setFiles] = useState([]);
   const [filesMaxed, setFilesMaxed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const baseURL = import.meta.env.VITE_BASE_API_URL;
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -48,14 +56,15 @@ export const Feedback = () => {
     { id: 2, name: "mobile", value: "Mobile" },
   ];
 
-  const [giveFeedback, { isLoading }] = useGiveFeedbackMutation();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       if (!platform) {
         toast.error("Platform is required");
+      }
+      if (!feedBackType) {
+        toast.error("Feedback type is required");
       }
       if (!fullName) {
         setFullNameError(true);
@@ -73,11 +82,12 @@ export const Feedback = () => {
         setMessageError(false);
       }
 
-      if (platform && fullName && email && message) {
+      if (platform && fullName && email && message && feedBackType) {
         const formData = new FormData();
         formData.append("name", fullName);
         formData.append("email", email);
         formData.append("platform", platform);
+        formData.append("feedback_type", feedBackType);
         formData.append("content", message);
 
         // Append each file in the files array
@@ -85,14 +95,57 @@ export const Feedback = () => {
           formData.append(`attachments[${index}]`, file);
         });
 
-        await giveFeedback(formData).unwrap(); // Submit the feedback using the mutation
+        setIsLoading(true);
+
+        // await giveFeedback(formData).unwrap();
+        const response = await fetch(`${baseURL}/user/feedback`, {
+          method: "POST",
+          body: formData,
+        });
+        const formMessage = await response.json();
+        console.log(formMessage);
         toast.success("Feedback submitted successfully!");
+
+        setFullName("");
+        setEmail("");
+        setPlatform("");
+        setFeedBackType("");
+        setMessage("");
+        setFiles([]);
       }
     } catch (error) {
-      toast.error("Failed to submit feedback", error?.data?.message);
+      toast.error(`Failed to submit feedback: ${error?.data?.message}`);
       console.error("Failed to submit feedback", error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const {
+    data: feedBackOptions,
+    isLoading: feedBackIsLoading,
+    error: feedBackOptionsError,
+  } = useFeedbackOptionsQuery();
+
+  if (feedBackIsLoading)
+    return (
+      <Container>
+        <div className="w-full flex justify-center items-center">
+          <ColoredLoader />
+        </div>
+      </Container>
+    );
+  if (feedBackOptionsError) {
+    throw new Error("An error occurred!");
+  }
+  let feedbackOptionsArray = [];
+  if (feedBackOptions?.data.length > 0) {
+    feedbackOptionsArray = feedBackOptions?.data.map((item, index) => ({
+      id: index + 1,
+      name: item, // Optional: Format the name
+      value: item,
+    }));
+  }
 
   return (
     <Container>
@@ -102,9 +155,11 @@ export const Feedback = () => {
         </h2>
         <form
           onSubmit={handleSubmit}
-          className="mt-7 md:mt-8 xl:mt-[35px] mb-7 md:mb-12 bg-white w-full max-w-[624px] mx-auto rounded-lg p-4 sm:p-6 border space-y-5 border-[#DDDDDD]"
+          className="mt-6 mb-7 md:mb-12 bg-white w-full max-w-[624px] mx-auto rounded-lg p-4 sm:p-6 border space-y-5 border-[#DDDDDD]"
         >
           <DropDownSelect
+            useValue
+            value={platform}
             buttonStyles="!py-2 h-[44px]"
             label="Platform"
             defaultValue="Select platform"
@@ -139,6 +194,16 @@ export const Feedback = () => {
             textSize="text-sm"
             error={emailError}
             errorText={emailError ? "Email is required" : ""}
+          />
+          <DropDownSelect
+            useValue
+            value={feedBackType}
+            buttonStyles="!py-2 h-[44px]"
+            label="Feedback Type"
+            defaultValue="Select feedback type"
+            options={feedbackOptionsArray}
+            required
+            onChange={(option) => setFeedBackType(option.name)}
           />
           <TextArea
             type="text"
