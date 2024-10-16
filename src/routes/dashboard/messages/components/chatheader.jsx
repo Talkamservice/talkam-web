@@ -24,6 +24,7 @@ export const ChatHeader = ({ messageController, currentChat, setCurrentChat, cur
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
     });
+    console.log(details, messageController)
 
     return (
         <div className={`p-2 flex items-center justify-between space-x-3 w-full border-b border-[#E2E4E9]`}>
@@ -34,7 +35,7 @@ export const ChatHeader = ({ messageController, currentChat, setCurrentChat, cur
                         :
                         null
                 }
-                <div className='cursor-pointer' onClick={() => navigate(`/userprofile/${receiver?.id}`)}>
+                <div className='cursor-pointer' onClick={() => navigate(`/userprofile/${receiver?.username}`)}>
                     <Avatar src={receiver?.avatar} size="sm" />
                 </div>
             </section>
@@ -58,7 +59,7 @@ export const ChatHeader = ({ messageController, currentChat, setCurrentChat, cur
                             className="absolute top-12 right-5 z-10"
                         >
                             <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
-                                <li onClick={() => navigate(`/userprofile/${receiver?.id}`)}
+                                <li onClick={() => navigate(`/userprofile/${receiver?.username}`)}
                                     className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight"
                                 >
                                     <SingleUserIcon className='' size={15} color='#000000' strokeWidth={2} />

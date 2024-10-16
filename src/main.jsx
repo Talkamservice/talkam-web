@@ -10,6 +10,7 @@ import { AnimatePresence } from 'framer-motion';
 import { HelpIfoLayout } from "./components/layout/helpInfoLayout";
 import ErrorPage from './routes/error/error';
 import App from './App';
+import NotFound from './routes/notfound/404';
 
 window.addEventListener("vite:preloadError", (event) => {
   window.location.reload();
@@ -537,7 +538,7 @@ const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <div>Nothing to see here</div>,
+    element: <NotFound />,
   },
 ]);
 

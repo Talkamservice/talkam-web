@@ -22,7 +22,7 @@ export const UserPopUp = ({ currentUser, toggleShowPanel, close }) => {
     return (
         <div className="flex flex-col min-w-[200px] z-40">
             <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
-                <li onClick={() => { navigate(`/userprofile/${currentUser.id}`); toggleShowPanel(); close() }}
+                <li onClick={() => { navigate(`/userprofile/${currentUser?.username}`); toggleShowPanel(); close() }}
                     className="bg-white w-full px-4 flex items-start gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight font-semibold whitespace-nowrap"
                 >
                     My Profile

@@ -55,7 +55,7 @@ export const Groups = () => {
                                         </section>
                                         :
                                         groupController.following?.data?.data.map((group) => (
-                                            <IsBanned isBanned={group?.is_suspended} onClick={() => navigate(`/group/${group.id}`)}>
+                                            <IsBanned isBanned={group?.is_suspended} onClick={() => navigate(`/group/${group.uuid}`)}>
                                                 <GroupCard
                                                     key={group.id}
                                                     img={group.image}

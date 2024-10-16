@@ -5,9 +5,14 @@ import { handleError } from "../../../utils/handleError";
 import { EmptyState } from "../../../components/global/emptystate";
 import { SubCategories } from "./subcategories";
 import { CategorySkeletonLoader } from "../../../components/global/skeletons";
+import { Button } from "../../../components/forms/button";
+import { Plus } from "react-feather";
+import { useNavigate } from "react-router-dom";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 export const Categories = () => {
+
+    const navigate = useNavigate();
 
     const { data: categories, isLoading, isError, error } = useGetCategoriesQuery({
         sort: ""
@@ -25,9 +30,20 @@ export const Categories = () => {
     }
 
     return (
-        <div className="w-full lg:w-5/6 flex flex-col gap-4 p-6">
-            <header className="text-xl font-bold">
-                All Categories
+        <div className="w-full lg:w-5/6 flex flex-col gap-8 p-6">
+            <header className="w-full flex flex-col items-start md:flex-row md:items-center justify-between">
+                <h1 className="text-xl font-bold">
+                    All Categories
+                </h1>
+
+                <Button
+                    onClick={() => navigate("/help&info/feedback")}
+                    className="!text-tprimary-50"
+                    leftIcon={<Plus size={18} />}
+                    variant="link"
+                >
+                    Submit a suggestion
+                </Button>
             </header>
 
             <section className="w-full flex flex-col gap-8">

@@ -74,7 +74,19 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 url: `/user/profile/fetch?username=${username}`,
                 method: "get"
             })
-        })
+        }),
+        getCountries: builder.query({
+            query: ({ search }) => ({
+                url: `/location/countries?search=${search}`,
+                method: "get"
+            })
+        }),
+        getStates: builder.query({
+            query: ({ countryId, search }) => ({
+                url: `/location/states?country_id=${countryId}&search=${search}`,
+                method: "get"
+            })
+        }),
     })
 })
 
@@ -91,4 +103,6 @@ export const {
     useAddInterestMutation,
     useGetUserFromUsernameQuery,
     useLazyGetUserFromUsernameQuery,
+    useGetCountriesQuery,
+    useGetStatesQuery,
 } = authApiSlice

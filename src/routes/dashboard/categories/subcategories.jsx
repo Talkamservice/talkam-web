@@ -33,7 +33,7 @@ export const SubCategories = ({ id }) => {
                                     key={category?.id}
                                     followercount={category?.followers_count}
                                     name={category?.name}
-                                    id={category?.id}
+                                    id={category?.uuid}
                                     type={category?.type}
                                     isSuspended={category?.type === "Group" ? category?.is_suspended : null}
                                 />

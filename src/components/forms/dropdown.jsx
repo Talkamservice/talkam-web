@@ -3,6 +3,7 @@ import { useOnOutsideClick } from '../../hooks/useOnOutsideClick'
 import { Search } from '../global/search'
 import { ColoredLoader } from '../global/loader'
 import * as Icon from 'react-feather'
+import { useClickOutside } from '../../hooks/useClickOutside'
 
 export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnly, node, styles, buttonStyles, search, searchChange, searchValue, isLoading, required }) => {
 
@@ -11,7 +12,7 @@ export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnl
 
   const ref = useRef()
 
-  useOnOutsideClick(ref, () => {
+  useClickOutside(ref, () => {
     setShow(false);
   });
 
@@ -31,11 +32,11 @@ export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnl
       ) : null}
       {required && <span className='text-error-500'>*</span>}
       <button type='button' ref={ref} onClick={toggleDropDown} className={`w-full relative flex justify-between items-center focus:ring-tblue-100 focus:border-tprimary-100
-        gap-6 bg-twhite-100 border border-tgray-50 focus:outline-none rounded-md focus:ring-4 cursor-pointer p-3 ${buttonStyles}`}
+        gap-6 bg-twhite-100 border border-tgray-50 focus:outline-none rounded-xl focus:ring-4 cursor-pointer p-3 ${buttonStyles}`}
       >
         <section className='flex items-center  gap-2'>
           {!!node && node}
-          <p className='text-tgray-150 text-sm whitespace-nowrap'>{selected ? selected?.value : defaultValue}</p>
+          <p className='text-tgray-300 text-sm whitespace-nowrap'>{selected ? selected?.name : defaultValue}</p>
         </section>
         {show ? <Icon.ChevronUp size={15} color='gray' /> : <Icon.ChevronDown size={15} color='gray' />}
         <div
@@ -61,7 +62,7 @@ export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnl
                 {options?.length ? options?.map(option => (
                   <MenuItem
                     key={option.id}
-                    value={option?.value}
+                    value={option?.value ? option.value : option.name}
                     id={option?.id}
                     onSelect={() => handleSelected(option)}
                     readOnly={readOnly}

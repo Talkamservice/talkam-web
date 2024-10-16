@@ -107,9 +107,9 @@ export const Home = () => {
                                             type={post.type}
                                             user={post.user}
                                             polls={post.polls}
-                                            avatar={post.user.avatar}
+                                            avatar={post?.user?.avatar}
                                             category={post.category?.name}
-                                            author={post.user.username ?? post.user.name}
+                                            author={post?.user?.username ?? post?.user?.name}
                                             title={post.title}
                                             comment={post.body}
                                             image={post.attachments?.[0]?.url}
