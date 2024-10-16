@@ -178,8 +178,8 @@ export const Comment = () => {
                             type={postDetails.data.type}
                             polls={postDetails.data.polls}
                             category={postDetails.data?.category}
-                            avatar={postDetails.data?.user.avatar}
-                            author={postDetails.data?.user.username ?? postDetails.data?.user.name}
+                            avatar={postDetails.data?.user?.avatar}
+                            author={postDetails.data?.user?.username ?? postDetails.data?.use?.name}
                             title={postDetails.data?.title}
                             comment={postDetails.data?.body}
                             image={postDetails.data?.attachments?.[0]?.url}
@@ -190,7 +190,7 @@ export const Comment = () => {
                             id={postDetails.data?.id}
                             isAnon={postDetails.data?.is_anonymous}
                             reaction={postDetails?.data.reaction}
-                            user={postDetails?.data.user}
+                            user={postDetails?.data?.user}
                             group={postDetails?.data?.group}
                             parentCategory={postDetails?.data?.category?.parent_category}
                             isReported={postDetails?.data?.is_reported}
