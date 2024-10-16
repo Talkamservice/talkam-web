@@ -45,11 +45,11 @@ const tabs = [
 
 export const Profile = () => {
 
+    const { userId } = useParams();
+    const navigate = useNavigate()
     const popUpRef = useRef();
     const userPopRef = useRef();
     const currentUser = useSelector(selectCurrentUser);
-    const navigate = useNavigate()
-    const { userId } = useParams();
     const [editModal, setEditModal] = useState();
     const [popUp, setPopUp] = useState(false);
     const [userPop, setUserPop] = useState(false);
@@ -62,7 +62,7 @@ export const Profile = () => {
     useOnOutsideClick(userPopRef, () => {
         setUserPop(false);
     })
-    const isLoggedInUser = currentUser?.id === Number(userId);
+    const isLoggedInUser = currentUser?.username === userId;
 
     const { data: user, refetch } = useGetUserProfileDetailsQuery(userId, {
         refetchOnMountOrArgChange: true,

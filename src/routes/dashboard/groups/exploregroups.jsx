@@ -52,7 +52,7 @@ export const ExploreGroups = () => {
                             </section>
                             :
                             groupController.allGroups?.data?.data?.map((group) => (
-                                <IsBanned isBanned={group?.is_suspended} onClick={() => groupController.navigate(`/group/${group.id}`)} >
+                                <IsBanned isBanned={group?.is_suspended} onClick={() => groupController.navigate(`/group/${group.uuid}`)} >
                                     <JoinGroupCard
                                         key={group.id}
                                         avatar={group.image}
@@ -61,6 +61,7 @@ export const ExploreGroups = () => {
                                         groupId={group.id}
                                         access={group.group_access}
                                         isSuspended={group.is_suspended}
+                                        uuid={group.uuid}
                                     />
                                 </IsBanned>
                             ))

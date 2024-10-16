@@ -65,7 +65,7 @@ export const PostCard = ({
             <header className="flex items-center justify-between gap-3">
                 <section className="flex items-center gap-3">
                     <span
-                        onClick={() => postController.navigate(`/userprofile/${user.id}`)}
+                        onClick={() => postController.navigate(`/userprofile/${user.username ?? user.id}`)}
                         className={`w-fit ${postController.anonymous ? "pointer-events-none" : "cursor-pointer"} `}
                     >
                         <Avatar size="xsm" src={!postController.anonymous ? avatar : null} />
@@ -81,7 +81,7 @@ export const PostCard = ({
                                 group && home ?
                                     <p className="items-center whitespace-nowrap inline-flex gap-1 pl-1">
                                         to{" "}
-                                        <Link to={`/group/${group?.id}`} className="text-tprimary-50 cursor-pointer">
+                                        <Link to={`/group/${group?.uuid}`} className="text-tprimary-50 cursor-pointer">
                                             {group?.name}
                                         </Link>
                                     </p>
@@ -92,7 +92,7 @@ export const PostCard = ({
                                 category && home && !group ?
                                     <p className="items-center whitespace-nowrap inline-flex gap-1 pl-1">
                                         to{" "}
-                                        <Link to={`/category/${category?.id}`} className="text-tprimary-50 cursor-pointer truncate">
+                                        <Link to={`/category/${category?.uuid}`} className="text-tprimary-50 cursor-pointer truncate">
                                             {category?.name}
                                         </Link>
                                     </p>

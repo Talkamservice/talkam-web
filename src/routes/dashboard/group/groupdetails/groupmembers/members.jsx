@@ -257,7 +257,7 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
                         >
                             <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
                                 <li
-                                    onClick={() => navigate(`/userprofile/${userId}`)}
+                                    onClick={() => navigate(`/userprofile/${user}`)}
                                     className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap"
                                 >
                                     <SingleUserIcon className='w-4 h-4 font-light' size={15} />
@@ -268,7 +268,7 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
                                     onClick={() => {
                                         navigate({
                                             pathname: `${location.pathname}`,
-                                            search: `?messages&u=${userId}`,
+                                            search: `?messages&u=${user}`,
                                         }, { state: userId });
                                     }}
                                 >

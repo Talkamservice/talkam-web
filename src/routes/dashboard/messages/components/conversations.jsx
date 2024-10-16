@@ -39,7 +39,7 @@ export const Conversations = ({ currentChat, setCurrentChat, conversations, isLo
                                 return (
                                     <ConversationCard
                                         key={convo.id}
-                                        user={receiver?.username ?? receiver.name}
+                                        user={receiver?.username ?? receiver?.name}
                                         time={convo.last_message?.created_at}
                                         lastMessage={convo.last_message?.message}
                                         status={convo.last_message?.read}

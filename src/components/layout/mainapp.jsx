@@ -357,7 +357,7 @@ export const MainAppLayout = ({ children }) => {
                                                         key={item.id}
                                                         children={item.name}
                                                         image={item.icon_image ?? <LatestEventsIcon />}
-                                                        url={`/category/${item?.id}`}
+                                                        url={`/category/${item?.uuid}`}
                                                         onClick={() => setShowPanel(false)}
                                                     />
                                                 ))
@@ -402,7 +402,7 @@ export const MainAppLayout = ({ children }) => {
                                                         key={item.id}
                                                         children={item.name}
                                                         image={item.icon_image ?? <LatestEventsIcon />}
-                                                        url={`/category/${item?.id}`}
+                                                        url={`/category/${item?.uuid}`}
                                                         onClick={() => setShowPanel(false)}
                                                     />
                                                 ))
