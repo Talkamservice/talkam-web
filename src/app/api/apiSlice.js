@@ -8,8 +8,8 @@ const baseQuery = fetchBaseQuery({
     const token = getState()?.auth?.token;
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
+      headers.set('Content-Type', 'application/json');
     }
-    headers.set('Content-Type', 'application/json');
     return headers;
   },
 });

@@ -198,7 +198,7 @@ export const CommentCard = ({
     const handleNavigateToProfile = async (username) => {
         try {
             const res = await trigger(username);
-            navigate(`/userprofile/${res?.data?.data?.id}`)
+            navigate(`/userprofile/${res?.data?.data?.username ?? res?.data?.data?.id}`)
         } catch (error) {
             const errorMessage = handleError(error);
             toast.error(errorMessage)
@@ -236,7 +236,7 @@ export const CommentCard = ({
             <LoadingBar height={3} color="#017FC8" progress={userLoading ? 75 : 100} />
             <div className={`w-full border border-tgray-50 rounded-xl p-4 flex flex-col items-start justify-between gap-4 relative`}>
                 <section className="w-full flex gap-3">
-                    <div onClick={() => navigate(`/userprofile/${parentComment?.user.id}`)}
+                    <div onClick={() => navigate(`/userprofile/${parentComment?.user?.username ?? parentComment?.user?.id}`)}
                         className={`flex items-start justify-start ${parentComment?.is_anonymous ? "pointer-events-none" : "cursor-pointer"}`}>
                         <Avatar size="xsm" src={parentComment.is_anonymous ? null : avatar} />
                     </div>

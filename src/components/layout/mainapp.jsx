@@ -26,11 +26,11 @@ import { AuthWrapper } from '../../utils/authWrapper';
 import { useGlobalLoader } from '../../hooks/useCheckLoader';
 import { Storage } from '../../app/storage';
 import { apiSlice } from '../../app/api/apiSlice';
-import * as Icon from 'react-feather'
 import Pusher from 'pusher-js';
 import LoadingBar from 'react-top-loading-bar';
 import PushIcon from "../../assets/icons/logo.svg"
 import PushSound from "../../assets/audio/notify.wav"
+import * as Icon from 'react-feather'
 
 export const MainAppLayout = ({ children }) => {
 
@@ -193,140 +193,142 @@ export const MainAppLayout = ({ children }) => {
     return (
         <section className='w-full flex items-center justify-center no-scrollbar'>
             <LoadingBar height={3} color="#017FC8" progress={state === "loading" ? 75 : 100} />
-            <main className='w-full relative h-dvh no-scrollbar max-w-screen-2xl no-scrollbar'>
+            <main className='w-full relative h-dvh no-scrollbar no-scrollbar'>
                 {/* Mobile header */}
-                <header className={`sticky w-full flex items-center justify-between gap-8 sm:gap-4 border-b border-tgray-light bg-white z-40 px-6 lg:px-24 h-[7dvh] py-2 top-0`}>
-                    <div onClick={() => { navigate('/home'); setShowPanel(false); }} className="flex items-center gap-2 cursor-pointer">
-                        <TalkamLogo width={isMobile ? 25 : 35} height={isMobile ? 30 : 40} />
-                        <p className={` ${!isLogoMobile ? 'block' : 'hidden'} flex items-center text-xl font-regularNunito`}><span className='font-extraboldNunito'>talk</span>AM</p>
-                    </div>
-                    <section className='w-10/12 md:w-9/12 flex items-center justify-end gap-6 md:gap-8 no-scrollbar'>
-                        <section className={`${isMobile ? "" : "flex-1"} flex items-center gap-5 md:gap-8`}>
-                            {isMobile ?
-                                <Icon.Search
-                                    onClick={() => navigate('/search')}
-                                    className={`${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`}
-                                />
-                                :
-                                <NavSearch />
-                            }
-                            {
-                                !isAuth ?
-                                    <section className='flex items-center gap-4'>
-                                        <Button
-                                            variant="outline"
-                                            className="!rounded-full !font-bold !py-2.5 !px-4 text-tprimary-50 border border-tprimary-50"
-                                            onClick={() => navigate("/sign-up")}
-                                        >
-                                            Sign Up
-                                        </Button>
-
-                                        <Button
-                                            variant="primary"
-                                            className="!rounded-full !font-bold !py-3 !px-4"
-                                            leftIcon={<LockIcon className="w-5 h-5 text-twhite-100" />}
-                                            onClick={() => navigate("/login")}
-                                        >
-                                            Login
-                                        </Button>
-                                    </section>
+                <header className='w-full border-b border-tgray-light'>
+                    <section className={`sticky w-full max-w-screen-2xl mx-auto flex items-center justify-between gap-8 sm:gap-4 bg-white z-40 px-6 lg:px-24 h-[7dvh] py-2 top-0`}>
+                        <div onClick={() => { navigate('/home'); setShowPanel(false); }} className="flex items-center gap-2 cursor-pointer">
+                            <TalkamLogo width={isMobile ? 25 : 35} height={isMobile ? 30 : 40} />
+                            <p className={` ${!isLogoMobile ? 'block' : 'hidden'} flex items-center text-xl font-regularNunito`}><span className='font-extraboldNunito'>talk</span>AM</p>
+                        </div>
+                        <section className='w-10/12 md:w-9/12 flex items-center justify-end gap-6 md:gap-8 no-scrollbar'>
+                            <section className={`${isMobile ? "" : "flex-1"} flex items-center gap-5 md:gap-8`}>
+                                {isMobile ?
+                                    <Icon.Search
+                                        onClick={() => navigate('/search')}
+                                        className={`${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`}
+                                    />
                                     :
-                                    null
-                            }
-                            {
-                                isAuth ?
-                                    <>
+                                    <NavSearch />
+                                }
+                                {
+                                    !isAuth ?
+                                        <section className='flex items-center gap-4'>
+                                            <Button
+                                                variant="outline"
+                                                className="!rounded-full !font-bold !py-2.5 !px-4 text-tprimary-50 border border-tprimary-50"
+                                                onClick={() => navigate("/sign-up")}
+                                            >
+                                                Sign Up
+                                            </Button>
 
-                                        <div className='relative'>
-                                            <NotificationIcon onClick={() => navigate('/notifications')} className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
-                                            <span
-                                                className={`absolute top-0 right-0 rounded-full bg-red-600 p-[2px] flex items-center justify-center
+                                            <Button
+                                                variant="primary"
+                                                className="!rounded-full !font-bold !py-3 !px-4"
+                                                leftIcon={<LockIcon className="w-5 h-5 text-twhite-100" />}
+                                                onClick={() => navigate("/login")}
+                                            >
+                                                Login
+                                            </Button>
+                                        </section>
+                                        :
+                                        null
+                                }
+                                {
+                                    isAuth ?
+                                        <>
+
+                                            <div className='relative'>
+                                                <NotificationIcon onClick={() => navigate('/notifications')} className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`} />
+                                                <span
+                                                    className={`absolute top-0 right-0 rounded-full bg-red-600 p-[2px] flex items-center justify-center
                                                     ${notificationStats?.data?.unread_notifications > 99 ? "" : "h-3 w-3"}
                                                     ${notificationStats?.data?.unread_notifications ? ' flex' : 'hidden'} text-[6px] text-twhite-100`
-                                                }
-                                            >
-                                                {notificationStats?.data?.unread_notifications}
-                                            </span>
-                                        </div>
+                                                    }
+                                                >
+                                                    {notificationStats?.data?.unread_notifications}
+                                                </span>
+                                            </div>
 
-                                        <div className='relative'>
-                                            <Icon.Mail
-                                                onClick={() => {
-                                                    navigate({
-                                                        pathname: `${location.pathname}`,
-                                                        search: `messages`,
-                                                    });
-                                                    setShowPanel(false);
-                                                }}
-                                                className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`}
-                                            />
-                                            <span
-                                                className={`absolute top-0 right-0 rounded-full bg-red-600 p-[2px] flex items-center justify-center
+                                            <div className='relative'>
+                                                <Icon.Mail
+                                                    onClick={() => {
+                                                        navigate({
+                                                            pathname: `${location.pathname}`,
+                                                            search: `messages`,
+                                                        });
+                                                        setShowPanel(false);
+                                                    }}
+                                                    className={`cursor-pointer ${isMobile ? 'w-5 h-5' : 'w-7 h-7'}`}
+                                                />
+                                                <span
+                                                    className={`absolute top-0 right-0 rounded-full bg-red-600 p-[2px] flex items-center justify-center
                                                     ${notificationStats?.data?.unread_messages > 99 ? "" : "h-3 w-3"}
                                                     ${notificationStats?.data?.unread_messages ? ' flex' : 'hidden'} text-[6px] text-twhite-100`
-                                                }
-                                            >
-                                                {notificationStats?.data?.unread_messages}
-                                            </span>
+                                                    }
+                                                >
+                                                    {notificationStats?.data?.unread_messages}
+                                                </span>
 
-                                        </div>
-                                    </>
-                                    :
-                                    null
-                            }
-                        </section>
-                        <section className='flex items-center gap-5 md:gap-8'>
-                            {
-                                isAuth ?
-                                    <>
-                                        <Button
-                                            children={isMobile ? "" : "Post"}
-                                            leftIcon={< Icon.Plus size={isMobile ? 16 : 20} />}
-                                            className="!p-1 lg:!px-4 lg:!py-2.5 !rounded-full"
-                                            onClick={() => { navigate('/create-post'); setShowPanel(false) }}
-                                        />
-                                        <div ref={popUpRef} className='cursor-pointer relative'>
-                                            <Avatar
-                                                onClick={showProfileMenu} src={user?.data?.avatar ?? currentUser?.avatar}
-                                                size={isMobile ? "xs" : "sm"}
+                                            </div>
+                                        </>
+                                        :
+                                        null
+                                }
+                            </section>
+                            <section className='flex items-center gap-5 md:gap-8'>
+                                {
+                                    isAuth ?
+                                        <>
+                                            <Button
+                                                children={isMobile ? "" : "Post"}
+                                                leftIcon={< Icon.Plus size={isMobile ? 16 : 20} />}
+                                                className="!p-1 lg:!px-4 lg:!py-2.5 !rounded-full"
+                                                onClick={() => { navigate('/create-post'); setShowPanel(false) }}
                                             />
-                                            {
-                                                profileMenu ?
-                                                    <motion.div
-                                                        variants={downVariants}
-                                                        initial="initial"
-                                                        animate="animate"
-                                                        exit="exit"
-                                                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                                                        className="absolute top-14 -right-12 z-40"
-                                                    >
-                                                        <UserPopUp
-                                                            currentUser={currentUser}
-                                                            toggleShowPanel={() => setShowPanel(false)}
-                                                            close={showProfileMenu}
-                                                        />
-                                                    </motion.div>
-                                                    :
-                                                    null
-                                            }
-                                        </div>
-                                    </>
-                                    :
-                                    null
-                            }
-                            <Icon.Menu
-                                className={`${isMobile ? 'block' : 'hidden'}`}
-                                width={24}
-                                height={24}
-                                color="black"
-                                onClick={toggleShowPanel}
-                                size={isMobile ? 15 : 18}
-                            />
+                                            <div ref={popUpRef} className='cursor-pointer relative'>
+                                                <Avatar
+                                                    onClick={showProfileMenu} src={user?.data?.avatar ?? currentUser?.avatar}
+                                                    size={isMobile ? "xs" : "sm"}
+                                                />
+                                                {
+                                                    profileMenu ?
+                                                        <motion.div
+                                                            variants={downVariants}
+                                                            initial="initial"
+                                                            animate="animate"
+                                                            exit="exit"
+                                                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                                            className="absolute top-14 -right-12 z-40"
+                                                        >
+                                                            <UserPopUp
+                                                                currentUser={currentUser}
+                                                                toggleShowPanel={() => setShowPanel(false)}
+                                                                close={showProfileMenu}
+                                                            />
+                                                        </motion.div>
+                                                        :
+                                                        null
+                                                }
+                                            </div>
+                                        </>
+                                        :
+                                        null
+                                }
+                                <Icon.Menu
+                                    className={`${isMobile ? 'block' : 'hidden'}`}
+                                    width={24}
+                                    height={24}
+                                    color="black"
+                                    onClick={toggleShowPanel}
+                                    size={isMobile ? 15 : 18}
+                                />
+                            </section>
                         </section>
                     </section>
                 </header>
 
-                <div className=" relative flex no-scrollbar h-[calc(100dvh-7dvh)]">
+                <div className="relative flex mx-auto no-scrollbar h-[calc(100dvh-7dvh)] max-w-screen-2xl">
                     <div
                         className={`fixed inset-0 z-[38] backdrop-blur-sm bg-tgray-300 lg:hidden`}
                         style={{
@@ -338,7 +340,7 @@ export const MainAppLayout = ({ children }) => {
                     ></div>
 
                     <aside
-                        className={`fixed border-r border-tgray-light inset-y-0 z-[38] lg:absolute w-80 sm:w-96 no-scrollbar overflow-y-auto bg-white sm:pl-20 pr-6
+                        className={`fixed border-r border-tgray-light inset-0 z-[38] lg:absolute w-80 sm:w-96 no-scrollbar overflow-y-auto bg-white sm:pl-20 pr-6
                         ${isMobile && !showPanel && "hidden"}`}
                     >
                         <div className="flex flex-col h-full overflow-y-auto no-scrollbar">

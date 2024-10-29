@@ -145,7 +145,7 @@ export const Comment = () => {
     return (
         <main className="w-full flex">
             <Helmet>
-                <title>{`${(postDetails?.data?.user.username ?? postDetails?.data?.user.name) ?? 'user'}`} on talkam</title>
+                <title>{`${(postDetails?.data?.user?.username ?? postDetails?.data?.user?.name) ?? 'user'}`} on talkam</title>
                 <meta charset="utf-8" />
                 <meta name="description" content={postDetails?.data?.body} />
                 <meta name="title" content={postDetails?.data?.title} />
@@ -178,7 +178,7 @@ export const Comment = () => {
                             type={postDetails.data.type}
                             polls={postDetails.data.polls}
                             category={postDetails.data?.category}
-                            avatar={postDetails.data?.user?.avatar}
+                            avatar={postDetails?.data?.user?.avatar}
                             author={postDetails.data?.user?.username ?? postDetails.data?.use?.name}
                             title={postDetails.data?.title}
                             comment={postDetails.data?.body}
@@ -232,7 +232,7 @@ export const Comment = () => {
                                         key={parentcomment.id}
                                         parentComment={parentcomment}
                                         allComments={parentcomment.children ?? []}
-                                        avatar={parentcomment.user.avatar}
+                                        avatar={parentcomment?.user?.avatar}
                                         time={parentcomment.created_at}
                                         submitCommentResponse={() => submitCommentResponse(parentcomment.id)}
                                         submitNestedCommentResponse={submitNestedCommentResponse}

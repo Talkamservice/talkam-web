@@ -19,7 +19,7 @@ export const Verification = () => {
 
     const navigate = useNavigate();
     const { state: locationState } = useLocation();
-    const { emailValue, type } = locationState;
+    const { emailValue = '', type = '' } = locationState || {};
     const [code, setCode] = useState(null)
     const handleChange = (enteredOtp) => {
         setCode(enteredOtp);

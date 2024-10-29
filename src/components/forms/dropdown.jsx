@@ -1,16 +1,19 @@
-import React, { useRef, useState } from 'react'
-import { useOnOutsideClick } from '../../hooks/useOnOutsideClick'
+import React, { useEffect, useRef, useState } from 'react'
 import { Search } from '../global/search'
 import { ColoredLoader } from '../global/loader'
-import * as Icon from 'react-feather'
 import { useClickOutside } from '../../hooks/useClickOutside'
+import * as Icon from 'react-feather'
 
 export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnly, node, styles, buttonStyles, search, searchChange, searchValue, isLoading, required }) => {
 
-  const [show, setShow] = useState(false)
-  const [selected, setSelected] = useState('')
+  const ref = useRef();
+  const menuRef = useRef();
+  const [show, setShow] = useState(false);
+  const [selected, setSelected] = useState('');
 
-  const ref = useRef()
+  const scrollToBottom = () => {
+    menuRef.current?.scrollIntoView?.({ behavior: "smooth", block: 'end', inline: 'nearest' });
+  };
 
   useClickOutside(ref, () => {
     setShow(false);
@@ -24,6 +27,12 @@ export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnl
     onChange(option)
     setSelected(option)
   }
+
+  useEffect(() => {
+    if (show && menuRef.current) {
+      scrollToBottom()
+    }
+  }, [show]);
 
   return (
     <div tabIndex={0} className={`w-full min-w-[200px] space-y-1 ${styles}`}>
@@ -40,6 +49,7 @@ export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnl
         </section>
         {show ? <Icon.ChevronUp size={15} color='gray' /> : <Icon.ChevronDown size={15} color='gray' />}
         <div
+          ref={menuRef}
           className={`absolute overflow-auto ${show ? "block" : "hidden"}
           left-0 right-0 top-full min-w-full w-max max-h-[200px] no-scrollbar bg-white shadow-md mt-1 rounded-lg z-20`}
         >
@@ -58,14 +68,15 @@ export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnl
                 <span className='text-xs text-tgray-300'>Loading results...</span>
               </section>
               :
-              <ul className={`overflow-hidden text-left border border-tgray-50 ${!search ? "rounded-lg" : "rounded-b-lg"} no-scrollbar relative`}>
+              <ul
+                className={`overflow-hidden text-left border border-tgray-50 ${!search ? "rounded-lg" : "rounded-b-lg"} no-scrollbar relative`}>
                 {options?.length ? options?.map(option => (
                   <MenuItem
                     key={option.id}
                     value={option?.value ? option.value : option.name}
                     id={option?.id}
                     onSelect={() => handleSelected(option)}
-                    readOnly={readOnly}
+                    readOnly={option.readOnly}
                   />
                 )) :
                   <li className='w-full overflow-hidden z-10 bg-twhite-100 px-4 py-3 hover:bg-tprimary-50 hover:text-white font-medium text-tblack-100 text-xs'>No options available</li>
@@ -80,6 +91,6 @@ export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnl
 
 export const MenuItem = ({ onSelect, value, readOnly }) => {
   return (
-    <li onClick={onSelect} className={` ${readOnly && 'pointer-events-none'} overflow-hidden z-10 bg-twhite-100 px-4 py-3 hover:bg-tprimary-50 hover:text-white border-b border-tgray-50 font-medium text-tblack-100 text-xs`}>{value}</li>
+    <li onClick={onSelect} className={` ${readOnly ? 'pointer-events-none text-tgray-75' : "text-tblack-100"} overflow-hidden z-10 bg-twhite-100 px-4 py-3 hover:bg-tprimary-50 hover:text-white border-b border-tgray-50 font-medium text-xs`}>{value}</li>
   )
 }

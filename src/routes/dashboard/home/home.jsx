@@ -4,14 +4,15 @@ import { PostCard } from "../../../components/posts/postcard"
 import { PostTags } from "../../../components/posts/posttags"
 import { GallerySkeletons, PillSkeletonLoader } from "../../../components/global/skeletons"
 import { useGetRecentPostsQuery } from "../../../services/posts/postsApiSlice"
-import { useGetTrendingTagsQuery } from "../../../services/userApiSlice"
+import { useGetTrendingTagsQuery, useGetUserProfileDetailsQuery } from "../../../services/userApiSlice"
 import { Carousel } from "../../../components/global/carousel"
 import { AnnouncementCard } from "../../../components/global/announcementcard"
 import { useGetAnnouncementsQuery } from "../../../services/notificationsApiSlice"
 import { useSelector } from "react-redux"
-import { selectCurrentToken } from "../../../services/authSlice"
+import { selectCurrentToken, selectCurrentUser } from "../../../services/authSlice"
 import { EmptyState } from "../../../components/global/emptystate"
 import EmptyListIcon from "../../../assets/images/emptylist.png"
+import { TalkAmPlusCard } from "../../../components/global/talkampluscard"
 
 
 const tabs = [
@@ -37,10 +38,16 @@ const tabs = [
 
 export const Home = () => {
 
+    const currentUser = useSelector(selectCurrentUser);
     const token = useSelector(selectCurrentToken);
     const { data: recents, isLoading: recentLoading } = useGetRecentPostsQuery(null, { skip: !token });
     const { data: tags, isLoading: trendLoad } = useGetTrendingTagsQuery(null, { skip: !token });
     const { data: announcements } = useGetAnnouncementsQuery();
+    const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true,
+        refetchOnReconnect: true
+    });
 
     return (
         <div className="w-full flex divide-x divide-tgray-light h-full">
@@ -64,6 +71,13 @@ export const Home = () => {
 
             <section className="w-2/6 px-6 hidden lg:block py-4 space-y-8 overflow-y-auto no-scrollbar">
                 {
+                    user && token && !user?.data?.active_subscription ?
+                        <TalkAmPlusCard />
+                        :
+                        null
+
+                }
+                {
                     trendLoad ?
                         <div className="flex items-center justify-center m-auto">
                             <PillSkeletonLoader num={8} />
@@ -75,7 +89,7 @@ export const Home = () => {
                                     <section className="flex flex-col gap-3">
                                         <h2 className="text-base font-bold leading-none">Trending Tags</h2>
                                         <ul className="flex items-center flex-wrap gap-1">
-                                            {tags && tags.data.map((tag) => <PostTags key={tag.id} tag={tag.tag} />)}
+                                            {tags && tags.data.map((tag, index) => <PostTags key={index} tag={tag.tag} />)}
                                         </ul>
                                     </section>
                                     :
