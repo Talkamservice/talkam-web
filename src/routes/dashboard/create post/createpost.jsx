@@ -12,10 +12,10 @@ import { AnonToggleButton } from "../../../components/global/anonymoustoggle";
 import { BasicToggleButton } from "../../../components/global/basictoggle";
 import { downVariants, PostCardVariants } from "../../../helpers/cardanimation";
 import { motion } from "framer-motion";
-import { useGetSubCategoriesQuery, useGetTrendingTagsQuery } from "../../../services/userApiSlice";
+import { useGetSubCategoriesQuery, useGetTrendingTagsQuery, useGetUserProfileDetailsQuery } from "../../../services/userApiSlice";
 import { useCreatePostMutation } from "../../../services/posts/postsApiSlice";
 import { handleError } from "../../../utils/handleError";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MultiSelect } from "../../../components/forms/multiselect";
 import { ScheduleModal } from "./schedulemodal";
 import { Modal } from "../../../components/global/modal";
@@ -29,6 +29,8 @@ import { getFileExtension } from "../../../helpers/getFileExtension";
 import { allowedVideoExtensions } from "../../../helpers/extensions";
 import Protected from "../../../utils/protected";
 import moment from "moment";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../../services/authSlice";
 
 const storageKeys = [
     "post_title", "post_comment",
@@ -43,11 +45,13 @@ export const CreatePost = () => {
 
     let isValid = false;
     const navigate = useNavigate();
+    const currentUser = useSelector(selectCurrentUser)
     const [searchCategories, setSearchCategories] = useState("");
     const [searchGroup, setSearchGroup] = useState("");
     const [categoryModal, setCategoryModal] = useState();
     const [imageLoading, setImageLoading] = useState();
-    const [isChecked, setIsChecked] = useState(false)
+    const [isChecked, setIsChecked] = useState(false);
+    const [plusPrompt, setPlusPrompt] = useState(false);
     const [scheduleCheck, setScheduleCheck] = useState(false);
     const [isScheduling, setIscheduling] = useState(false);
     const [publishDate, setPublishDate] = useState(null);
@@ -92,6 +96,11 @@ export const CreatePost = () => {
         type: "all"
     });
     const { data: trending } = useGetTrendingTagsQuery();
+    const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true,
+        refetchOnReconnect: true
+    });
 
     //Functions
     const toggleModal = () => {
@@ -204,6 +213,15 @@ export const CreatePost = () => {
         Storage.setItem("post_group", group)
     }
 
+    const handleAnonToggle = (event) => {
+        if (!user) return;
+        if (!user?.data?.active_subscription && user?.data?.anonymous_post === 5) {
+            setPlusPrompt(true)
+        } else {
+            setIsChecked(event.target.checked)
+        }
+    }
+
     const handleCreatePost = async () => {
         const transformedPollOptions = poll && poll.map((item) => [
             item.option
@@ -301,7 +319,7 @@ export const CreatePost = () => {
         },
     ];
 
-    if ((post.comment || post.title) && (post?.category?.id || post?.group?.id)) {
+    if ((post?.category?.id || post?.group?.id)) {
         isValid = true
     }
 
@@ -310,7 +328,7 @@ export const CreatePost = () => {
             <div className="w-full h-full flex divide-x divide-tgray-light relative">
                 <section className=" w-full md:w-4/6 overflow-auto no-scrollbar">
                     {/*left side card here */}
-                    <main className={`flex flex-col gap-3 sm:mx-6 sm:mt-6 p-6 sm:border border-tgray-xlight rounded-tr-xl rounded-tl-xl ${!isChecked && "rounded-xl"} transition-all duration-300 ease-out`}>
+                    <main className={`flex flex-col gap-3 sm:mx-6 sm:mt-6 p-6 sm:border border-tgray-xlight rounded-tr-xl rounded-tl-xl ${(!isChecked && !plusPrompt) && "rounded-xl"} transition-all duration-300 ease-out`}>
                         <header className="w-full flex flex-col items-start md:flex-row gap-4 md:items-center justify-between">
                             <h2 className="font-bold text-2xl">Create post</h2>
                             <div className="w-3/7">
@@ -336,10 +354,11 @@ export const CreatePost = () => {
 
                         <section className="relative">
                             <Tabs tabs={tabs} />
-                            <span className="absolute top-2 right-0 z-[12]">
+                            <span className="absolute top-2 right-0 z-[12] flex items-center gap-2">
+                                {!user?.data?.active_subscription ? <span className="text-xs text-tgray-250 ">{user?.data?.anonymous_post}/5</span> : null}
                                 <AnonToggleButton
                                     checked={isChecked}
-                                    onChange={(event) => setIsChecked(event.target.checked)}
+                                    onChange={(event) => handleAnonToggle(event)}
                                 />
                             </span>
                         </section>
@@ -410,17 +429,37 @@ export const CreatePost = () => {
                         </footer>
                     </main>
                     {
-                        isChecked &&
-                        <motion.p
-                            key="chatbox"
-                            variants={downVariants}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                            className="bg-[#FDD78D] text-xs font-semibold sm:rounded-bl-xl sm:rounded-br-xl p-2 flex items-center justify-center text-center sm:mx-6">
-                            You&apos;re posting anonymously. Your profile won&apos;t be shown.
-                        </motion.p>
+                        isChecked ?
+                            <motion.p
+                                key="chatbox"
+                                variants={downVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                className="bg-[#FDD78D] text-xs font-semibold sm:rounded-bl-xl sm:rounded-br-xl p-2 flex items-center justify-center text-center sm:mx-6">
+                                You&apos;re posting anonymously. Your profile won&apos;t be shown.
+                            </motion.p>
+                            :
+                            null
+                    }
+                    {
+                        plusPrompt ?
+                            <motion.div
+                                key="chatbox"
+                                variants={downVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                className="bg-gradient-to-r from-[#D1F2F7] via-[#FDFFFF] to-[#D1F2F7] text-[10px] font-semibold sm:rounded-bl-xl sm:rounded-br-xl p-2 flex items-center justify-center text-center sm:mx-6"
+                            >
+                                <p>
+                                    You have used up your 5 free anonymous post, to post anonymously without limit, {" "} <Link to="/pricing" className="text-tprimary-50 pl-.5 underline underline-offset-2 inline">upgrade to TalkAM plus today</Link>
+                                </p>
+                            </motion.div>
+                            :
+                            null
                     }
                 </section>
 

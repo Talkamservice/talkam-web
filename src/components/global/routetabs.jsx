@@ -10,9 +10,9 @@ export const RouteTabs = ({ tabs, data, id, headerPadding }) => {
     const activePath = pathname.split('/').splice(-1)[0]
     const [activeTab, setActiveTab] = useState("")
 
-    const handleTabClick = (id) => {
-        setActiveTab(id)
-        navigate(`${id}`, { replace: true })
+    const handleTabClick = (tab) => {
+        setActiveTab(tab)
+        navigate(`${tab}`, { replace: true })
     }
 
     return (
@@ -22,7 +22,7 @@ export const RouteTabs = ({ tabs, data, id, headerPadding }) => {
                     <TabButton
                         key={item.title}
                         text={item.title}
-                        type={item.text === activePath ? "" : "text"}
+                        activeRoute={item.text === activePath ? "" : "text"}
                         onClick={() => handleTabClick(item.text)}
                         icon={item.icon}
                     />
@@ -36,7 +36,7 @@ export const RouteTabs = ({ tabs, data, id, headerPadding }) => {
     )
 }
 
-export const TabButton = ({ text, onClick, type, icon }) => {
+export const TabButton = ({ text, onClick, activeRoute, icon }) => {
     return (
         <div onClick={onClick}
             className={`
@@ -51,7 +51,7 @@ export const TabButton = ({ text, onClick, type, icon }) => {
                 <span className='w-full text-sm font-medium z-10 whitespace-nowrap'>{text}</span>
             </div>
             {
-                type !== 'text' ?
+                activeRoute !== 'text' ?
                     <motion.div
                         layoutId='active-pill'
                         className='border-b-4 border-tprimary-50 absolute inset-0 p-3 w-full'

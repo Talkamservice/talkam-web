@@ -83,6 +83,15 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "pricing",
+        lazy: async () => {
+          let { Pricing } = await import(
+            "./routes/dashboard/pricing/pricing"
+          );
+          return { Component: Pricing };
+        },
+      },
+      {
         path: "userprofile/:userId",
         children: [
           {
@@ -517,6 +526,7 @@ const router = createBrowserRouter([
   },
   {
     path: "email-verification",
+    errorElement: <ErrorPage />,
     lazy: async () => {
       let { Verification } = await import("./routes/auth/signup/verification");
       return { Component: Verification };

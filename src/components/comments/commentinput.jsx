@@ -8,11 +8,12 @@ import { Avatar } from "../global/avatar"
 import { motion } from "framer-motion"
 import { selectCurrentUser } from "../../services/authSlice"
 import { useIsAuth } from "../../hooks/useIsAuth"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { ColoredLoader } from "../global/loader"
 import { useRef, useState } from "react"
 import { useGetTagSuggestionsQuery } from "../../services/posts/postsApiSlice"
 import * as Icon from 'react-feather'
+import { useGetUserProfileDetailsQuery } from "../../services/userApiSlice"
 
 export const CommentInput = ({
     anonChecked,
@@ -38,12 +39,26 @@ export const CommentInput = ({
     const isAuth = useIsAuth();
     const textareaRef = useRef()
 
-    // States to manage tagging
+    const [plusPrompt, setPlusPrompt] = useState(false);
     const [mentionInput, setMentionInput] = useState("");
     const [suggestedUsers, setSuggestedUsers] = useState([]);
     const [isMentioning, setIsMentioning] = useState(false);
 
     const { data: suggestions, isLoading: searchLoading } = useGetTagSuggestionsQuery(mentionInput);
+    const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true,
+        refetchOnReconnect: true
+    });
+
+    const handleAnonToggle = (event) => {
+        if (!user) return;
+        if (!user?.data?.active_subscription && user?.data?.anonymous_comment === 5) {
+            setPlusPrompt(true)
+        } else {
+            setAnonChecked(event.target.checked)
+        }
+    }
 
     const handleCommentChange = (e) => {
         const data = suggestions?.data || []
@@ -110,7 +125,7 @@ export const CommentInput = ({
 
     return (
         <>
-            <div className={`w-full border border-tgray-50 rounded-tr-xl rounded-tl-xl ${!anonChecked && "rounded-xl"} p-3 flex flex-col sm:flex-row items-start justify-between gap-2`}>
+            <div className={`w-full border border-tgray-50 ${(!anonChecked && !plusPrompt) ? "rounded-xl" : "rounded-tr-xl rounded-tl-xl"} p-3 flex flex-col sm:flex-row items-start justify-between gap-2`}>
                 <section className="w-full flex items-start gap-2">
                     <div className="flex items-start justify-start">
                         <Avatar size="sm" src={currentUser?.avatar} />
@@ -234,7 +249,7 @@ export const CommentInput = ({
                                 <Icon.Image color="#2121219C" />
                             </label>
                             <UploadGifIcon />
-                            <AnonToggleButton checked={anonChecked} onChange={(event) => setAnonChecked(event.target.checked)} />
+                            <AnonToggleButton checked={anonChecked} onChange={(event) => handleAnonToggle(event)} />
                         </div>
                     </section>
                 </section>
@@ -273,7 +288,24 @@ export const CommentInput = ({
                     You&apos;re posting anonymously. Your profile won&apos;t be shown.
                 </motion.p>
             }
-
+            {
+                plusPrompt ?
+                    <motion.div
+                        key="chatbox"
+                        variants={downVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                        className="bg-gradient-to-r from-[#D1F2F7] via-[#FDFFFF] to-[#D1F2F7] text-[10px] font-semibold sm:rounded-bl-xl sm:rounded-br-xl p-2 flex items-center justify-center text-center"
+                    >
+                        <p>
+                            You have used up your 5 free anonymous post, to post anonymously without limit, {" "} <Link to="/pricing" className="text-tprimary-50 pl-.5 underline underline-offset-2 inline">upgrade to TalkAM plus today</Link>
+                        </p>
+                    </motion.div>
+                    :
+                    null
+            }
             <style jsx>{`
                 .mention {
                     color: blue;

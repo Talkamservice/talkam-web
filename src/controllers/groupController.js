@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useGetCategoriesQuery } from "../services/userApiSlice";
+import { useGetCategoriesQuery, useGetUserProfileDetailsQuery } from "../services/userApiSlice";
 import { useCreateGroupMutation, useGetAllGroupsQuery, useGetFollowingGroupsQuery, useReportGroupMutationMutation } from "../services/groupApiSlice";
 import { randomId } from "../helpers/randomid";
 import { storageDB } from "../utils/firestore";
@@ -7,11 +7,14 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { handleError } from "../utils/handleError";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../services/authSlice";
 
 export const useGroupController = (groupTab, groupId) => {
 
     let isValid = false;
     let isRuleValid = false;
+    const currentUser = useSelector(selectCurrentUser)
     const navigate = useNavigate();
     const [search, setSearch] = useState(null);
     const [categoryId, setCategoryId] = useState("")
@@ -61,6 +64,11 @@ export const useGroupController = (groupTab, groupId) => {
         tab: "",
         search: "",
         type: "all"
+    });
+    const { data: user, refetch } = useGetUserProfileDetailsQuery(currentUser?.id, {
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true,
+        refetchOnReconnect: true
     });
     const [reportGroup, { isLoading: reportLoading }] = useReportGroupMutationMutation()
 
@@ -228,5 +236,6 @@ export const useGroupController = (groupTab, groupId) => {
         handleReportGroup,
         handleReportModal,
         navigate,
+        user,
     }
 }

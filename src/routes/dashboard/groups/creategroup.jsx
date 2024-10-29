@@ -10,28 +10,35 @@ import { EmptyState } from "../../../components/global/emptystate"
 import { randomId } from "../../../helpers/randomid"
 import { Loader } from "../../../components/global/loader"
 import { useGroupController } from "../../../controllers/groupController"
+import { Link } from "react-router-dom"
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 import * as Icon from 'react-feather'
 
 const purposeLimit = 100
 const InformationLimit = 500;
 
-const discoverOptions = [
-    {
-        id: randomId(),
-        name: "Opened",
-        value: "Opened"
-    },
-    {
-        id: randomId(),
-        name: "Closed",
-        value: "Closed"
-    },
-]
 
 export const CreateGroup = () => {
 
     const controller = useGroupController();
+    const freeGroupIsUsed = !controller?.user?.data?.active_subscription && controller?.user?.data?.public_group_count === 1;
+    console.log(controller.user)
+    console.log(freeGroupIsUsed)
+
+    const discoverOptions = [
+        {
+            id: randomId(),
+            name: `Opened ${!controller?.user?.data?.active_subscription ? controller?.user?.data?.public_group_count + '/1' : ""}`,
+            value: `Opened ${!controller?.user?.data?.active_subscription ? controller?.user?.data?.public_group_count + '/1' : ""}`,
+            readOnly: !controller?.user?.data?.active_subscription && freeGroupIsUsed
+        },
+        {
+            id: randomId(),
+            name: "Closed",
+            value: "Closed",
+            readOnly: !controller?.user?.data?.active_subscription
+        },
+    ]
 
     return (
         <main className="absolute top-0 left-0 bg-white z-[35] lg:z-[39] w-full h-full flex flex-col md:flex-row divide-x divide-tgray-50 overflow-auto no-scrollbar">
@@ -85,6 +92,18 @@ export const CreateGroup = () => {
                                         : null
                             }
                         </div>
+                        {
+                            !controller.user?.data?.active_subscription ?
+                                <div className="bg-gradient-to-r from-[#D1F2F7] via-[#FDFFFF] to-[#D1F2F7] text-[10px] font-semibold rounded-bl-xl rounded-br-xl p-2 flex items-center justify-center text-center"
+                                >
+                                    <p>
+                                        Open unlimited public and private groups when you, {" "}
+                                        <Link to="/pricing" className="text-tprimary-50 pl-.5 underline underline-offset-2 inline">upgrade to TalkAM plus today</Link>
+                                    </p>
+                                </div>
+                                :
+                                null
+                        }
                         {controller.groupDetails.banner ?
                             <span className="w-full h-full bg-[#000000] bg-opacity-10 absolute top-0 flex items-center justify-center m-auto cursor-pointer rounded-md">
                                 <span
@@ -139,7 +158,7 @@ export const CreateGroup = () => {
                             required
                         />
 
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-start gap-3 mb-8">
                             <span className="border rounded-full p-2">
                                 <LockIcon className="w-5 h-5" />
                             </span>
