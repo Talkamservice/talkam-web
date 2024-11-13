@@ -171,6 +171,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
                 budget={budget}
                 duration={duration}
                 location={country?.name}
+                countries={selectedItems}
                 minAge={ageRange.minAge}
                 maxAge={ageRange.maxAge}
                 gender={gender}

@@ -1,4 +1,4 @@
-export const SlideThree = ({ location, minAge, maxAge, gender, budget, duration }) => {
+export const SlideThree = ({ location, minAge, maxAge, gender, budget, countries, duration }) => {
 
     let durationPluralization;
 
@@ -16,10 +16,14 @@ export const SlideThree = ({ location, minAge, maxAge, gender, budget, duration 
                     <p className="text-sm font-medium">Your reach</p>
                 </div>
 
-                <section className="flex items-center justify-between flex-wrap w-full gap-3">
+                <section className="flex items-start justify-between flex-wrap w-full gap-3">
                     <div className="flex flex-col gap-2">
-                        <span className="text-xs text-[#858585]">Location</span>
-                        <p className="text-xl font-medium">{location}</p>
+                        <span className="text-xs text-[#858585]">Location(s)</span>
+                        {
+                            countries?.map((country) => (
+                                <p className="text-xl font-medium">{country?.name}</p>
+                            ))
+                        }
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-xs text-[#858585]">Age range</span>
