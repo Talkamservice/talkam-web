@@ -3,7 +3,7 @@ import { PostCard } from "../../../components/posts/postcard";
 import { GallerySkeletons } from "../../../components/global/skeletons";
 import { useDeletePostMutation, useGetUserPostsQuery } from "../../../services/posts/postsApiSlice";
 import { toast } from "sonner";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { handleError } from "../../../utils/handleError";
 import { ColoredLoader } from "../../../components/global/loader";
 import { Storage } from "../../../app/storage";
@@ -13,9 +13,10 @@ import EmptyListIcon from "../../../assets/images/emptylist.png"
 export const ProfilesPosts = () => {
 
     const { userId } = useParams();
+    const navigate = useNavigate();
+    const isLoggedUser = useOutletContext();
     const isRestoringScroll = useRef(false);
     const scrollableRef = useRef(null);
-    const navigate = useNavigate();
     const [currentParams, setCurrentParams] = useState(userId);
     const [page, setPage] = useState(1);
     const [posts, setPosts] = useState([]);
@@ -157,11 +158,13 @@ export const ProfilesPosts = () => {
                                     isReported={post?.is_reported}
                                     notification={post?.enabled_notification}
                                     published={post?.publish_at}
+                                    isUser={isLoggedUser}
+                                    ad={post?.promotion}
                                     home
                                 />
                             ))
                             :
-                            !isLoading && !isFetching && userPosts.data.data.length === 0 ?
+                            !isLoading && !isFetching && userPosts?.data?.data.length === 0 ?
                                 <section className="w-full py-1">
                                     <EmptyState
                                         icon={EmptyListIcon}

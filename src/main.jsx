@@ -65,6 +65,39 @@ const router = createBrowserRouter([
         ],
       },
       {
+        path: "ads",
+        lazy: async () => {
+          let { Ads } = await import(
+            "./routes/dashboard/ads/ads"
+          );
+          return { Component: Ads };
+        },
+        children: [
+          {
+            index: true,
+            loader: () => redirect("running-ads"),
+          },
+          {
+            path: "running-ads",
+            lazy: async () => {
+              let { RunningAds } = await import(
+                "./routes/dashboard/ads/runningads"
+              );
+              return { Component: RunningAds };
+            },
+          },
+          {
+            path: "closed-ads",
+            lazy: async () => {
+              let { ClosedAds } = await import(
+                "./routes/dashboard/ads/closedads"
+              );
+              return { Component: ClosedAds };
+            },
+          },
+        ]
+      },
+      {
         path: "create-post",
         lazy: async () => {
           let { CreatePost } = await import(

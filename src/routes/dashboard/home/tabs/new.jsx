@@ -141,11 +141,12 @@ export const New = () => {
                                     parentCategory={post?.category?.parent_category}
                                     isReported={post?.is_reported}
                                     notification={post?.enabled_notification}
+                                    ad={post?.promotion}
                                     home
                                 />
                             ))
                             :
-                            !isLoading && !isFetching && latest.data.data.length === 0 ?
+                            !isLoading && !isFetching && latest.data?.data?.length === 0 ?
                                 <section className="w-full py-1">
                                     <EmptyState
                                         icon={EmptyListIcon}

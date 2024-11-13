@@ -20,7 +20,57 @@ export const pricingApiSlice = apiSlice.injectEndpoints({
                 url: `user/finance/subscriptions/${sub}/cancel`,
                 method: "post",
             })
-        })
+        }),
+        promote: builder.mutation({
+            query: credentials => ({
+                url: `user/promotions/initiate`,
+                method: 'post',
+                body: { ...credentials }
+            })
+        }),
+        getRunningAds: builder.query({
+            query: status => ({
+                url: `user/promotions?status=${status ?? ""}`,
+                method: 'get'
+            }),
+            providesTags: ["ads"]
+        }),
+        deletePromotion: builder.mutation({
+            query: ad => ({
+                url: `user/promotions/${ad}/delete`,
+                method: "DELETE"
+            }),
+            invalidatesTags: ["ads"]
+        }),
+        updatePromotion: builder.mutation({
+            query: ({ ad, body }) => ({
+                url: `user/promotions/${ad}/update`,
+                method: "post",
+                body: { ...body }
+            }),
+            invalidatesTags: ["ads"]
+        }),
+        paymentCallBack: builder.mutation({
+            query: ref => ({
+                url: `user/finance/payments/callback`,
+                method: "post",
+                body: { ...ref }
+            }),
+        }),
+        restartPromotion: builder.mutation({
+            query: ad => ({
+                url: `user/promotions/${ad}/reinitiate`,
+                method: "post"
+            }),
+            invalidatesTags: ["ads"]
+        }),
+        updateStats: builder.mutation({
+            query: ad => ({
+                url: `user/posts/stats/save`,
+                method: "post"
+            }),
+            invalidatesTags: ["ads"]
+        }),
     }),
 });
 
@@ -28,4 +78,11 @@ export const {
     useGetAllPlansQuery,
     useSubscribeMutation,
     useCancelSubscriptionMutation,
+    usePromoteMutation,
+    useGetRunningAdsQuery,
+    useDeletePromotionMutation,
+    usePaymentCallBackMutation,
+    useUpdatePromotionMutation,
+    useRestartPromotionMutation,
+    useUpdateStatsMutation,
 } = pricingApiSlice;

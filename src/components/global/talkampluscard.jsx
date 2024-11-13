@@ -16,8 +16,8 @@ export const TalkAmPlusCard = ({ plan }) => {
                     null
             }
             <header className="flex flex-col gap-2">
-                <h1 className="text-xl font-bold text-white">Upgrade to TalkAM plus</h1>
-                <p className="text-xs text-[#8AC9EF]">Enjoy great experiences with our premium plan, get easy access to creator tools and boost your presence on TalkAm.</p>
+                <h1 className="text-xl font-bold text-white text-center">Upgrade to TalkAM plus</h1>
+                <p className="text-xs text-[#8AC9EF] text-center">Enjoy great experiences with our premium plan, get easy access to creator tools and boost your presence on TalkAm.</p>
             </header>
 
             <Button

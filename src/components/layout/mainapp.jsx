@@ -424,6 +424,13 @@ export const MainAppLayout = ({ children }) => {
                                     <Button
                                         variant="link"
                                         fullWidth
+                                        children="Ads"
+                                        className="flex items-center justify-between !text-sm !py-0 !px-0"
+                                        onClick={() => { navigate("/ads"); setShowPanel(false) }}
+                                    />
+                                    <Button
+                                        variant="link"
+                                        fullWidth
                                         children="Help & Support"
                                         className="flex items-center justify-between !text-sm !py-0 !px-0"
                                     />

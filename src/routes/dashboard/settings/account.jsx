@@ -17,6 +17,7 @@ import { TalkAmPlusCard } from "../../../components/global/talkampluscard"
 import { useGetUserProfileDetailsQuery } from "../../../services/userApiSlice"
 import { PremiumSubCard } from "../../../components/global/premiumsubcard"
 import { CancelSubscriptionModal } from "./cancelsubmodal"
+import { AlertCircle } from "react-feather"
 import { useCancelSubscriptionMutation } from "../../../services/paymentApiSlice"
 import moment from "moment/moment"
 
@@ -106,6 +107,8 @@ export const AccountSettings = () => {
         setCancelSubModal((prev) => !prev)
     }
 
+    console.log(user)
+
     return (
         <div className="flex flex-col gap-12 py-8">
             <section className="flex flex-col gap-6">
@@ -127,6 +130,10 @@ export const AccountSettings = () => {
                 <div className="w-full flex flex-col md:flex-row gap-3 md:items-center justify-between border-t border-tgray-50 py-4">
                     <div className="flex flex-col gap-1">
                         <p className="text-lg font-bold uppercase">Your Subscription plan</p>
+                        <span className="text-xs text-error-500 flex items-center gap-1">
+                            <AlertCircle color="#FF0000" size={18} />
+                            {user?.data?.active_subscription?.renewal_cancelled_at ? "Cancelled" : ""}
+                        </span>
                     </div>
                     <section className="md:w-1/2">
                         {

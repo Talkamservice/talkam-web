@@ -7,7 +7,7 @@ import { Modal } from "../../../components/global/modal";
 import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../services/authSlice";
-import { ChatSquareIcon, UploadAvatarIcon } from "../../../assets/icons/generated";
+import { BlueTickIcon, ChatSquareIcon, UploadAvatarIcon } from "../../../assets/icons/generated";
 import { AuthWrapper } from "../../../utils/authWrapper";
 import { BlockPromptModal } from "../../../components/global/blockpromptmodal";
 import { useOnOutsideClick } from "../../../hooks/useOnOutsideClick";
@@ -17,8 +17,8 @@ import { handleError } from "../../../utils/handleError";
 import { motion } from "framer-motion";
 import { PostCardVariants } from "../../../helpers/cardanimation";
 import { ColoredLoader } from "../../../components/global/loader";
-import * as Icon from 'react-feather'
 import { ScheduledPosts } from "./scheduledposts";
+import * as Icon from 'react-feather'
 
 const tabs = [
     {
@@ -64,7 +64,7 @@ export const Profile = () => {
     })
     const isLoggedInUser = currentUser?.username === userId;
 
-    const { data: user, refetch } = useGetUserProfileDetailsQuery(userId, {
+    const { data: user, refetch, isFetching } = useGetUserProfileDetailsQuery(userId, {
         refetchOnMountOrArgChange: true,
         refetchOnFocus: true,
         refetchOnReconnect: true
@@ -123,8 +123,27 @@ export const Profile = () => {
                     <section className="flex items-start flex-col gap-3">
                         <div className="flex items-center gap-2">
                             <Avatar src={user?.data.avatar} size='sm' />
-                            <span className="text-sm md:text-base font-bold text-tblack-100">
+                            <span className="flex items-center gap-2 text-sm md:text-base font-bold text-tblack-100">
                                 {username}
+                                {
+                                    user && !isFetching ?
+                                        <section className={``}>
+                                            {
+                                                user?.data?.active_subscription ?
+                                                    <BlueTickIcon />
+                                                    :
+                                                    <span
+                                                        onClick={() => navigate("/pricing")}
+                                                        className={` ${isLoggedInUser && !user?.data?.active_subscription ? "block" : "hidden"} w-fit flex items-center gap-1 font-normal border border-[#D1F2F7] text-[8px] px-2 py-1 rounded-full bg-gradient-to-r from-[#FDFFFF] to-[#D1F2F7] cursor-pointer sm:ml-4`}
+                                                    >
+                                                        <BlueTickIcon />
+                                                        Subscribe to TalkAM plus
+                                                    </span>
+                                            }
+                                        </section>
+                                        :
+                                        null
+                                }
                             </span>
                         </div>
                         <p className={`text-base font-bold text-tblack-100 ${isLoggedInUser ? "block" : "hidden"} `}>My Profile</p>
@@ -270,7 +289,7 @@ export const Profile = () => {
                             </section>
                             :
                             <section className="relative overflow-y-auto w-full no-scrollbar">
-                                <RouteTabs tabs={tabs} headerPadding="px-6" />
+                                <RouteTabs data={isLoggedInUser} tabs={tabs} headerPadding="px-6" />
                             </section>
 
             }
@@ -295,7 +314,7 @@ export const Profile = () => {
                 shouldCloseOnOverlayClick={false}
                 onClose={handleShowBlockModal}
                 position='center'
-                contentWidth='w-full sm:w-3/5 md:w-5/12 xl:w-3/12 '
+                contentWidth='w-full sm:w-3/5 md:w-5/12 xl:w-3/12'
             >
                 <BlockPromptModal
                     handleBlockUser={handleBlockUser}

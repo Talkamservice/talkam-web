@@ -139,6 +139,7 @@ export const GroupTrending = () => {
                                     routeChange={() => navigate(`/comment/${post.id}`)}
                                     handleDeletePost={handleDeletePost}
                                     notification={post?.enabled_notification}
+                                    ad={post?.promotion}
                                 />
                             ))
                             :

@@ -10,12 +10,12 @@ import { talkAmRules } from "../../../constants/talkamrules";
 import { RuleCard } from "../../../components/global/rulecard";
 import { AnonToggleButton } from "../../../components/global/anonymoustoggle";
 import { BasicToggleButton } from "../../../components/global/basictoggle";
-import { downVariants, PostCardVariants } from "../../../helpers/cardanimation";
+import { downVariants } from "../../../helpers/cardanimation";
 import { motion } from "framer-motion";
 import { useGetSubCategoriesQuery, useGetTrendingTagsQuery, useGetUserProfileDetailsQuery } from "../../../services/userApiSlice";
 import { useCreatePostMutation } from "../../../services/posts/postsApiSlice";
 import { handleError } from "../../../utils/handleError";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { MultiSelect } from "../../../components/forms/multiselect";
 import { ScheduleModal } from "./schedulemodal";
 import { Modal } from "../../../components/global/modal";
@@ -27,12 +27,13 @@ import { SelectCategoryModal } from "./selectcategorymodal";
 import { useGetFollowingGroupsQuery } from "../../../services/groupApiSlice";
 import { getFileExtension } from "../../../helpers/getFileExtension";
 import { allowedVideoExtensions } from "../../../helpers/extensions";
-import Protected from "../../../utils/protected";
-import moment from "moment";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../services/authSlice";
+import { PromotionModal } from "../userprofile/promotion/promotion";
+import Protected from "../../../utils/protected";
+import moment from "moment";
 
-const storageKeys = [
+export const postStorageKeys = [
     "post_title", "post_comment",
     "post_image", "post_tags",
     "post_publish", "post_anonymous",
@@ -45,10 +46,13 @@ export const CreatePost = () => {
 
     let isValid = false;
     const navigate = useNavigate();
+    const { state: locationState } = useLocation();
+    console.log(locationState)
     const currentUser = useSelector(selectCurrentUser)
     const [searchCategories, setSearchCategories] = useState("");
     const [searchGroup, setSearchGroup] = useState("");
-    const [categoryModal, setCategoryModal] = useState();
+    const [categoryModal, setCategoryModal] = useState(false);
+    const [promotionModal, setPromotionModal] = useState(false);
     const [imageLoading, setImageLoading] = useState();
     const [isChecked, setIsChecked] = useState(false);
     const [plusPrompt, setPlusPrompt] = useState(false);
@@ -109,6 +113,10 @@ export const CreatePost = () => {
 
     const toggleCategoryModal = () => {
         setCategoryModal((prev) => !prev)
+    }
+
+    const handlePromotionModal = () => {
+        setPromotionModal(prev => !prev)
     }
 
     const convertedtTrendsArray = trending && trending.data?.map((trend) => trend.tag)
@@ -222,6 +230,11 @@ export const CreatePost = () => {
         }
     }
 
+    const transformedPollOptions = poll && poll.map((item) => [
+        item.option
+    ]).flat(2);
+    const PostType = poll.some(item => item.option !== "") ? "Poll" : post?.image ? "Image" : post?.video ? "Video" : "Text";
+
     const handleCreatePost = async () => {
         const transformedPollOptions = poll && poll.map((item) => [
             item.option
@@ -248,7 +261,7 @@ export const CreatePost = () => {
             }
             const postRes = await createPost({ ...newPost }).unwrap();
             toast.success(postRes.message);
-            storageKeys.forEach((key) => Storage.removeItem(key))
+            postStorageKeys.forEach((key) => Storage.removeItem(key))
             navigate("/home/new", { replace: true })
         } catch (error) {
             const errorMessage = handleError(error);
@@ -417,13 +430,23 @@ export const CreatePost = () => {
                                         children="Drafts"
                                         className="!rounded-full font-bold !text-base text-tprimary-50"
                                     /> */}
-                                    <Button
-                                        children="Post"
-                                        className="!rounded-full !text-base bg-tprimary-50 px-6 !py-1.5 md:!px-8 md:!py-2.5"
-                                        onClick={handleCreatePost}
-                                        isLoading={createLoading}
-                                        disabled={!isValid || createLoading}
-                                    />
+                                    {
+                                        locationState ?
+                                            <Button
+                                                children="Create Promoted Post"
+                                                className="!rounded-full !text-base bg-tprimary-50 px-6 !py-1.5 md:!px-8 md:!py-2.5"
+                                                onClick={handlePromotionModal}
+                                                disabled={!isValid}
+                                            />
+                                            :
+                                            <Button
+                                                children="Post"
+                                                className="!rounded-full !text-base bg-tprimary-50 px-6 !py-1.5 md:!px-8 md:!py-2.5"
+                                                onClick={handleCreatePost}
+                                                isLoading={createLoading}
+                                                disabled={!isValid || createLoading}
+                                            />
+                                    }
                                 </div>
                             </section>
                         </footer>
@@ -520,6 +543,38 @@ export const CreatePost = () => {
                         searchGroups={searchGroup}
                         setSearchGroups={setSearchGroup}
                         groupsLoading={groupsLoading}
+                    />
+                </Modal>
+
+                <Modal
+                    show={promotionModal}
+                    shouldCloseOnEscPress={false}
+                    shouldCloseOnOverlayClick={false}
+                    onClose={handlePromotionModal}
+                    position='center'
+                    contentWidth='w-full md:w-3/4 xl:w-2/5'
+                >
+                    <PromotionModal
+                        onClose={handlePromotionModal}
+                        payload={
+                            {
+                                category_id: post?.group ? post.group?.name : post?.category?.id,
+                                group_id: post.group?.id,
+                                type: PostType,
+                                title: post.title,
+                                body: post.comment,
+                                status: "Active",
+                                publish_at: publishDate ?? null,
+                                is_anonymous: isChecked ? 1 : 0,
+                                attachments: PostType === "Image" ? [{ url: post.image, type: "Image" }] : PostType === "Video" ? [{ url: post.video, type: "Video" }] : null,
+                                poll: PostType === "Poll" ? {
+                                    duration: convertedTime(pollDuration.days, pollDuration.hours),
+                                    options: transformedPollOptions,
+                                    type: "Text"
+                                } : null,
+                                tags: selectedItems
+                            }
+                        }
                     />
                 </Modal>
             </div>

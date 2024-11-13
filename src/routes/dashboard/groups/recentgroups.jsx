@@ -178,6 +178,7 @@ export const RecentGroups = () => {
                                     parentCategory={post?.category?.parent_category}
                                     isReported={post?.is_reported}
                                     notification={post?.enabled_notification}
+                                    ad={post?.promotion}
                                     home
                                 />
                             ))

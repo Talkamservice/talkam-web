@@ -27,6 +27,7 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
     const [openShare, setOpenShare] = useState(false);
     const [showBlockModal, setShowBlockModal] = useState(false);
     const [openReport, setOpenReport] = useState(false);
+    const [openPromotionModal, setOpenPromotionModal] = useState(false);
     const [action, setAction] = useState(reaction && reaction?.action);
     const [likeCount, setLikeCount] = useState(likes);
     const [showImagePreview, setShowImagePreview] = useState(false)
@@ -34,6 +35,7 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
     const [selectedPoll, setSelectedPoll] = useState(pollOptions && pollOptions.some(option => option.selected));
     const [isPostReported, setIsPostReported] = useState(isReported);
     const [isNotificationEnabled, setIsNotificationEnabled] = useState(notification);
+    const [openAnalytics, setOpenAnalytics] = useState(false);
 
     const { isTruncated, isReadingMore, toggleIsShowingMore } = useTruncatedElement(commentRef);
     useOnOutsideClick(popUpRef, () => {
@@ -218,9 +220,21 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
     }
     const handleShowBlockModal = () => {
         setShowBlockModal((prev) => !prev)
+        setShowPopUp(false)
     }
     const handleReportModal = () => {
         setOpenReport((prev) => !prev)
+        setShowPopUp(false)
+    }
+
+    const handlePromotionModal = () => {
+        setOpenPromotionModal((prev) => !prev)
+        setShowPopUp(false)
+    }
+
+    const handleAnalyticsModal = () => {
+        setOpenAnalytics((prev) => !prev)
+        setShowPopUp(false)
     }
 
 
@@ -274,5 +288,9 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
         isPostReported,
         isNotificationEnabled,
         handleNotificationPreference,
+        handlePromotionModal,
+        openPromotionModal,
+        openAnalytics,
+        handleAnalyticsModal,
     }
 }

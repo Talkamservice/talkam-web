@@ -7,7 +7,7 @@ import { handleError } from "../../utils/handleError";
 import { useState } from "react";
 import Logo from '../../assets/images/avatar.png'
 
-export const PricingCard = ({ plan, currentPlan, period, features, price, planId, data }) => {
+export const PricingCard = ({ plan, currentPlan, period, features, price, planId, currentPlanPrice }) => {
 
     const [subResponse, setSubResponse] = useState(null)
     const [subscribe, { isLoading }] = useSubscribeMutation();
@@ -20,7 +20,7 @@ export const PricingCard = ({ plan, currentPlan, period, features, price, planId
 
             if (res?.data) {
                 const config = {
-                    public_key: 'FLWPUBK_TEST-16545ee16ab85e98f183fe164e248223-X',
+                    public_key: import.meta.env.VITE_FLUTTERWAVE_KEY,
                     tx_ref: res?.data?.reference,
                     amount: res?.data?.amount,
                     currency: res?.data?.currency,
@@ -42,7 +42,7 @@ export const PricingCard = ({ plan, currentPlan, period, features, price, planId
                 const handleFlutterPayment = useFlutterwave(config);
                 handleFlutterPayment({
                     callback: async (response) => {
-                        console.log('response', response);
+                        // console.log('response', response);
                         // navigate('/', {replace: true})
                         closePaymentModal();
                     },
@@ -65,7 +65,7 @@ export const PricingCard = ({ plan, currentPlan, period, features, price, planId
                     <p className={`text-[10px] bg-[#F6F3DA] py-1.5 px-3 rounded-full ${currentPlan ? "flex" : "hidden"} `}>Current Plan</p>
                 </div>
 
-                <p className="font-bold text-3xl">${price}</p>
+                <p className="font-bold text-3xl">${currentPlan ? currentPlanPrice : price}</p>
                 <p className={`text-sm ${currentPlan || plan === "Freemium" ? "hidden" : "flex"}`}>Billed {period}</p>
             </header>
 

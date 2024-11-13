@@ -31,6 +31,8 @@ import HandIcon from "../icons/suspend.svg?react";
 import HasReadIcon from "../icons/read.svg?react";
 import UnreadIcon from "../icons/unread.svg?react";
 import NewsIcon from "../icons/news.svg?react";
+import AnalyticsIcon from "../icons/analytics.svg?react";
+import BlueTickIcon from "../icons/bluetick.svg?react";
 
 export {
     TalkamLogo,
@@ -66,4 +68,6 @@ export {
     HasReadIcon,
     UnreadIcon,
     NewsIcon,
+    AnalyticsIcon,
+    BlueTickIcon,
 }

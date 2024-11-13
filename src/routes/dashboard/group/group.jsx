@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { FeaturedFireIcon, LatestEventsIcon, LockIcon, NewBadgeIcon, TrendingIcon, UploadAvatarIcon } from "../../../assets/icons/generated";
+import { AnalyticsIcon, FeaturedFireIcon, LatestEventsIcon, LockIcon, NewBadgeIcon, TrendingIcon, UploadAvatarIcon } from "../../../assets/icons/generated";
 import { RouteTabs } from "../../../components/global/routetabs"
 import { useFollowGroupMutation, useGetGroupDetailsQuery, useRequestFollowMutation, useUnFollowGroupMutation } from "../../../services/groupApiSlice";
 import { Banner } from "../../../components/global/groupbanner";
@@ -22,9 +22,11 @@ import { useOnOutsideClick } from "../../../hooks/useOnOutsideClick";
 import { useGroupController } from "../../../controllers/groupController";
 import { GroupReportModal } from "./groupreportmodal";
 import { IsSuspended } from "../../../utils/isSuspended";
+import { PromotionModal } from "../userprofile/promotion/promotion";
 import * as Icon from 'react-feather'
 import FallBack from "../../../assets/icons/users.svg"
 import Protected from "../../../utils/protected";
+import { PostAnalyticsModal } from "../../../components/posts/postanalyticsmodal";
 
 const tabs = [
     {
@@ -56,16 +58,19 @@ export const Group = () => {
     const { groupId } = useParams();
     const [showEditHeaderModal, setShowEditHeaderMdal] = useState();
     const [showInfo, setShowInfo] = useState(false);
-    const [showReportPop, setShowReportPop] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
+    const [promotionModal, setPromotionModal] = useState(false);
+    const [analyticsModal, setAnalyticsModal] = useState(false)
 
     const { data: groupDetails, isLoading } = useGetGroupDetailsQuery(groupId);
     const [followGroup, { isLoading: followLoading }] = useFollowGroupMutation();
     const [unFollowGroup, { isLoading: unFollowLoading }] = useUnFollowGroupMutation();
     const [requestFollow, { isLoading: requestLoading }] = useRequestFollowMutation();
+
     const groupController = useGroupController(null, groupId);
 
     useOnOutsideClick(popUpRef, () => {
-        setShowReportPop(false);
+        setShowPopup(false);
     });
 
     const toggleHeaderModal = () => {
@@ -112,6 +117,15 @@ export const Group = () => {
     const toggleInfoView = () => {
         setShowInfo((prev) => !prev)
     };
+
+    const handlePromotionModal = () => {
+        setPromotionModal(prev => !prev)
+    }
+
+    const handleGroupAnalyticsModal = () => {
+        setAnalyticsModal(prev => !prev)
+        setShowPopup(false);
+    }
 
     const isPrivateMember = groupDetails?.data?.is_following && groupDetails?.data.group_access === "Closed"
 
@@ -173,6 +187,25 @@ export const Group = () => {
                                                                     <span className='text-tblack-100 text-xs md:text-sm'>Edit</span>
                                                                 </div>
                                                             </IsRole>
+                                                            {
+                                                                !groupDetails?.data?.promotion ?
+                                                                    <IsRole currentRole={groupDetails?.data?.user_role ?? "Member"} allowedRoles={["Owner", "Admin"]}>
+                                                                        <span
+                                                                            onClick={handlePromotionModal}
+                                                                            className={`w-fit font-normal border border-[#D1F2F7] text-[8px] px-2 py-1 rounded-full bg-gradient-to-r from-[#FDFFFF] to-[#D1F2F7] cursor-pointer`}
+                                                                        >
+                                                                            Promote group
+                                                                        </span>
+                                                                    </IsRole>
+                                                                    :
+                                                                    null
+                                                            }
+
+                                                            <span
+                                                                className={`w-fit ${groupDetails?.data?.promotion ? "inline" : "hidden"} font-normal text-[8px] px-2 py-1 rounded-full bg-[#FDAC0E] cursor-pointer sm:ml-4`}
+                                                            >
+                                                                Ad
+                                                            </span>
                                                         </div>
                                                     </section>
                                                 </header>
@@ -184,50 +217,52 @@ export const Group = () => {
                                                 <ButtonSkeletonLoader />
                                             </div>
                                             :
-                                            <section className="flex items-end justify-end">
-                                                {
-                                                    !groupDetails?.data?.is_following && groupDetails?.data.group_access === "Opened" ?
-                                                        <Button
-                                                            children="Follow"
-                                                            leftIcon={!followLoading && <Icon.Plus size={18} />}
-                                                            className="!rounded-full !text-sm bg-tprimary-50 !px-4 !py-2.5 font-semiboldNunito"
-                                                            onClick={handleFollowGroup}
-                                                            isLoading={followLoading}
-                                                            disabled={followLoading}
-                                                        />
-                                                        :
-                                                        !groupDetails?.data?.is_following && groupDetails?.data.group_access === "Closed" && !groupDetails?.data?.has_requested ?
+                                            <div className={`${groupDetails ? "block" : "hidden"}`}>
+                                                <section className="flex items-end justify-end">
+                                                    {
+                                                        !groupDetails?.data?.is_following && groupDetails?.data.group_access === "Opened" ?
                                                             <Button
-                                                                children="Request to join"
-                                                                leftIcon={!requestLoading && <Icon.Plus size={18} />}
-                                                                className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
-                                                                onClick={handleRquestToFollowGroup}
-                                                                isLoading={requestLoading}
-                                                                disabled={requestLoading}
+                                                                children="Follow"
+                                                                leftIcon={!followLoading && <Icon.Plus size={18} />}
+                                                                className="!rounded-full !text-sm bg-tprimary-50 !px-4 !py-2.5 font-semiboldNunito"
+                                                                onClick={handleFollowGroup}
+                                                                isLoading={followLoading}
+                                                                disabled={followLoading}
                                                             />
                                                             :
-                                                            groupDetails?.data?.is_following ?
+                                                            !groupDetails?.data?.is_following && groupDetails?.data.group_access === "Closed" && !groupDetails?.data?.has_requested ?
                                                                 <Button
-                                                                    children="Unfollow"
+                                                                    children="Request to join"
+                                                                    leftIcon={!requestLoading && <Icon.Plus size={18} />}
                                                                     className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
-                                                                    onClick={handleUnFollowGroup}
-                                                                    isLoading={unFollowLoading}
-                                                                    disabled={unFollowLoading}
-                                                                    variant="error"
+                                                                    onClick={handleRquestToFollowGroup}
+                                                                    isLoading={requestLoading}
+                                                                    disabled={requestLoading}
                                                                 />
                                                                 :
-                                                                <p className="border border-tprimary-50 px-3 py-1 rounded-full whitespace-nowrap flex items-center gap-2 text-tprimary-50">
-                                                                    <Icon.Info size={18} />
-                                                                    Requested
-                                                                </p>
+                                                                groupDetails?.data?.is_following ?
+                                                                    <Button
+                                                                        children="Unfollow"
+                                                                        className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
+                                                                        onClick={handleUnFollowGroup}
+                                                                        isLoading={unFollowLoading}
+                                                                        disabled={unFollowLoading}
+                                                                        variant="error"
+                                                                    />
+                                                                    :
+                                                                    <p className="border border-tprimary-50 px-3 py-1 rounded-full whitespace-nowrap flex items-center gap-2 text-tprimary-50">
+                                                                        <Icon.Info size={18} />
+                                                                        Requested
+                                                                    </p>
 
-                                                }
-                                            </section>
+                                                    }
+                                                </section>
+                                            </div>
                                     }
                                     {groupDetails?.data?.is_following || isPrivateMember ? <section ref={popUpRef} className="cursor-pointer relative">
-                                        <Icon.MoreVertical onClick={() => setShowReportPop(prev => !prev)} size={35} className="hover:bg-tgray-xlight p-2 rounded-full cursor-pointer" />
+                                        <Icon.MoreVertical onClick={() => setShowPopup(prev => !prev)} size={35} className="hover:bg-tgray-xlight p-2 rounded-full cursor-pointer" />
                                         {
-                                            showReportPop ?
+                                            showPopup ?
                                                 <motion.div
                                                     variants={PostCardVariants}
                                                     initial="initial"
@@ -237,11 +272,17 @@ export const Group = () => {
                                                     className="absolute top-12 right-4 z-[15]"
                                                 >
                                                     <ul className="w-full bg-white flex flex-col items-start divide-y divide-tgray-50 border border-tgray-50 overflow-hidden rounded-xl">
-                                                        <li onClick={groupController.handleReportModal}
+                                                        <li onClick={() => { groupController.handleReportModal(); setShowPopup(false) }}
                                                             className="bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap"
                                                         >
                                                             <Icon.Flag className='' size={15} color='#000000' strokeWidth={2} />
                                                             <p>Report Group</p>
+                                                        </li>
+                                                        <li onClick={handleGroupAnalyticsModal}
+                                                            className={`${groupDetails?.data?.promotion ? "block" : "hidden"} bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}
+                                                        >
+                                                            <AnalyticsIcon className='' size={15} color='#000000' strokeWidth={2} />
+                                                            <p>View Analytics</p>
                                                         </li>
                                                     </ul>
                                                 </motion.div>
@@ -342,6 +383,34 @@ export const Group = () => {
                             isLoading={groupController?.reportLoading}
                             confirmationModal={groupController?.confirmationModal}
                             setConfirmationModal={groupController?.setConfirmationModal}
+                        />
+                    </Modal>
+
+                    <Modal
+                        show={promotionModal}
+                        shouldCloseOnEscPress={false}
+                        shouldCloseOnOverlayClick={false}
+                        onClose={handlePromotionModal}
+                        position='center'
+                        contentWidth='w-full md:w-3/4 xl:w-2/5'
+                    >
+                        <PromotionModal
+                            onClose={handlePromotionModal}
+                            groupId={groupDetails?.data?.id}
+                        />
+                    </Modal>
+
+                    <Modal
+                        show={analyticsModal}
+                        shouldCloseOnEscPress={false}
+                        shouldCloseOnOverlayClick={false}
+                        onClose={handleGroupAnalyticsModal}
+                        position='center'
+                        contentWidth='w-full md:w-3/4 xl:w-2/5'
+                    >
+                        <PostAnalyticsModal
+                            onClose={handleGroupAnalyticsModal}
+                            groupId={groupDetails?.data?.id}
                         />
                     </Modal>
                 </section>

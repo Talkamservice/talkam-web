@@ -197,6 +197,12 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 method: 'get'
             })
         }),
+        getAnalytics: builder.query({
+            query: ({ postId, groupId }) => ({
+                url: `user/posts/stats/fetch?post_id=${postId ?? ""}&group_id=${groupId ?? ""}`,
+                method: 'get'
+            })
+        })
     })
 })
 
@@ -224,4 +230,5 @@ export const {
     useUpdatePostNotificationsMutation,
     useGetTagSuggestionsQuery,
     useGetScheduledPostsQuery,
+    useGetAnalyticsQuery,
 } = postsApiSlice

@@ -11,8 +11,8 @@ import { useGetAnnouncementsQuery } from "../../../services/notificationsApiSlic
 import { useSelector } from "react-redux"
 import { selectCurrentToken, selectCurrentUser } from "../../../services/authSlice"
 import { EmptyState } from "../../../components/global/emptystate"
-import EmptyListIcon from "../../../assets/images/emptylist.png"
 import { TalkAmPlusCard } from "../../../components/global/talkampluscard"
+import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 
 const tabs = [

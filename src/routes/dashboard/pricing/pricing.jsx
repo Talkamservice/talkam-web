@@ -4,6 +4,8 @@ import { PricingTabs } from "../../../components/pricing/pricingTabs"
 import { useState } from "react"
 import { PricingCard } from "../../../components/pricing/pricingcard"
 import { useGetAllPlansQuery } from "../../../services/paymentApiSlice"
+import { useSelector } from "react-redux"
+import { selectCurrentUser } from "../../../services/authSlice"
 
 const freemiumFeatures = [
     "Limited character when Posting and commenting.",
@@ -45,12 +47,13 @@ const tabs = [
 
 export const Pricing = () => {
 
+    const currentUser = useSelector(selectCurrentUser);
     const [period, setPeriod] = useState("Annually");
     const { data: plans, isLoading } = useGetAllPlansQuery();
 
     const handleCurrentTab = (tab) => {
         setPeriod(tab)
-    }
+    };
 
     return (
         <div className="absolute top-0 left-0 bg-white z-[35] lg:z-[39] w-full h-full flex flex-col md:flex-row divide-x divide-tgray-50 overflow-auto no-scrollbar p-4 md:px-12">
@@ -70,12 +73,19 @@ export const Pricing = () => {
                     </header>
                 </div>
                 <section className="w-full xl:w-3/5 flex flex-col gap-6 items-center justify-center">
-                    <header className="w-fit">
-                        <PricingTabs
-                            tabs={tabs}
-                            onTabChange={handleCurrentTab}
-                        />
-                    </header>
+
+                    {
+                        !currentUser?.active_subscription ?
+                            <header className="w-fit">
+                                <PricingTabs
+                                    tabs={tabs}
+                                    onTabChange={handleCurrentTab}
+                                />
+                            </header>
+                            :
+                            null
+                    }
+
                     <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                         {
                             plans?.data?.map((plan) => {
@@ -92,6 +102,9 @@ export const Pricing = () => {
                                                 (period === "Annually" ? plan?.durations?.[1]?.price : plan?.durations?.[0]?.price)
                                                 :
                                                 0
+                                        }
+                                        currentPlanPrice={
+                                            plan.is_active_subscription ? plan?.price : 0
                                         }
                                     />
                                 )
