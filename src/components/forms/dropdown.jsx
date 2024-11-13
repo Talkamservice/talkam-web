@@ -25,7 +25,7 @@ export const DropDownSelect = ({ defaultValue, options, label, onChange, readOnl
 
   const handleSelected = (option) => {
     onChange(option)
-    setSelected(option)
+    setSelected(option);
   }
 
   useEffect(() => {

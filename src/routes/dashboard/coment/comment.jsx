@@ -195,6 +195,7 @@ export const Comment = () => {
                             parentCategory={postDetails?.data?.category?.parent_category}
                             isReported={postDetails?.data?.is_reported}
                             notification={postDetails?.data?.enabled_notification}
+                            ad={postDetails?.data?.promotion}
                             home
                         />
                 }

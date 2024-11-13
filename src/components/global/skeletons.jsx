@@ -14,6 +14,17 @@ export const ListSkeleton = () => {
     )
 }
 
+export const AnalyticsLoader = () => {
+    return (
+        <div role="status" className="w-full flex flex-col gap-2 animate-pulse">
+            <div className="h-20 bg-tgray-100 opacity-10 rounded-xl mb-.5"></div>
+            <div className="h-20 bg-tgray-100 opacity-10 rounded-xl mb-.5"></div>
+            <div className="h-20 bg-tgray-100 opacity-10 rounded-xl mb-.5"></div>
+            <div className="h-20 bg-tgray-100 opacity-10 rounded-xl"></div>
+        </div>
+    )
+}
+
 export const BannerSkeletons = () => {
     return (
         <div className="w-full min-h-[180px] max-h-[180px] bg-tgray-100 opacity-10 rounded-sm animate-pulse" />
@@ -133,7 +144,7 @@ export const GallerySkeletons = ({ num = 3, direction = 'flex-col', side }) => {
                             <div className="h-2 bg-tgray-100 opacity-10 rounded-full mb-.5"></div>
                             <div className="h-2 bg-tgray-100 opacity-10 rounded-full"></div>
                         </div>
-                        <div className={` flex items-center justify-center m-auto w-full ${side ? 'h-32' : 'h-80'} rounded-xl p-3 bg-tgray-100 opacity-10 animate-pulse `}></div>
+                        <div className={` flex items-center justify-center m-auto w-full ${side ? 'h-52' : 'h-96'} rounded-xl p-3 bg-tgray-100 opacity-10 animate-pulse `}></div>
                     </div>
                 ))
             }
@@ -227,6 +238,21 @@ export const CommentsLoader = ({ num = 9 }) => {
                         <div
                             className="w-1/3 cursor-pointer h-[50px] md:h-[100px] rounded-lg bg-tgray-100 opacity-10"
                         />
+                    </div>
+                ))
+            }
+        </div>
+    )
+}
+
+export const AdSkeletonLoader = ({ num = 3 }) => {
+    return (
+        <div className='flex flex-col gap-6'>
+            {
+                [...Array(num)].map((_, index) => (
+                    <div className='w-full flex flex-col items-center xl:items-start xl:flex-row gap-2'>
+                        <GallerySkeletons side num={1} />
+                        <AnalyticsLoader />
                     </div>
                 ))
             }

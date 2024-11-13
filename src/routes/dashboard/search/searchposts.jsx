@@ -113,11 +113,11 @@ export const SearchPosts = () => {
                                 <PostCard
                                     key={post.id}
                                     type={post.type}
-                                    user={post.user}
+                                    user={post?.user}
                                     polls={post.polls}
-                                    avatar={post.user.avatar}
+                                    avatar={post?.user?.avatar}
                                     category={post.category?.name}
-                                    author={post.user.username ?? post.user.name}
+                                    author={post?.user?.username ?? post?.user?.name}
                                     title={post.title}
                                     comment={post.body}
                                     image={post.attachments?.[0]?.url}

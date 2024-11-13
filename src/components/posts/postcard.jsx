@@ -12,13 +12,15 @@ import { PostTitle } from "./posttitle"
 import { PostPollBar } from "./postpollbar"
 import { Modal } from "../global/modal"
 import { ShareModal } from "./postsharemodal"
-import { NewNotificationIcon, TrashIcon } from '../../assets/icons/generated'
+import { AnalyticsIcon, BlueTickIcon, LockIcon, NewNotificationIcon, TrashIcon } from '../../assets/icons/generated'
 import { BlockPromptModal } from "../global/blockpromptmodal"
 import { PostReportModal } from "./postreportmodal"
 import { usePostController } from "../../controllers/postsController"
 import { Link } from "react-router-dom"
 import { ImageModalView } from "../global/imagemodalview"
 import { AuthWrapper } from "../../utils/authWrapper"
+import { PromotionModal } from "../../routes/dashboard/userprofile/promotion/promotion"
+import { PostAnalyticsModal } from "./postanalyticsmodal"
 import moment from "moment"
 import * as Icon from 'react-feather'
 
@@ -48,6 +50,8 @@ export const PostCard = ({
     notification,
     published,
     home,
+    isUser,
+    ad,
 }) => {
 
     const postController = usePostController(isAnon, user, reaction, likes, polls, isReported, notification, id);
@@ -62,7 +66,7 @@ export const PostCard = ({
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             className="w-full flex flex-col gap-2 border border-tgray-xlight p-3 rounded-lg relative bg-white"
         >
-            <header className="flex items-center justify-between gap-3">
+            <header className="flex items-center justify-between gap-2">
                 <section className="flex items-center gap-3">
                     <span
                         onClick={() => postController.navigate(`/userprofile/${user.username ?? user.id}`)}
@@ -70,13 +74,28 @@ export const PostCard = ({
                     >
                         <Avatar size="xsm" src={!postController.anonymous ? avatar : null} />
                     </span>
-                    <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                            <span className={`${side ? "text-xs" : "text-sm"} font-medium text-tblack-100 whitespace-nowrap`}>{parentCategory?.name ?? category?.name}</span>
-                            <span className={`${side ? "text-xs" : "text-sm"} font-medium text-tprimary-50 whitespace-nowrap`}>{moment(time).fromNow(true)}</span>
-                        </div>
+                    <div className="flex flex-col gap-2">
+                        <section className="flex flex-col items-start sm:flex-row sm:items-center gap-2">
+                            <div className="flex items-center gap-2">
+                                <span className={`${side ? "text-xs" : "text-sm"} font-medium text-tblack-100 whitespace-nowrap`}>{parentCategory?.name ?? category?.name}</span>
+                                <span className={`${side ? "text-xs" : "text-sm"} font-medium text-tprimary-50 whitespace-nowrap`}>{moment(time).fromNow(true)}</span>
+                            </div>
+                            <span
+                                onClick={postController?.handlePromotionModal}
+                                className={`w-fit ${isUser && !ad && (group ? group?.group_access !== "Closed" : true) ? "inline" : "hidden"} font-normal border border-[#D1F2F7] text-[8px] px-2 py-1 rounded-full bg-gradient-to-r from-[#FDFFFF] to-[#D1F2F7] cursor-pointer sm:ml-4`}
+                            >
+                                Promote post
+                            </span>
+                            <span
+                                className={`w-fit ${ad ? "inline" : "hidden"} font-normal text-[8px] px-2 py-1 rounded-full bg-[#FDAC0E] cursor-pointer sm:ml-4`}
+                            >
+                                Ad
+                            </span>
+                        </section>
                         <span className="text-xs font-medium text-[#858585]">
-                            Posted by {!postController.anonymous ? author : 'Anonymous'}
+                            <span className="flex items-center gap-2">
+                                Posted by {!postController.anonymous ? author : 'Anonymous'} {user?.active_subscription ? <BlueTickIcon /> : null}
+                            </span>
                             {
                                 group && home ?
                                     <p className="items-center whitespace-nowrap inline-flex gap-1 pl-1">
@@ -84,6 +103,7 @@ export const PostCard = ({
                                         <Link to={`/group/${group?.uuid}`} className="text-tprimary-50 cursor-pointer">
                                             {group?.name}
                                         </Link>
+                                        {group?.group_access === "Closed" ? <LockIcon className="w-4 h-4" /> : null}
                                     </p>
                                     :
                                     null
@@ -132,16 +152,15 @@ export const PostCard = ({
                                             </li>
                                         </AuthWrapper>
                                     </li>
-                                    {/* <li onClick={postController.handleShowBlockModal}
+                                    <li onClick={postController.handleAnalyticsModal}
                                         className={`
                                         bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight
-                                        ${(!postController.anonymous) ? "block" : 'hidden'}
-                                        ${(!postController.isCurrentUser) ? "block" : 'hidden'}
+                                        ${postController?.isCurrentUser && ad ? "block" : 'hidden'}
                                     `}
                                     >
-                                        <Icon.Slash size={15} color='#000000' strokeWidth={2} />
-                                        <p>Block @{author}</p>
-                                    </li> */}
+                                        <AnalyticsIcon size={15} color='#000000' strokeWidth={2} />
+                                        <p>View Analytics</p>
+                                    </li>
                                     <li className={`w-full ${postController?.isPostReported ? 'hidden' : 'block'} `}>
                                         <AuthWrapper onClick={postController.handleReportModal}>
                                             <li
@@ -352,6 +371,35 @@ export const PostCard = ({
                     setConfirmationModal={postController?.setConfirmationModal}
                 />
             </Modal>
+
+            <Modal
+                show={postController.openPromotionModal}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={postController.handlePromotionModal}
+                position='center'
+                contentWidth='w-full md:w-3/4 xl:w-2/5'
+            >
+                <PromotionModal
+                    onClose={postController.handlePromotionModal}
+                    postId={id}
+                />
+            </Modal>
+
+            <Modal
+                show={postController.openAnalytics}
+                shouldCloseOnEscPress={false}
+                shouldCloseOnOverlayClick={false}
+                onClose={postController.handleAnalyticsModal}
+                position='center'
+                contentWidth='w-full md:w-3/4 xl:w-2/5'
+            >
+                <PostAnalyticsModal
+                    onClose={postController.handleAnalyticsModal}
+                    postId={id}
+                />
+            </Modal>
+
         </motion.div>
     )
 }

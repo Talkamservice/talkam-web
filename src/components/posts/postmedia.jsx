@@ -45,7 +45,7 @@ export const PostMedia = ({ src, style, side, onClick, type }) => {
     return (
         <div
             className={classNames(style, `w-full flex items-center justify-center ${src ? 'block' : 'hidden'} cursor-pointer
-                ${side ? 'h-[150px]' : 'h-[250px] sm:h-[300px] md:h-[400px]'}
+                ${side ? 'h-[250px]' : 'h-[250px] sm:h-[300px] md:h-[400px]'}
                 rounded-xl overflow-hidden`)
             }
         >
