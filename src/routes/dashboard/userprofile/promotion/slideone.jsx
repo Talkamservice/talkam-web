@@ -1,11 +1,14 @@
 import { DropDownSelect } from "../../../../components/forms/dropdown"
+import { MultiSelect } from "../../../../components/forms/multiselect"
+import { ObjectMultiSelect } from "../../../../components/forms/multiselectobject"
 import { TextRadioButton } from "../../../../components/forms/textradiobutton"
 import { CustomDoubleRangeSlider } from "../../../../components/global/customdoublerange"
 
-export const SlideOne = ({ minAge, maxAge, gender, country, countries, loadingCountries, handleSelectCountry, handleCountrySearch, countrySearch, rangeValueChange, handleGender }) => {
+export const SlideOne = ({ minAge, maxAge, gender, country, selectedItems, setSelectedItems, countries, loadingCountries, setCountrySearch, handleSelectCountry, handleCountrySearch, countrySearch, rangeValueChange, handleGender }) => {
+
     return (
         <div className="flex flex-col gap-6 divide-y divide-tgray-50">
-            <DropDownSelect
+            {/* <DropDownSelect
                 label="Location"
                 defaultValue={country?.name ?? "country"}
                 options={countries?.data}
@@ -14,7 +17,28 @@ export const SlideOne = ({ minAge, maxAge, gender, country, countries, loadingCo
                 search
                 searchChange={handleCountrySearch}
                 searchValue={countrySearch}
-            />
+            /> */}
+
+            <section className="flex flex-col gap-2">
+                <label
+                    className='text-sm font-medium text-tblack-100'
+                >
+                    Location{""}(s)
+                </label>
+                <ObjectMultiSelect
+                    placeholder="Search Countries"
+                    rounded="rounded-xl"
+                    selectedItems={selectedItems}
+                    setSelectedItems={setSelectedItems}
+                    options={countries?.data ?? []}
+                    setSearchValue={setCountrySearch}
+                    handleSearch={handleCountrySearch}
+                    searchValue={countrySearch}
+                    isLoading={loadingCountries}
+                    limit={3}
+                // allowAdd={false}
+                />
+            </section>
 
             <section className="flex flex-col gap-12 py-6">
                 <div className="flex flex-col gap-2">

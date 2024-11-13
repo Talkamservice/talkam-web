@@ -2,10 +2,24 @@ import React, { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion';
 import { useOnOutsideClick } from '../../hooks/useOnOutsideClick';
 import { CardVariants } from '../../helpers/cardanimation';
-import { Storage } from '../../app/storage';
+import { ColoredLoader } from '../global/loader';
 import * as Icon from 'react-feather'
 
-export const MultiSelect = ({ options, selectedItems, setSelectedItems, rounded, placeholder, limit = 4 }) => {
+//proper schema would be id and name at least so it can work with any type of data structure, final selected items can then be transformed.
+
+export const ObjectMultiSelect = ({
+    options,
+    selectedItems,
+    setSelectedItems,
+    handleSearch,
+    setSearchValue,
+    searchValue,
+    rounded,
+    placeholder,
+    isLoading,
+    limit = 4,
+    allowAdd = true
+}) => {
 
     const ref = useRef();
     const [search, setSearch] = useState('')
@@ -35,8 +49,8 @@ export const MultiSelect = ({ options, selectedItems, setSelectedItems, rounded,
             if (selectedItems.includes(search)) return;
             const updatedItems = [...selectedItems, search]
             setSelectedItems(() => updatedItems);
-            Storage.setItem("post_tags", updatedItems)
             setSearch(() => "")
+            setSearchValue("")
         }
     }
 
@@ -44,15 +58,14 @@ export const MultiSelect = ({ options, selectedItems, setSelectedItems, rounded,
         if (selectedItems.includes(item) || selectedItems.length >= 4) return;
         const updatedItems = [...selectedItems, item]
         setSelectedItems(() => updatedItems);
-        Storage.setItem("post_tags", updatedItems)
         setFilteredData(() => options)
         setSearch(() => '')
+        setSearchValue("")
     }
 
     const removeItemFromArray = (item) => {
         const newItems = selectedItems.filter(option => option !== item);
         setSelectedItems(() => newItems);
-        Storage.setItem("post_tags", newItems)
     }
 
     useEffect(() => {
@@ -63,10 +76,10 @@ export const MultiSelect = ({ options, selectedItems, setSelectedItems, rounded,
     return (
         <div ref={ref} className='w-full flex flex-col'>
             <div className='w-full relative '>
-                <div className={`w-full flex items-center justify-between gap-2 border border-[#E2E4E9] ${rounded ? rounded : "rounded-xl"} cursor-pointer p-1`}>
+                <div className={`w-full flex items-center justify-between gap-2 border border-[#E2E4E9] ${rounded ? rounded : "rounded-xl"} cursor-pointer p-1 `}>
                     {!selectedItems?.length ?
                         <span onClick={() => setShowDropDown(prev => !prev)} className='text-[#76787e] text-[12px] p-2 whitespace-nowrap leading-none'>
-                            {placeholder ?? 'Add a tag (Tap "Enter" to add your tag.)'}
+                            {placeholder ?? 'Select your ooptions'}
                         </span>
                         :
                         <div className='flex-2 flex items-center gap-2 flex-wrap overflow-auto'>
@@ -96,29 +109,42 @@ export const MultiSelect = ({ options, selectedItems, setSelectedItems, rounded,
                                         border: "1px solid #E2E4E9",
                                         boxShadow: "none",
                                     }}
-                                    value={search}
-                                    onChange={(event) => handleSearchOptions(event)}
-                                    onKeyUp={(event) => handleAddNewtag(event)}
+                                    value={searchValue}
+                                    onChange={handleSearch}
+                                    onKeyUp={(event) => allowAdd ? handleAddNewtag(event) : null}
                                     type="text"
                                     placeholder="Search"
                                     className="text-[#0A0D14] size-full w-full text-sm rounded-[8px] py-2 pl-9 pr-8"
                                 />
                             </div>
-                            <section className='flex flex-col w-full gap-1 max-h-[120px] overflow-auto'>
+                            <section className='flex flex-col w-full max-h-[120px] overflow-auto divide-y divide-tgray-xlight'>
                                 {
-                                    !filteredData?.length ?
-                                        <span className='text-xs text-[#76787e]'>Tap "Enter" to add tag.</span>
+                                    isLoading ?
+                                        <section className='p-3 flex items-center gap-2'>
+                                            <ColoredLoader />
+                                            <span className='text-xs text-tgray-300'>Loading options...</span>
+                                        </section>
                                         :
-                                        filteredData?.map((option, index) => (
-                                            <button
-                                                disabled={selectedItems?.length >= limit}
-                                                type='button'
-                                                onClick={() => handleAddItemArray(option)}
-                                                className={`text-sm w-full cursor-pointer disabled:text-tgray-75 disabled:cursor-not-allowed hover:bg-gray-50 text-left p-2`} key={index}
-                                            >
-                                                {option}
-                                            </button>
-                                        ))
+                                        !filteredData?.length ?
+                                            <div>
+                                                {
+                                                    allowAdd ?
+                                                        <span className='text-xs text-[#76787e]'>Tap "Enter" to add option.</span>
+                                                        :
+                                                        <span className='text-xs text-[#76787e]'>No options.</span>
+                                                }
+                                            </div>
+                                            :
+                                            filteredData?.map((option, index) => (
+                                                <button
+                                                    disabled={selectedItems?.length >= limit}
+                                                    type='button'
+                                                    onClick={() => handleAddItemArray(option)}
+                                                    className={`${rounded} text-sm w-full cursor-pointer disabled:text-tgray-75 disabled:cursor-not-allowed hover:bg-tprimary-50 hover:text-white text-left px-5 py-2.5`} key={index}
+                                                >
+                                                    {option.name}
+                                                </button>
+                                            ))
                                 }
                             </section>
                         </motion.section>
@@ -133,7 +159,7 @@ export const MultiSelect = ({ options, selectedItems, setSelectedItems, rounded,
 const SelectedPill = ({ option, onClick }) => {
     return (
         <div className='flex items-center justify-between gap-2 py-2 px-3 bg-[#e8edf3a7] rounded-lg'>
-            <span className='text-xs'>{option}</span>
+            <span className='text-xs'>{option.name}</span>
             <Icon.X onClick={onClick} size={15} color='#ff000090' className='cursor-pointer' />
         </div>
     )
