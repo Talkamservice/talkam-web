@@ -20,6 +20,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
     const navigate = useNavigate();
     const [currentSlide, setCurrentSlide] = useState("one");
     const [country, setCountry] = useState("");
+    const [selectedItems, setSelectedItems] = useState([]);
     const [countrySearch, setCountrySearch] = useState("");
     const [budget, setBudget] = useState(1000);
     const [duration, setDuration] = useState(15);
@@ -28,6 +29,8 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
         maxAge: 45
     })
     const [gender, setGender] = useState("");
+
+    const transformedCountries = selectedItems?.map(country => country.id)
 
     const { data: countries, isFetching: loadingCountries } = useGetCountriesQuery({
         search: countrySearch
@@ -71,7 +74,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
         const details = {
             post_id: postId ?? null,
             group_id: groupId ?? null,
-            country_id: country?.id,
+            country_id: [...transformedCountries],
             state_id: null,
             min_age: ageRange.minAge.toString(),
             max_age: ageRange.maxAge.toString(),
@@ -136,6 +139,8 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
         }
     };
 
+    console.log(selectedItems)
+
     const slideMap = {
         "one":
             <SlideOne
@@ -150,6 +155,9 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
                 loadingCountries={loadingCountries}
                 rangeValueChange={handleRangeChange}
                 handleGender={handleGendleSelect}
+                selectedItems={selectedItems}
+                setSelectedItems={setSelectedItems}
+                setCountrySearch={setCountrySearch}
             />,
         "two":
             <SlideTwo
@@ -176,7 +184,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
         "three": '03'
     }
 
-    if (country && ageRange && gender) {
+    if (selectedItems?.length && ageRange && gender) {
         slideOneIsValid = true
     }
 

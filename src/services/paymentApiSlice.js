@@ -69,7 +69,7 @@ export const pricingApiSlice = apiSlice.injectEndpoints({
                 url: `user/posts/stats/save`,
                 method: "post"
             }),
-            invalidatesTags: ["ads"]
+            invalidatesTags: ["analytics"]
         }),
     }),
 });

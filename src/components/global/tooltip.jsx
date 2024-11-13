@@ -18,7 +18,7 @@ export const Tooltip = ({ children, text, position = "top" }) => {
     return (
         <span className="relative group inline-flex">
             {children}
-            <div className={`z-[9999] absolute whitespace-nowrap bg-[#212121] text-white text-xs px-3 py-2 rounded-xl hidden group-hover:block transition-all duration-700 ease-in-out ${positionClassesMap[position]}`}>
+            <div className={`z-[9999] absolute whitespace-nowrap bg-[#212121] text-white text-[8px] md:text-xs px-3 py-2 rounded-xl hidden group-hover:block transition-all duration-700 ease-in-out ${positionClassesMap[position]}`}>
                 {text}
                 <div className={`absolute w-0 h-0 border-8 border-transparent ${pointerClasses[position]}`} />
             </div>
