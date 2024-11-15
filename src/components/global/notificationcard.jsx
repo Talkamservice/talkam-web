@@ -17,6 +17,7 @@ export const NotificationCard = ({ notification, image, style, time, title, type
         "group_request": `/group/${id}`,
         "conversation": `${location.pathname}?messages`,
         "comment": `/comment/${id}`,
+        "promotion": `/promo/${id}`,
         "user": "",
         "notification": ""
     }

@@ -7,8 +7,9 @@ import { useOnOutsideClick } from "../hooks/useOnOutsideClick";
 import { useBlockUserMutation, usePostReactionMutation, useReportPostMutation, useSelectPollOptionMutation, useUpdatePostNotificationsMutation } from "../services/posts/postsApiSlice";
 import { toast } from "sonner";
 import { handleError } from "../utils/handleError";
+import { useUpdateStatsMutation } from "../services/paymentApiSlice";
 
-export const usePostController = (isAnon, user, reaction, likes, polls, isReported, notification, id) => {
+export const usePostController = (isAnon, user, reaction, likes, polls, isReported, notification, ad, id) => {
 
     let noOfDaysLeft = 0
     let totalVoteCount = 0
@@ -47,6 +48,7 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
     const [blockUser, { isLoading }] = useBlockUserMutation();
     const [reportPost, { isLoading: reportLoading }] = useReportPostMutation();
     const [updatePostNotifications, { isLoading: updateNotificationLoading }] = useUpdatePostNotificationsMutation();
+    const [updateStats] = useUpdateStatsMutation();
 
     const calculatePercentages = (options) => {
         const totalVotes = options.reduce((sum, option) => sum + option.count, 0);
@@ -201,6 +203,32 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
         setShowPopUp(false)
     }
 
+    const handleUpdateProfileVisitStats = async () => {
+        const postAdDetails = {
+            post_id: id,
+            profile_visits: true
+        }
+        try {
+            await updateStats({ ...postAdDetails }).unwrap();
+        } catch (error) {
+            const errorMessage = handleError(error);
+            console.log(errorMessage)
+        }
+    }
+
+    const handleUpdateShareStats = async () => {
+        const postAdDetails = {
+            post_id: id,
+            shares: true
+        }
+        try {
+            await updateStats({ ...postAdDetails }).unwrap();
+        } catch (error) {
+            const errorMessage = handleError(error);
+            console.log(errorMessage)
+        }
+    }
+
     const copyTextToClipboard = async () => {
         try {
             await navigator.clipboard.writeText(`https://web.talkam.prodevs.io/comment/${id}`);
@@ -216,7 +244,10 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
         setShowImagePreview((prev) => !prev)
     }
     const toggleShareModal = () => {
-        setOpenShare((prev) => !prev)
+        setOpenShare((prev) => !prev);
+        if (!isCurrentUser && ad) {
+            handleUpdateShareStats();
+        }
     }
     const handleShowBlockModal = () => {
         setShowBlockModal((prev) => !prev)
@@ -292,5 +323,7 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
         openPromotionModal,
         openAnalytics,
         handleAnalyticsModal,
+        handleUpdateProfileVisitStats,
+        handleUpdateShareStats,
     }
 }

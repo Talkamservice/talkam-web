@@ -1,6 +1,10 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 export const Tooltip = ({ children, text, position = "top" }) => {
+
+    const containerId = document.getElementsByTagName('body')[0];
+
     const positionClassesMap = {
         top: "bottom-full left-1/2 transform -translate-x-1/2 mb-2",
         bottom: "top-full left-1/2 transform -translate-x-1/2 mt-2",
@@ -18,7 +22,7 @@ export const Tooltip = ({ children, text, position = "top" }) => {
     return (
         <span className="relative group inline-flex">
             {children}
-            <div className={`z-[9999] absolute whitespace-nowrap bg-[#212121] text-white text-[8px] md:text-xs px-3 py-2 rounded-xl hidden group-hover:block transition-all duration-700 ease-in-out ${positionClassesMap[position]}`}>
+            <div className={`absolute whitespace-nowrap bg-[#212121] text-white text-[8px] text-xs px-3 py-2 rounded-xl hidden group-hover:block transition-all duration-700 ease-in-out ${positionClassesMap[position]}`}>
                 {text}
                 <div className={`absolute w-0 h-0 border-8 border-transparent ${pointerClasses[position]}`} />
             </div>

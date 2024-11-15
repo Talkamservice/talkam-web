@@ -18,7 +18,7 @@ export const Comment = () => {
     let isValidComment = false
     const { commentId } = useParams();
     // SERVER HOOKS HERE
-    const { data: postDetails, isLoading } = useGetSinglePostQuery(commentId)
+    const { data: postDetails, isLoading, isError, error } = useGetSinglePostQuery(commentId)
     const { data: comments, isLoading: commentsLoading } = useGetPostCommentsQuery(commentId);
     const [makeComment, { isLoading: newCommentLoading }] = useMakeCommentMutation()
 
@@ -173,31 +173,37 @@ export const Comment = () => {
                     isLoading ?
                         <GallerySkeletons num={1} />
                         :
-                        postDetails &&
-                        <PostCard
-                            type={postDetails.data.type}
-                            polls={postDetails.data.polls}
-                            category={postDetails.data?.category}
-                            avatar={postDetails?.data?.user?.avatar}
-                            author={postDetails.data?.user?.username ?? postDetails.data?.use?.name}
-                            title={postDetails.data?.title}
-                            comment={postDetails.data?.body}
-                            image={postDetails.data?.attachments?.[0]?.url}
-                            commentcount={postDetails.data?.comments_count}
-                            likes={postDetails.data?.likes_count}
-                            tags={postDetails.data?.tags}
-                            time={postDetails.data?.created_at}
-                            id={postDetails.data?.id}
-                            isAnon={postDetails.data?.is_anonymous}
-                            reaction={postDetails?.data.reaction}
-                            user={postDetails?.data?.user}
-                            group={postDetails?.data?.group}
-                            parentCategory={postDetails?.data?.category?.parent_category}
-                            isReported={postDetails?.data?.is_reported}
-                            notification={postDetails?.data?.enabled_notification}
-                            ad={postDetails?.data?.promotion}
-                            home
-                        />
+                        isError ?
+                            <div className="w-full items-center justify-center m-auto text-center text-tgray-150">
+                                <p className="text-sm font-normal">Post not found.</p>
+                                <p className="text-xs font-normal">Try again.</p>
+                            </div>
+                            :
+                            postDetails &&
+                            <PostCard
+                                type={postDetails.data.type}
+                                polls={postDetails.data.polls}
+                                category={postDetails.data?.category}
+                                avatar={postDetails?.data?.user?.avatar}
+                                author={postDetails.data?.user?.username ?? postDetails.data?.use?.name}
+                                title={postDetails.data?.title}
+                                comment={postDetails.data?.body}
+                                image={postDetails.data?.attachments?.[0]?.url}
+                                commentcount={postDetails.data?.comments_count}
+                                likes={postDetails.data?.likes_count}
+                                tags={postDetails.data?.tags}
+                                time={postDetails.data?.created_at}
+                                id={postDetails.data?.id}
+                                isAnon={postDetails.data?.is_anonymous}
+                                reaction={postDetails?.data.reaction}
+                                user={postDetails?.data?.user}
+                                group={postDetails?.data?.group}
+                                parentCategory={postDetails?.data?.category?.parent_category}
+                                isReported={postDetails?.data?.is_reported}
+                                notification={postDetails?.data?.enabled_notification}
+                                ad={postDetails?.data?.promotion}
+                                home
+                            />
                 }
                 <section className="w-full flex flex-col">
                     <CommentInput

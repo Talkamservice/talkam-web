@@ -35,6 +35,12 @@ export const pricingApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: ["ads"]
         }),
+        getPromotionDetails: builder.query({
+            query: ad => ({
+                url: `user/promotions/${ad}/show`,
+                method: "get"
+            })
+        }),
         deletePromotion: builder.mutation({
             query: ad => ({
                 url: `user/promotions/${ad}/delete`,
@@ -65,9 +71,10 @@ export const pricingApiSlice = apiSlice.injectEndpoints({
             invalidatesTags: ["ads"]
         }),
         updateStats: builder.mutation({
-            query: ad => ({
+            query: ({ ad }) => ({
                 url: `user/posts/stats/save`,
-                method: "post"
+                method: "post",
+                body: { ...ad }
             }),
             invalidatesTags: ["analytics"]
         }),
@@ -85,4 +92,5 @@ export const {
     useUpdatePromotionMutation,
     useRestartPromotionMutation,
     useUpdateStatsMutation,
+    useGetPromotionDetailsQuery,
 } = pricingApiSlice;

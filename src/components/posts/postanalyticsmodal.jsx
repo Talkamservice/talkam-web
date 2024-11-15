@@ -126,18 +126,17 @@ export const PostAnalyticsModal = ({ onClose, postId, groupId }) => {
                     </section>
 
                     <section className='py-5 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
-                        <div className='flex items-center gap-1'>
-                            <p className='text-base'>Nigeria:</p>
-                            <span className='text-base text-[#858585]'>98%</span>
-                        </div>
-                        <div className='flex items-center gap-1'>
-                            <p className='text-base'>Ghana:</p>
-                            <span className='text-base text-[#858585]'>1%</span>
-                        </div>
-                        <div className='flex items-center gap-1'>
-                            <p className='text-base'>Benin:</p>
-                            <span className='text-base text-[#858585]'>1%</span>
-                        </div>
+                        {
+                            !analytics?.data?.countries?.length ?
+                                "No Countries"
+                                :
+                                analytics?.data?.countries?.map(country => (
+                                    <div className='flex items-center gap-1'>
+                                        <p className='text-base'>{country?.name}:</p>
+                                        <span className='text-base text-[#858585]'>{country?.percentage}%</span>
+                                    </div>
+                                ))
+                        }
                     </section>
 
                 </section>

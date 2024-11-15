@@ -1,7 +1,7 @@
-import classNames from 'classnames';
-import * as React from 'react';
 import { Zoom } from 'react-awesome-reveal';
 import { createPortal } from 'react-dom';
+import classNames from 'classnames';
+import * as React from 'react';
 
 const modalOverlayBase = classNames(
   'fixed',
