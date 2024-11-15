@@ -54,7 +54,7 @@ export const PostCard = ({
     ad,
 }) => {
 
-    const postController = usePostController(isAnon, user, reaction, likes, polls, isReported, notification, id);
+    const postController = usePostController(isAnon, user, reaction, likes, polls, isReported, notification, ad, id);
 
     return (
         <motion.div
@@ -69,7 +69,10 @@ export const PostCard = ({
             <header className="flex items-center justify-between gap-2">
                 <section className="flex items-center gap-3">
                     <span
-                        onClick={() => postController.navigate(`/userprofile/${user.username ?? user.id}`)}
+                        onClick={() => {
+                            postController.navigate(`/userprofile/${user.username ?? user.id}`)
+                            ad && !postController.isCurrentUser ? postController.handleUpdateProfileVisitStats() : null
+                        }}
                         className={`w-fit ${postController.anonymous ? "pointer-events-none" : "cursor-pointer"} `}
                     >
                         <Avatar size="xsm" src={!postController.anonymous ? avatar : null} />

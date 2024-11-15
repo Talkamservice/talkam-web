@@ -10,10 +10,10 @@ import { handleError } from '../../utils/handleError'
 import { toast } from 'sonner'
 import { closePaymentModal, useFlutterwave } from "flutterwave-react-v3"
 import { PromotionModal } from '../../routes/dashboard/userprofile/promotion/promotion'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { GroupBannerAd } from '../../routes/dashboard/ads/groupbannerad'
-import * as Icon from 'react-feather'
 import { Tooltip } from './tooltip'
+import * as Icon from 'react-feather'
 
 export const AdCard = ({
     id,
@@ -31,7 +31,8 @@ export const AdCard = ({
     clicks,
     mintime,
     maxtime,
-    status
+    status,
+    page
 }) => {
 
     const navigate = useNavigate();
@@ -125,7 +126,7 @@ export const AdCard = ({
 
     const statusMap = {
         "Active": "Running Ad",
-        "Inactive": "Pending Ad"
+        "Pending": "Pending Ad"
     }
 
     return (
@@ -195,12 +196,39 @@ export const AdCard = ({
                         </div>
                         <div className='flex items-start flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585] relative'>
-                                <p>Engagement</p>
+                                <p>Engagement Rate</p>
                                 <Tooltip position='left' text="This is gotten directly from your target audience">
                                     <Icon.AlertCircle />
                                 </Tooltip>
                             </header>
-                            <p className='text-base'>{engagements ?? 0}</p>
+                            <p className='text-base'>{engagements ?? '0%'}</p>
+                        </div>
+                        <div className='flex items-start flex-col gap-1'>
+                            <header className='flex items-center gap-1 text-[#858585]'>
+                                <p>Clicks</p>
+                                <Tooltip
+                                    position='left'
+                                    text="This is gotten directly from your target audience"
+                                >
+                                    <Icon.AlertCircle />
+                                </Tooltip>
+                            </header>
+                            <p className='text-base'>{clicks ?? 0}</p>
+                        </div>
+                    </section>
+
+
+                    <section className='px-5 py-3 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
+                        <div className='flex items-start flex-col gap-1'>
+                            <header className='flex items-center gap-1 text-[#858585]'>
+                                <p>Profile Visits</p>
+                                <Tooltip
+                                    text="This is gotten directly from your target audience"
+                                >
+                                    <Icon.AlertCircle />
+                                </Tooltip>
+                            </header>
+                            <p className='text-base'>{visits ?? 0}</p>
                         </div>
                         {group && (
                             <div className='flex items-start flex-col gap-1'>
@@ -217,84 +245,70 @@ export const AdCard = ({
                         )}
                     </section>
 
+                    {
+                        page ?
+                            <>
+                                <section className='px-5 py-3 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
+                                    <div className='flex items-start flex-col gap-1'>
+                                        <header className='flex items-center gap-1 text-[#858585]'>
+                                            <p>Min time spent on post</p>
+                                            <Tooltip
+                                                text="This is gotten directly from your target audience"
+                                            >
+                                                <Icon.AlertCircle />
+                                            </Tooltip>
+                                        </header>
+                                        <p className='text-base'>{mintime ?? '0 secs'}</p>
+                                    </div>
+                                    <div className='flex items-start flex-col gap-1'>
+                                        <header className='flex items-center gap-1 text-[#858585]'>
+                                            <p>Max time spent on post</p>
+                                            <Tooltip
+                                                position='left'
+                                                text="This is gotten directly from your target audience"
+                                            >
+                                                <Icon.AlertCircle />
+                                            </Tooltip>
+                                        </header>
+                                        <p className='text-base'>{maxtime ?? "0 secs"}</p>
+                                    </div>
+                                </section>
 
-                    <section className='px-5 py-3 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
-                        <div className='flex items-start flex-col gap-1'>
-                            <header className='flex items-center gap-1 text-[#858585]'>
-                                <p>Profile Visits</p>
-                                <Tooltip
-                                    text="This is gotten directly from your target audience"
-                                >
-                                    <Icon.AlertCircle />
-                                </Tooltip>
-                            </header>
-                            <p className='text-base'>{visits ?? 0}</p>
-                        </div>
-                        <div className='flex items-start flex-col gap-1'>
-                            <header className='flex items-center gap-1 text-[#858585]'>
-                                <p>Clicks</p>
-                                <Tooltip
-                                    position='left'
-                                    text="This is gotten directly from your target audience"
-                                >
-                                    <Icon.AlertCircle />
-                                </Tooltip>
-                            </header>
-                            <p className='text-base'>{clicks ?? 0}</p>
-                        </div>
-                    </section>
+                                <section className='px-5 flex items-center'>
+                                    <p>Country engagements</p>
+                                </section>
 
-                    <section className='px-5 py-3 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
-                        <div className='flex items-start flex-col gap-1'>
-                            <header className='flex items-center gap-1 text-[#858585]'>
-                                <p>Min time spent on post</p>
-                                <Tooltip
-                                    text="This is gotten directly from your target audience"
-                                >
-                                    <Icon.AlertCircle />
-                                </Tooltip>
-                            </header>
-                            <p className='text-base'>{mintime ?? '0 secs'}</p>
-                        </div>
-                        <div className='flex items-start flex-col gap-1'>
-                            <header className='flex items-center gap-1 text-[#858585]'>
-                                <p>Max time spent on post</p>
-                                <Tooltip
-                                    position='left'
-                                    text="This is gotten directly from your target audience"
-                                >
-                                    <Icon.AlertCircle />
-                                </Tooltip>
-                            </header>
-                            <p className='text-base'>{maxtime ?? "0 secs"}</p>
-                        </div>
-                    </section>
+                                <section className='px-5 py-3 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
+                                    <div className='flex items-center gap-1'>
+                                        <p className='text-base'>Nigeria:</p>
+                                        <span className='text-base text-[#858585]'>98%</span>
+                                    </div>
+                                    <div className='flex items-center gap-1'>
+                                        <p className='text-base'>Ghana:</p>
+                                        <span className='text-base text-[#858585]'>1%</span>
+                                    </div>
+                                    <div className='flex items-center gap-1'>
+                                        <p className='text-base'>Benin:</p>
+                                        <span className='text-base text-[#858585]'>1%</span>
+                                    </div>
+                                </section>
+                            </>
+                            :
+                            <div className=''>
+                                <Link className='flex items-center gap-2 text-tprimary-50 underline underline-offset-2' to={`/promo/${id}`}>
+                                    View Promotion Details
+                                    <Icon.ArrowRight size={18} />
+                                </Link>
+                            </div>
+                    }
 
-                    <section className='px-5 flex items-center'>
-                        <p>Country engagements</p>
-                    </section>
-
-                    <section className='px-5 py-3 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
-                        <div className='flex items-center gap-1'>
-                            <p className='text-base'>Nigeria:</p>
-                            <span className='text-base text-[#858585]'>98%</span>
-                        </div>
-                        <div className='flex items-center gap-1'>
-                            <p className='text-base'>Ghana:</p>
-                            <span className='text-base text-[#858585]'>1%</span>
-                        </div>
-                        <div className='flex items-center gap-1'>
-                            <p className='text-base'>Benin:</p>
-                            <span className='text-base text-[#858585]'>1%</span>
-                        </div>
-                    </section>
                 </section>
             </section>
 
             {
                 type === "running" ?
                     <footer className='w-full flex items-center justify-between gap-4 p-4'>
-                        <p className='rounded-full px-3 py-1.5 bg-[#F1FAFF] border border-[#E5F6FF] text-[10px]'>{statusMap[status]}</p>
+                        <p className={` ${status === "Active" ? "bg-[#F1FAFF] border border-[#E5F6FF]" : "bg-[#fffdf1] border border-[#fff6e5]"} rounded-full px-3 py-1.5  text-[10px]`}>{statusMap[status]}</p>
 
                         <Button
                             variant="link"

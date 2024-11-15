@@ -238,6 +238,13 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "promo/:adId",
+        lazy: async () => {
+          let { AdDetails } = await import("./routes/dashboard/ads/addetails");
+          return { Component: AdDetails };
+        },
+      },
+      {
         path: "notifications",
         lazy: async () => {
           let { Notifications } = await import(

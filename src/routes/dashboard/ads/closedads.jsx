@@ -46,6 +46,7 @@ export const ClosedAds = () => {
                                         key={ad.id}
                                         id={ad.id}
                                         post={ad?.post}
+                                        group={ad?.group}
                                         commentCount={ad?.post?.comments_count}
                                         likes={ad?.post?.likes_count}
                                         impressions={ad?.post?.views_count}

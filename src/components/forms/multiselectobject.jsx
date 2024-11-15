@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion';
-import { useOnOutsideClick } from '../../hooks/useOnOutsideClick';
 import { CardVariants } from '../../helpers/cardanimation';
 import { ColoredLoader } from '../global/loader';
+import { useClickOutside } from '../../hooks/useClickOutside';
 import * as Icon from 'react-feather'
 
 //proper schema would be id and name at least so it can work with any type of data structure, final selected items can then be transformed.
@@ -26,7 +26,7 @@ export const ObjectMultiSelect = ({
     const [filteredData, setFilteredData] = useState(options)
     const [showDropDown, setShowDropDown] = useState(false);
 
-    useOnOutsideClick(ref, () => {
+    useClickOutside(ref, () => {
         setShowDropDown(() => false);
     });
 

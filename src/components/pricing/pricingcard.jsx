@@ -5,10 +5,12 @@ import { closePaymentModal, useFlutterwave } from "flutterwave-react-v3";
 import { toast } from "sonner";
 import { handleError } from "../../utils/handleError";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Logo from '../../assets/images/avatar.png'
 
 export const PricingCard = ({ plan, currentPlan, period, features, price, planId, currentPlanPrice }) => {
 
+    const navigate = useNavigate();
     const [subResponse, setSubResponse] = useState(null)
     const [subscribe, { isLoading }] = useSubscribeMutation();
 
@@ -43,10 +45,12 @@ export const PricingCard = ({ plan, currentPlan, period, features, price, planId
                 handleFlutterPayment({
                     callback: async (response) => {
                         // console.log('response', response);
-                        // navigate('/', {replace: true})
+                        navigate('/', { replace: true })
                         closePaymentModal();
                     },
-                    onClose: () => { },
+                    onClose: () => {
+                        navigate('/', { replace: true })
+                    },
                 });
             } else {
                 toast.error('Payment details missing. Please try again.');
