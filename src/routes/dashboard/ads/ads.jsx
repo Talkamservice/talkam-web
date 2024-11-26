@@ -1,4 +1,4 @@
-import { ArrowLeft } from "react-feather"
+import { ArrowLeft, Plus } from "react-feather"
 import { Button } from "../../../components/forms/button"
 import { useNavigate } from "react-router-dom"
 import { RouteTabs } from "../../../components/global/routetabs";
@@ -22,7 +22,7 @@ export const Ads = () => {
 
     return (
         <div className="w-full h-full flex flex-col">
-            <header className="w-full flex items-center justify-between gap-4 p-4 border-b border-tgray-50 h-[5dvh] sticky top-0 bg-white">
+            <header className="w-full flex items-center justify-between gap-4 px-4 py-2 border-b border-tgray-50 sticky top-0 bg-white">
                 <Button
                     variant="link"
                     leftIcon={<ArrowLeft size={18} />}
@@ -31,7 +31,13 @@ export const Ads = () => {
                     Back
                 </Button>
 
-                <p>Ads Central</p>
+                <Button
+                    className="!rounded-full"
+                    onClick={() => navigate("/create-post", { state: "new-promo" })}
+                    rightIcon={<Plus size={18} />}
+                >
+                    Start Promoting
+                </Button>
             </header>
 
             <section className="w-full p-6 relative overflow-y-auto">

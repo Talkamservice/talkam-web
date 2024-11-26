@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from '../../assets/images/avatar.png'
 
-export const PricingCard = ({ plan, currentPlan, period, features, price, planId, currentPlanPrice }) => {
+export const PricingCard = ({ plan, currentPlan, period, features, price = "0", planId, currentPlanPrice }) => {
 
     const navigate = useNavigate();
     const [subResponse, setSubResponse] = useState(null)

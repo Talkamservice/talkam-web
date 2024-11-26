@@ -250,7 +250,7 @@ export const AdSkeletonLoader = ({ num = 3 }) => {
         <div className='flex flex-col gap-6'>
             {
                 [...Array(num)].map((_, index) => (
-                    <div className='w-full flex flex-col items-center xl:items-start xl:flex-row gap-2'>
+                    <div key={index} className='w-full flex flex-col items-center xl:items-start xl:flex-row gap-2'>
                         <GallerySkeletons side num={1} />
                         <AnalyticsLoader />
                     </div>

@@ -7,6 +7,7 @@ import { IsBanned } from "../../../utils/isBanned";
 import { useNavigate } from "react-router-dom";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 import Protected from "../../../utils/protected";
+import { SuggestedCard } from "../../../components/global/suggestedcard";
 
 const tabs = [
     {
@@ -29,15 +30,54 @@ export const Groups = () => {
     return (
         <Protected>
             <div className="w-full flex divide-x divide-tgray-light h-full">
-                <section className="relative w-full md:w-4/6 overflow-y-auto no-scrollbar px-6">
+                <section className="relative w-full md:w-4/6 overflow-y-auto no-scrollbar px-2 md:px-6">
                     <RouteTabs
                         tabs={tabs}
                     />
                 </section>
 
                 <section className="w-2/6 px-6 hidden md:block py-4 space-y-8 overflow-y-auto no-scrollbar">
+                    <section className="w-full flex flex-col gap-4">
+                        <h2 className="text-lg font-bold leading-none">Suggested Groups</h2>
+                        <ul className="w-full flex items-center gap-4 overflow-x-auto">
+                            {
+                                groupController.followingGroupsLoading ?
+                                    <GroupSkeletonLoader button={false} />
+                                    :
+                                    !groupController.following?.data?.data.length ?
+                                        <section className="w-full py-4">
+                                            <EmptyState
+                                                icon={EmptyListIcon}
+                                                height="h-[50px]"
+                                                width="h-[50px]"
+                                                text="No groups"
+                                                subtext="When groups are added they would appear here"
+                                            />
+                                        </section>
+                                        :
+                                        groupController.following?.data?.data.map((group) => (
+                                            <IsBanned
+                                                key={group.id}
+                                                isBanned={group?.is_suspended}
+                                                onClick={() => navigate(`/group/${group.uuid}`)}
+                                            >
+                                                <SuggestedCard
+                                                    key={group.id}
+                                                    img={group.image}
+                                                    members={group.total_members}
+                                                    group={group.name}
+                                                    access={group.group_access}
+                                                    isSuspended={group.is_suspended}
+                                                    ad={group.promotion}
+                                                />
+                                            </IsBanned>
+                                        ))
+                            }
+                        </ul>
+
+                    </section>
                     <section className="flex flex-col gap-4">
-                        <h2 className="text-base font-bold leading-none">Your Groups</h2>
+                        <h2 className="text-lg font-bold leading-none">Your Groups</h2>
                         <ul className="flex items-start flex-col gap-4">
                             {
                                 groupController.followingGroupsLoading ?
@@ -63,6 +103,7 @@ export const Groups = () => {
                                                     group={group.name}
                                                     access={group.group_access}
                                                     isSuspended={group.is_suspended}
+                                                    ad={group.promotion}
                                                 />
                                             </IsBanned>
                                         ))

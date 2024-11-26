@@ -54,21 +54,15 @@ export const MainAppLayout = ({ children }) => {
         sort: "popular",
         categoryId: ""
     }, {
-        refetchOnFocus: true,
-        refetchOnMountOrArgChange: true,
+        // refetchOnFocus: true,
+        // refetchOnMountOrArgChange: true,
         refetchOnReconnect: true,
         skip: !token
     });
-    const { data: followingCategories, isLoading: followingCategoriesLoading } = useFollowingCategoriesQuery({
-        refetchOnFocus: true,
-        refetchOnMountOrArgChange: true,
-        refetchOnReconnect: true,
-    }, {
-        skip: !token
-    });
+    const { data: followingCategories, isLoading: followingCategoriesLoading } = useFollowingCategoriesQuery({ skip: !token });
     const [resendOtp, { isLoading: resendLoading }] = useResendOtpMutation();
     const { data: user, isSuccess } = useGetUserProfileDetailsQuery(currentUser?.id, {
-        refetchOnFocus: true,
+        // refetchOnFocus: true,
         refetchOnMountOrArgChange: true,
         refetchOnReconnect: true,
         skip: !token

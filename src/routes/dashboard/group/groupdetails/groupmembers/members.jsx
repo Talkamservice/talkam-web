@@ -278,7 +278,7 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
                                 {
                                     role === "Member" || role === "Admin" && role !== "Owner" ?
                                         <IsRole currentRole={currentUserRole} allowedRoles={["Owner", "Admin"]}>
-                                            <li onClick={handleDeleteMember} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
+                                            <li onClick={() => { handleTogglePopup(); handleDeleteMember() }} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
                                                 <Icon.Slash size={15} />
                                                 <p>Remove {user}</p>
                                             </li>
@@ -289,7 +289,7 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
                                 {
                                     (role === "Member" || (role === "Admin" && role !== "Owner")) && !suspended ?
                                         <IsRole currentRole={currentUserRole} allowedRoles={["Owner", "Admin"]}>
-                                            <li onClick={handleSuspendMember} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
+                                            <li onClick={() => { handleTogglePopup(); handleSuspendMember() }} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
                                                 <Icon.AlertTriangle size={18} className="text-[#AC4242]" />
                                                 <p>Suspend {user}</p>
                                             </li>
@@ -300,7 +300,7 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
                                 {
                                     (role === "Member" || (role === "Admin" && role !== "Owner")) && suspended ?
                                         <IsRole currentRole={currentUserRole} allowedRoles={["Owner", "Admin"]}>
-                                            <li onClick={handleSuspendMember} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
+                                            <li onClick={() => { handleTogglePopup(); handleSuspendMember() }} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
                                                 <Icon.AlertTriangle size={18} className="text-[#AC4242]" />
                                                 <p>Unsuspend {user}</p>
                                             </li>
@@ -311,7 +311,7 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
                                 {
                                     role === "Admin" ?
                                         <IsRole currentRole={currentUserRole} allowedRoles={["Owner", "Admin"]}>
-                                            <li onClick={handleRemoveModerator} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
+                                            <li onClick={() => { handleTogglePopup(); handleRemoveModerator() }} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
                                                 <Icon.UserMinus size={18} className="text-[#AC4242]" />
                                                 <p>Remove as Moderator</p>
                                             </li>
@@ -322,7 +322,7 @@ export const MemberListCard = ({ avatar, user, role, currentUserRole, joined, po
                                 {
                                     role !== "Admin" && role !== "Owner" ?
                                         <IsRole currentRole={currentUserRole} allowedRoles={["Owner", "Admin"]}>
-                                            <li onClick={handleMakeModerator} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
+                                            <li onClick={() => { handleTogglePopup(); handleMakeModerator(); }} className={`bg-white w-full px-4 flex items-center gap-2 text-sm py-3 text-[#444444] hover:bg-tgray-xlight whitespace-nowrap`}>
                                                 <Icon.UserPlus size={18} className="" />
                                                 <p>Add as Moderator</p>
                                             </li>

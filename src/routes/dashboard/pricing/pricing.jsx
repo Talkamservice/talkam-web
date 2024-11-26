@@ -101,10 +101,10 @@ export const Pricing = () => {
                                             plan?.durations.length ?
                                                 (period === "Annually" ? plan?.durations?.[1]?.price : plan?.durations?.[0]?.price)
                                                 :
-                                                0
+                                                "0"
                                         }
                                         currentPlanPrice={
-                                            plan.is_active_subscription ? plan?.price : 0
+                                            (plan.is_active_subscription && plan?.price) ?? "0"
                                         }
                                     />
                                 )

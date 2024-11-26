@@ -121,7 +121,7 @@ export const ProfilesPosts = () => {
     }
 
     return (
-        <main className="flex h-full px-6">
+        <main className="flex h-full px-2 md:px-6">
             <section
                 onScroll={handleScroll}
                 ref={scrollableRef}

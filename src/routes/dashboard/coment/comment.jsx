@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom"
 import { PostCard } from "../../../components/posts/postcard"
 import { CommentInput } from "../../../components/comments/commentinput"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { CommentCard } from "../../../components/comments/commentcard"
 import { useGetPostCommentsQuery, useGetSinglePostQuery, useMakeCommentMutation } from "../../../services/posts/postsApiSlice"
 import { GallerySkeletons } from "../../../components/global/skeletons"
@@ -12,11 +12,13 @@ import { randomId } from "../../../helpers/randomid"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { storageDB } from "../../../utils/firestore"
 import { Helmet } from "react-helmet"
+import { useUpdateStatsMutation } from "../../../services/paymentApiSlice"
 
 export const Comment = () => {
 
     let isValidComment = false
     const { commentId } = useParams();
+    const visitStartRef = useRef(null);// ref for timer on user visit to components
     // SERVER HOOKS HERE
     const { data: postDetails, isLoading, isError, error } = useGetSinglePostQuery(commentId)
     const { data: comments, isLoading: commentsLoading } = useGetPostCommentsQuery(commentId);
@@ -44,6 +46,8 @@ export const Comment = () => {
         image: null,
         comment: "",
     });
+
+    const [updateStats] = useUpdateStatsMutation();
 
     // FUNCTIONS
     const handleAddNewComment = (event) => {
@@ -136,7 +140,32 @@ export const Comment = () => {
             image: "",
             comment: "",
         });
-    }
+    };
+
+    const handleUpdateTimeVisitStats = async () => {
+        const timeSpentInSeconds = Math.floor((Date.now() - visitStartRef.current) / 1000);
+        const postAdDetails = {
+            post_id: commentId,
+            time_spent: timeSpentInSeconds,
+        };
+
+        try {
+            await updateStats(postAdDetails).unwrap();
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    };
+
+    useEffect(() => {
+        visitStartRef.current = Date.now();
+
+        if (postDetails?.data)
+            handleUpdateTimeVisitStats()
+        return () => {
+            handleUpdateTimeVisitStats();
+        }
+    }, [commentId]);
 
     if ((commentBody.comment || commentBody.image) && !imageLoading) {
         isValidComment = true

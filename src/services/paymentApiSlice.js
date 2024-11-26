@@ -71,7 +71,7 @@ export const pricingApiSlice = apiSlice.injectEndpoints({
             invalidatesTags: ["ads"]
         }),
         updateStats: builder.mutation({
-            query: ({ ad }) => ({
+            query: ad => ({
                 url: `user/posts/stats/save`,
                 method: "post",
                 body: { ...ad }
