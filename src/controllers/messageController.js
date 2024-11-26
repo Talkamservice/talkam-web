@@ -19,8 +19,8 @@ import { getFileExtension } from "../helpers/getFileExtension";
 import { useLocation, useNavigate } from "react-router-dom";
 import { formatDate } from "../utils/formatMessageDate";
 import { Storage } from "../app/storage";
-import Pusher from 'pusher-js';
 import { useBlockUserMutation } from "../services/posts/postsApiSlice";
+import Pusher from 'pusher-js';
 
 export const useMessagesController = (currentChat, setCurrentChat, page, setPage) => {
 
@@ -268,7 +268,7 @@ export const useMessagesController = (currentChat, setCurrentChat, page, setPage
 
     // //infinite scroll functions
     const messageIds = new Set();
-    // Deduplicate new posts
+    // Deduplicate new messages
     const newResults = (messages && messages).filter(message => {
         if (!messageIds.has(message.id)) {
             messageIds.add(message.id);

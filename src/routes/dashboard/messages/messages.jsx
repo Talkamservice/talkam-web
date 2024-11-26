@@ -108,7 +108,7 @@ export const Messages = ({ onClose }) => {
             navigate({
                 pathname: `${location.pathname}`,
                 search: `messages`,
-            }, { replace: true });
+            }, { replace: true }); //clearing url state in this location
         }
     }, [isSuccess])
 

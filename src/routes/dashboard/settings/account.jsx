@@ -130,10 +130,16 @@ export const AccountSettings = () => {
                 <div className="w-full flex flex-col md:flex-row gap-3 md:items-center justify-between border-t border-tgray-50 py-4">
                     <div className="flex flex-col gap-1">
                         <p className="text-lg font-bold uppercase">Your Subscription plan</p>
-                        <span className="text-xs text-error-500 flex items-center gap-1">
-                            <AlertCircle color="#FF0000" size={18} />
-                            {user?.data?.active_subscription?.renewal_cancelled_at ? "Cancelled" : ""}
-                        </span>
+
+                        {
+                            user?.data?.active_subscription?.renewal_cancelled_at ?
+                                <span className="text-xs text-error-500 flex items-center gap-1">
+                                    <AlertCircle color="#FF0000" size={18} />
+                                    "Cancelled"
+                                </span>
+                                :
+                                null
+                        }
                     </div>
                     <section className="md:w-1/2">
                         {

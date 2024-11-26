@@ -12,8 +12,8 @@ import { Link, useNavigate } from "react-router-dom"
 import { ColoredLoader } from "../global/loader"
 import { useRef, useState } from "react"
 import { useGetTagSuggestionsQuery } from "../../services/posts/postsApiSlice"
-import * as Icon from 'react-feather'
 import { useGetUserProfileDetailsQuery } from "../../services/userApiSlice"
+import * as Icon from 'react-feather'
 
 export const CommentInput = ({
     anonChecked,
@@ -249,7 +249,11 @@ export const CommentInput = ({
                                 <Icon.Image color="#2121219C" />
                             </label>
                             <UploadGifIcon />
-                            <AnonToggleButton checked={anonChecked} onChange={(event) => handleAnonToggle(event)} />
+
+                            <div className="flex items-center gap-2">
+                                <AnonToggleButton checked={anonChecked} onChange={(event) => handleAnonToggle(event)} />
+                                {!user?.data?.active_subscription ? <span className="text-xs text-tgray-250 ">{user?.data?.anonymous_post}/5</span> : null}
+                            </div>
                         </div>
                     </section>
                 </section>

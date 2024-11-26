@@ -22,7 +22,10 @@ export const New = () => {
         tab: 'latest',
         page: page,
         target: "",
-    }, { refetchOnMountOrArgChange: 420 });
+    }, {
+        refetchOnReconnect: true,
+        refetchOnMountOrArgChange: 420
+    });
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();
@@ -105,7 +108,7 @@ export const New = () => {
     }
 
     return (
-        <main className="flex flex-col h-full relative gap-2 px-6">
+        <main className="flex flex-col h-full relative gap-2 px-2 md:px-6">
             <section
                 onScroll={handleScroll}
                 ref={scrollableRef}
@@ -146,7 +149,7 @@ export const New = () => {
                                 />
                             ))
                             :
-                            !isLoading && !isFetching && latest.data?.data?.length === 0 ?
+                            !isLoading && !isFetching && latest?.data?.data?.length === 0 ?
                                 <section className="w-full py-1">
                                     <EmptyState
                                         icon={EmptyListIcon}

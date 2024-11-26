@@ -3,7 +3,7 @@ import { LockIcon } from '../../assets/icons/generated';
 import FallBack from '../../assets/icons/groupicon.svg'
 import * as Icon from "react-feather"
 
-export const GroupCard = ({ group, members, img, access, onClick, isSuspended }) => {
+export const GroupCard = ({ group, members, img, access, isSuspended, ad }) => {
 
     let membersPluralization;
 
@@ -15,7 +15,7 @@ export const GroupCard = ({ group, members, img, access, onClick, isSuspended })
     }
 
     return (
-        <AuthWrapper onClick={onClick}>
+        <AuthWrapper>
             <section className="cursor-pointer flex items-center gap-2">
                 <img
                     style={{
@@ -35,7 +35,14 @@ export const GroupCard = ({ group, members, img, access, onClick, isSuspended })
                         <p className="font-bold text-base">{group}</p>
                         {access === "Closed" ? <LockIcon /> : null}
                     </div>
-                    <span className="text-sm font-normal">{membersPluralization}</span>
+                    <div className='flex items-center gap-2'>
+                        <span className="text-sm font-normal">{membersPluralization}</span>
+                        <span
+                            className={`w-fit ${ad ? "inline" : "hidden"} font-normal text-[8px] px-2 py-1 rounded-full bg-[#FDAC0E] cursor-pointer`}
+                        >
+                            Ad
+                        </span>
+                    </div>
                     {
                         isSuspended ?
                             <p className='flex items-center gap-1 rounded-full'>

@@ -11,6 +11,7 @@ import { HelpIfoLayout } from "./components/layout/helpInfoLayout";
 import ErrorPage from './routes/error/error';
 import App from './App';
 import NotFound from './routes/notfound/404';
+import { Search } from './routes/dashboard/search/search';
 
 window.addEventListener("vite:preloadError", (event) => {
   window.location.reload();
@@ -419,10 +420,13 @@ const router = createBrowserRouter([
       },
       {
         path: "search",
-        lazy: async () => {
-          let { Search } = await import("./routes/dashboard/search/search");
-          return { Component: Search };
-        },
+        // lazy: async () => {
+        //   let { Search } = await import("./routes/dashboard/search/search");
+        //   return { Component: Search };
+        // },
+
+        //used the direct component and not the dynamic import cause it delays the users input on search cause the module is not downloaded yet...
+        element: <Search />,
         children: [
           {
             index: true,

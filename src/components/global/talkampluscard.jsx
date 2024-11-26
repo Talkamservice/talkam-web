@@ -1,9 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../forms/button"
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 
 export const TalkAmPlusCard = ({ plan }) => {
 
     const navigate = useNavigate();
+    let isMonitor = useMediaQuery("(min-width: 1024px)");
+
 
     return (
         <div className="w-full rounded-xl p-6 bg-gradient-to-b from-[#005783] to-[#00131D] flex flex-col items-center justify-center gap-2">
@@ -21,11 +24,11 @@ export const TalkAmPlusCard = ({ plan }) => {
             </header>
 
             <Button
-                className="!rounded-full"
+                className="!rounded-full !text-xs xl:!text-sm"
                 fullWidth
                 onClick={() => navigate("/pricing")}
             >
-                Upgrade to TalkAM plus
+                {isMonitor ? 'Upgrade to TalkAM plus' : "Upgrade to plus"}
             </Button>
         </div>
     )

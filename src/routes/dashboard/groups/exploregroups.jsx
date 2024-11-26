@@ -21,7 +21,7 @@ export const ExploreGroups = () => {
                             :
                             groupController.categories?.data?.slice(0, 15).map((item, index) => (
                                 <span
-                                    key={index}
+                                    key={index + item?.id}
                                     onClick={() => groupController.setCategoryId(item.id)}
                                     className={`
                                         text-sm py-1 px-2 border border-tgray-50 rounded-full text whitespace-nowrap cursor-pointer
@@ -62,6 +62,7 @@ export const ExploreGroups = () => {
                                         access={group.group_access}
                                         isSuspended={group.is_suspended}
                                         uuid={group.uuid}
+                                        ad={group.promotion}
                                     />
                                 </IsBanned>
                             ))

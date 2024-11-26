@@ -8,23 +8,35 @@ export const NotificationCard = ({ notification, image, style, time, title, type
 
     const location = useLocation();
     const navigate = useNavigate();
-    const [trigger, { }] = useLazyShowNotificationQuery()
+    const [trigger, { }] = useLazyShowNotificationQuery();
 
     const notificationType = {
         "post": `/comment/${id}`,
         "mention": `/comment/${id}`,
         "group": `/group/${id}`,
         "group_request": `/group/${id}`,
-        "conversation": `${location.pathname}?messages`,
+        "conversation": location.pathname,
         "comment": `/comment/${id}`,
-        "promotion": `/promo/${id}`,
+        "promotion": `/promo/${id} `,
         "user": "",
         "notification": ""
     }
 
+    const pathToRouteTo = type ? notificationType[type] : location.pathname
+    const addMessageParam = type === "conversation" ? `messages&u=${extra?.sender?.username}` : false
+
+    console.log(pathToRouteTo, addMessageParam)
+
     return (
         <div
-            onClick={() => { trigger(notifyId); refetch(); navigate(`${type ? notificationType[type] : location.pathname}`, { state: type === "conversation" ? extra?.sender?.id : id }) }}
+            onClick={() => {
+                trigger(notifyId);
+                refetch();
+                navigate({
+                    pathname: pathToRouteTo,
+                    search: addMessageParam
+                }, { state: type === "conversation" ? extra?.sender?.id : id })
+            }}
             className="cursor-pointer w-full flex items-start gap-4 justify-between hover:bg-tgray-xlight p-2 relative rounded-md">
             <section className="flex gap-2">
                 {
@@ -41,7 +53,7 @@ export const NotificationCard = ({ notification, image, style, time, title, type
             </section>
 
             <div
-                className={classNames(style, `w-[200px] flex-2 ${image ? 'block' : 'hidden'} cursor-pointer h-[100px] rounded-lg`)}
+                className={classNames(style, `w - [200px] flex - 2 ${image ? 'block' : 'hidden'} cursor - pointer h - [100px] rounded - lg`)}
                 style={{
                     backgroundImage: `url(${image})`,
                     backgroundRepeat: 'no-repeat',

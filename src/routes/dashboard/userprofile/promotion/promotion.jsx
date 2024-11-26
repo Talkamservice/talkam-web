@@ -25,7 +25,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
     const [budget, setBudget] = useState(1000);
     const [duration, setDuration] = useState(15);
     const [ageRange, setAgeRange] = useState({
-        minAge: 15,
+        minAge: 18,
         maxAge: 45
     })
     const [gender, setGender] = useState("");
@@ -122,7 +122,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
                                 await paymentCallBack({ reference: res?.data?.reference }).unwrap();
                             } catch (err) {
                                 const errorMessage = handleError(err);
-                                toast.error(errorMessage);
+                                // toast.error(errorMessage);
                             }
                         }, 120000);
                     },
@@ -138,8 +138,6 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
             toast.error(errorMessage);
         }
     };
-
-    console.log(selectedItems)
 
     const slideMap = {
         "one":

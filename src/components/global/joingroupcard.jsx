@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { Button } from "../forms/button"
 import { GroupCard } from "./groupcard"
 
-export const JoinGroupCard = ({ avatar, groupName, membersCount, isSuspended, access }) => {
+export const JoinGroupCard = ({ avatar, groupName, membersCount, isSuspended, access, ad }) => {
 
     const navigate = useNavigate();
 
@@ -14,6 +14,7 @@ export const JoinGroupCard = ({ avatar, groupName, membersCount, isSuspended, ac
                 members={membersCount}
                 access={access}
                 isSuspended={isSuspended}
+                ad={ad}
             />
 
             {/* <AuthWrapper onClick={onView && onView}> */}

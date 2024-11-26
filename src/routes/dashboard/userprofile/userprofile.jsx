@@ -264,8 +264,6 @@ export const Profile = () => {
                                 </section>
                         }
                     </div>
-
-
                 </div>
             </section>
 
