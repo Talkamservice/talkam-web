@@ -107,8 +107,6 @@ export const AccountSettings = () => {
         setCancelSubModal((prev) => !prev)
     }
 
-    console.log(user)
-
     return (
         <div className="flex flex-col gap-12 py-8">
             <section className="flex flex-col gap-6">

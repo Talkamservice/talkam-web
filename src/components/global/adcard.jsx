@@ -95,7 +95,6 @@ export const AdCard = ({
                 const handleFlutterPayment = useFlutterwave(config);
                 handleFlutterPayment({
                     callback: async (response) => {
-                        // console.log('response', response);
                         closePaymentModal();
                         navigate("/ads", { replace: true });
                     },

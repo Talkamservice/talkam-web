@@ -22,8 +22,6 @@ export const CreateGroup = () => {
 
     const controller = useGroupController();
     const freeGroupIsUsed = !controller?.user?.data?.active_subscription && controller?.user?.data?.public_group_count === 1;
-    console.log(controller.user)
-    console.log(freeGroupIsUsed)
 
     const discoverOptions = [
         {
@@ -224,7 +222,7 @@ export const CreateGroup = () => {
                                         index={index + 1}
                                         rule={rule.title}
                                         description={rule.description}
-                                        handleRemoveRule={controller.handleRemoveRule}
+                                        handleRemoveRule={() => controller.handleRemoveRule(rule.id)}
                                     />
                                 ))
                         }

@@ -17,15 +17,13 @@ export const NotificationCard = ({ notification, image, style, time, title, type
         "group_request": `/group/${id}`,
         "conversation": location.pathname,
         "comment": `/comment/${id}`,
-        "promotion": `/promo/${id} `,
+        "promotion": `/promo/${id}`,
         "user": "",
         "notification": ""
     }
 
     const pathToRouteTo = type ? notificationType[type] : location.pathname
     const addMessageParam = type === "conversation" ? `messages&u=${extra?.sender?.username}` : false
-
-    console.log(pathToRouteTo, addMessageParam)
 
     return (
         <div
