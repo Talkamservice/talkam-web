@@ -212,7 +212,6 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
             await updateStats({ ...postAdDetails }).unwrap();
         } catch (error) {
             const errorMessage = handleError(error);
-            console.log(errorMessage)
         }
     }
 
@@ -225,7 +224,6 @@ export const usePostController = (isAnon, user, reaction, likes, polls, isReport
             await updateStats({ ...postAdDetails }).unwrap();
         } catch (error) {
             const errorMessage = handleError(error);
-            console.log(errorMessage)
         }
     }
 

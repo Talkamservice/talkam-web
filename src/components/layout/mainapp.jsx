@@ -63,8 +63,10 @@ export const MainAppLayout = ({ children }) => {
     const [resendOtp, { isLoading: resendLoading }] = useResendOtpMutation();
     const { data: user, isSuccess } = useGetUserProfileDetailsQuery(currentUser?.id, {
         // refetchOnFocus: true,
-        refetchOnMountOrArgChange: true,
-        refetchOnReconnect: true,
+        // refetchOnMountOrArgChange: true,
+        // refetchOnReconnect: true,
+        pollingInterval: 300000,
+        // skipPollingIfUnfocused: true,
         skip: !token
     });
     const { data: notificationStats, refetch: refetchNotification } = useGetNotificationStatsQuery(null, {

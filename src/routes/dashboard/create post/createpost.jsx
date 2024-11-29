@@ -47,7 +47,6 @@ export const CreatePost = () => {
     let isValid = false;
     const navigate = useNavigate();
     const { state: locationState } = useLocation();
-    console.log(locationState)
     const currentUser = useSelector(selectCurrentUser)
     const [searchCategories, setSearchCategories] = useState("");
     const [searchGroup, setSearchGroup] = useState("");
@@ -396,7 +395,6 @@ export const CreatePost = () => {
                                         <p className="text-[#272727] font-normal text-base">Schedule this post</p>
                                         <BasicToggleButton checked={isScheduling}
                                             onChange={(event) => {
-                                                console.log(event.target.checked)
                                                 if (event.target.checked === false) {
                                                     setIscheduling(event.target.checked)
                                                     setPublishDate(null)

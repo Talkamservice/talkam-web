@@ -24,7 +24,6 @@ export const ChatHeader = ({ messageController, currentChat, setCurrentChat, cur
     useOnOutsideClick(popUpRef, () => {
         setShowPopUp(false);
     });
-    console.log(details, messageController)
 
     return (
         <div className={`p-2 flex items-center justify-between space-x-3 w-full border-b border-[#E2E4E9]`}>

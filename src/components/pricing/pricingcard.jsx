@@ -44,7 +44,6 @@ export const PricingCard = ({ plan, currentPlan, period, features, price = "0", 
                 const handleFlutterPayment = useFlutterwave(config);
                 handleFlutterPayment({
                     callback: async (response) => {
-                        // console.log('response', response);
                         navigate('/', { replace: true })
                         closePaymentModal();
                     },

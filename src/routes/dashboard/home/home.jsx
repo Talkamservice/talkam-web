@@ -45,7 +45,8 @@ export const Home = () => {
     const { data: announcements } = useGetAnnouncementsQuery();
     const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
         refetchOnMountOrArgChange: true,
-        refetchOnFocus: true,
+        // refetchOnFocus: true,
+        pollingInterval: 300000,
         refetchOnReconnect: true
     });
 
