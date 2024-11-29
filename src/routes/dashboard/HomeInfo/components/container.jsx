@@ -35,8 +35,8 @@ function Container({ children }) {
     // On mobile devices, it will proceed to open the phone app due to the "tel:" link
   };
   return (
-    <div className="w-full min-h-full flex flex-col justify-between max-w-screen-2xl mx-auto px-[5vw] lg:px-24 pt-5 sm:pt-6 min-[850px]:pt-0 ">
-      <div className="w-full max-w-[1080px] mx-auto pt-6 md:pt-10 xl:pt-10">
+    <div className="w-full min-h-full flex flex-col justify-between max-w-screen-2xl mx-auto px-[5vw] lg:px-24  ">
+      <div className="w-full max-w-[1080px] mx-auto pt-9 md:pt-10 ">
         {children}
       </div>
       <div className="border-t w-full border-[#D7D7D7] mt-10 pt-8 flex flex-col gap-8  xl:flex-row justify-between items-start xl:items-center pb-8 sm:pb-12">
