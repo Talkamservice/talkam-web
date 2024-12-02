@@ -1,6 +1,6 @@
 import Container from "./components/container";
-import logo from "../../../assets/images/logo-vector.png";
-import phone from "../../../assets/images/talk-phone3.png";
+// import logo from "../../../assets/images/logo-vector.png";
+import phone from "../../../assets/images/talk-phone.png";
 import apple from "../../../assets/images/astore.png";
 import google from "../../../assets/images/gplay.png";
 import sideImg from "../../../assets/images/waitlist-side.svg";
@@ -9,7 +9,7 @@ import sideImg2 from "../../../assets/images/about-offers.png";
 export const About = () => {
   return (
     <Container>
-      <div className="!bg-[#1D1D1D] rounded-xl w-full max-w-[1101px] xl:h-[459px] overflow-hidden flex px-5 md:px-7 xl:px-10">
+      <div className="!bg-[#1D1D1D] border-none rounded-xl w-full max-w-[1101px] xl:h-[459px] overflow-hidden flex px-5 md:px-7 xl:px-10">
         <div className="w-full xl:w-[50%] h-full flex justify-center items-center py-5 md:py-7 xl:py-10">
           <p className="text-base xl:text-lg text-white">
             TalkAM is a vibrant online community where you can freely express
@@ -21,11 +21,11 @@ export const About = () => {
             Discover a wealth of knowledge, share your perspectives, and connect
             with people from all walks of life. Whether you're interested in the
             latest news, seeking support, or simply looking to connect with
-            others, TalkAM has something for everyone
+            others, TalkAM has something for everyone.
           </p>
         </div>
         <div className="hidden xl:flex pt-[38px] pl-16">
-          <img src={phone} alt="example" className="w-[346px] h-fit" />
+          <img src={phone} alt="example" className="w-[374px] h-fit" />
         </div>
       </div>
       <div
@@ -35,7 +35,7 @@ export const About = () => {
         className="rounded-[12px] mt-8 sm:mt-10 p-5 md:px-7 md:py-10 xl:px-10 xl:py-14"
       >
         <h2 className="text-lg sm:text-xl text-[#1290CF] mb-2 sm:mb-3 mx-auto text-center">
-          What talkAm offers you
+          What TalkAM offers you
         </h2>
         <p className="text-base sm:text-lg max-w-[702px] mx-auto text-white text-center">
           Need a safe space to talk? TalkAM offers anonymous, non-judgmental
