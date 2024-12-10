@@ -144,7 +144,10 @@ export const AdCard = ({
                                 side
                             />
                             :
-                            <GroupBannerAd groupDetails={group} />
+                            <GroupBannerAd
+                                groupId={group.id}
+                                groupDetails={group}
+                            />
                     }
                 </section>
 
