@@ -12,12 +12,17 @@ import { closePaymentModal, useFlutterwave } from "flutterwave-react-v3"
 import { useNavigate } from "react-router-dom"
 import { postStorageKeys } from "../../create post/createpost"
 import { Storage } from "../../../../app/storage"
+import { useSelector } from "react-redux"
+import { selectCurrentUser } from "../../../../services/authSlice"
+import { useGetCurrencySymbol } from "../../../../hooks/useGetCurrencySymbol"
 import Logo from '../../../../assets/images/avatar.png'
 
 export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
 
     let slideOneIsValid = false;
     const navigate = useNavigate();
+    const currentUser = useSelector(selectCurrentUser);
+    const userCurrency = useGetCurrencySymbol(currentUser?.pricing_currency)
     const [currentSlide, setCurrentSlide] = useState("one");
     const [country, setCountry] = useState("");
     const [selectedItems, setSelectedItems] = useState([]);
@@ -163,6 +168,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
                 handleDurationChange={handleDurationRange}
                 budget={budget}
                 duration={duration}
+                currency={userCurrency}
             />,
         "three":
             <SlideThree
@@ -173,6 +179,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
                 minAge={ageRange.minAge}
                 maxAge={ageRange.maxAge}
                 gender={gender}
+                currency={userCurrency}
             />
         ,
     }

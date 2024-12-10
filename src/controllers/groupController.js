@@ -57,6 +57,13 @@ export const useGroupController = (groupTab, groupId) => {
     const { data: allGroups, isLoading: allGroupsLoading, isFetching: fetchingGroups } = useGetAllGroupsQuery({
         categoryId: categoryId,
         tab: groupTab ?? "",
+        recommend: "",
+        search: ""
+    });
+    const { data: suggestedGroups, isLoading: suggestedGroupsLoading } = useGetAllGroupsQuery({
+        categoryId: categoryId,
+        tab: "",
+        recommend: 1,
         search: ""
     });
     const { data: following, isLoading: followingGroupsLoading } = useGetFollowingGroupsQuery({
@@ -205,6 +212,8 @@ export const useGroupController = (groupTab, groupId) => {
         categoriesLoading,
         createGroupLoading,
         allGroupsLoading,
+        suggestedGroups,
+        suggestedGroupsLoading,
         followingGroupsLoading,
         fetchingGroups,
         categories,

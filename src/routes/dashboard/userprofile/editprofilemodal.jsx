@@ -19,8 +19,8 @@ import { DropDownSelect } from '../../../components/forms/dropdown';
 import { Datepicker } from 'flowbite-react';
 import { themeOptions } from '../../../utils/calendarTheme';
 import { randomId } from '../../../helpers/randomid';
-import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
+import moment from 'moment';
 
 const genderOptions = [
     {

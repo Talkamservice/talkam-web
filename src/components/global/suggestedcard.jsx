@@ -1,6 +1,7 @@
 import { LockIcon } from "../../assets/icons/generated";
 import { AuthWrapper } from "../../utils/authWrapper";
 import { Button } from "../forms/button";
+import TalkamLogo from "../../assets/icons/logo.svg"
 import * as Icon from 'react-feather'
 
 export const SuggestedCard = ({ group, members, img, access, isSuspended, ad }) => {
@@ -24,11 +25,11 @@ export const SuggestedCard = ({ group, members, img, access, isSuspended, ad }) 
                             backgroundRepeat: "no-repeat",
                             objectFit: "cover",
                         }}
-                        src={img ?? FallBack}
+                        src={img ?? TalkamLogo}
                         className="rounded-xl !w-32 !h-24 bg-[#00000071]"
                         onError={(e) => {
-                            e.target.onerror = FallBack;
-                            e.target.src = FallBack
+                            e.target.onerror = TalkamLogo;
+                            e.target.src = TalkamLogo
                         }}
                     />
                     <div className="flex flex-col items-start gap-1">

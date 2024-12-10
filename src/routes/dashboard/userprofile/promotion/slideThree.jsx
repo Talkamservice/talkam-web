@@ -1,4 +1,4 @@
-export const SlideThree = ({ location, minAge, maxAge, gender, budget, countries, duration }) => {
+export const SlideThree = ({ location, minAge, maxAge, gender, budget, countries, duration, currency }) => {
 
     let durationPluralization;
 
@@ -8,6 +8,7 @@ export const SlideThree = ({ location, minAge, maxAge, gender, budget, countries
         const noun = duration > 1 ? 'days' : 'day';
         durationPluralization = duration + " " + noun
     }
+    const formattedBudget = useNumberFormatter(budget);
 
     return (
         <div className="flex flex-col gap-6 divide-y divide-tgray-50">
@@ -44,7 +45,7 @@ export const SlideThree = ({ location, minAge, maxAge, gender, budget, countries
                 <section className="flex items-center justify-between flex-wrap w-full gap-3">
                     <div className="flex flex-col gap-2">
                         <span className="text-xs text-[#858585]">Daily budget</span>
-                        <p className="text-xl font-medium">${budget}</p>
+                        <p className="text-xl font-medium">{currency}{formattedBudget}</p>
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-xs text-[#858585]">Duration</span>

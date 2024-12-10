@@ -9,6 +9,8 @@ import { ColoredLoader } from "../../../components/global/loader";
 import { toast } from "sonner";
 import { EmptyState } from "../../../components/global/emptystate";
 import { handleError } from "../../../utils/handleError";
+import { useGetAllAdsGroupsQuery } from "../../../services/groupApiSlice";
+import { GroupBannerAd } from "../ads/groupbannerad";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 export const RecentGroups = () => {
@@ -27,18 +29,54 @@ export const RecentGroups = () => {
         categoryId: categoryId,
         target: "group"
     });
+    const { data: ads } = useGetAllAdsGroupsQuery({
+        page: page
+    })
     const [deletePost] = useDeletePostMutation();
 
-    // const postIds = new Set();
+    const postIds = new Set();
 
     // // Deduplicate new posts
-    // const newResults = (posts || []).filter(post => {
-    //     if (!postIds.has(post.id)) {
-    //         postIds.add(post.id);
-    //         return true;
-    //     }
-    //     return false;
-    // });
+    const newResults = (posts || []).filter(post => {
+        if (!postIds.has(post.id)) {
+            postIds.add(post.id);
+            return true;
+        }
+        return false;
+    });
+
+    const mergePostsAndAds = (postsData, adsData) => {
+        const mergedData = [];
+        const adsLength = adsData.length;
+        let adIndex = 0;
+
+        for (let i = 0; i < postsData.length; i++) {
+            mergedData.push(postsData[i]);
+            if ((i + 1) % 5 === 0 && adIndex < adsLength) {
+                mergedData.push({ ...adsData[adIndex], adtype: 'group' });
+                adIndex++;
+            }
+        }
+        return mergedData;
+    };
+
+    const appendNewPageData = () => {
+        if (featured?.data?.data && ads?.data.data) {
+            const mergedData = mergePostsAndAds(featured.data.data, ads.data.data);
+
+            const postIds = new Set(posts.map((post) => post.id));
+            const deduplicatedMergedData = mergedData.filter((post) => {
+                if (!postIds.has(post.id)) {
+                    postIds.add(post.id);
+                    return true;
+                }
+                return false;
+            });
+
+            setPosts((prevPosts) => [...prevPosts, ...deduplicatedMergedData]);
+            setIsFetching(false);
+        }
+    };
 
     // const appendNewPageData = () => {
     //     if (featured?.data?.data) {
@@ -89,9 +127,9 @@ export const RecentGroups = () => {
         }
     };
 
-    // useEffect(() => {
-    //     appendNewPageData();
-    // }, [featured]);
+    useEffect(() => {
+        appendNewPageData();
+    }, [featured]);
 
     useEffect(() => {
         restoreScrollPosition();
@@ -142,7 +180,7 @@ export const RecentGroups = () => {
                     isLoading ?
                         <GallerySkeletons />
                         :
-                        !featured?.data?.data.length ?
+                        newResults && !newResults?.length && !featured?.data.data && !ads.data.data ?
                             <section className="w-full py-1">
                                 <EmptyState
                                     icon={EmptyListIcon}
@@ -153,35 +191,41 @@ export const RecentGroups = () => {
                                 />
                             </section>
                             :
-                            featured?.data?.data?.map((post) => (
-                                <PostCard
-                                    key={post.id}
-                                    type={post.type}
-                                    user={post?.user}
-                                    polls={post.polls}
-                                    avatar={post?.user?.avatar}
-                                    category={post.category}
-                                    author={post?.user?.username ?? post?.user?.name}
-                                    title={post.title}
-                                    comment={post.body}
-                                    image={post.attachments?.[0]?.url}
-                                    commentcount={post.comments_count}
-                                    likes={post.likes_count}
-                                    reaction={post.reaction}
-                                    tags={post.tags}
-                                    time={post.created_at}
-                                    id={post.id}
-                                    isAnon={post.is_anonymous}
-                                    routeChange={() => navigate(`/comment/${post.id}`)}
-                                    handleDeletePost={handleDeletePost}
-                                    group={post?.group}
-                                    parentCategory={post?.category?.parent_category}
-                                    isReported={post?.is_reported}
-                                    notification={post?.enabled_notification}
-                                    ad={post?.promotion}
-                                    home
-                                />
-                            ))
+                            newResults?.length ? (
+                                newResults?.map((post) =>
+                                    post?.adtype === "group" ?
+                                        <GroupBannerAd groupDetails={post} />
+                                        :
+                                        <PostCard
+                                            key={post.id}
+                                            type={post.type}
+                                            user={post?.user}
+                                            polls={post.polls}
+                                            avatar={post?.user?.avatar}
+                                            category={post.category}
+                                            author={post?.user?.username ?? post?.user?.name}
+                                            title={post.title}
+                                            comment={post.body}
+                                            image={post.attachments?.[0]?.url}
+                                            commentcount={post.comments_count}
+                                            likes={post.likes_count}
+                                            reaction={post.reaction}
+                                            tags={post.tags}
+                                            time={post.created_at}
+                                            id={post.id}
+                                            isAnon={post.is_anonymous}
+                                            routeChange={() => navigate(`/comment/${post.id}`)}
+                                            handleDeletePost={handleDeletePost}
+                                            group={post?.group}
+                                            parentCategory={post?.category?.parent_category}
+                                            isReported={post?.is_reported}
+                                            notification={post?.enabled_notification}
+                                            ad={post?.promotion}
+                                            home
+                                        />
+                                )
+                            ) : null
+
                 }
                 {isFetching ?
                     <div className="w-full flex items-center justify-center py-24">

@@ -10,31 +10,37 @@ import { handleError } from "../../../utils/handleError"
 import { Button } from "../../../components/forms/button"
 import { Modal } from "../../../components/global/modal"
 import { DeleteAccountModal } from "./deleteaccountmodal"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ChangePasswordModal } from "./changepasswordmodal"
-import { selectCurrentUser } from "../../../services/authSlice"
+import { selectCurrentToken, selectCurrentUser, setCredentials } from "../../../services/authSlice"
 import { TalkAmPlusCard } from "../../../components/global/talkampluscard"
-import { useGetUserProfileDetailsQuery } from "../../../services/userApiSlice"
+import { useGetUserProfileDetailsQuery, useUpdateProfileMutation } from "../../../services/userApiSlice"
 import { PremiumSubCard } from "../../../components/global/premiumsubcard"
 import { CancelSubscriptionModal } from "./cancelsubmodal"
 import { AlertCircle } from "react-feather"
 import { useCancelSubscriptionMutation } from "../../../services/paymentApiSlice"
+import { BasicToggleButton } from "../../../components/global/basictoggle"
 import moment from "moment/moment"
 
 export const AccountSettings = () => {
 
-    const currentUser = useSelector(selectCurrentUser)
     const dispatch = useDispatch();
+    const token = useSelector(selectCurrentToken);
+    const currentUser = useSelector(selectCurrentUser);
     const [cancelSubModal, setCancelSubModal] = useState(false);
     const [openDeleteAccount, setOpenDeleteAccount] = useState(false);
     const [changePasswordModal, setChangePasswordModal] = useState(false);
     const [OauthLogin, { isLoading: OauthLoading }] = useOauthLoginMutation();
-    const [cancelSubscription, { isLoading }] = useCancelSubscriptionMutation()
+    const [cancelSubscription, { isLoading }] = useCancelSubscriptionMutation();
+
     const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
         refetchOnMountOrArgChange: true,
         refetchOnFocus: true,
         refetchOnReconnect: true
     });
+    const [updateProfile, { isLoading: updateLoading }] = useUpdateProfileMutation();
+    const [isAdsDisabled, setisAdsDisabled] = useState(!user?.data?.should_display_ads)
+
 
     const googleLogin = useGoogleLogin({
         onSuccess: async tokenResponse => {
@@ -97,6 +103,26 @@ export const AccountSettings = () => {
         }
     }
 
+    const handleToggleAdsFeature = async (event) => {
+        setisAdsDisabled(event.target.checked);
+
+        event.preventDefault();
+        try {
+            const updateObject = {
+                should_display_ads: event.target.checked ? 0 : 1
+            }
+            const res = await updateProfile({ ...updateObject }).unwrap();
+            dispatch(setCredentials({
+                user: { ...currentUser, ...updateObject },
+                accessToken: token,
+            }))
+            toast.success(res?.message);
+        } catch (err) {
+            const errorMessage = handleError(err);
+            toast.error(errorMessage)
+        }
+    }
+
     const handleDeleteModal = () => {
         setOpenDeleteAccount((prev) => !prev)
     }
@@ -106,6 +132,10 @@ export const AccountSettings = () => {
     const handleSubscriptionModal = () => {
         setCancelSubModal((prev) => !prev)
     }
+
+    useEffect(() => {
+        setisAdsDisabled(!user?.data?.should_display_ads)
+    }, [user])
 
     return (
         <div className="flex flex-col gap-12 py-8">
@@ -124,6 +154,22 @@ export const AccountSettings = () => {
                     <span onClick={handleChangePasswordModal} className='cursor-pointer border border-tgray-50 rounded-full py-1 flex items-center text-tblack-100 text-xs md:text-sm whitespace-nowrap px-2'>Change</span>
                 </div>
 
+                {
+                    user?.data?.active_subscription ?
+                        <section className="flex flex-col items-start justify-between w-full lg:flex-row lg:items-center">
+                            <div className="flex flex-col gap-2">
+                                <p className="text-sm font-bold">Deactivate ads on your feed</p>
+                                <span className="text-sm text-[#444444]">You will be unable to see ads on your feeds when this is activated.</span>
+                            </div>
+
+                            <BasicToggleButton
+                                checked={isAdsDisabled}
+                                onChange={(event) => handleToggleAdsFeature(event)}
+                            />
+                        </section>
+                        :
+                        null
+                }
 
                 <div className="w-full flex flex-col md:flex-row gap-3 md:items-center justify-between border-t border-tgray-50 py-4">
                     <div className="flex flex-col gap-1">
@@ -155,7 +201,7 @@ export const AccountSettings = () => {
 
                 {
                     user ? (
-                        !user?.data?.active_subscription?.renewal_cancelled_at ?
+                        user?.data?.active_subscription && !user?.data?.active_subscription?.renewal_cancelled_at ?
                             <div className="w-full flex items-center justify-between border-y border-tgray-50 py-4">
                                 <p onClick={() => setCancelSubModal((prev) => !prev)} className="text-sm text-tprimary-50 underline cursor-pointer">Cancel Subscription</p>
                                 <p className="text-[10px] text-[#858585]">By clicking on cancel subscription, you agree that you have read TalkAM&apos;s <span className="text-tprimary-50">Cancelation Policy</span>.</p>
@@ -217,7 +263,7 @@ export const AccountSettings = () => {
                 shouldCloseOnOverlayClick={false}
                 onClose={handleSubscriptionModal}
                 position='center'
-                contentWidth='w-full md:w-2/4 lg:w-2/5'
+                contentWidth='w-full sm:w-3/5 md:w-5/12 xl:w-3/12'
             >
                 <CancelSubscriptionModal
                     handleCancelSub={handleCancleSubscription}

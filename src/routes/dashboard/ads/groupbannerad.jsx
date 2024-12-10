@@ -1,10 +1,55 @@
 import { LatestEventsIcon, LockIcon } from "../../../assets/icons/generated";
 import { Banner } from "../../../components/global/groupbanner";
 import { ColoredLoader } from "../../../components/global/loader";
-import { BannerSkeletons } from "../../../components/global/skeletons";
+import { BannerSkeletons, ButtonSkeletonLoader } from "../../../components/global/skeletons";
+import { Button } from "../../../components/forms/button";
+import { useFollowGroupMutation, useRequestFollowMutation, useUnFollowGroupMutation } from "../../../services/groupApiSlice";
 import FallBack from "../../../assets/icons/users.svg"
+import * as Icon from 'react-feather'
 
 export const GroupBannerAd = ({ groupDetails, isLoading }) => {
+
+    const [followGroup, { isLoading: followLoading }] = useFollowGroupMutation();
+    const [unFollowGroup, { isLoading: unFollowLoading }] = useUnFollowGroupMutation();
+    const [requestFollow, { isLoading: requestLoading }] = useRequestFollowMutation();
+
+    const handleFollowGroup = async () => {
+        try {
+            const credentials = {
+                group_id: groupId,
+                user_id: currentUser?.id,
+            }
+            const res = await followGroup({ ...credentials }).unwrap();
+            toast.success(res?.message)
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    }
+
+    const handleUnFollowGroup = async () => {
+        try {
+            const credentials = {
+                group_id: groupId,
+                user_id: currentUser?.id,
+            }
+            const res = await unFollowGroup({ ...credentials }).unwrap();
+            toast.success(res?.message)
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    }
+
+    const handleRquestToFollowGroup = async () => {
+        try {
+            const res = await requestFollow(groupId).unwrap();
+            toast.success(res?.message)
+        } catch (error) {
+            const errorMessage = handleError(error);
+            toast.error(errorMessage)
+        }
+    }
 
     return (
         <section className="w-full flex flex-col gap-2">
@@ -68,6 +113,54 @@ export const GroupBannerAd = ({ groupDetails, isLoading }) => {
                                     <article className="w-full text-xs md:text-sm">{groupDetails?.about}</article>
                                 </div>
                             </section>
+                    }
+                    {
+                        isLoading ?
+                            <div className="flex items-end justify-end py-1">
+                                <ButtonSkeletonLoader />
+                            </div>
+                            :
+                            <div className={`${groupDetails ? "block" : "hidden"}`}>
+                                <section className="flex items-end justify-end">
+                                    {
+                                        !groupDetails?.is_following && groupDetails?.group_access === "Opened" ?
+                                            <Button
+                                                children="Follow"
+                                                leftIcon={!followLoading && <Icon.Plus size={18} />}
+                                                className="!rounded-full !text-sm bg-tprimary-50 !px-4 !py-2.5 font-semiboldNunito"
+                                                onClick={handleFollowGroup}
+                                                isLoading={followLoading}
+                                                disabled={followLoading}
+                                            />
+                                            :
+                                            !groupDetails?.is_following && groupDetails?.group_access === "Closed" && !groupDetails?.has_requested ?
+                                                <Button
+                                                    children="Request to join"
+                                                    leftIcon={!requestLoading && <Icon.Plus size={18} />}
+                                                    className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
+                                                    onClick={handleRquestToFollowGroup}
+                                                    isLoading={requestLoading}
+                                                    disabled={requestLoading}
+                                                />
+                                                :
+                                                groupDetails?.is_following ?
+                                                    <Button
+                                                        children="Unfollow"
+                                                        className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
+                                                        onClick={handleUnFollowGroup}
+                                                        isLoading={unFollowLoading}
+                                                        disabled={unFollowLoading}
+                                                        variant="error"
+                                                    />
+                                                    :
+                                                    <p className="border border-tprimary-50 px-3 py-1 rounded-full whitespace-nowrap flex items-center gap-2 text-tprimary-50">
+                                                        <Icon.Info size={18} />
+                                                        Requested
+                                                    </p>
+
+                                    }
+                                </section>
+                            </div>
                     }
                 </section>
             </section>

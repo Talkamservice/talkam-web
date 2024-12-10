@@ -106,6 +106,9 @@ export const Pricing = () => {
                                         currentPlanPrice={
                                             (plan.is_active_subscription && plan?.price) ?? "0"
                                         }
+                                        currency={
+                                            (plan?.currency) ?? "$"
+                                        }
                                     />
                                 )
                             })

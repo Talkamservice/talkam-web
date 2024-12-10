@@ -346,7 +346,7 @@ export const PostCard = ({
                 shouldCloseOnOverlayClick={false}
                 onClose={postController.handleShowBlockModal}
                 position='center'
-                contentWidth='w-full sm:w-3/5 md:w-5/12 xl:w-3/12 '
+                contentWidth='w-full sm:w-3/5 md:w-5/12 xl:w-3/12'
             >
                 <BlockPromptModal
                     handleBlockUser={postController.handleBlockUser}
