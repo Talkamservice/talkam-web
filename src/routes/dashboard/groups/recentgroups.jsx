@@ -29,7 +29,7 @@ export const RecentGroups = () => {
         categoryId: categoryId,
         target: "group"
     });
-    const { data: ads } = useGetAllAdsGroupsQuery({
+    const { data: ads, refetch: refetchAds } = useGetAllAdsGroupsQuery({
         page: page
     })
     const [deletePost] = useDeletePostMutation();
@@ -52,16 +52,23 @@ export const RecentGroups = () => {
 
         for (let i = 0; i < postsData.length; i++) {
             mergedData.push(postsData[i]);
+            // Add an ad after every 5 posts
             if ((i + 1) % 5 === 0 && adIndex < adsLength) {
                 mergedData.push({ ...adsData[adIndex], adtype: 'group' });
                 adIndex++;
             }
         }
+
+        while (adIndex < adsLength) {
+            mergedData.push({ ...adsData[adIndex], adtype: 'group' });
+            adIndex++;
+        }
+
         return mergedData;
     };
 
     const appendNewPageData = () => {
-        if (featured?.data?.data && ads?.data.data) {
+        if (featured?.data?.data && ads?.data?.data) {
             const mergedData = mergePostsAndAds(featured.data.data, ads.data.data);
 
             const postIds = new Set(posts.map((post) => post.id));
@@ -77,6 +84,7 @@ export const RecentGroups = () => {
             setIsFetching(false);
         }
     };
+
 
     // const appendNewPageData = () => {
     //     if (featured?.data?.data) {
@@ -122,7 +130,7 @@ export const RecentGroups = () => {
             isRestoringScroll.current = true;
             scrollableRef.current.scrollTop = parseInt(savedScrollPosition, 10);
             setTimeout(() => {
-                isRestoringScroll.current = false; // Allow the scroll handler to run again after a short delay
+                isRestoringScroll.current = false;
             }, 0);
         }
     };
@@ -145,6 +153,7 @@ export const RecentGroups = () => {
             </div>
         );
     }
+    console.log(newResults)
 
     return (
         <div className="h-full flex flex-col gap-4">
@@ -194,7 +203,13 @@ export const RecentGroups = () => {
                             newResults?.length ? (
                                 newResults?.map((post) =>
                                     post?.adtype === "group" ?
-                                        <GroupBannerAd groupDetails={post} />
+                                        <GroupBannerAd
+                                            refetch={refetch}
+                                            refetchAds={refetchAds}
+                                            groupId={post?.id}
+                                            groupDetails={post}
+                                            actions
+                                        />
                                         :
                                         <PostCard
                                             key={post.id}

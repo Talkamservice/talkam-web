@@ -4,10 +4,12 @@ import { ColoredLoader } from "../../../components/global/loader";
 import { BannerSkeletons, ButtonSkeletonLoader } from "../../../components/global/skeletons";
 import { Button } from "../../../components/forms/button";
 import { useFollowGroupMutation, useRequestFollowMutation, useUnFollowGroupMutation } from "../../../services/groupApiSlice";
+import { handleError } from "../../../utils/handleError";
+import { toast } from "sonner";
 import FallBack from "../../../assets/icons/users.svg"
 import * as Icon from 'react-feather'
 
-export const GroupBannerAd = ({ groupDetails, isLoading }) => {
+export const GroupBannerAd = ({ groupDetails, refetch, refetchAds, isLoading, groupId, actions }) => {
 
     const [followGroup, { isLoading: followLoading }] = useFollowGroupMutation();
     const [unFollowGroup, { isLoading: unFollowLoading }] = useUnFollowGroupMutation();
@@ -25,6 +27,8 @@ export const GroupBannerAd = ({ groupDetails, isLoading }) => {
             const errorMessage = handleError(error);
             toast.error(errorMessage)
         }
+        refetch();
+        refetchAds();
     }
 
     const handleUnFollowGroup = async () => {
@@ -39,6 +43,8 @@ export const GroupBannerAd = ({ groupDetails, isLoading }) => {
             const errorMessage = handleError(error);
             toast.error(errorMessage)
         }
+        refetch();
+        refetchAds();
     }
 
     const handleRquestToFollowGroup = async () => {
@@ -49,6 +55,8 @@ export const GroupBannerAd = ({ groupDetails, isLoading }) => {
             const errorMessage = handleError(error);
             toast.error(errorMessage)
         }
+        refetch();
+        refetchAds();
     }
 
     return (
@@ -115,52 +123,59 @@ export const GroupBannerAd = ({ groupDetails, isLoading }) => {
                             </section>
                     }
                     {
-                        isLoading ?
-                            <div className="flex items-end justify-end py-1">
-                                <ButtonSkeletonLoader />
-                            </div>
-                            :
-                            <div className={`${groupDetails ? "block" : "hidden"}`}>
-                                <section className="flex items-end justify-end">
-                                    {
-                                        !groupDetails?.is_following && groupDetails?.group_access === "Opened" ?
-                                            <Button
-                                                children="Follow"
-                                                leftIcon={!followLoading && <Icon.Plus size={18} />}
-                                                className="!rounded-full !text-sm bg-tprimary-50 !px-4 !py-2.5 font-semiboldNunito"
-                                                onClick={handleFollowGroup}
-                                                isLoading={followLoading}
-                                                disabled={followLoading}
-                                            />
-                                            :
-                                            !groupDetails?.is_following && groupDetails?.group_access === "Closed" && !groupDetails?.has_requested ?
-                                                <Button
-                                                    children="Request to join"
-                                                    leftIcon={!requestLoading && <Icon.Plus size={18} />}
-                                                    className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
-                                                    onClick={handleRquestToFollowGroup}
-                                                    isLoading={requestLoading}
-                                                    disabled={requestLoading}
-                                                />
-                                                :
-                                                groupDetails?.is_following ?
-                                                    <Button
-                                                        children="Unfollow"
-                                                        className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
-                                                        onClick={handleUnFollowGroup}
-                                                        isLoading={unFollowLoading}
-                                                        disabled={unFollowLoading}
-                                                        variant="error"
-                                                    />
-                                                    :
-                                                    <p className="border border-tprimary-50 px-3 py-1 rounded-full whitespace-nowrap flex items-center gap-2 text-tprimary-50">
-                                                        <Icon.Info size={18} />
-                                                        Requested
-                                                    </p>
+                        actions ?
+                            <section>
+                                {
+                                    isLoading ?
+                                        <div className="flex items-end justify-end py-1">
+                                            <ButtonSkeletonLoader />
+                                        </div>
+                                        :
+                                        <div className={`${groupDetails ? "block" : "hidden"}`}>
+                                            <section className="flex items-end justify-end">
+                                                {
+                                                    !groupDetails?.is_following && groupDetails?.group_access === "Opened" ?
+                                                        <Button
+                                                            children="Follow"
+                                                            leftIcon={!followLoading && <Icon.Plus size={18} />}
+                                                            className="!rounded-full !text-sm bg-tprimary-50 !px-4 !py-2.5 font-semiboldNunito"
+                                                            onClick={handleFollowGroup}
+                                                            isLoading={followLoading}
+                                                            disabled={followLoading}
+                                                        />
+                                                        :
+                                                        !groupDetails?.is_following && groupDetails?.group_access === "Closed" && !groupDetails?.has_requested ?
+                                                            <Button
+                                                                children="Request to join"
+                                                                leftIcon={!requestLoading && <Icon.Plus size={18} />}
+                                                                className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
+                                                                onClick={handleRquestToFollowGroup}
+                                                                isLoading={requestLoading}
+                                                                disabled={requestLoading}
+                                                            />
+                                                            :
+                                                            groupDetails?.is_following ?
+                                                                <Button
+                                                                    children="Unfollow"
+                                                                    className="!rounded-full !text-sm !px-4 !py-2.5 font-semiboldNunito"
+                                                                    onClick={handleUnFollowGroup}
+                                                                    isLoading={unFollowLoading}
+                                                                    disabled={unFollowLoading}
+                                                                    variant="error"
+                                                                />
+                                                                :
+                                                                <p className="border border-tprimary-50 px-3 py-1 rounded-full whitespace-nowrap flex items-center gap-2 text-tprimary-50">
+                                                                    <Icon.Info size={18} />
+                                                                    Requested
+                                                                </p>
 
-                                    }
-                                </section>
-                            </div>
+                                                }
+                                            </section>
+                                        </div>
+                                }
+                            </section>
+                            :
+                            null
                     }
                 </section>
             </section>
