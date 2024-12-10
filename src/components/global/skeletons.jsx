@@ -152,6 +152,19 @@ export const GallerySkeletons = ({ num = 3, direction = 'flex-col', side }) => {
     )
 }
 
+export const OverflowLoader = ({ num = 8 }) => {
+    return (
+        <div className='w-full overflow-x-auto flex gap-3'>
+            {
+                [...Array(num)].map((_, index) => (
+                    <div key={index} className="w-full flex items-center justify-between min-w-52 h-32 rounded-xl p-3 bg-tgray-100 opacity-10 animate-pulse">
+                    </div>
+                ))
+            }
+        </div>
+    )
+}
+
 export const ConversationSkeletonLoader = ({ num = 4 }) => {
     return (
         <div className='flex flex-col gap-3'>

@@ -48,13 +48,11 @@ export const RunningAds = () => {
                                 runningAds?.data?.data?.map((ad) => (
                                     <AdCard
                                         key={ad.id}
-                                        id={ad.id}
+                                        id={ad?.id}
                                         post={ad?.post}
                                         group={ad?.group}
-                                        commentCount={ad?.post?.comments_count}
-                                        likes={ad?.post?.likes_count}
-                                        impressions={ad?.post?.views_count}
-                                        status={ad.status}
+                                        status={ad?.status}
+                                        stats={ad?.stats}
                                         type="running"
                                     />
                                 ))

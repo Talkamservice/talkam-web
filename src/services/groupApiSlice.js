@@ -4,11 +4,19 @@ export const groupApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getAllGroups: builder.query({
             keepUnusedDataFor: 180,
-            query: ({ categoryId, tab, search }) => ({
-                url: `/user/groups?category_id=${categoryId}&tab=${tab}&search=${search}`,
+            query: ({ categoryId, tab, recommend, search }) => ({
+                url: `/user/groups?category_id=${categoryId}&tab=${tab}&recommend=${recommend}&search=${search}`,
                 method: "get",
             }),
             providesTags: ["groups"]
+        }),
+        getAllAdsGroups: builder.query({
+            keepUnusedDataFor: 180,
+            query: ({ page }) => ({
+                url: `/user/groups/promotions/list?page=${page}`,
+                method: "get",
+            }),
+            providesTags: ["adgroups"]
         }),
         getFollowingGroups: builder.query({
             keepUnusedDataFor: 180,
@@ -152,6 +160,7 @@ export const groupApiSlice = apiSlice.injectEndpoints({
 
 export const {
     useGetAllGroupsQuery,
+    useGetAllAdsGroupsQuery,
     useGetFollowingGroupsQuery,
     useCreateGroupMutation,
     useGetGroupDetailsQuery,

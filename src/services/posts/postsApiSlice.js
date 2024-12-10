@@ -11,6 +11,13 @@ export const postsApiSlice = apiSlice.injectEndpoints({
             }),
             providesTags: ["posts"]
         }),
+        getAllAdsPosts: builder.query({
+            query: ({ page }) => ({
+                url: `/user/posts/promotions/list?page=${page}`,
+                method: "get",
+            }),
+            providesTags: ["adposts"]
+        }),
         getRecentPosts: builder.query({
             keepUnusedDataFor: 420,
             query: () => ({
@@ -208,6 +215,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
 
 export const {
     useGetAllPostsQuery,
+    useGetAllAdsPostsQuery,
     useGetRecentPostsQuery,
     useGetSinglePostQuery,
     useDeletePostMutation,

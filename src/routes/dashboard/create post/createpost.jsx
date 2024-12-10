@@ -393,14 +393,16 @@ export const CreatePost = () => {
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-4">
                                         <p className="text-[#272727] font-normal text-base">Schedule this post</p>
-                                        <BasicToggleButton checked={isScheduling}
+                                        <BasicToggleButton
+                                            checked={isScheduling}
                                             onChange={(event) => {
                                                 if (event.target.checked === false) {
                                                     setIscheduling(event.target.checked)
                                                     setPublishDate(null)
                                                 }
                                                 setIscheduling(event.target.checked)
-                                            }} />
+                                            }}
+                                        />
                                     </div>
                                     {
                                         isScheduling ?

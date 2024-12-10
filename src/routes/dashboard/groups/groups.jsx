@@ -1,13 +1,13 @@
 import { EmptyState } from "../../../components/global/emptystate";
 import { GroupCard } from "../../../components/global/groupcard";
 import { RouteTabs } from "../../../components/global/routetabs"
-import { GroupSkeletonLoader } from "../../../components/global/skeletons";
+import { GroupSkeletonLoader, OverflowLoader } from "../../../components/global/skeletons";
 import { useGroupController } from "../../../controllers/groupController";
 import { IsBanned } from "../../../utils/isBanned";
 import { useNavigate } from "react-router-dom";
+import { SuggestedCard } from "../../../components/global/suggestedcard";
 import EmptyListIcon from "../../../assets/images/emptylist.png"
 import Protected from "../../../utils/protected";
-import { SuggestedCard } from "../../../components/global/suggestedcard";
 
 const tabs = [
     {
@@ -41,8 +41,8 @@ export const Groups = () => {
                         <h2 className="text-lg font-bold leading-none">Suggested Groups</h2>
                         <ul className="w-full flex items-center gap-4 overflow-x-auto">
                             {
-                                groupController.followingGroupsLoading ?
-                                    <GroupSkeletonLoader button={false} />
+                                groupController.suggestedGroupsLoading ?
+                                    <OverflowLoader />
                                     :
                                     !groupController.following?.data?.data.length ?
                                         <section className="w-full py-4">
@@ -55,7 +55,7 @@ export const Groups = () => {
                                             />
                                         </section>
                                         :
-                                        groupController.following?.data?.data.map((group) => (
+                                        groupController.suggestedGroups?.data?.data.map((group) => (
                                             <IsBanned
                                                 key={group.id}
                                                 isBanned={group?.is_suspended}

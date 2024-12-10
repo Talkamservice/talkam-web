@@ -20,18 +20,8 @@ export const AdCard = ({
     type,
     post,
     group,
-    commentCount,
-    likes,
-    dislikes,
-    shared,
-    impressions,
-    engagements,
-    newfollowers,
-    visits,
-    clicks,
-    mintime,
-    maxtime,
     status,
+    stats,
     page
 }) => {
 
@@ -164,19 +154,19 @@ export const AdCard = ({
                             <section className='rounded-xl px-5 py-3 flex items-center justify-between flex-wrap bg-[#F1FAFF] border border-[#E5F6FF]'>
                                 <div className='flex items-center gap-1'>
                                     <ChatSquareIcon />
-                                    <span>{commentCount ?? 0}</span>
+                                    <span>{stats?.comments ?? 0}</span>
                                 </div>
                                 <div className='flex items-center gap-1'>
                                     <Icon.ThumbsUp />
-                                    <span>{likes ?? 0}</span>
+                                    <span>{stats?.likes ?? 0}</span>
                                 </div>
                                 <div className='flex items-center gap-1'>
                                     <Icon.ThumbsDown />
-                                    <span>{dislikes ?? 0}</span>
+                                    <span>{stats?.dislikes ?? 0}</span>
                                 </div>
                                 <div className='flex items-center gap-1'>
                                     <ShareIcon />
-                                    <span>{shared ?? 0}</span>
+                                    <span>{stats?.shares ?? 0}</span>
                                 </div>
                             </section>
                             :
@@ -191,7 +181,7 @@ export const AdCard = ({
                                     <Icon.AlertCircle />
                                 </Tooltip>
                             </header>
-                            <p className='text-base'>{impressions ?? 0}</p>
+                            <p className='text-base'>{stats.impressions ?? 0}</p>
                         </div>
                         <div className='flex items-start flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585] relative'>
@@ -200,7 +190,7 @@ export const AdCard = ({
                                     <Icon.AlertCircle />
                                 </Tooltip>
                             </header>
-                            <p className='text-base'>{engagements ?? '0%'}</p>
+                            <p className='text-base'>{stats.engagements ?? '0%'}</p>
                         </div>
                         <div className='flex items-start flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
@@ -212,7 +202,7 @@ export const AdCard = ({
                                     <Icon.AlertCircle />
                                 </Tooltip>
                             </header>
-                            <p className='text-base'>{clicks ?? 0}</p>
+                            <p className='text-base'>{stats?.clicks ?? 0}</p>
                         </div>
                     </section>
 
@@ -227,7 +217,7 @@ export const AdCard = ({
                                     <Icon.AlertCircle />
                                 </Tooltip>
                             </header>
-                            <p className='text-base'>{visits ?? 0}</p>
+                            <p className='text-base'>{stats?.profile_visits ?? 0}</p>
                         </div>
                         {group && (
                             <div className='flex items-start flex-col gap-1'>
@@ -239,7 +229,7 @@ export const AdCard = ({
                                         <Icon.AlertCircle />
                                     </Tooltip>
                                 </header>
-                                <p className='text-base'>{newfollowers ?? 0}</p>
+                                <p className='text-base'>{stats?.followers ?? 0}</p>
                             </div>
                         )}
                     </section>
@@ -257,7 +247,7 @@ export const AdCard = ({
                                                 <Icon.AlertCircle />
                                             </Tooltip>
                                         </header>
-                                        <p className='text-base'>{mintime ?? '0 secs'}</p>
+                                        <p className='text-base'>{stats?.min_time_spent ?? '0 secs'}</p>
                                     </div>
                                     <div className='flex items-start flex-col gap-1'>
                                         <header className='flex items-center gap-1 text-[#858585]'>
@@ -269,7 +259,7 @@ export const AdCard = ({
                                                 <Icon.AlertCircle />
                                             </Tooltip>
                                         </header>
-                                        <p className='text-base'>{maxtime ?? "0 secs"}</p>
+                                        <p className='text-base'>{stats?.max_time_spent ?? "0 secs"}</p>
                                     </div>
                                 </section>
 
@@ -278,23 +268,19 @@ export const AdCard = ({
                                 </section>
 
                                 <section className='px-5 py-3 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
-                                    <div className='flex items-center gap-1'>
-                                        <p className='text-base'>Nigeria:</p>
-                                        <span className='text-base text-[#858585]'>98%</span>
-                                    </div>
-                                    <div className='flex items-center gap-1'>
-                                        <p className='text-base'>Ghana:</p>
-                                        <span className='text-base text-[#858585]'>1%</span>
-                                    </div>
-                                    <div className='flex items-center gap-1'>
-                                        <p className='text-base'>Benin:</p>
-                                        <span className='text-base text-[#858585]'>1%</span>
-                                    </div>
+                                    {
+                                        stats?.countries?.map(country => (
+                                            <div className='flex items-center gap-1'>
+                                                <p className='text-base'>{country?.name}:</p>
+                                                <span className='text-base text-[#858585]'>{country.percentage}%</span>
+                                            </div>
+                                        ))
+                                    }
                                 </section>
                             </>
                             :
                             <div className=''>
-                                <Link className='flex items-center gap-2 text-tprimary-50 underline underline-offset-2' to={`/promo/${id}`}>
+                                <Link className='text-sm flex items-center gap-2 text-tprimary-50 underline underline-offset-2' to={`/promo/${id}`}>
                                     View Promotion Details
                                     <Icon.ArrowRight size={18} />
                                 </Link>

@@ -33,7 +33,7 @@ export const AdDetails = () => {
 
     return (
         <div className="w-full h-full flex flex-col">
-            <header className="w-full flex items-center justify-between gap-4 p-4 border-b border-tgray-50 h-[5dvh] sticky top-0 bg-white">
+            <header className="w-full flex items-center justify-between gap-4 p-4 border-b border-tgray-50 h-[5dvh] sticky top-0 bg-white z-20">
                 <Button
                     variant="link"
                     leftIcon={<ArrowLeft size={18} />}
@@ -52,13 +52,11 @@ export const AdDetails = () => {
                         :
                         <AdCard
                             id={ad?.data?.id}
+                            type={statusMap[ad?.data?.status]}
                             post={ad?.data?.post}
                             group={ad?.data?.group}
-                            commentCount={ad?.data?.post?.comments_count}
-                            likes={ad?.data?.post?.likes_count}
-                            impressions={ad?.data?.post?.views_count}
                             status={ad?.data?.status}
-                            type={statusMap[ad?.data?.status]}
+                            stats={ad?.data?.stats}
                             page="details"
                         />
                 }

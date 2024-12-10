@@ -23,10 +23,10 @@ import { useGroupController } from "../../../controllers/groupController";
 import { GroupReportModal } from "./groupreportmodal";
 import { IsSuspended } from "../../../utils/isSuspended";
 import { PromotionModal } from "../userprofile/promotion/promotion";
+import { PostAnalyticsModal } from "../../../components/posts/postanalyticsmodal";
 import * as Icon from 'react-feather'
 import FallBack from "../../../assets/icons/users.svg"
 import Protected from "../../../utils/protected";
-import { PostAnalyticsModal } from "../../../components/posts/postanalyticsmodal";
 
 const tabs = [
     {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PostCard } from "../../../../components/posts/postcard";
 import { GallerySkeletons } from "../../../../components/global/skeletons";
-import { useDeletePostMutation, useGetAllPostsQuery } from "../../../../services/posts/postsApiSlice";
+import { useDeletePostMutation, useGetAllAdsPostsQuery, useGetAllPostsQuery } from "../../../../services/posts/postsApiSlice";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { handleError } from "../../../../utils/handleError";
@@ -23,6 +23,9 @@ export const Trending = () => {
         page: page,
         target: "",
     });
+    const { data: ads } = useGetAllAdsPostsQuery({
+        page: page
+    })
     const [deletePost] = useDeletePostMutation();
 
     const postIds = new Set();
@@ -36,15 +39,49 @@ export const Trending = () => {
         return false;
     });
 
+    const mergePostsAndAds = (postsData, adsData) => {
+        const mergedData = [];
+        const adsLength = adsData.length;
+        let adIndex = 0;
+
+        for (let i = 0; i < postsData.length; i++) {
+            mergedData.push(postsData[i]);
+            // Insert an ad every 5 posts, if ads are available
+            if ((i + 1) % 5 === 0 && adIndex < adsLength) {
+                mergedData.push({ ...adsData[adIndex] });
+                adIndex++;
+            }
+        }
+        return mergedData;
+    };
+
     const appendNewPageData = () => {
-        if (trending?.data?.data) {
-            setPosts((prevPosts) => {
-                const newPosts = new Set([...prevPosts, ...trending.data.data]);
-                return Array.from(newPosts);
+        if (trending?.data?.data && ads?.data.data) {
+            const mergedData = mergePostsAndAds(trending.data.data, ads.data.data);
+
+            const postIds = new Set(posts.map((post) => post.id));
+            const deduplicatedMergedData = mergedData.filter((post) => {
+                if (!postIds.has(post.id)) {
+                    postIds.add(post.id);
+                    return true;
+                }
+                return false;
             });
+
+            setPosts((prevPosts) => [...prevPosts, ...deduplicatedMergedData]);
             setIsFetching(false);
         }
     };
+
+    // const appendNewPageData = () => {
+    //     if (trending?.data?.data) {
+    //         setPosts((prevPosts) => {
+    //             const newPosts = new Set([...prevPosts, ...trending.data.data]);
+    //             return Array.from(newPosts);
+    //         });
+    //         setIsFetching(false);
+    //     }
+    // };
 
     const handleDeletePost = async (id) => {
         const newPage = 1

@@ -1,6 +1,7 @@
 import { CustomRangeSlider } from "../../../../components/global/customrange"
+import { useNumberFormatter } from "../../../../hooks/useNumberFormatter";
 
-export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, duration }) => {
+export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, duration, currency }) => {
 
     let durationPluralization;
 
@@ -10,6 +11,7 @@ export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, dur
         const noun = duration > 1 ? 'days' : 'day';
         durationPluralization = duration + " " + noun
     }
+    const formattedBudget = useNumberFormatter(budget);
 
     return (
         <div className="flex flex-col gap-6 divide-y divide-tgray-50">
@@ -22,14 +24,14 @@ export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, dur
                 <section className="flex flex-col w-full gap-3">
                     <CustomRangeSlider
                         initialValue={budget}
-                        min={5}
-                        max={5000}
-                        step={1}
+                        min={50}
+                        max={10000}
+                        step={50}
                         onValueChange={handleBudgetChange}
                     />
                     <section className="w-full flex items-center justify-between">
-                        <span className="text-[10px] font-medium text-[#858585]">$5</span>
-                        <span className="text-[10px] font-medium text-[#858585]">$5,000</span>
+                        <span className="text-[10px] font-medium text-[#858585]">{currency}50</span>
+                        <span className="text-[10px] font-medium text-[#858585]">{currency}10,000</span>
                     </section>
                 </section>
             </section>
@@ -57,7 +59,7 @@ export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, dur
             <section className="py-6">
                 <section className="w-full rounded-xl bg-[#F1FAFF] border border-[#E5F6FF] p-4 flex items-center flex-col gap-6 justify-center">
                     <div className="w-full md:w-3/4 flex items-center justify-between">
-                        <p className="text-xl text-tprimary-50 font-bold">${budget ?? 0}</p>
+                        <p className="text-xl text-tprimary-50 font-bold">{currency}{formattedBudget ?? 0}</p>
                         <span className="text-[#858585] text-[10px]">For</span>
                         <p className="text-xl text-tprimary-50 font-bold">{durationPluralization}</p>
                     </div>
