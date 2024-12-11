@@ -90,6 +90,13 @@ export const SlideOne = ({ minAge, maxAge, gender, country, selectedItems, setSe
                             value="Others"
                             checked={gender === "Others"}
                         />
+                        <TextRadioButton
+                            label="All"
+                            name="gender"
+                            onChange={handleGender}
+                            value="All"
+                            checked={gender === "All"}
+                        />
                     </section>
                 </section>
             </section>
