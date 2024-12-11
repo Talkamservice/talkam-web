@@ -55,17 +55,6 @@ export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, dur
                     </section>
                 </section>
             </section>
-
-            <section className="py-6">
-                <section className="w-full rounded-xl bg-[#F1FAFF] border border-[#E5F6FF] p-4 flex items-center flex-col gap-6 justify-center">
-                    <div className="w-full md:w-3/4 flex items-center justify-between">
-                        <p className="text-xl text-tprimary-50 font-bold">{currency}{formattedBudget ?? 0}</p>
-                        <span className="text-[#858585] text-[10px]">For</span>
-                        <p className="text-xl text-tprimary-50 font-bold">{durationPluralization}</p>
-                    </div>
-                    <p className="text-[#858585] text-[10px]">Estimated reach within 15 days is 70k</p>
-                </section>
-            </section>
         </div>
     )
 }
