@@ -193,11 +193,20 @@ export const EditProfileModal = ({ onClose, user }) => {
                         onChange={handleSelectGender}
                     />
                     <Input
+                        wrapperClassName="relative w-full"
+                        label="Date of Birth"
+                        placeholder="dd/mm/yyyy"
+                        value={dateOfBirth || ""}
+                        onFocus={() => setOpenDOBModal(true)}
+                        readOnly
+                    />
+
+                    {/* <Input
                         wrapperClassName='relative w-full'
                         label='Date of Birth'
                         placeholder={(dateOfBirth && dateOfBirth !== "") ? dateOfBirth : "dd/mm/yyyy"}
                         onFocus={() => setOpenDOBModal(true)}
-                    />
+                    /> */}
                     <DropDownSelect
                         label="Country"
                         defaultValue={country?.name ?? "country"}

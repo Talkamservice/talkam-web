@@ -2,10 +2,10 @@ import { X } from "react-feather"
 import { Button } from "../../../../components/forms/button"
 import { SlideOne } from "./slideone"
 import { useGetCountriesQuery } from "../../../../services/userApiSlice"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { SlideTwo } from "./slidetwo"
 import { SlideThree } from "./slideThree"
-import { usePaymentCallBackMutation, usePromoteMutation } from "../../../../services/paymentApiSlice"
+import { useGetPromotionImpressionsQuery, usePaymentCallBackMutation, usePromoteMutation } from "../../../../services/paymentApiSlice"
 import { toast } from "sonner"
 import { handleError } from "../../../../utils/handleError"
 import { closePaymentModal, useFlutterwave } from "flutterwave-react-v3"
@@ -15,6 +15,7 @@ import { Storage } from "../../../../app/storage"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "../../../../services/authSlice"
 import { useGetCurrencySymbol } from "../../../../hooks/useGetCurrencySymbol"
+import { useNumberFormatter } from "../../../../hooks/useNumberFormatter"
 import Logo from '../../../../assets/images/avatar.png'
 
 export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
@@ -29,19 +30,28 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
     const [countrySearch, setCountrySearch] = useState("");
     const [budget, setBudget] = useState(1000);
     const [duration, setDuration] = useState(15);
+    const [gender, setGender] = useState("");
+    const [priceToPay, setPriceToPay] = useState(budget)
     const [ageRange, setAgeRange] = useState({
         minAge: 18,
         maxAge: 45
     })
-    const [gender, setGender] = useState("");
-
     const transformedCountries = selectedItems?.map(country => country.id)
+    const paidPrice = budget * duration;
 
     const { data: countries, isFetching: loadingCountries } = useGetCountriesQuery({
         search: countrySearch
     });
     const [promote, { isLoading }] = usePromoteMutation();
-    const [paymentCallBack] = usePaymentCallBackMutation()
+    const [paymentCallBack] = usePaymentCallBackMutation();
+    const { data: impressionData } = useGetPromotionImpressionsQuery();
+
+    const EstimatedReach = () => {
+        const multiplier = impressionData?.data?.impressions / impressionData?.data?.amount * budget;
+        return (multiplier * duration).toFixed(0)
+    }
+    const formattedEstimatedReach = useNumberFormatter(EstimatedReach(), 0)
+    console.log(EstimatedReach(), formattedEstimatedReach)
 
     const handleCountrySearch = (event) => {
         setCountrySearch(event.target.value)
@@ -66,7 +76,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
         setBudget(value)
     };
     const handleDurationRange = (value) => {
-        setDuration(value)
+        setDuration(value);
     };
 
     const handlePromote = async () => {
@@ -169,6 +179,10 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
                 budget={budget}
                 duration={duration}
                 currency={userCurrency}
+                impressionData={impressionData?.data}
+                priceToPay={priceToPay}
+                setPriceToPay={setPriceToPay}
+                estimatedReach={formattedEstimatedReach}
             />,
         "three":
             <SlideThree
@@ -180,9 +194,16 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
                 maxAge={ageRange.maxAge}
                 gender={gender}
                 currency={userCurrency}
+                priceToPay={paidPrice}
+                estimatedReach={formattedEstimatedReach}
             />
         ,
     }
+
+    useEffect(() => {
+        setBudget(impressionData?.data?.amount.toFixed(0) ?? 7000)
+        setPriceToPay(impressionData?.data?.amount.toFixed(0) ?? 7000)
+    }, [impressionData])
 
     const stepMap = {
         "one": '01',
