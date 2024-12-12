@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 
-export const useNumberFormatter = (number) => {
+export const useNumberFormatter = (number, decimal = 2) => {
     return useMemo(() => {
         const formatter = new Intl.NumberFormat('en-US', {
             useGrouping: true,
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
+            minimumFractionDigits: decimal,
+            maximumFractionDigits: decimal,
         });
         return formatter.format(number);
     }, [number]);

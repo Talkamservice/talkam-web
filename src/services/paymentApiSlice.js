@@ -78,6 +78,12 @@ export const pricingApiSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ["analytics"]
         }),
+        getPromotionImpressions: builder.query({
+            query: () => ({
+                url: `/user/promotion-pricings/get`,
+                method: "get",
+            })
+        })
     }),
 });
 
@@ -92,5 +98,5 @@ export const {
     useUpdatePromotionMutation,
     useRestartPromotionMutation,
     useUpdateStatsMutation,
-    useGetPromotionDetailsQuery,
+    useGetPromotionImpressionsQuery,
 } = pricingApiSlice;
