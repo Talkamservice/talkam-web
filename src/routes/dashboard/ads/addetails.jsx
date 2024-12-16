@@ -1,7 +1,7 @@
 import { ArrowLeft } from "react-feather"
 import { Button } from "../../../components/forms/button"
 import { useNavigate, useParams } from "react-router-dom"
-import { useGetPromotionImpressionsQuery } from "../../../services/paymentApiSlice";
+import { useGetPromotionDetailsQuery } from "../../../services/paymentApiSlice";
 import { AdSkeletonLoader } from "../../../components/global/skeletons";
 import { AdCard } from "../../../components/global/adcard";
 import { handleError } from "../../../utils/handleError";
@@ -18,7 +18,7 @@ export const AdDetails = () => {
     const { adId } = useParams();
     const navigate = useNavigate();
 
-    const { data: ad, isLoading, isError, error } = useGetPromotionImpressionsQuery(adId);
+    const { data: ad, isLoading, isError, error } = useGetPromotionDetailsQuery(adId);
 
     if (isError) {
         const errorMessage = handleError(error);
