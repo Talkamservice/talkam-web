@@ -60,7 +60,7 @@ export const SlideThree = ({ location, minAge, maxAge, gender, budget, countries
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-xs text-[#858585]">Estimated Reach</span>
-                        <p className="text-xl font-medium">{estimatedReach} impressions</p>
+                        <p className="text-xl font-medium">{estimatedReach ?? ""} impressions</p>
                     </div>
                 </section>
             </section>

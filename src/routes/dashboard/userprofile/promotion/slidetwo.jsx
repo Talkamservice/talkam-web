@@ -64,7 +64,7 @@ export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, dur
                         <span className="text-[#858585] text-[10px]">For</span>
                         <p className="text-xl text-tprimary-50 font-bold">{durationPluralization}</p>
                     </div>
-                    <p className="text-[#858585] text-xs">Estimated reach within {durationPluralization} is {estimatedReach} impressions</p>
+                    <p className="text-[#858585] text-xs">Estimated reach within {durationPluralization} is {estimatedReach ?? 0} impressions</p>
                 </section>
             </section>
         </div>

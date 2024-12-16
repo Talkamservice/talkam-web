@@ -47,8 +47,9 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
     const { data: impressionData } = useGetPromotionImpressionsQuery();
 
     const EstimatedReach = () => {
+        console.log(impressionData)
         const multiplier = impressionData?.data?.impressions / impressionData?.data?.amount * budget;
-        return (multiplier * duration).toFixed(0)
+        return Number((multiplier * duration).toFixed(0))
     }
     const formattedEstimatedReach = useNumberFormatter(EstimatedReach(), 0)
     console.log(EstimatedReach(), formattedEstimatedReach)
