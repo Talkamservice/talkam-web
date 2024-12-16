@@ -47,7 +47,9 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
     const { data: impressionData } = useGetPromotionImpressionsQuery();
 
     const EstimatedReach = () => {
-        console.log(impressionData)
+        if (!impressionData?.data) {
+            return 0;
+        }
         const multiplier = impressionData?.data?.impressions / impressionData?.data?.amount * budget;
         return Number((multiplier * duration).toFixed(0))
     }
