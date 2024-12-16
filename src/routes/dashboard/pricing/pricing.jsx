@@ -68,7 +68,7 @@ export const Pricing = () => {
                     <header className="w-full flex items-center justify-center">
                         <section className="flex flex-col items-center">
                             <p className="font-bold text-xl md:text-3xl text-center">Upgrade to TalkAM plus</p>
-                            <p className="text-sm md:text-base text-tgray-250">Enjoy great ecperiences with TalkAM plus</p>
+                            <p className="text-sm md:text-base text-tgray-250">Enjoy great experiences with TalkAM plus</p>
                         </section>
                     </header>
                 </div>
