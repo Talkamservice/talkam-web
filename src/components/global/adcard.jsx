@@ -118,6 +118,8 @@ export const AdCard = ({
         "Pending": "Pending Ad"
     }
 
+    console.log(group)
+
     return (
         <div className="w-full flex flex-col p-3 border border-tgray-xlight rounded-xl divide-y divide-tgray-xlight">
             <section className="w-full flex flex-col xl:flex-row items-start justify-center gap-3">
@@ -145,7 +147,7 @@ export const AdCard = ({
                             />
                             :
                             <GroupBannerAd
-                                groupId={group.id}
+                                groupId={group?.id}
                                 groupDetails={group}
                             />
                     }
@@ -184,7 +186,7 @@ export const AdCard = ({
                                     <Icon.AlertCircle />
                                 </Tooltip>
                             </header>
-                            <p className='text-base'>{stats.impressions ?? 0}</p>
+                            <p className='text-base'>{stats?.impressions ?? 0}</p>
                         </div>
                         <div className='flex items-start flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585] relative'>
@@ -193,7 +195,7 @@ export const AdCard = ({
                                     <Icon.AlertCircle />
                                 </Tooltip>
                             </header>
-                            <p className='text-base'>{stats.engagements ?? '0%'}</p>
+                            <p className='text-base'>{stats?.engagements ?? '0%'}</p>
                         </div>
                         <div className='flex items-start flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>

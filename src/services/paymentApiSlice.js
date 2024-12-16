@@ -93,6 +93,7 @@ export const {
     useCancelSubscriptionMutation,
     usePromoteMutation,
     useGetRunningAdsQuery,
+    useGetPromotionDetailsQuery,
     useDeletePromotionMutation,
     usePaymentCallBackMutation,
     useUpdatePromotionMutation,
