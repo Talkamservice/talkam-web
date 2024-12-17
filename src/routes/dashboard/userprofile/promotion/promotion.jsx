@@ -54,7 +54,6 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
         return Number((multiplier * duration).toFixed(0))
     }
     const formattedEstimatedReach = useNumberFormatter(EstimatedReach(), 0)
-    console.log(EstimatedReach(), formattedEstimatedReach)
 
     const handleCountrySearch = (event) => {
         setCountrySearch(event.target.value)
