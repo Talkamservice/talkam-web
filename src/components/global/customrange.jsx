@@ -32,7 +32,7 @@ export const CustomRangeSlider = ({ min, max, initialValue, step, onValueChange 
                         step={step}
                         value={value}
                         onChange={handleChange}
-                        className="absolute w-full -top-1 h-2 bg-transparent appearance-none pointer-events-none opacity-0"
+                        className="absolute w-full -top-2 h-2 bg-transparent appearance-none opacity-0"
                     />
                     <div
                         className="text-tgray-75 text-xs"
@@ -41,7 +41,7 @@ export const CustomRangeSlider = ({ min, max, initialValue, step, onValueChange 
                             left: `${((value - min) / (max - min)) * 100}%`,
                             transform: 'translateX(-50%)',
                             marginTop: '-2rem',
-                            whiteSpace: 'nowrap' // Prevent text wrapping
+                            whiteSpace: 'nowrap'
                         }}
                     >
                         {value}
@@ -51,11 +51,11 @@ export const CustomRangeSlider = ({ min, max, initialValue, step, onValueChange 
                             position: 'absolute',
                             left: `${((value - min) / (max - min)) * 100}%`,
                             transform: 'translateX(-50%)',
-                            marginTop: '-.8rem',
+                            marginTop: '-1rem',
                             pointerEvents: 'none'
                         }}
                         width="40"
-                        height="20"
+                        height="25"
                         viewBox="0 0 25 17"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"

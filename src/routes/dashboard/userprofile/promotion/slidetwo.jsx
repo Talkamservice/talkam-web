@@ -27,12 +27,12 @@ export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, dur
                         initialValue={budget}
                         min={impressionData?.amount.toFixed(0)}
                         max={impressionData?.max_daily_amount.toFixed(0)}
-                        step={50}
+                        step={1}
                         onValueChange={handleBudgetChange}
                     />
                     <section className="w-full flex items-center justify-between">
                         <span className="text-[10px] font-medium text-[#858585]">{currency}{impressionData?.amount.toFixed(0)}</span>
-                        <span className="text-[10px] font-medium text-[#858585]">{currency}{impressionData?.max_daily_amount.toFixed(0)}</span>
+                        <span className="text-[10px] font-medium text-[#473131]">{currency}{impressionData?.max_daily_amount.toFixed(0)}</span>
                     </section>
                 </section>
             </section>
