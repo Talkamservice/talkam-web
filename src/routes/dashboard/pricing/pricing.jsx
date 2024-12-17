@@ -6,6 +6,8 @@ import { PricingCard } from "../../../components/pricing/pricingcard"
 import { useGetAllPlansQuery } from "../../../services/paymentApiSlice"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "../../../services/authSlice"
+import { useGetUserProfileDetailsQuery } from "../../../services/userApiSlice"
+import { ColoredLoader } from "../../../components/global/loader"
 
 const freemiumFeatures = [
     "Limited character when Posting and commenting.",
@@ -50,6 +52,11 @@ export const Pricing = () => {
     const currentUser = useSelector(selectCurrentUser);
     const [period, setPeriod] = useState("Annually");
     const { data: plans, isLoading } = useGetAllPlansQuery();
+    const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true,
+        refetchOnReconnect: true
+    });
 
     const handleCurrentTab = (tab) => {
         setPeriod(tab)
@@ -72,55 +79,61 @@ export const Pricing = () => {
                         </section>
                     </header>
                 </div>
-                <section className="w-full xl:w-3/5 flex flex-col gap-6 items-center justify-center">
 
-                    {
-                        !currentUser?.active_subscription ?
-                            <header className="w-fit">
-                                <PricingTabs
-                                    tabs={tabs}
-                                    onTabChange={handleCurrentTab}
-                                />
-                            </header>
-                            :
-                            null
-                    }
+                {
+                    isLoading ?
+                        <ColoredLoader />
+                        :
+                        <section className="w-full xl:w-3/5 flex flex-col gap-6 items-center justify-center">
 
-                    <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {
-                            plans?.data?.map((plan) => {
-                                return (
-                                    <PricingCard
-                                        key={plan.id}
-                                        planId={period === "Annually" ? plan?.durations?.[1]?.id : plan?.durations?.[0]?.id}
-                                        currentPlan={plan?.is_active_subscription}
-                                        period={period === "Annually" ? plan?.durations?.[1]?.frequency : plan?.durations?.[0]?.frequency}
-                                        plan={plan?.name}
-                                        features={plan?.benefits}
-                                        price={
-                                            plan?.durations.length ?
-                                                (period === "Annually" ? plan?.durations?.[1]?.price : plan?.durations?.[0]?.price)
-                                                :
-                                                "0"
-                                        }
-                                        currentPlanPrice={
-                                            (plan.is_active_subscription && plan?.price) ?? "0"
-                                        }
-                                        currency={
-                                            (plan?.currency) ?? "$"
-                                        }
-                                    />
-                                )
-                            })
-                        }
-                        {/* <PricingCard
+                            {
+                                !user?.data?.active_subscription ?
+                                    <header className="w-fit">
+                                        <PricingTabs
+                                            tabs={tabs}
+                                            onTabChange={handleCurrentTab}
+                                        />
+                                    </header>
+                                    :
+                                    null
+                            }
+
+                            <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {
+                                    plans?.data?.map((plan) => {
+                                        return (
+                                            <PricingCard
+                                                key={plan.id}
+                                                planId={period === "Annually" ? plan?.durations?.[1]?.id : plan?.durations?.[0]?.id}
+                                                currentPlan={plan?.is_active_subscription}
+                                                period={period === "Annually" ? plan?.durations?.[1]?.frequency : plan?.durations?.[0]?.frequency}
+                                                plan={plan?.name}
+                                                features={plan?.benefits}
+                                                price={
+                                                    plan?.durations.length ?
+                                                        (period === "Annually" ? plan?.durations?.[1]?.price : plan?.durations?.[0]?.price)
+                                                        :
+                                                        "0"
+                                                }
+                                                currentPlanPrice={
+                                                    (plan.is_active_subscription && plan?.price) ?? "0"
+                                                }
+                                                currency={
+                                                    (plan?.currency) ?? "$"
+                                                }
+                                            />
+                                        )
+                                    })
+                                }
+                                {/* <PricingCard
                             period={period}
                             plan="TalkAM Plus"
                             features={talkAMPlusFeatures}
                             price={period === "Annually" ? 60 : 5}
                         /> */}
-                    </section>
-                </section>
+                            </section>
+                        </section>
+                }
             </section>
 
         </div>

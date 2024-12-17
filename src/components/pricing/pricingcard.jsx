@@ -72,7 +72,7 @@ export const PricingCard = ({ plan, currentPlan, period, features, price = "0", 
                     <p className={`text-[10px] bg-[#F6F3DA] py-1.5 px-3 rounded-full ${currentPlan ? "flex" : "hidden"} `}>Current Plan</p>
                 </div>
 
-                <p className="font-bold text-3xl">{currencySymbol}{formattedPrice}</p>
+                <p className="font-bold text-3xl">{(currentPlan || plan === "Freemium") ? "Free" : `${currencySymbol}${formattedPrice}`}</p>
                 <p className={`text-sm ${currentPlan || plan === "Freemium" ? "hidden" : "flex"}`}>Billed {period}</p>
             </header>
 
