@@ -64,7 +64,7 @@ export const Pricing = () => {
 
     return (
         <div className="absolute top-0 left-0 bg-white z-[35] lg:z-[39] w-full h-full flex flex-col md:flex-row divide-x divide-tgray-50 overflow-auto no-scrollbar p-4 md:px-12">
-            <section className="w-full rounded-xl bg-gradient-to-b from-[#FEFEFE] to-[#F0F0F0] border border-[#E5E5E5] p-6 flex flex-col items-center gap-12 overflow-y-auto no-scrollbar">
+            <section className="w-full rounded-xl bg-gradient-to-b from-[#FEFEFE] to-[#F0F0F0] border border-[#E5E5E5] p-6 flex flex-col items-center gap-8 overflow-y-auto no-scrollbar">
                 <div className="w-full flex items-start lg:items-center flex-col lg:flex-row gap-4">
                     {/* <Button
                         className="!rounded-full !bg-black"
@@ -84,7 +84,7 @@ export const Pricing = () => {
                     isLoading ?
                         <ColoredLoader />
                         :
-                        <section className="w-full xl:w-3/5 flex flex-col gap-6 items-center justify-center">
+                        <section className="w-full xl:w-5/6 flex flex-col gap-6 items-center justify-center">
 
                             {
                                 !user?.data?.active_subscription ?
@@ -98,7 +98,7 @@ export const Pricing = () => {
                                     null
                             }
 
-                            <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <section className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {
                                     plans?.data?.map((plan) => {
                                         return (

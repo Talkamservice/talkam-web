@@ -65,7 +65,7 @@ export const PricingCard = ({ plan, currentPlan, period, features, price = "0", 
     };
 
     return (
-        <div className="w-full border border-[#E5E5E5] rounded-xl divide-y divide-tgray-200 bg-white h-fit">
+        <div className="w-full border border-[#E5E5E5] rounded-xl divide-y divide-tgray-200 bg-white">
             <header className="flex flex-col gap-2 p-7">
                 <div className="flex items-center justify-between">
                     <p className="text-xs text-[#858585]">{plan}</p>
@@ -88,7 +88,7 @@ export const PricingCard = ({ plan, currentPlan, period, features, price = "0", 
                 </Button>
             </section>
 
-            <section className="px-7 py-3 flex flex-col gap-6">
+            <section className="px-7 py-3 flex flex-col gap-5">
                 {
                     features?.map((feature, index) => (
                         <div
