@@ -32,6 +32,12 @@ export const helpAndInfoSlice = apiSlice.injectEndpoints({
         method: "get",
       }),
     }),
+    paymentTerms: builder.query({
+      query: () => ({
+        url: `/user/finance/payment-terms`,
+        method: "get",
+      }),
+    }),
     giveFeedback: builder.mutation({
       query: (feedbackData) => ({
         url: "/user/feedback",
@@ -48,6 +54,7 @@ export const {
   useTermsOfUseQuery,
   usePrivacyPolicyQuery,
   useRulesQuery,
+  usePaymentTermsQuery,
   useGiveFeedbackMutation,
   useFeedbackOptionsQuery,
 } = helpAndInfoSlice;

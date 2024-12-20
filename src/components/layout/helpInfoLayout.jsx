@@ -131,9 +131,10 @@ export const HelpIfoLayout = ({ children }) => {
   }, []);
 
   const activeInfoNavLinkClass = ({ isActive }) =>
-    `relative transition-all duration-300 ${isActive
-      ? "after:block after:absolute after:left-0 after:bottom-[-2px] after:w-full after:h-[3px] after:bg-[#017FC8]"
-      : ""
+    `relative transition-all duration-300 ${
+      isActive
+        ? "after:block after:absolute after:left-0 after:bottom-[-2px] after:w-full after:h-[3px] after:bg-[#017FC8]"
+        : ""
     }`;
 
   return (
@@ -143,9 +144,9 @@ export const HelpIfoLayout = ({ children }) => {
           className={`w-full relative h-dvh no-scrollbar  no-scrollbar bg-[#FAFAFA]`}
         >
           {/* Mobile header */}
-          <div className="border-b bg-white border-tgray-light w-full h-[7dvh] sm:h-[8dvh] flex items-center">
+          <div className="border-b bg-white border-tgray-light w-full   flex items-center">
             <header
-              className={`sticky w-full flex items-center justify-between max-w-screen-2xl mx-auto gap-8 sm:gap-4 z-40 px-[5vw] lg:px-24  py-2 top-0`}
+              className={`sticky w-full flex items-center justify-between max-w-screen-2xl h-[7dvh] mx-auto gap-8 sm:gap-4 z-40 px-[5vw] lg:px-24  py-2 top-0`}
             >
               <div
                 onClick={() => {
@@ -159,8 +160,9 @@ export const HelpIfoLayout = ({ children }) => {
                   height={isMobile ? 30 : 40}
                 />
                 <p
-                  className={` ${!isLogoMobile ? "block" : "hidden"
-                    } flex items-center text-xl font-regularNunito`}
+                  className={` ${
+                    !isLogoMobile ? "block" : "hidden"
+                  } flex items-center text-xl font-regularNunito`}
                 >
                   <span className="font-extraboldNunito">talk</span>AM
                 </p>
@@ -168,10 +170,11 @@ export const HelpIfoLayout = ({ children }) => {
               {isHelpAndInfo && (
                 <>
                   <section
-                    className={` ${isMobile ? "hidden" : "flex"
-                      } justify-center items-center gap-10`}
+                    className={` ${
+                      isMobile ? "hidden" : "flex"
+                    } justify-center items-center gap-10`}
                   >
-                    <div className="*:text-sm *:text-[#212121] *:font-semibold  flex justify-center items-start gap-8">
+                    <div className="*:text-sm *:text-[#212121] *:font-semibold  flex justify-center items-start gap-6">
                       <NavLink
                         to="/help&info/about"
                         className={activeInfoNavLinkClass}
@@ -217,7 +220,7 @@ export const HelpIfoLayout = ({ children }) => {
             </header>
           </div>
 
-          <div className=" relative max-w-screen-2xl mx-auto flex no-scrollbar h-[calc(100dvh-7dvh)] sm:h-[calc(100dvh-8dvh)]">
+          <div className=" relative max-w-screen-2xl mx-auto flex no-scrollbar h-[calc(100dvh-7dvh)] ">
             <div
               className={`fixed inset-0 z-[38] backdrop-blur-sm bg-tgray-300 lg:hidden`}
               style={{
@@ -234,8 +237,9 @@ export const HelpIfoLayout = ({ children }) => {
               >
                 <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
                   <nav
-                    className={`flex-1 no-scrollbar ${isMobile && "pt-[80px] sm:pt-[110px]"
-                      } `}
+                    className={`flex-1 no-scrollbar ${
+                      isMobile && "pt-[80px] sm:pt-[110px]"
+                    } `}
                   >
                     <section className="flex flex-col items-start gap-4 sm:gap-5 border-b *:!text-sm *:sm:!text-lg border-tgray-200 pb-10 sm:pb-12">
                       <Button

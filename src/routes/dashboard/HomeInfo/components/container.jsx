@@ -41,7 +41,7 @@ function Container({ children }) {
       </div>
       <div className="border-t w-full border-[#D7D7D7] mt-10 pt-8 flex flex-col gap-8  xl:flex-row justify-between items-start xl:items-center pb-8 sm:pb-12">
         <div className="*:text-sm *:text-[#212121] *:font-semibold flex flex-wrap justify-start items-start gap-5 sm:gap-8 gap-y-3 ">
-          <Link to="">Copyright</Link>
+          <Link to="/help&info/payment-terms">Payment Terms</Link>
           <Link to="/help&info/terms">Terms of Use</Link>
           <Link to="/help&info/feedback">Feedback</Link>
           <Link to="/help&info/privacy-policy">Privacy Policy</Link>
