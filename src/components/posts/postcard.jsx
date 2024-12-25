@@ -90,39 +90,43 @@ export const PostCard = ({
                                 Promote post
                             </span>
                             <span
-                                className={`w-fit ${ad ? "inline" : "hidden"} font-normal text-[8px] px-2 py-1 rounded-full bg-[#FDAC0E] cursor-pointer sm:ml-4`}
+                                className={`w-fit ${ad ? "inline" : "hidden"} font-normal text-[8px] px-2 py-1 rounded-full bg-[#FDAC0E] cursor-pointer`}
                             >
                                 Ad
                             </span>
                         </section>
-                        <span className="text-xs font-medium text-[#858585]">
-                            <span className="flex items-center gap-2">
-                                Posted by {!postController.anonymous ? author : 'Anonymous'} {user?.active_subscription ? <BlueTickIcon /> : null}
-                            </span>
-                            {
-                                group && home ?
-                                    <p className="items-center whitespace-nowrap inline-flex gap-1 pl-1">
-                                        to{" "}
-                                        <Link to={`/group/${group?.uuid}`} className="text-tprimary-50 cursor-pointer">
-                                            {group?.name}
-                                        </Link>
-                                        {group?.group_access === "Closed" ? <LockIcon className="w-4 h-4" /> : null}
-                                    </p>
-                                    :
-                                    null
-                            }
-                            {
-                                category && home && !group ?
-                                    <p className="items-center whitespace-nowrap inline-flex gap-1 pl-1">
-                                        to{" "}
-                                        <Link to={`/category/${category?.uuid}`} className="text-tprimary-50 cursor-pointer truncate">
-                                            {category?.name}
-                                        </Link>
-                                    </p>
-                                    :
-                                    null
-                            }
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1 text-xs font-medium text-[#858585]">
+                            <div className="flex items-center gap-2 whitespace-nowrap">
+                                Posted by {!postController.anonymous ? author : "Anonymous"}{" "}
+                                {user?.active_subscription && <BlueTickIcon />}
+                            </div>
+
+                            {group && home && (
+                                <div className="flex items-center gap-1 whitespace-nowrap">
+                                    to{" "}
+                                    <Link
+                                        to={`/group/${group?.uuid}`}
+                                        className="text-tprimary-50 cursor-pointer whitespace-nowrap"
+                                    >
+                                        {group?.name}
+                                    </Link>
+                                    {group?.group_access === "Closed" && <LockIcon className="w-4 h-4" />}
+                                </div>
+                            )}
+
+                            {category && home && !group && (
+                                <div className="flex items-center gap-1 whitespace-nowrap">
+                                    to{" "}
+                                    <Link
+                                        to={`/category/${category?.uuid}`}
+                                        className="text-tprimary-50 cursor-pointer whitespace-nowrap truncate"
+                                    >
+                                        {category?.name}
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+
                     </div>
                 </section>
 

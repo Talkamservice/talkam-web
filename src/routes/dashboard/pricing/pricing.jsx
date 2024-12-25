@@ -50,7 +50,7 @@ const tabs = [
 export const Pricing = () => {
 
     const currentUser = useSelector(selectCurrentUser);
-    const [period, setPeriod] = useState("Annually");
+    const [period, setPeriod] = useState("Monthly");
     const { data: plans, isLoading } = useGetAllPlansQuery();
     const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
         refetchOnMountOrArgChange: true,

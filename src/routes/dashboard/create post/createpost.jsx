@@ -140,7 +140,7 @@ export const CreatePost = () => {
     const transformedGroups = following && following?.data?.data?.map((group) => {
         return {
             id: group.id,
-            name: group.category?.id, //Hack to get the groups category when it is selected, anti-programming
+            name: group.category?.id, //Hack to get the groups category when it is selected...
             value: group.name
         }
     });
@@ -222,7 +222,7 @@ export const CreatePost = () => {
 
     const handleAnonToggle = (event) => {
         if (!user) return;
-        if (!user?.data?.active_subscription && user?.data?.anonymous_post === 5) {
+        if (!user?.data?.active_subscription && (user?.data?.anonymous_post >= 5)) {
             setPlusPrompt(true)
         } else {
             setIsChecked(event.target.checked)
