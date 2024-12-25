@@ -1,17 +1,21 @@
-import './index.css';
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { RouterProvider, createBrowserRouter, redirect } from 'react-router-dom'
-import { Provider } from 'react-redux'
-import { Toaster } from 'sonner'
-import { store } from './app/store';
-import { GoogleOAuthProvider } from '@react-oauth/google';
-import { AnimatePresence } from 'framer-motion';
+import "./index.css";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import {
+  RouterProvider,
+  createBrowserRouter,
+  redirect,
+} from "react-router-dom";
+import { Provider } from "react-redux";
+import { Toaster } from "sonner";
+import { store } from "./app/store";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AnimatePresence } from "framer-motion";
 import { HelpIfoLayout } from "./components/layout/helpInfoLayout";
-import ErrorPage from './routes/error/error';
-import App from './App';
-import NotFound from './routes/notfound/404';
-import { Search } from './routes/dashboard/search/search';
+import ErrorPage from "./routes/error/error";
+import App from "./App";
+import NotFound from "./routes/notfound/404";
+import { Search } from "./routes/dashboard/search/search";
 
 window.addEventListener("vite:preloadError", (event) => {
   window.location.reload();
@@ -68,9 +72,7 @@ const router = createBrowserRouter([
       {
         path: "ads",
         lazy: async () => {
-          let { Ads } = await import(
-            "./routes/dashboard/ads/ads"
-          );
+          let { Ads } = await import("./routes/dashboard/ads/ads");
           return { Component: Ads };
         },
         children: [
@@ -96,7 +98,7 @@ const router = createBrowserRouter([
               return { Component: ClosedAds };
             },
           },
-        ]
+        ],
       },
       {
         path: "create-post",
@@ -119,9 +121,7 @@ const router = createBrowserRouter([
       {
         path: "pricing",
         lazy: async () => {
-          let { Pricing } = await import(
-            "./routes/dashboard/pricing/pricing"
-          );
+          let { Pricing } = await import("./routes/dashboard/pricing/pricing");
           return { Component: Pricing };
         },
       },
@@ -502,6 +502,15 @@ const router = createBrowserRouter([
         lazy: async () => {
           let { Privacy } = await import("./routes/dashboard/HomeInfo/privacy");
           return { Component: Privacy };
+        },
+      },
+      {
+        path: "payment-terms",
+        lazy: async () => {
+          let { PaymentTerms } = await import(
+            "./routes/dashboard/HomeInfo/paymentTerms"
+          );
+          return { Component: PaymentTerms };
         },
       },
       {
