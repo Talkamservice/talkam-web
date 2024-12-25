@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 
 export const PricingTabs = ({ tabs, onTabChange }) => {
 
-    const [activeTab, setActiveTab] = useState(tabs[0]?.text ?? "")
+    const [activeTab, setActiveTab] = useState(tabs[1]?.text ?? "")
 
     const handleTabClick = (tab) => {
         setActiveTab(tab)

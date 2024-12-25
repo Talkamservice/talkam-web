@@ -53,7 +53,7 @@ export const CommentInput = ({
 
     const handleAnonToggle = (event) => {
         if (!user) return;
-        if (!user?.data?.active_subscription && user?.data?.anonymous_comment === 5) {
+        if (!user?.data?.active_subscription && user?.data?.anonymous_comment >= 5) {
             setPlusPrompt(true)
         } else {
             setAnonChecked(event.target.checked)
