@@ -190,12 +190,12 @@ export const AdCard = ({
                         </div>
                         <div className='flex items-start flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585] relative'>
-                                <p>Engagement Rate</p>
+                                <p>Engagement rates</p>
                                 <Tooltip position='left' text="This is gotten directly from your target audience">
                                     <Icon.AlertCircle />
                                 </Tooltip>
                             </header>
-                            <p className='text-base'>{stats?.engagements ?? '0%'}</p>
+                            <p className='text-base'>{Number(stats?.engagement_rates).toFixed(0) ?? '0%'}</p>
                         </div>
                         <div className='flex items-start flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
@@ -215,7 +215,7 @@ export const AdCard = ({
                     <section className='px-5 py-3 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
                         <div className='flex items-start flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
-                                <p>Profile Visits</p>
+                                <p>Profile visits</p>
                                 <Tooltip
                                     text="This is gotten directly from your target audience"
                                 >
