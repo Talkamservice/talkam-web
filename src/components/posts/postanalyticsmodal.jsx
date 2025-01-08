@@ -97,10 +97,10 @@ export const PostAnalyticsModal = ({ onClose, postId, groupId }) => {
                         </div>
                         <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
-                                <p>Engagement rates</p>
+                                <p>Engagements</p>
                                 <Icon.AlertCircle />
                             </header>
-                            <p className='text-base'>{Number(analytics?.data?.engagements).toFixed(0) ?? 0}</p>
+                            <p className='text-base'>{analytics?.data?.engagements ?? 0}</p>
                         </div>
                         <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
