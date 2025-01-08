@@ -25,17 +25,17 @@ export const SlideThree = ({ location, minAge, maxAge, gender, budget, countries
                         <span className="text-xs text-[#858585]">Location(s)</span>
                         {
                             countries?.map((country) => (
-                                <p className="text-xl font-medium">{country?.name}</p>
+                                <p className="text-lg font-medium">{country?.name}</p>
                             ))
                         }
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-xs text-[#858585]">Age range</span>
-                        <p className="text-xl font-medium">{minAge} - {maxAge}yrs</p>
+                        <p className="text-lg font-medium">{minAge} - {maxAge}yrs</p>
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-xs text-[#858585]">Gender</span>
-                        <p className="text-xl font-medium">{gender}</p>
+                        <p className="text-lg font-medium">{gender}</p>
                     </div>
                 </section>
             </section>
@@ -48,19 +48,19 @@ export const SlideThree = ({ location, minAge, maxAge, gender, budget, countries
                 <section className="flex items-center justify-between flex-wrap w-full gap-3">
                     <div className="flex flex-col gap-2">
                         <span className="text-xs text-[#858585]">Daily budget</span>
-                        <p className="text-xl font-medium">{currency}{formattedBudget}</p>
+                        <p className="text-lg font-medium">{currency}{formattedBudget}</p>
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-xs text-[#858585]">Duration</span>
-                        <p className="text-xl font-medium">{durationPluralization}</p>
+                        <p className="text-lg font-medium">{durationPluralization}</p>
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-xs text-[#858585]">Amount</span>
-                        <p className="text-xl font-medium">{currency}{formattedPriceToPay}</p>
+                        <p className="text-lg font-medium">{currency}{formattedPriceToPay}</p>
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-xs text-[#858585]">Estimated Reach</span>
-                        <p className="text-xl font-medium">{estimatedReach ?? ""} impressions</p>
+                        <p className="text-lg font-medium">{estimatedReach ?? ""} impressions</p>
                     </div>
                 </section>
             </section>
