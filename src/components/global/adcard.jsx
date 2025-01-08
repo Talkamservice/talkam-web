@@ -229,7 +229,7 @@ export const AdCard = ({
                                 <p>Engagement rates</p>
                                 <Icon.AlertCircle />
                             </header>
-                            <p className='text-base'>{Number(stats?.engagemens).toFixed(0) ?? 0}%</p>
+                            <p className='text-base'>{Number(stats?.engagemens).toFixed(0) ?? 0}</p>
                         </div>
                         {group && (
                             <div className='flex items-start flex-col gap-1'>
