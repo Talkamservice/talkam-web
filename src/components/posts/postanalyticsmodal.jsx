@@ -17,7 +17,7 @@ export const PostAnalyticsModal = ({ onClose, postId, groupId }) => {
                 <X className="cursor-pointer" onClick={onClose} size={20} strokeWidth={2} />
             </header>
             <section className="w-full flex flex-col px-6 gap-3">
-                <p className="font-medium text-[#858585] text-sm">Get more insights into how well your {postId ? "Post" : "Group"}st is doing.</p>
+                <p className="font-medium text-[#858585] text-sm">Get more insights into how well your {postId ? "Post" : "Group"} is doing.</p>
             </section>
             <section className="flex flex-col gap-4 p-6">
 
@@ -64,21 +64,21 @@ export const PostAnalyticsModal = ({ onClose, postId, groupId }) => {
 
                 <section>
                     <section className='py-5 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
-                        <div className='flex items-start flex-col gap-1'>
+                        <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
                                 <p>Impressions</p>
                                 <Icon.AlertCircle />
                             </header>
                             <p className='text-base'>{analytics?.data?.impressions ?? 0}</p>
                         </div>
-                        <div className='flex items-start flex-col gap-1'>
+                        <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
-                                <p>Engagement</p>
+                                <p>Engagement rates</p>
                                 <Icon.AlertCircle />
                             </header>
-                            <p className='text-base'>{analytics?.data?.engagements ?? 0}</p>
+                            <p className='text-base'>{Number(analytics?.data?.engagement_rates).toFixed(0) ?? 0}%</p>
                         </div>
-                        {/* <div className='flex items-start flex-col gap-1'>
+                        {/* <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
                                 <p>New Followers</p>
                                 <Icon.AlertCircle />
@@ -88,14 +88,14 @@ export const PostAnalyticsModal = ({ onClose, postId, groupId }) => {
                     </section>
 
                     <section className='py-5 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
-                        <div className='flex items-start flex-col gap-1'>
+                        <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
-                                <p>Profile Visits</p>
+                                <p>Profile visits</p>
                                 <Icon.AlertCircle />
                             </header>
                             <p className='text-base'>{analytics?.data?.profile_visits ?? 0}</p>
                         </div>
-                        <div className='flex items-start flex-col gap-1'>
+                        <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
                                 <p>Clicks</p>
                                 <Icon.AlertCircle />
@@ -105,14 +105,14 @@ export const PostAnalyticsModal = ({ onClose, postId, groupId }) => {
                     </section>
 
                     <section className='py-5 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>
-                        <div className='flex items-start flex-col gap-1'>
+                        <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
                                 <p>Min time spent on post</p>
                                 <Icon.AlertCircle />
                             </header>
                             <p className='text-base'>{analytics?.data?.min_time_spent ?? '0 secs'}</p>
                         </div>
-                        <div className='flex items-start flex-col gap-1'>
+                        <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
                                 <p>Max time spent on post</p>
                                 <Icon.AlertCircle />

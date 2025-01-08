@@ -13,5 +13,5 @@ export const useGetCurrencySymbol = (currency) => {
         return parts.find(part => part.type === 'currency')?.value || '';
     }, [currency]);
 
-    return currencySymbol || '$';
+    return currencySymbol ?? currency;
 };
