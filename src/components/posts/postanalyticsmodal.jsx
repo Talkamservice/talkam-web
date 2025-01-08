@@ -117,14 +117,14 @@ export const PostAnalyticsModal = ({ onClose, postId, groupId }) => {
                                 <p>Min time spent on post</p>
                                 <Icon.AlertCircle />
                             </header>
-                            <p className='text-base'>{analytics?.data?.min_time_spent ?? '0 secs'}</p>
+                            <p className='text-base'>{analytics?.data?.min_time_spent ?? '0'}secs</p>
                         </div>
                         <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
                                 <p>Max time spent on post</p>
                                 <Icon.AlertCircle />
                             </header>
-                            <p className='text-base'>{analytics?.data?.max_time_spent ?? "0 secs"}</p>
+                            <p className='text-base'>{analytics?.data?.max_time_spent ?? "0"}secs</p>
                         </div>
                     </section>
 
