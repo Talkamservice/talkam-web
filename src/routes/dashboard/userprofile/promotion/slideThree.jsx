@@ -15,7 +15,7 @@ export const SlideThree = ({ location, minAge, maxAge, gender, budget, countries
 
     return (
         <div className="flex flex-col gap-6 divide-y divide-tgray-50">
-            <section className="flex flex-col gap-6 py-6">
+            <section className="flex flex-col gap-6 py-3">
                 <div className="flex flex-col gap-2">
                     <p className="text-sm font-medium">Your reach</p>
                 </div>

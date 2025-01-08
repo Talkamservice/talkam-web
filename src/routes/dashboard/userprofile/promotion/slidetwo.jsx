@@ -15,8 +15,8 @@ export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, dur
     const formattedBudget = useNumberFormatter(budget * duration);
 
     return (
-        <div className="flex flex-col gap-6 divide-y divide-tgray-50">
-            <section className="flex flex-col gap-12 py-6">
+        <div className="flex flex-col gap-3 divide-y divide-tgray-50">
+            <section className="flex flex-col gap-6 py-2">
                 <div className="flex flex-col gap-2">
                     <p className="text-sm font-medium">What is your budget.</p>
                     <span className="text-[10px] font-medium text-[#858585]">Daily budget</span>
@@ -38,7 +38,7 @@ export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, dur
             </section>
 
             <section className="flex flex-col w-full py-6 gap-6">
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 py-2">
                     <p className="text-sm font-medium">Duration.</p>
                 </div>
 
@@ -57,7 +57,7 @@ export const SlideTwo = ({ handleBudgetChange, handleDurationChange, budget, dur
                 </section>
             </section>
 
-            <section className="py-6">
+            <section className="py-3">
                 <section className="w-full rounded-xl bg-[#F1FAFF] border border-[#E5F6FF] p-4 flex items-center flex-col gap-6 justify-center">
                     <div className="w-full md:w-3/4 flex items-center justify-between">
                         <p className="text-xl text-tprimary-50 font-bold">{currency}{formattedBudget ?? 0}</p>
