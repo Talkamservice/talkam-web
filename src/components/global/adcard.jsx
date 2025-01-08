@@ -195,7 +195,7 @@ export const AdCard = ({
                                     <Icon.AlertCircle />
                                 </Tooltip>
                             </header>
-                            <p className='text-base'>{Number(stats?.engagement_rates).toFixed(0) ?? '0%'}</p>
+                            <p className='text-base'>{Number(stats?.engagement_rates).toFixed(0) ?? '0%'}%</p>
                         </div>
                         <div className='flex items-start flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
@@ -223,6 +223,13 @@ export const AdCard = ({
                                 </Tooltip>
                             </header>
                             <p className='text-base'>{stats?.profile_visits ?? 0}</p>
+                        </div>
+                        <div className='flex items-center flex-col gap-1'>
+                            <header className='flex items-center gap-1 text-[#858585]'>
+                                <p>Engagement rates</p>
+                                <Icon.AlertCircle />
+                            </header>
+                            <p className='text-base'>{Number(stats?.engagemens).toFixed(0) ?? 0}%</p>
                         </div>
                         {group && (
                             <div className='flex items-start flex-col gap-1'>
