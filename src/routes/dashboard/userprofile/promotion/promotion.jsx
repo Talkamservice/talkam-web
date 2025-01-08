@@ -218,16 +218,16 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
     }
 
     return (
-        <div className="w-full flex flex-col gap-4">
-            <header className="flex items-center justify-between border-b border-tgray-50 gap-3 p-6">
+        <div className="w-full flex flex-col gap-2">
+            <header className="flex items-center justify-between border-b border-tgray-50 gap-3 p-5">
                 <p className="text-xl font-bold">Promote your {groupId ? 'group' : 'post'}</p>
                 <X className="cursor-pointer" onClick={onClose} size={20} strokeWidth={2} />
             </header>
-            <section className="w-full flex flex-col px-6 gap-3">
+            <section className="w-full flex flex-col px-6 gap-2">
                 <p className="font-medium text-[#858585] text-base">Reach more people and make your {groupId ? 'group' : 'post'} more visible to a large audience of people.</p>
                 <span className="w-full flex justify-end text-sm font-medium text-tprimary-50">{stepMap[currentSlide]}/<span className="text-tprimary-50 text-opacity-45">03</span></span>
             </section>
-            <section className="px-6 transition-all duration-700 ease-in-out">
+            <section className="px-8 transition-all duration-700 ease-in-out">
                 {slideMap[currentSlide]}
             </section>
             <footer className="w-full flex items-end justify-end p-6">
