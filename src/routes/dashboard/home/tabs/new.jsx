@@ -12,6 +12,8 @@ import EmptyListIcon from "../../../../assets/images/emptylist.png"
 
 export const New = () => {
 
+    //Most implementations for post and the paginated queries are redundant across the application, this would be refactored into single utitlity functions or hooks to be reusable soon...
+
     const isRestoringScroll = useRef(false);
     const scrollableRef = useRef(null);
     const navigate = useNavigate();

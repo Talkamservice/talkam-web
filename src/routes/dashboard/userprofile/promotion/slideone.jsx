@@ -36,7 +36,7 @@ export const SlideOne = ({ minAge, maxAge, gender, country, selectedItems, setSe
                     searchValue={countrySearch}
                     isLoading={loadingCountries}
                     limit={3}
-                // allowAdd={false}
+                    allowAdd={false}
                 />
             </section>
 

@@ -180,7 +180,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
                 handleDurationChange={handleDurationRange}
                 budget={budget}
                 duration={duration}
-                currency={userCurrency}
+                currency={userCurrency ?? currentUser?.pricing_currency}
                 impressionData={impressionData?.data}
                 priceToPay={priceToPay}
                 setPriceToPay={setPriceToPay}
@@ -195,7 +195,7 @@ export const PromotionModal = ({ onClose, postId, groupId, payload }) => {
                 minAge={ageRange.minAge}
                 maxAge={ageRange.maxAge}
                 gender={gender}
-                currency={userCurrency}
+                currency={userCurrency ?? currentUser?.pricing_currency}
                 priceToPay={paidPrice}
                 estimatedReach={formattedEstimatedReach}
             />
