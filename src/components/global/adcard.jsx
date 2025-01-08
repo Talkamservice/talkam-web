@@ -226,10 +226,10 @@ export const AdCard = ({
                         </div>
                         <div className='flex items-center flex-col gap-1'>
                             <header className='flex items-center gap-1 text-[#858585]'>
-                                <p>Engagement rates</p>
+                                <p>Engagements</p>
                                 <Icon.AlertCircle />
                             </header>
-                            <p className='text-base'>{Number(stats?.engagemens).toFixed(0) ?? 0}</p>
+                            <p className='text-base'>{stats?.engagements ?? 0}</p>
                         </div>
                         {group && (
                             <div className='flex items-start flex-col gap-1'>
