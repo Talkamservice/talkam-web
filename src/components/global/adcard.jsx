@@ -259,7 +259,7 @@ export const AdCard = ({
                                                 <Icon.AlertCircle />
                                             </Tooltip>
                                         </header>
-                                        <p className='text-base'>{stats?.min_time_spent ?? '0 secs'}</p>
+                                        <p className='text-base'>{stats?.min_time_spent ?? '0'} secs</p>
                                     </div>
                                     <div className='flex items-start flex-col gap-1'>
                                         <header className='flex items-center gap-1 text-[#858585]'>
@@ -271,7 +271,7 @@ export const AdCard = ({
                                                 <Icon.AlertCircle />
                                             </Tooltip>
                                         </header>
-                                        <p className='text-base'>{stats?.max_time_spent ?? "0 secs"}</p>
+                                        <p className='text-base'>{stats?.max_time_spent ?? "0"}secs</p>
                                     </div>
                                 </section>
 
