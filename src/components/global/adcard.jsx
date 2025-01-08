@@ -271,7 +271,7 @@ export const AdCard = ({
                                                 <Icon.AlertCircle />
                                             </Tooltip>
                                         </header>
-                                        <p className='text-base'>{stats?.max_time_spent ?? "0"}secs</p>
+                                        <p className='text-base'>{stats?.max_time_spent ?? "0"} secs</p>
                                     </div>
                                 </section>
 
