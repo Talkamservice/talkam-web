@@ -30,23 +30,6 @@ const talkAMPlusFeatures = [
     "Unlimited anonymous post and comment.",
 ]
 
-const tabs = [
-    {
-        id: 0,
-        // title: "Monthly",
-        text: "Annually",
-        node: <p className="flex items-center gap-2">
-            <span className="text-sm !font-extralight">Annually</span>
-            <span className="border border-[#D1F2F7] text-[8px] px-2 py-1 rounded-full bg-gradient-to-r from-[#D1F2F7] via-[#FDFFFF] to-[#D1F2F7] !text-tblack-100">Save 20%</span>
-        </p>
-    },
-    {
-        id: 1,
-        title: "Monthly",
-        text: "Monthly",
-    }
-]
-
 export const Pricing = () => {
 
     const currentUser = useSelector(selectCurrentUser);
@@ -61,6 +44,28 @@ export const Pricing = () => {
     const handleCurrentTab = (tab) => {
         setPeriod(tab)
     };
+
+    const tabs = [
+        {
+            id: 0,
+            // title: "Monthly",
+            text: "Annually",
+            node: <p className="flex items-center gap-2">
+                <span className="text-sm !font-extralight">Annually</span>
+                {
+                    plans?.data?.[0]?.discount ?
+                        <span className="border border-[#D1F2F7] text-[8px] px-2 py-1 rounded-full bg-gradient-to-r from-[#D1F2F7] via-[#FDFFFF] to-[#D1F2F7] !text-tblack-100">Save {plans?.data?.[0]?.discount}%</span>
+                        :
+                        null
+                }
+            </p>
+        },
+        {
+            id: 1,
+            title: "Monthly",
+            text: "Monthly",
+        }
+    ]
 
     return (
         <div className="absolute top-0 left-0 bg-white z-[35] lg:z-[39] w-full h-full flex flex-col md:flex-row divide-x divide-tgray-50 overflow-auto no-scrollbar p-4 md:px-12">
