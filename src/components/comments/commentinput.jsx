@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux"
 import { TrashIcon, UploadGifIcon, UploadImageIcon } from "../../assets/icons/generated"
-import { downVariants } from "../../helpers/cardanimation"
+import { downVariants, PostCardVariants } from "../../helpers/cardanimation"
 import { Button } from "../forms/button"
 import { Input } from "../forms/input"
 import { AnonToggleButton } from "../global/anonymoustoggle"
@@ -13,7 +13,10 @@ import { ColoredLoader } from "../global/loader"
 import { useRef, useState } from "react"
 import { useGetTagSuggestionsQuery } from "../../services/posts/postsApiSlice"
 import { useGetUserProfileDetailsQuery } from "../../services/userApiSlice"
+import { useClickOutside } from "../../hooks/useClickOutside"
+import { useMediaQuery } from "../../hooks/useMediaQuery"
 import * as Icon from 'react-feather'
+import EmojiPicker from "emoji-picker-react"
 
 export const CommentInput = ({
     anonChecked,
@@ -34,15 +37,22 @@ export const CommentInput = ({
     error,
 }) => {
 
+    let isMonitor = useMediaQuery("(min-width: 768px)");
     const navigate = useNavigate();
     const currentUser = useSelector(selectCurrentUser);
     const isAuth = useIsAuth();
-    const textareaRef = useRef()
+    const textareaRef = useRef();
+    const reactionRef = useRef();
 
     const [plusPrompt, setPlusPrompt] = useState(false);
     const [mentionInput, setMentionInput] = useState("");
     const [suggestedUsers, setSuggestedUsers] = useState([]);
     const [isMentioning, setIsMentioning] = useState(false);
+    const [showReactions, setShowReactions] = useState(false);
+
+    useClickOutside(reactionRef, () => {
+        setShowReactions(false);
+    });
 
     const { data: suggestions, isLoading: searchLoading } = useGetTagSuggestionsQuery(mentionInput);
     const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
@@ -70,14 +80,15 @@ export const CommentInput = ({
             const mention = value.slice(lastAtIndex + 1);
             setMentionInput(mention);
 
-            // Update suggested users based on the current mention input
-            setSuggestedUsers(data); // Use fetched suggestions
+            // Show suggested users based on the current mention input
+            setSuggestedUsers(data);
 
             // Check if there are suggestions and update mentioning state
             if (suggestions && suggestions.data?.length > 0) {
                 setIsMentioning(true);
             } else {
-                setIsMentioning(false); // Close the suggestion box if no matches
+                // Close the suggestion box if there are no matches
+                setIsMentioning(false);
             }
         } else {
             setMentionInput("");
@@ -93,7 +104,7 @@ export const CommentInput = ({
         setMentionInput("");
         setSuggestedUsers([]);
         setIsMentioning(false);
-        textareaRef.current.focus(); // Ensure the input regains focus
+        textareaRef.current.focus();
     };
 
     // Function to render the comment with mentions as styled spans
@@ -121,7 +132,6 @@ export const CommentInput = ({
             submitComment();
         }
     }
-
 
     return (
         <>
@@ -189,7 +199,8 @@ export const CommentInput = ({
                                 <span className="text-xs text-gray-500">Loading results...</span>
                             </div>
                         ) : null}
-                        {/* Image here */}
+
+                        {/***************************************************** Image here ***********************************************/}
                         {
                             imagePreview ?
                                 <section className="relative rounded-lg min-h-[170px] h-[250px]">
@@ -248,7 +259,41 @@ export const CommentInput = ({
                                 />
                                 <Icon.Image color="#2121219C" />
                             </label>
-                            <UploadGifIcon />
+                            <div
+                                ref={reactionRef}
+                                className="z-10 relative cursor-pointer" onClick={() => setShowReactions(prev => !prev)}>
+                                {/* <UploadGifIcon /> */}
+                                <Icon.Smile color="#2121219C" />
+                                {
+                                    showReactions ?
+                                        <motion.section
+                                            key="chatbox"
+                                            variants={PostCardVariants}
+                                            initial="initial"
+                                            animate="animate"
+                                            exit="exit"
+                                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                            className="absolute -left-32 -top-14"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <EmojiPicker
+                                                onEmojiClick={(emojiObject) => {
+                                                    // here i append the selected emoji to the current comment body and return focus to the text field
+                                                    setCommentBody((prev) => ({
+                                                        ...prev,
+                                                        comment: prev.comment + emojiObject.emoji,
+                                                    }));
+                                                    textareaRef.current.focus();
+                                                }}
+                                                width={!isMonitor ? "300px" : "400px"}
+                                                reactionsDefaultOpen={true}
+                                                allowExpandReactions={true}
+                                            />
+                                        </motion.section>
+                                        :
+                                        null
+                                }
+                            </div>
 
                             <div className="flex items-center gap-2">
                                 <AnonToggleButton checked={anonChecked} onChange={(event) => handleAnonToggle(event)} />

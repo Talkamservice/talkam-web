@@ -4,6 +4,7 @@ import { Tabs } from "../../../components/global/tabs";
 import { SearchPosts } from "./searchposts";
 import { SearchGroup } from "./searchgroups";
 import { SearchMedia } from "./searchmedia";
+import { SearchUsers } from "./searchusers";
 
 export const Search = () => {
 
@@ -29,6 +30,11 @@ export const Search = () => {
             title: "Media",
             // text: `media?search=${searchTerm ?? ""}`,
             component: <SearchMedia />
+        },
+        {
+            id: 3,
+            title: "Users",
+            component: <SearchUsers />
         },
     ];
 

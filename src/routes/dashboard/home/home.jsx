@@ -53,7 +53,7 @@ export const Home = () => {
     return (
         <div className="w-full flex divide-x divide-tgray-light h-full">
             <section className="relative w-full lg:w-4/6 overflow-y-auto no-scrollbar">
-                <Carousel autoSlide={announcements && announcements?.data?.length > 1} autoSlideInterval={5000} >
+                <Carousel autoSlide={announcements && announcements?.data?.length > 1} autoSlideInterval={10000}>
                     {
                         announcements?.data?.map((info, index) => (
                             <AnnouncementCard
