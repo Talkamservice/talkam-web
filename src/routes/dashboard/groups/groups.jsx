@@ -44,7 +44,7 @@ export const Groups = () => {
                                 groupController.suggestedGroupsLoading ?
                                     <OverflowLoader />
                                     :
-                                    !groupController.following?.data?.data.length ?
+                                    groupController.following?.data?.data && !groupController.following?.data?.data.length ?
                                         <section className="w-full py-4">
                                             <EmptyState
                                                 icon={EmptyListIcon}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { ChevronLeft, ChevronRight } from "react-feather"
 
-export const Carousel = ({ children: slides, autoSlide = false, autoSlideInterval = 5000 }) => {
+export const Carousel = ({ children: slides, autoSlide, autoSlideInterval }) => {
 
     const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -15,10 +15,9 @@ export const Carousel = ({ children: slides, autoSlide = false, autoSlideInterva
 
     useEffect(() => {
         if (!autoSlide) return;
-
         const slideInterval = setInterval(goToNext, autoSlideInterval);
         return () => clearInterval(slideInterval)
-    }, []);
+    }, [autoSlide, autoSlideInterval]);
 
     return (
         <div className="">
