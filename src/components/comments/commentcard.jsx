@@ -50,6 +50,7 @@ export const CommentCard = ({
     setInternalImagePreview,
     notification,
     isReported,
+    user,
 }) => {
 
     let isValidComment = false;
@@ -415,6 +416,7 @@ export const CommentCard = ({
                             isValidComment={isValidComment}
                             isLoading={isLoading}
                             imageLoading={imageLoading}
+                            user={user}
                             cancel
                         />
                     </motion.section>
@@ -449,6 +451,7 @@ export const CommentCard = ({
                                         setInternalImagePreview={setInternalImagePreview}
                                         notification={comment?.enabled_notification}
                                         isReported={comment?.is_reported}
+                                        user={user}
                                     />
                                 ))
                             }

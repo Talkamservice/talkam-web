@@ -70,7 +70,7 @@ export const postsApiSlice = apiSlice.injectEndpoints({
                 method: 'POST',
                 body: { ...body }
             }),
-            invalidatesTags: ["comments", "postDetail"],
+            invalidatesTags: ["comments", "postDetail", "profile"],
         }),
         createPost: builder.mutation({
             query: body => ({

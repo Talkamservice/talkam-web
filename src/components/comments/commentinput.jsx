@@ -12,7 +12,6 @@ import { Link, useNavigate } from "react-router-dom"
 import { ColoredLoader } from "../global/loader"
 import { useRef, useState } from "react"
 import { useGetTagSuggestionsQuery } from "../../services/posts/postsApiSlice"
-import { useGetUserProfileDetailsQuery } from "../../services/userApiSlice"
 import { useClickOutside } from "../../hooks/useClickOutside"
 import { useMediaQuery } from "../../hooks/useMediaQuery"
 import * as Icon from 'react-feather'
@@ -35,6 +34,7 @@ export const CommentInput = ({
     isLoading,
     imageLoading,
     error,
+    user,
 }) => {
 
     let isMonitor = useMediaQuery("(min-width: 768px)");
@@ -55,11 +55,6 @@ export const CommentInput = ({
     });
 
     const { data: suggestions, isLoading: searchLoading } = useGetTagSuggestionsQuery(mentionInput);
-    const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
-        refetchOnMountOrArgChange: true,
-        refetchOnFocus: true,
-        refetchOnReconnect: true
-    });
 
     const handleAnonToggle = (event) => {
         if (!user) return;

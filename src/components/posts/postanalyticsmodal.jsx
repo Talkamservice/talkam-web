@@ -78,13 +78,18 @@ export const PostAnalyticsModal = ({ onClose, postId, groupId }) => {
                             </header>
                             <p className='text-base'>{Number(analytics?.data?.engagement_rates).toFixed(0) ?? 0}%</p>
                         </div>
-                        {/* <div className='flex items-center flex-col gap-1'>
-                            <header className='flex items-center gap-1 text-[#858585]'>
-                                <p>New Followers</p>
-                                <Icon.AlertCircle />
-                            </header>
-                            <p className='text-base'>{analytics?.data?.followers ?? 0}</p>
-                        </div> */}
+                        {
+                            groupId ?
+                                <div className='flex items-center flex-col gap-1'>
+                                    <header className='flex items-center gap-1 text-[#858585]'>
+                                        <p>New Followers</p>
+                                        <Icon.AlertCircle />
+                                    </header>
+                                    <p className='text-base'>{analytics?.data?.followers ?? 0}</p>
+                                </div>
+                                :
+                                null
+                        }
                     </section>
 
                     <section className='py-5 flex items-center justify-between flex-wrap border-b border-tgray-xlight'>

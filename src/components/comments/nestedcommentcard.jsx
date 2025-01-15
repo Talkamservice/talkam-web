@@ -36,7 +36,8 @@ export const NestedCommentCard = ({
     internalImagePreview,
     setInternalImagePreview,
     isReported,
-    notification
+    notification,
+    user,
 }) => {
 
     let isValidComment = false
@@ -374,6 +375,7 @@ export const NestedCommentCard = ({
                             isValidComment={isValidComment}
                             isLoading={isLoading}
                             imageLoading={imageLoading}
+                            user={user}
                             cancel
                         />
                     </motion.section>

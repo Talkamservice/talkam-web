@@ -39,14 +39,15 @@ export const pricingApiSlice = apiSlice.injectEndpoints({
             query: ad => ({
                 url: `user/promotions/${ad}/show`,
                 method: "get"
-            })
+            }),
+            providesTags: ["addetails"]
         }),
         deletePromotion: builder.mutation({
             query: ad => ({
                 url: `user/promotions/${ad}/delete`,
                 method: "DELETE"
             }),
-            invalidatesTags: ["ads"]
+            invalidatesTags: ["ads", "addetails"]
         }),
         updatePromotion: builder.mutation({
             query: ({ ad, body }) => ({
@@ -54,7 +55,7 @@ export const pricingApiSlice = apiSlice.injectEndpoints({
                 method: "post",
                 body: { ...body }
             }),
-            invalidatesTags: ["ads"]
+            invalidatesTags: ["ads", "addetails"]
         }),
         paymentCallBack: builder.mutation({
             query: ref => ({
@@ -68,7 +69,7 @@ export const pricingApiSlice = apiSlice.injectEndpoints({
                 url: `user/promotions/${ad}/reinitiate`,
                 method: "post"
             }),
-            invalidatesTags: ["ads"]
+            invalidatesTags: ["ads", "addetails"]
         }),
         updateStats: builder.mutation({
             query: ad => ({

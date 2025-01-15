@@ -34,13 +34,26 @@ export const AdCard = ({
     const [deletePromotion, { isLoading: deleteloading }] = useDeletePromotionMutation();
     const [restartPromotion, { isLoading: restartLoading }] = useRestartPromotionMutation();
 
+    const handleCloseAdModal = () => {
+        setCloseAdModal(prev => !prev)
+    }
+
+    const handleDeleteAdModal = () => {
+        setDeleteAdModal(prev => !prev)
+    }
+
+    const handlePromotionModal = () => {
+        setPromotionModal(prev => !prev)
+    }
+
     const handleCloseAdHandler = async () => {
         const updateDetails = {
             status: "Inactive"
         }
         try {
             const res = await updatePromotion({ ad: id, body: { ...updateDetails } }).unwrap();
-            toast.success(res?.message)
+            toast.success(res?.message);
+            handleCloseAdModal();
         } catch (error) {
             const errorMessage = handleError(error);
             toast.error(errorMessage);
@@ -50,7 +63,12 @@ export const AdCard = ({
     const handleDeleteAdHandler = async () => {
         try {
             const res = await deletePromotion(id).unwrap();
-            toast.success(res?.message)
+            toast.success(res?.message);
+            handleDeleteAdModal();
+
+            if (page === "details") {
+                navigate(-1, { replace: true })
+            }
         } catch (error) {
             const errorMessage = handleError(error);
             toast.error(errorMessage);
@@ -101,24 +119,10 @@ export const AdCard = ({
         }
     }
 
-    const handleCloseAdModal = () => {
-        setCloseAdModal(prev => !prev)
-    }
-
-    const handleDeleteAdModal = () => {
-        setDeleteAdModal(prev => !prev)
-    }
-
-    const handlePromotionModal = () => {
-        setPromotionModal(prev => !prev)
-    }
-
     const statusMap = {
         "Active": "Running Ad",
         "Pending": "Pending Ad"
     }
-
-    console.log(group)
 
     return (
         <div className="w-full flex flex-col p-3 border border-tgray-xlight rounded-xl divide-y divide-tgray-xlight">
