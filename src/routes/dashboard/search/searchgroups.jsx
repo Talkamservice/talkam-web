@@ -5,8 +5,8 @@ import { useSearchQuery } from "../../../services/seachApiSlice";
 import { useLocation, useNavigate } from "react-router-dom";
 import { GroupSkeletonLoader } from "../../../components/global/skeletons";
 import { EmptyState } from "../../../components/global/emptystate";
-import SearchIcon from '../../../assets/images/searchicon.jpg'
 import { IsBanned } from "../../../utils/isBanned";
+import SearchIcon from '../../../assets/images/searchicon.jpg'
 
 export const SearchGroup = () => {
 
@@ -45,15 +45,15 @@ export const SearchGroup = () => {
                             </section>
                             :
                             searchResult?.data.data.map((group) => (
-                                <IsBanned isBanned={group?.is_suspended} onClick={() => navigate(`/group/${group.id}`)} >
+                                <IsBanned isBanned={group?.is_suspended} onClick={() => navigate(`/group/${group.uuid}`)} >
                                     <JoinGroupCard
                                         key={group.id}
                                         avatar={group.image}
                                         membersCount={group.total_members}
                                         groupName={group.name}
-                                        groupId={group.id}
                                         access={group.group_access}
                                         isSuspended={group.is_suspended}
+                                        ad={group.promotion}
                                     />
                                 </IsBanned>
                             ))

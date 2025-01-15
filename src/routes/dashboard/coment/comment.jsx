@@ -13,16 +13,27 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { storageDB } from "../../../utils/firestore"
 import { Helmet } from "react-helmet"
 import { useUpdateStatsMutation } from "../../../services/paymentApiSlice"
+import { useGetUserProfileDetailsQuery } from "../../../services/userApiSlice"
+import { useSelector } from "react-redux"
+import { selectCurrentUser } from "../../../services/authSlice"
 
 export const Comment = () => {
 
     let isValidComment = false
     const { commentId } = useParams();
-    const visitStartRef = useRef(null);// ref for timer on user visit to components
+    const currentUser = useSelector(selectCurrentUser);
+    // ref for timer on user visit to components
+    const visitStartRef = useRef(null);
     // SERVER HOOKS HERE
     const { data: postDetails, isLoading, isError, error } = useGetSinglePostQuery(commentId)
     const { data: comments, isLoading: commentsLoading } = useGetPostCommentsQuery(commentId);
-    const [makeComment, { isLoading: newCommentLoading }] = useMakeCommentMutation()
+    const [makeComment, { isLoading: newCommentLoading }] = useMakeCommentMutation();
+    const [updateStats] = useUpdateStatsMutation();
+    const { data: user } = useGetUserProfileDetailsQuery(currentUser?.id, {
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true,
+        refetchOnReconnect: true
+    });
 
     // LOCAL STATE HERE
     const [imageLoading, setImageLoading] = useState(false);
@@ -46,8 +57,6 @@ export const Comment = () => {
         image: null,
         comment: "",
     });
-
-    const [updateStats] = useUpdateStatsMutation();
 
     // FUNCTIONS
     const handleAddNewComment = (event) => {
@@ -249,6 +258,7 @@ export const Comment = () => {
                         isValidComment={isValidComment}
                         isLoading={newCommentLoading}
                         imageLoading={imageLoading}
+                        user={user}
                     />
                     <Link to={"/help&info/rules"} className="text-xs text-[#676767] border-b border-tgray-50 py-1 pt-3">
                         Please be respectful and follow the <span className="text-tprimary-50 font-bold">Community Guidelines</span>
@@ -289,6 +299,7 @@ export const Comment = () => {
                                         setInternalImagePreview={setInternalImagePreview}
                                         notification={parentcomment?.enabled_notification}
                                         isReported={parentcomment?.is_reported}
+                                        user={user}
                                     />
                                 ))
                     }

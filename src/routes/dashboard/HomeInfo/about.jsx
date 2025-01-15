@@ -59,10 +59,10 @@ export const About = () => {
           Get the App
         </h2>
         <div className=" *:w-[160px] gap-4 *:sm:w-[180px] flex justify-center items-center sm:gap-5">
-          <a href="http://" target="_blank" rel="noopener noreferrer">
+          <a href="https://apps.apple.com/us/app/talkam-tech/id6740508182" target="_blank" rel="noopener noreferrer">
             <img src={apple} alt="appstore" />
           </a>
-          <a href="http://" target="_blank" rel="noopener noreferrer">
+          <a href="https://play.google.com/store/apps/details?id=com.talkamtech.app" target="_blank" rel="noopener noreferrer">
             <img src={google} alt="playstore" />
           </a>
         </div>
