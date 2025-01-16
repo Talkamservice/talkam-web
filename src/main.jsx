@@ -387,35 +387,53 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect("new"),
+            loader: () => redirect("posts"),
           },
           {
-            path: "featured",
+            path: "posts",
             lazy: async () => {
-              let { GroupFeatured } = await import(
-                "./routes/dashboard/group/groupfeatured"
+              let { GroupPosts } = await import(
+                "./routes/dashboard/group/groupposts"
               );
-              return { Component: GroupFeatured };
+              return { Component: GroupPosts };
             },
           },
           {
-            path: "trending",
+            path: "media",
             lazy: async () => {
-              let { GroupTrending } = await import(
-                "./routes/dashboard/group/grouptrending"
+              let { GroupMedia } = await import(
+                "./routes/dashboard/group/groupmedia"
               );
-              return { Component: GroupTrending };
+              return { Component: GroupMedia };
             },
           },
-          {
-            path: "new",
-            lazy: async () => {
-              let { GroupLatest } = await import(
-                "./routes/dashboard/group/grouplatest"
-              );
-              return { Component: GroupLatest };
-            },
-          },
+          // {
+          //   path: "featured",
+          //   lazy: async () => {
+          //     let { GroupFeatured } = await import(
+          //       "./routes/dashboard/group/groupfeatured"
+          //     );
+          //     return { Component: GroupFeatured };
+          //   },
+          // },
+          // {
+          //   path: "trending",
+          //   lazy: async () => {
+          //     let { GroupTrending } = await import(
+          //       "./routes/dashboard/group/grouptrending"
+          //     );
+          //     return { Component: GroupTrending };
+          //   },
+          // },
+          // {
+          //   path: "new",
+          //   lazy: async () => {
+          //     let { GroupLatest } = await import(
+          //       "./routes/dashboard/group/grouplatest"
+          //     );
+          //     return { Component: GroupLatest };
+          //   },
+          // },
         ],
       },
       {
