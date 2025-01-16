@@ -31,22 +31,22 @@ import Protected from "../../../utils/protected";
 const tabs = [
     {
         id: 0,
-        title: "Just In",
-        text: "new",
-        icon: <NewBadgeIcon />
+        title: "Posts",
+        text: "posts",
+        // icon: <NewBadgeIcon />
     },
     {
         id: 1,
-        title: "Featured",
-        text: "featured",
-        icon: <FeaturedFireIcon />
+        title: "Media",
+        text: "media",
+        // icon: <FeaturedFireIcon />
     },
-    {
-        id: 2,
-        title: "Trending",
-        text: "trending",
-        icon: <TrendingIcon />
-    },
+    // {
+    //     id: 2,
+    //     title: "Trending",
+    //     text: "trending",
+    //     icon: <TrendingIcon />
+    // },
 ];
 
 export const Group = () => {
