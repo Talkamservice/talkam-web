@@ -64,6 +64,7 @@ export const CreatePost = () => {
         days: null,
         hours: null
     });
+
     const [poll, setPoll] = useState([
         {
             index: 1,
@@ -187,6 +188,7 @@ export const CreatePost = () => {
         if (itemIndex < 0) toast.error("item index not found.")
         deleteInput.splice(itemIndex, 1)
         setPoll(deleteInput)
+        Storage.setItem('post_polls', deleteInput)
     }
 
     const getInputValue = (event, index) => {
@@ -229,10 +231,10 @@ export const CreatePost = () => {
         }
     }
 
-    const transformedPollOptions = poll && poll.map((item) => [
+    const transformedPollOptions = poll && poll?.map((item) => [
         item.option
     ]).flat(2);
-    const PostType = poll.some(item => item.option !== "") ? "Poll" : post?.image ? "Image" : post?.video ? "Video" : "Text";
+    const PostType = poll?.some(item => item.option !== "") ? "Poll" : post?.image ? "Image" : post?.video ? "Video" : "Text";
 
     const handleCreatePost = async () => {
         const transformedPollOptions = poll && poll.map((item) => [
@@ -278,6 +280,7 @@ export const CreatePost = () => {
         const post_tags = Storage.getItem('post_tags');
         const post_category = Storage.getItem('post_category');
         const post_group = Storage.getItem('post_group');
+        const post_polls = Storage.getItem('post_polls')
 
         setPost((prev) => {
             return {
@@ -291,6 +294,16 @@ export const CreatePost = () => {
                 group: post_group
             }
         })
+        setPoll(post_polls ?? [
+            {
+                index: 1,
+                option: '',
+            },
+            {
+                index: 2,
+                option: '',
+            },
+        ])
         // setImagePreview(post_image)
         setSelectedItems(post_tags ?? [])
     }, []);
