@@ -5,6 +5,8 @@ import { useGetRunningAdsQuery } from "../../../services/paymentApiSlice";
 import { handleError } from "../../../utils/handleError";
 import { toast } from "sonner";
 import { AdSkeletonLoader } from "../../../components/global/skeletons";
+import { EmptyState } from "../../../components/global/emptystate";
+import EmptyListIcon from "../../../assets/images/emptylist.png"
 
 export const RunningAds = () => {
 
@@ -30,19 +32,23 @@ export const RunningAds = () => {
                     :
                     !runningAds?.data?.data?.length ?
                         <section className="flex items-center justify-center flex-col gap-3 h-full p-7 md:py-24">
-                            <div>
-                                <p className="text-2xl text-center">You currently don&apos;t have any post promoted</p>
-                                <p className="text-base text-[#858585] text-center">You haven&apos;t promoted any post yet. Click on the button below to begin</p>
-                            </div>
-
-                            <Button
-                                className="!rounded-full"
-                                onClick={() => navigate("/create-post", { state: "new-promo" })}
-                            >
-                                Start Promoting
-                            </Button>
-                        </section> :
-
+                            <EmptyState
+                                icon={EmptyListIcon}
+                                height="h-[30px]"
+                                width="h-[30px]"
+                                text="You currently don&apos;t have any post promoted"
+                                subtext="You haven&apos;t promoted any post yet. Click on the button below to begin"
+                                node={
+                                    <Button
+                                        className="!rounded-full"
+                                        onClick={() => navigate("/create-post", { state: "new-promo" })}
+                                    >
+                                        Start Promoting
+                                    </Button>
+                                }
+                            />
+                        </section>
+                        :
                         <section className="flex flex-col gap-3">
                             {
                                 runningAds?.data?.data?.map((ad) => (

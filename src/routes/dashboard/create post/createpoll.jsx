@@ -10,26 +10,26 @@ import { Storage } from "../../../app/storage";
 import { TextArea } from "../../../components/forms/textarea";
 
 export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, removePollHandler, pollDuration, setPollDuration }) => {
-    
-    const pollHoursDuration = useMemo(() => Array(24).fill(null).map((_,i) => i + 1).map(h => {
+
+    const pollHoursDuration = useMemo(() => Array(24).fill(null).map((_, i) => i + 1).map(h => {
         return {
             id: randomId(),
             name: h,
-            value: `${h < 1 ? '' : h === 1 ? h + ' hour' : h + ' hours' }`
+            value: `${h < 1 ? '' : h === 1 ? h + ' hour' : h + ' hours'}`
         }
     }).flat(), []);
-    
-    const pollDaysDuration = useMemo(() => Array(7).fill(null).map((_,i) => i + 1).map(d => {
+
+    const pollDaysDuration = useMemo(() => Array(7).fill(null).map((_, i) => i + 1).map(d => {
         return {
             id: randomId(),
             name: d,
-            value: `${d < 1 ? '' : d === 1 ? d + ' day' : d + ' days' }`
+            value: `${d < 1 ? '' : d === 1 ? d + ' day' : d + ' days'}`
         }
     }).flat(), []);
 
     const setFormattedTitle = useCallback(
         text => {
-        setPost({...post, title: text?.slice(0, 80)});
+            setPost({ ...post, title: text?.slice(0, 80) });
         },
         [post, setPost]
     );
@@ -40,8 +40,8 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
     const handlePollDurationDays = (option) => {
         setPollDuration({ ...pollDuration, days: option.name })
     }
-     
-    return(
+
+    return (
         <motion.form
             key="chatbox"
             variants={PostCardVariants}
@@ -54,14 +54,14 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
             <TextArea
                 type="text"
                 rounded="rounded-[4px]"
-                placeholder = 'A sharp title for your post works best.'
-                label = 'Post title'
+                placeholder='A sharp title for your post works best.'
+                label='Post title'
                 value={post?.title}
                 rows={1}
                 limitPosition="top"
                 limit={80}
                 onChange={(event) => {
-                    setFormattedTitle(event.target.value) 
+                    setFormattedTitle(event.target.value)
                     Storage.setItem("post_title", event.target.value)
                 }}
                 required
@@ -75,16 +75,16 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
                 <Input
                     type="text"
                     rounded="rounded-[4px]"
-                    placeholder = 'Choice 1'
+                    placeholder='Choice 1'
                     onChange={(event) => getInputValue(event, 1, '')}
-                    value={poll[0].option}
+                    value={poll?.[0]?.option}
                 />
                 <Input
                     type="text"
                     rounded="rounded-[4px]"
-                    placeholder = 'Choice 2'
+                    placeholder='Choice 2'
                     onChange={(event) => getInputValue(event, 2, '')}
-                    value={poll[1].option}
+                    value={poll?.[1]?.option}
                 />
                 {
                     poll?.slice(2)?.map((item, index) => (
@@ -92,7 +92,7 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
                             key={item.index}
                             getInputValue={getInputValue}
                             index={item.index}
-                            choiceIndex={ index + 3 }
+                            choiceIndex={index + 3}
                             removePollItem={removePollHandler}
                             value={item.option}
                         />
@@ -121,7 +121,7 @@ export const CreatePoll = ({ poll, onAddPoll, getInputValue, post, setPost, remo
                 <Button
                     type="button"
                     children="Add choice"
-                    className={`!rounded-full !py-2 !px-4 text-sm font-bold text-tprimary-50 ${ poll.length >= 4 ? 'hidden' : 'block' } `}
+                    className={`!rounded-full !py-2 !px-4 text-sm font-bold text-tprimary-50 ${poll?.length >= 4 ? 'hidden' : 'block'} `}
                     variant="outline"
                     onClick={onAddPoll}
                 />
