@@ -103,7 +103,7 @@ export const Pricing = () => {
                                     null
                             }
 
-                            <section className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <section className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4">
                                 {
                                     plans?.data?.map((plan) => {
                                         return (
@@ -130,12 +130,6 @@ export const Pricing = () => {
                                         )
                                     })
                                 }
-                                {/* <PricingCard
-                            period={period}
-                            plan="TalkAM Plus"
-                            features={talkAMPlusFeatures}
-                            price={period === "Annually" ? 60 : 5}
-                        /> */}
                             </section>
                         </section>
                 }
