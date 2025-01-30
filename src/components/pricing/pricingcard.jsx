@@ -10,7 +10,7 @@ import { useGetCurrencySymbol } from "../../hooks/useGetCurrencySymbol";
 import { useNumberFormatter } from "../../hooks/useNumberFormatter";
 import Logo from '../../assets/images/avatar.png'
 
-export const PricingCard = ({ plan, currentPlan, period, features, price = "0", planId, currentPlanPrice, currency }) => {
+export const PricingCard = ({ className, plan, currentPlan, period, features, price = "0", planId, currentPlanPrice, currency }) => {
 
     const navigate = useNavigate();
     const [subResponse, setSubResponse] = useState(null)
@@ -65,7 +65,7 @@ export const PricingCard = ({ plan, currentPlan, period, features, price = "0", 
     };
 
     return (
-        <div className="w-full border border-[#E5E5E5] rounded-xl divide-y divide-tgray-200 bg-white">
+        <div className={`w-full border border-[#E5E5E5] rounded-xl divide-y divide-tgray-200 bg-white ${className}`}>
             <header className="flex flex-col gap-2 p-7">
                 <div className="flex items-center justify-between">
                     <p className="text-xs text-[#858585]">{plan}</p>
