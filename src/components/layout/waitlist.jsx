@@ -12,6 +12,7 @@ import { Input } from "../forms/input";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useJoinWaitlistMutation } from "../../services/waitlistSlice";
+import { Helmet } from "react-helmet";
 
 export const WaitlistPage = () => {
   const [name, setName] = useState("");
