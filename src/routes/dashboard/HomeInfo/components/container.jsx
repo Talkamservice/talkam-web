@@ -45,6 +45,7 @@ function Container({ children }) {
           <Link to="/help&info/terms">Terms of Use</Link>
           <Link to="/help&info/feedback">Feedback</Link>
           <Link to="/help&info/privacy-policy">Privacy Policy</Link>
+          <Link to="/help&info/child-safety-policy">Child Safety Policy</Link>
         </div>
         <div className="flex flex-col justify-start sm:justify-between xl:justify-start w-fit items-start gap-y-5 gap-7 sm:flex-row  sm:w-full xl:w-fit ">
           <a
