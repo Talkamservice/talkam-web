@@ -509,6 +509,15 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "child-safety-policy",
+        lazy: async () => {
+          let { ChildSafetyPolicy } = await import(
+            "./routes/dashboard/HomeInfo/childSafetyPolicy"
+          );
+          return { Component: ChildSafetyPolicy };
+        },
+      },
+      {
         path: "rules",
         lazy: async () => {
           let { Rules } = await import("./routes/dashboard/HomeInfo/rules");
