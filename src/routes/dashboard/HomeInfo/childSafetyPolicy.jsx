@@ -19,7 +19,7 @@ export const ChildSafetyPolicy = () => {
     'The "Report" functionality built into the app (on any profile, message, photo, or content).',
     {
       text: "Support email: ",
-      email: "support@talkam.com",
+      email: "support@talkam.net",
     },
     'For urgent or severe reports (e.g. content involving minors in danger or CSAM), users can mark as "Urgent" when reporting, such that it escalates to our trust & safety team immediately.',
   ];
@@ -334,10 +334,9 @@ export const ChildSafetyPolicy = () => {
               If you ever have questions, concerns, or suggestions about how we
               can further improve child safety on Talkam, please reach out to
               our Child Safety Officer at{" "}
-              <a href="mailto:childsafety@talkam.com" className="underline">
-                childsafety@talkam.com
+              <a href="mailto:childsafety@talkam.net" className="underline">
+                childsafety@talkam.net
               </a>
-              .
             </p>
             <p className="text-base text-black">
               Thank you for helping us maintain a safe space for everyone.

@@ -499,16 +499,18 @@ export const MainAppLayout = ({ children }) => {
                 </section>
 
                 <section className="flex flex-col items-start gap-3 border-b border-tgray-200 py-6 pl-4 pb-4">
-                  <Button
-                    variant="link"
-                    fullWidth
-                    children="Ads"
-                    className="flex items-center justify-between !text-sm !py-0 !px-0"
-                    onClick={() => {
-                      navigate("/ads");
-                      setShowPanel(false);
-                    }}
-                  />
+                  {isAuth && (
+                    <Button
+                      variant="link"
+                      fullWidth
+                      children="Ads"
+                      className="flex items-center justify-between !text-sm !py-0 !px-0"
+                      onClick={() => {
+                        navigate("/ads");
+                        setShowPanel(false);
+                      }}
+                    />
+                  )}
                   <Button
                     variant="link"
                     fullWidth
