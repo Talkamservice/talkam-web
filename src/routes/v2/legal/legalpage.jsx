@@ -26,13 +26,13 @@ const LegalPage = ({ doc, footerLinks, metaDescription }) => {
         innerClassName="!max-w-[760px] pb-20 pt-12 lg:pb-24 lg:pt-16"
       >
         <DsEyebrow className="mb-2.5 block text-brand-400">Legal</DsEyebrow>
-      <h1 className="mb-2 text-[28px] font-extraboldNunito tracking-[-0.01em] text-navy-800 lg:text-[36px]">
+      <h1 className="mb-2 text-[28px] font-blackNunito tracking-[-0.01em] text-navy-800 lg:text-[36px]">
         {doc.title}
       </h1>
       <p className="text-[13px] text-[#9299A8]">Last updated: {doc.lastUpdated}</p>
 
       {doc.callout ? (
-        <div className="mt-6 flex gap-3 rounded-[14px] bg-brand-25 px-5 py-[18px]">
+        <div className="mt-6 flex gap-3 rounded-[14px] bg-brand-25 px-[22px] py-[18px]">
           <svg
             width="18"
             height="18"
@@ -50,7 +50,7 @@ const LegalPage = ({ doc, footerLinks, metaDescription }) => {
         </div>
       ) : null}
 
-      <div className={doc.callout ? "mt-4" : "mt-6"}>
+      <div className={doc.callout ? "mt-[12px]" : "mt-4"}>
         {doc.sections.map((section) => (
           <section key={section.title}>
             <h2 className="mb-2.5 mt-9 text-[19px] font-extraboldNunito text-navy-800">

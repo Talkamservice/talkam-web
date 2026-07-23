@@ -395,3 +395,38 @@ Files: `src/routes/v2/fortherapists/fortherapists.jsx`.
 | (b) | Below `lg` the hero stacks, the browser frame hides (matching the deck's own `.hide-sm` below 820px), and the grids reflow. |
 
 ---
+## 6. Privacy Policy & Terms of Use
+
+Decks: `TalkAM Privacy Policy.dc.html`, `TalkAM Terms of Use.dc.html` ·
+Routes: `/privacy-policy`, `/terms`. Both decks are the same 760px measure:
+minimal nav → LEGAL eyebrow → title → last-updated → (privacy only) NDPA
+callout → numbered sections → contact line → minimal footer.
+
+Copy — all nine privacy sections and all Terms sections, the NDPA callout, the
+DPO contact line and the "July 9, 2026" date — was already verbatim.
+
+| # | Section | Deck | Implementation (before) | Type |
+|---|---------|------|--------------------------|------|
+| 157 | Nav | **logo + "Business Login →" only** — no nav links, 24px logo, `24px 56px` padding, `1px #F0F0F2` bottom rule | the full marketing nav with four links | extra elements |
+| 158 | Footer | single `40px 56px` row: `©…` + **Pricing · Terms of Use · Business Login** (privacy) / **Pricing · Privacy Policy · Business Login** (terms) | the landing four-column footer | wrong component |
+| 159 | H1 | 36px/**900** | 800 | weight |
+| 160 | NDPA callout | `padding:18px 22px` | `px-5` (20px) | size |
+| 161 | Callout→sections gap | callout `margin-bottom:36px` collapses with the first `<h2>`'s `margin-top:36px` → 36px | `mt-4` + `mt-9` → 52px | size |
+
+**Discrepancies found: 5 — all 5 fixed.**
+
+### ✅ PASS — Privacy Policy & Terms of Use
+
+Total heights, deck vs implementation: Privacy 1891/1891 (exact), Terms
+1847/1843. Re-screenshotted both at 1440 and compared top to bottom.
+
+Files: `src/routes/v2/legal/legalpage.jsx`.
+
+**Allowed deviations**
+
+| Kind | Deviation |
+|------|-----------|
+| (a) | Deck cross-links are real routes. |
+| (b) | The 760px measure keeps its 24px gutters below `lg`; nothing else changes. |
+
+---
