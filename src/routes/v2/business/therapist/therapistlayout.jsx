@@ -1,0 +1,314 @@
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import classNames from "classnames";
+import * as Icon from "react-feather";
+import { DashboardShell } from "../../../../components/v2/dashboard/dashboardshell";
+import {
+  Modal,
+  PrimaryButton,
+  SecondaryButton,
+  InfoStrip,
+  Toast,
+} from "../../../../components/v2/dashboard/chrome";
+import { usePageMeta } from "../../../../hooks/usePageMeta";
+import { V2 } from "../../../../constants/v2routes";
+import {
+  therapistWorkspace,
+  therapistUser,
+  therapistPageMeta,
+  nextSession,
+} from "../../../../fakedata/v2/therapist";
+
+/**
+ * Therapist (provider) dashboard shell.
+ * Spec: "TalkAM B2B Therapist Dashboard.dc.html". Wellness-teal accent, per
+ * the DS rule that teal marks therapy surfaces.
+ */
+
+const TherapistContext = createContext(null);
+
+export const useTherapist = () => {
+  const ctx = useContext(TherapistContext);
+  if (!ctx) throw new Error("useTherapist must be used inside TherapistProvider");
+  return ctx;
+};
+
+const at = (path) => `${V2.therapist}${path}`;
+
+const NAV_SECTIONS = [
+  {
+    items: [
+      { to: V2.therapist, end: true, label: "Home", icon: <Icon.Home size={16} /> },
+      { to: at("/sessions"), label: "Sessions", icon: <Icon.Calendar size={16} />, count: "5", countTone: "teal" },
+      { to: at("/availability"), label: "Availability", icon: <Icon.Clock size={16} /> },
+      { to: at("/analytics"), label: "Analytics", icon: <Icon.BarChart2 size={16} /> },
+      { to: at("/earnings"), label: "Earnings", icon: <Icon.DollarSign size={16} /> },
+      { to: at("/messages"), label: "Messages", icon: <Icon.MessageCircle size={16} />, count: "3", countTone: "teal" },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { to: at("/profile"), label: "Profile & Account", icon: <Icon.User size={16} /> },
+      { to: at("/help"), label: "Help & Support", icon: <Icon.HelpCircle size={16} /> },
+    ],
+  },
+];
+
+export const TherapistProvider = () => {
+  const [modal, setModal] = useState(null);
+  const [context, setContext] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [resolved, setResolved] = useState([]);
+  const timer = useRef(null);
+
+  const open = useCallback((name, ctx = null) => {
+    setModal(name);
+    setContext(ctx);
+  }, []);
+  const close = useCallback(() => setModal(null), []);
+
+  const showToast = useCallback((message) => {
+    if (timer.current) clearTimeout(timer.current);
+    setToast(message);
+    timer.current = setTimeout(() => setToast(null), 2800);
+  }, []);
+
+  const resolve = useCallback((key) => setResolved((p) => [...p, key]), []);
+
+  const value = useMemo(
+    () => ({ open, close, showToast, resolved, resolve }),
+    [open, close, showToast, resolved, resolve]
+  );
+
+  return (
+    <TherapistContext.Provider value={value}>
+      <Outlet />
+      {toast ? (
+        <div className="fixed bottom-6 left-1/2 z-[400] -translate-x-1/2">
+          <Toast message={toast} />
+        </div>
+      ) : null}
+      <TherapistModals
+        modal={modal}
+        context={context}
+        close={close}
+        showToast={showToast}
+        resolve={resolve}
+      />
+    </TherapistContext.Provider>
+  );
+};
+
+export const TherapistLayout = () => {
+  const { pathname } = useLocation();
+  const { open } = useTherapist();
+
+  const segment = pathname.replace(V2.therapist, "").replace(/^\//, "") || "home";
+  const meta = therapistPageMeta[segment] ?? therapistPageMeta.home;
+
+  usePageMeta(`${meta.title} — TalkAM for Therapists`);
+
+  return (
+    <DashboardShell
+      sections={NAV_SECTIONS}
+      workspace={therapistWorkspace}
+      user={therapistUser}
+      accent="therapy"
+      title={meta.title}
+      subtitle={meta.subtitle}
+      topbarAction={
+        <button
+          type="button"
+          onClick={() => open("joinConfirm", nextSession)}
+          className="inline-flex shrink-0 cursor-pointer items-center gap-[7px] rounded-[10px] bg-wellness-400 px-4 py-[9px] text-[13px] font-boldNunito text-white shadow-[0_4px_12px_rgba(59,168,143,0.22)] transition-colors hover:bg-wellness-600"
+        >
+          <Icon.Video size={13} />
+          <span className="hidden sm:inline">Join next session</span>
+        </button>
+      }
+    />
+  );
+};
+
+/* ── Modals ───────────────────────────────────────────────────────────── */
+
+const NotesModal = ({ open, close, showToast, resolve }) => (
+  <Modal open={open} onClose={close} title="Session notes" subtitle="Private to you — never shared with the employer">
+    <InfoStrip tone="purple" className="mb-4">
+      Sessions are never recorded. These written notes are the only record, and they
+      stay with you.
+    </InfoStrip>
+    <textarea
+      rows={6}
+      defaultValue=""
+      placeholder="What came up, what you tried, and what to pick up next time…"
+      className="mb-4 w-full resize-none rounded-ds-md border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] leading-[1.6] text-ink-800"
+    />
+    <div className="flex justify-end gap-2">
+      <SecondaryButton onClick={close}>Save draft</SecondaryButton>
+      <PrimaryButton
+        onClick={() => {
+          resolve("notes");
+          close();
+          showToast("Session notes saved");
+        }}
+      >
+        Save notes
+      </PrimaryButton>
+    </div>
+  </Modal>
+);
+
+const RescheduleReqModal = ({ open, close, showToast, resolve }) => (
+  <Modal open={open} onClose={close} title="Reschedule request" subtitle="Anonymous · currently Thu 2:00 PM">
+    <p className="mb-4 text-[13px] leading-[1.7] text-ink-500">
+      The client has asked to move this session. Accepting notifies them and frees your
+      original slot.
+    </p>
+    <div className="mb-4 flex flex-col gap-2">
+      {["Thu · 5:00 PM", "Fri · 10:00 AM", "Fri · 3:00 PM"].map((slot, i) => (
+        <label
+          key={slot}
+          className="flex cursor-pointer items-center gap-3 rounded-ds-md border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] font-semiboldNunito text-ink-600 has-[:checked]:border-wellness-400 has-[:checked]:bg-wellness-50"
+        >
+          <input
+            type="radio"
+            name="reschedule-slot"
+            defaultChecked={i === 0}
+            className="text-wellness-400 focus:ring-wellness-400"
+          />
+          {slot}
+        </label>
+      ))}
+    </div>
+    <div className="flex justify-end gap-2">
+      <SecondaryButton onClick={close}>Decline</SecondaryButton>
+      <PrimaryButton
+        onClick={() => {
+          resolve("reschedule");
+          close();
+          showToast("Reschedule confirmed — client notified");
+        }}
+      >
+        Confirm new time
+      </PrimaryButton>
+    </div>
+  </Modal>
+);
+
+const JoinConfirmModal = ({ open, close, showToast, context }) => (
+  <Modal open={open} onClose={close} title="Join session room?" width="max-w-[440px]">
+    <div className="mb-4 flex items-center gap-3">
+      <span
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-h4 font-extraboldNunito text-white"
+        style={{ background: context?.avatarBg ?? "#3BA88F" }}
+      >
+        {context?.initials ?? "A"}
+      </span>
+      <div>
+        <div className="text-body font-extraboldNunito text-navy-800">
+          {context?.client ?? "Anonymous client"}
+        </div>
+        <div className="text-[11.5px] text-ink-400">
+          {context?.format ?? "Video"} · {context?.focus ?? "Session"}
+        </div>
+      </div>
+    </div>
+    <InfoStrip tone="purple" className="mb-4">
+      This room is never recorded — no audio, video or transcript is stored.
+    </InfoStrip>
+    <div className="flex justify-end gap-2">
+      <SecondaryButton onClick={close}>Not yet</SecondaryButton>
+      <button
+        type="button"
+        onClick={() => {
+          close();
+          showToast(`Session with ${context?.client ?? "the client"} started`);
+        }}
+        className="cursor-pointer rounded-[10px] bg-wellness-400 px-4 py-[9px] text-[13px] font-boldNunito text-white hover:bg-wellness-600"
+      >
+        Join room
+      </button>
+    </div>
+  </Modal>
+);
+
+const RequestModal = ({ open, close, showToast, context }) => (
+  <Modal open={open} onClose={close} title="New client request" subtitle={context?.focus}>
+    <p className="mb-4 text-[13px] leading-[1.7] text-ink-500">{context?.context}</p>
+    <div className="mb-4 rounded-ds-md bg-ink-50 p-3.5">
+      <div className="text-[11px] font-boldNunito text-ink-400">REQUESTED SLOT</div>
+      <div className="text-body font-extraboldNunito text-navy-800">{context?.requested}</div>
+    </div>
+    <div className="flex justify-end gap-2">
+      <SecondaryButton
+        onClick={() => {
+          close();
+          showToast("Request declined");
+        }}
+      >
+        Decline
+      </SecondaryButton>
+      <button
+        type="button"
+        onClick={() => {
+          close();
+          showToast("Request accepted — session scheduled");
+        }}
+        className="cursor-pointer rounded-[10px] bg-wellness-400 px-4 py-[9px] text-[13px] font-boldNunito text-white hover:bg-wellness-600"
+      >
+        Accept &amp; schedule
+      </button>
+    </div>
+  </Modal>
+);
+
+const AllPayoutsModal = ({ open, close, context }) => (
+  <Modal open={open} onClose={close} title="All payouts" subtitle="Paid weekly via Flutterwave" width="max-w-[560px]">
+    <div className="flex flex-col">
+      {(context ?? []).map((p) => (
+        <div
+          key={p.date}
+          className="flex items-center justify-between gap-4 border-b border-ink-100 py-3 last:border-b-0"
+        >
+          <div>
+            <div className="text-[13px] font-boldNunito text-navy-800">{p.date}</div>
+            <div className="text-[11px] text-ink-400">{p.sessions} sessions</div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-[13px] font-extraboldNunito text-navy-800">{p.amount}</span>
+            <span className="rounded-full bg-wellness-50 px-2.5 py-[3px] text-[10px] font-extraboldNunito text-wellness-600">
+              Paid
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Modal>
+);
+
+/**
+ * Only the active modal is mounted. Rendering all of them meant each one's
+ * children were evaluated on every state change — a modal that reads its
+ * `context` (e.g. AllPayouts mapping over a payout array) would then crash
+ * whenever a *different* modal was open and `context` held another shape.
+ */
+const TherapistModals = ({ modal, context, close, showToast, resolve }) => {
+  switch (modal) {
+    case "notes":
+      return <NotesModal open close={close} showToast={showToast} resolve={resolve} />;
+    case "rescheduleReq":
+      return <RescheduleReqModal open close={close} showToast={showToast} resolve={resolve} />;
+    case "joinConfirm":
+      return <JoinConfirmModal open close={close} showToast={showToast} context={context} />;
+    case "request":
+      return <RequestModal open close={close} showToast={showToast} context={context} />;
+    case "allPayouts":
+      return (
+        <AllPayoutsModal open close={close} context={Array.isArray(context) ? context : []} />
+      );
+    default:
+      return null;
+  }
+};

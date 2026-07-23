@@ -1053,6 +1053,102 @@ const router = createBrowserRouter([
     ],
   },
 
+  /* B2B Therapist (provider) dashboard. */
+  {
+    path: "/v2/business/therapist",
+    errorElement: <ErrorPage />,
+    lazy: async () => {
+      let { TherapistProvider } = await import(
+        "./routes/v2/business/therapist/therapistlayout"
+      );
+      return { Component: TherapistProvider };
+    },
+    children: [
+      {
+        lazy: async () => {
+          let { TherapistLayout } = await import(
+            "./routes/v2/business/therapist/therapistlayout"
+          );
+          return { Component: TherapistLayout };
+        },
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              let { TherapistHome } = await import(
+                "./routes/v2/business/therapist/pages/therapistpages"
+              );
+              return { Component: TherapistHome };
+            },
+          },
+          {
+            path: "sessions",
+            lazy: async () => {
+              let { TherapistSessions } = await import(
+                "./routes/v2/business/therapist/pages/therapistpages"
+              );
+              return { Component: TherapistSessions };
+            },
+          },
+          {
+            path: "availability",
+            lazy: async () => {
+              let { TherapistAvailability } = await import(
+                "./routes/v2/business/therapist/pages/therapistpages"
+              );
+              return { Component: TherapistAvailability };
+            },
+          },
+          {
+            path: "analytics",
+            lazy: async () => {
+              let { TherapistAnalytics } = await import(
+                "./routes/v2/business/therapist/pages/therapistpages"
+              );
+              return { Component: TherapistAnalytics };
+            },
+          },
+          {
+            path: "earnings",
+            lazy: async () => {
+              let { TherapistEarnings } = await import(
+                "./routes/v2/business/therapist/pages/therapistpages"
+              );
+              return { Component: TherapistEarnings };
+            },
+          },
+          {
+            path: "messages",
+            lazy: async () => {
+              let { TherapistMessages } = await import(
+                "./routes/v2/business/therapist/pages/therapistpages"
+              );
+              return { Component: TherapistMessages };
+            },
+          },
+          {
+            path: "profile",
+            lazy: async () => {
+              let { TherapistProfile } = await import(
+                "./routes/v2/business/therapist/pages/therapistpages"
+              );
+              return { Component: TherapistProfile };
+            },
+          },
+          {
+            path: "help",
+            lazy: async () => {
+              let { TherapistHelp } = await import(
+                "./routes/v2/business/therapist/pages/therapistpages"
+              );
+              return { Component: TherapistHelp };
+            },
+          },
+        ],
+      },
+    ],
+  },
+
   {
     path: "*",
     element: <NotFound />,
