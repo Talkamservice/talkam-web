@@ -13,6 +13,7 @@ export const theme = {
     semiboldNunito: ['semibold-nunito'],
     boldNunito: ['bold-nunito'],
     extraboldNunito: ['extrabold-nunito'],
+    blackNunito: ['black-nunito'],
   },
   extend: {
     colors: {

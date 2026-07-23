@@ -89,7 +89,7 @@ const HomeMoodRow = ({ value, onPick }) => (
 /** Deck: `<div class="card" style="padding:16px 18px">` stat tile. */
 const StatCard = ({ value, label, accent }) => (
   <Card className="!px-[18px] !py-4">
-    <div className="mb-0.5 text-[22px] font-extraboldNunito" style={{ color: accent }}>
+    <div className="mb-0.5 text-[22px] font-blackNunito" style={{ color: accent }}>
       {value}
     </div>
     <div className="text-[11.5px] text-ink-400">{label}</div>
@@ -131,7 +131,7 @@ export const EmployeeHome = () => {
       {/* greeting + V2 pill */}
       <div>
         <div className="mb-[3px] flex flex-wrap items-center gap-2.5">
-          <span className="text-[20px] font-extraboldNunito tracking-[-0.01em] text-navy-800">
+          <span className="text-[20px] font-blackNunito tracking-[-0.01em] text-navy-800">
             Good morning, Adaeze
           </span>
           <span className="inline-flex items-center gap-[5px] rounded-full bg-[linear-gradient(135deg,#6B44A8,#8B5FC2)] px-2.5 py-1 text-[10px] font-extraboldNunito tracking-[0.05em] text-white shadow-[0_3px_8px_rgba(107,68,168,0.3)]">
@@ -363,7 +363,7 @@ export const EmployeeHome = () => {
             {wellbeingSnapshot.map((w) => (
               <div key={w.label} className="rounded-[12px] bg-[#F8F9FC] px-1.5 py-3 text-center">
                 <div
-                  className="mb-0.5 text-[19px] font-extraboldNunito"
+                  className="mb-0.5 text-[19px] font-blackNunito"
                   style={{ color: w.accent }}
                 >
                   {w.value}
@@ -787,7 +787,7 @@ export const EmployeeCheckins = () => {
           <div className="mb-2.5 text-[11px] font-boldNunito tracking-[0.06em] text-white/50">
             STREAK
           </div>
-          <div className="mb-0.5 text-[34px] font-extraboldNunito text-white">9 days</div>
+          <div className="mb-0.5 text-[34px] font-blackNunito text-white">9 days</div>
           <div className="mb-4 text-[12px] text-white/50">Longest yet — keep it up</div>
           <div className="text-[11px] leading-[1.6] text-white/40">
             Detailed journaling and full mood history live in the mobile app.

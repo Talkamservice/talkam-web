@@ -11,7 +11,7 @@ import {
 import { DsButton } from "../../../components/v2/button";
 import { DsEyebrow } from "../../../components/v2/badge";
 import { usePageMeta } from "../../../hooks/usePageMeta";
-import { V2 } from "../../../constants/v2routes";
+import { V2, PRODUCT_NAV } from "../../../constants/v2routes";
 import {
   businessSectors,
   businessHeroStats,
@@ -36,40 +36,55 @@ export const V2ForBusiness = () => {
       {/* HERO */}
       <MarketingHero
         className="bg-[linear-gradient(165deg,#0D1523_0%,#141B34_55%,#10284A_100%)]"
-        innerClassName="flex flex-wrap items-center gap-12 pb-20 pt-10 lg:gap-14 lg:pb-[120px] lg:pt-[52px]"
+        navCta={{
+          links: PRODUCT_NAV,
+          active: "For Business",
+          ctaVariant: "brand",
+          ctaClassName:
+            "!px-[22px] !py-[11px] font-extraboldNunito shadow-[0_8px_20px_rgba(1,127,200,0.35)]",
+          padClassName: "py-5 lg:py-[22px]",
+        }}
+        /* Deck: hero band is `padding:92px 56px 120px`. */
+        innerClassName="flex flex-wrap items-center gap-12 pb-20 pt-10 lg:gap-14 lg:pb-[120px] lg:pt-[92px]"
         glows={[
           "-right-[120px] -top-[60px] h-[560px] w-[560px] bg-[radial-gradient(circle,rgba(1,127,200,0.22)_0%,transparent_60%)]",
           "-left-[100px] -bottom-[140px] h-[460px] w-[460px] bg-[radial-gradient(circle,rgba(59,168,143,0.12)_0%,transparent_60%)]",
         ]}
       >
         <div className="v2-reveal w-full min-w-0 flex-1 lg:max-w-[560px]">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/[0.14] bg-white/[0.07] px-4 py-[7px]">
+          <div className="mb-[22px] inline-flex items-center gap-2 rounded-full border border-white/[0.14] bg-white/[0.07] px-4 py-[7px]">
             <span className="h-[7px] w-[7px] shrink-0 rounded-full bg-wellness-400" />
             <span className="text-caption font-boldNunito tracking-[0.04em] text-white/75">
               TALKAM FOR BUSINESS
             </span>
           </div>
-          <h1 className="mb-5 text-[36px] font-extraboldNunito leading-[1.05] tracking-[-0.02em] text-white sm:text-[44px] lg:text-[56px]">
+          <h1 className="mb-5 text-[36px] font-blackNunito leading-[1.05] tracking-[-0.02em] text-white sm:text-[44px] lg:text-[56px]">
             A wellness benefit your whole team{" "}
             <span className="bg-[linear-gradient(100deg,#68B4E1,#3BA88F)] bg-clip-text text-transparent">
               actually uses.
             </span>
           </h1>
-          <p className="mb-8 max-w-[480px] text-[16px] leading-[1.65] text-white/60 lg:text-h4">
+          <p className="mb-8 max-w-[480px] text-[16px] leading-[1.65] text-white/60 lg:text-[18px]">
             Give employees private access to therapy, community and self-care tools
             — and see anonymised wellbeing trends from one clean dashboard. Never
             individual data.
           </p>
           <div className="flex flex-wrap gap-3.5">
+            {/* Deck: padding 16px 32px, radius 14, 16px/800. */}
             <DsButton
               to={V2.businessSignUp}
               variant="brand"
               size="lg"
-              className="shadow-[0_14px_30px_rgba(1,127,200,0.4)]"
+              className="h-auto px-8 py-4 font-extraboldNunito shadow-[0_14px_30px_rgba(1,127,200,0.4)]"
             >
               Get started →
             </DsButton>
-            <DsButton to={V2.pricing} variant="translucent" size="lg">
+            <DsButton
+              to={V2.pricing}
+              variant="translucent"
+              size="lg"
+              className="h-auto border-white/20 !bg-white/[0.08] px-8 py-4 font-extraboldNunito"
+            >
               See pricing
             </DsButton>
           </div>
@@ -79,7 +94,7 @@ export const V2ForBusiness = () => {
               <div key={stat.value} className="flex gap-7">
                 {i > 0 ? <span className="w-px self-stretch bg-white/[0.12]" /> : null}
                 <div>
-                  <div className="text-h2 font-extraboldNunito text-white">{stat.value}</div>
+                  <div className="text-[26px] font-blackNunito text-white">{stat.value}</div>
                   <div className="text-[12.5px] text-white/50">{stat.label}</div>
                 </div>
               </div>
@@ -132,10 +147,10 @@ export const V2ForBusiness = () => {
           <DsEyebrow className="mb-3 block text-brand-400">
             Why TalkAM for Business
           </DsEyebrow>
-          <h2 className="mb-3.5 text-[28px] font-extraboldNunito tracking-[-0.02em] text-navy-800 lg:text-[38px]">
+          <h2 className="mb-3.5 text-[28px] font-blackNunito tracking-[-0.02em] text-navy-800 lg:text-[38px]">
             Care that scales, insight that respects privacy.
           </h2>
-          <p className="text-body-lg leading-[1.65] text-[#5B6577]">
+          <p className="text-[16px] leading-[1.65] text-[#5B6577]">
             Everything HR needs to run a modern wellbeing benefit — without ever
             crossing the line into individual employee data.
           </p>
@@ -167,7 +182,7 @@ export const V2ForBusiness = () => {
       {/* SEAT MANAGEMENT */}
       <ShowcaseBand url="business.talkam.net/employees" preview={<EmployeesPreview />}>
         <DsEyebrow className="mb-3 block text-brand-400">Seat management</DsEyebrow>
-        <h2 className="mb-4 text-[26px] font-extraboldNunito tracking-[-0.02em] text-navy-800 lg:text-display">
+        <h2 className="mb-4 text-[26px] font-blackNunito tracking-[-0.02em] text-navy-800 lg:text-[32px]">
           Invite in bulk, manage seats in seconds.
         </h2>
         <p className="mb-6 text-[15.5px] leading-[1.7] text-[#5B6577]">
@@ -184,21 +199,21 @@ export const V2ForBusiness = () => {
           className="pointer-events-none absolute left-1/2 -top-[100px] h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(1,127,200,0.16)_0%,transparent_65%)]"
         />
         <div className="v2-reveal relative z-[1] mx-auto max-w-[760px] text-center">
-          <div className="mx-auto mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-ds-lg border border-wellness-400/30 bg-wellness-400/[0.16]">
+          <div className="mx-auto mb-[22px] flex h-[60px] w-[60px] items-center justify-center rounded-ds-lg border border-wellness-400/30 bg-wellness-400/[0.16]">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3BA88F" strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
-          <h2 className="mb-4 text-[26px] font-extraboldNunito tracking-[-0.02em] text-white lg:text-[34px]">
+          <h2 className="mb-4 text-[26px] font-blackNunito tracking-[-0.02em] text-white lg:text-[34px]">
             The employer never sees an individual.
           </h2>
-          <p className="text-[16px] leading-[1.7] text-white/65 lg:text-h4">
+          <p className="text-[16px] leading-[1.7] text-white/65 lg:text-[17px]">
             Mood check-ins, sessions, messages and community activity are private to
             the employee. HR only ever sees company-wide, anonymised totals — and
             only above a minimum cohort size. It&apos;s wellbeing insight without
             surveillance.
           </p>
-          <div className="mt-5 inline-flex items-center rounded-full border border-white/[0.12] bg-white/[0.06] px-[18px] py-[9px] text-[13px] font-boldNunito text-white/80">
+          <div className="mt-[22px] inline-flex items-center rounded-full border border-white/[0.12] bg-white/[0.06] px-[18px] py-[9px] text-[13px] font-boldNunito text-white/80">
             NDPA-compliant consent, built in
           </div>
         </div>
@@ -207,7 +222,7 @@ export const V2ForBusiness = () => {
       {/* BILLING */}
       <ShowcaseBand reverse tint url="business.talkam.net/billing" preview={<BillingPreview />}>
         <DsEyebrow className="mb-3 block text-brand-400">Fair, post-paid billing</DsEyebrow>
-        <h2 className="mb-4 text-[26px] font-extraboldNunito tracking-[-0.02em] text-navy-800 lg:text-display">
+        <h2 className="mb-4 text-[26px] font-blackNunito tracking-[-0.02em] text-navy-800 lg:text-[32px]">
           Only pay for sessions your team actually uses.
         </h2>
         <p className="mb-6 text-[15.5px] leading-[1.7] text-[#5B6577]">
@@ -229,7 +244,7 @@ export const V2ForBusiness = () => {
       <section className="bg-white px-6 py-16 lg:px-14 lg:py-[88px]">
         <div className="v2-reveal mb-12 text-center">
           <DsEyebrow className="mb-3 block text-brand-400">Get started in days</DsEyebrow>
-          <h2 className="text-[28px] font-extraboldNunito tracking-[-0.02em] text-navy-800 lg:text-[36px]">
+          <h2 className="text-[28px] font-blackNunito tracking-[-0.02em] text-navy-800 lg:text-[36px]">
             Live for your team in three steps.
           </h2>
         </div>
@@ -242,7 +257,7 @@ export const V2ForBusiness = () => {
               <div className="mb-3 text-[44px] font-extraboldNunito leading-none text-[#D6E4F0]">
                 {step.n}
               </div>
-              <h3 className="mb-2 text-h4 font-extraboldNunito text-navy-800">{step.title}</h3>
+              <h3 className="mb-2 text-[18px] font-extraboldNunito text-navy-800">{step.title}</h3>
               <p className="text-body leading-[1.6] text-[#5B6577]">{step.body}</p>
             </div>
           ))}
@@ -256,24 +271,24 @@ export const V2ForBusiness = () => {
           className="pointer-events-none absolute -bottom-20 -right-20 h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.12)_0%,transparent_65%)]"
         />
         <div className="v2-reveal relative z-[1] mx-auto max-w-[620px]">
-          <h2 className="mb-4 text-[30px] font-extraboldNunito tracking-[-0.02em] text-white lg:text-[40px]">
+          <h2 className="mb-4 text-[30px] font-blackNunito tracking-[-0.02em] text-white lg:text-[40px]">
             Bring real care to your workplace.
           </h2>
-          <p className="mb-7 text-[16px] leading-[1.6] text-white/80 lg:text-h4">
+          <p className="mb-[30px] text-[16px] leading-[1.6] text-white/80 lg:text-[17px]">
             Set up your organisation in minutes and invite your first team today.
           </p>
           <div className="flex flex-wrap justify-center gap-3.5">
             <DsButton
               to={V2.businessSignUp}
               size="lg"
-              className="bg-white !text-[#0D2240] shadow-[0_14px_30px_rgba(0,0,0,0.25)] hover:bg-ink-50"
+              className="h-auto bg-white px-[34px] py-4 font-blackNunito !text-[#0D2240] shadow-[0_14px_30px_rgba(0,0,0,0.25)] hover:bg-ink-50"
             >
               Get started free →
             </DsButton>
             <DsButton
               to={V2.pricing}
               size="lg"
-              className="border-[1.5px] border-white/30 bg-white/[0.14] !text-white hover:bg-white/25"
+              className="h-auto border-[1.5px] border-white/30 bg-white/[0.14] px-[34px] py-4 font-extraboldNunito !text-white hover:bg-white/25"
             >
               View pricing
             </DsButton>

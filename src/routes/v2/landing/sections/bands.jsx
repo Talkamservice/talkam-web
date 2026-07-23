@@ -77,7 +77,7 @@ export const StatsBand = () => (
               i > 0 ? "text-center lg:border-l lg:border-white/10" : "text-center"
             }
           >
-            <div className="mb-2 text-[30px] font-extraboldNunito tracking-[-0.02em] text-brand-200 lg:text-[38px]">
+            <div className="mb-2 text-[30px] font-blackNunito tracking-[-0.02em] text-brand-200 lg:text-[38px]">
               {stat.value}
             </div>
             <p className="text-caption leading-[1.5] text-white/60">{stat.label}</p>

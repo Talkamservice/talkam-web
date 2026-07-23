@@ -166,7 +166,7 @@ export const LandingHero = () => (
         </span>
       </div>
 
-      <h1 className="mb-5 text-[42px] font-extraboldNunito leading-[1.05] tracking-[-0.03em] text-white [text-shadow:0_2px_40px_rgba(1,127,200,0.3)] sm:text-[56px] lg:text-[76px] lg:leading-none">
+      <h1 className="mb-5 text-[42px] font-blackNunito leading-[1.05] tracking-[-0.03em] text-white [text-shadow:0_2px_40px_rgba(1,127,200,0.3)] sm:text-[56px] lg:text-[76px] lg:leading-none">
         Your community and your{" "}
         <span className="bg-gradient-to-r from-brand-200 to-wellness-400 bg-clip-text text-transparent">
           therapist

@@ -88,6 +88,13 @@ input[type=range]::-webkit-slider-thumb {
   src: url("./assets/fonts/Nunito-ExtraBold.ttf");
 }
 
+/* Nunito Black (900). The decks set `font-weight:900` on hero headings and big
+   figures; without this face the browser fell back to ExtraBold (800). */
+@font-face {
+  font-family: "black-nunito";
+  src: url("./assets/fonts/Nunito-Black.ttf");
+}
+
 @font-face {
   font-family: "light-nunito";
   src: url("./assets/fonts/Nunito-Light.ttf");

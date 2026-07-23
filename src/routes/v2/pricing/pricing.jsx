@@ -41,7 +41,7 @@ const TierCard = ({ tier }) => (
       {tier.name}
     </div>
     <div className="mb-1 flex items-baseline gap-1">
-      <span className="text-[30px] font-extraboldNunito text-navy-800">{tier.price}</span>
+      <span className="text-[30px] font-blackNunito text-navy-800">{tier.price}</span>
       <span className="text-caption text-ink-400">{tier.unit}</span>
     </div>
     <p className="mb-4 text-[12.5px] leading-[1.6] text-ink-500">{tier.body}</p>
@@ -74,7 +74,7 @@ export const V2Pricing = () => {
         <span className="mb-[22px] inline-flex items-center rounded-full bg-brand-25 px-3.5 py-[7px]">
           <DsEyebrow className="text-brand-400">TalkAM for Business</DsEyebrow>
         </span>
-        <h1 className="mb-3.5 text-[34px] font-extraboldNunito tracking-[-0.02em] text-navy-800 sm:text-[42px] lg:text-[48px]">
+        <h1 className="mb-3.5 text-[34px] font-blackNunito tracking-[-0.02em] text-navy-800 sm:text-[42px] lg:text-[48px]">
           Simple, transparent pricing.
         </h1>
         <p className="mx-auto mb-2 max-w-[640px] text-[16px] leading-[1.7] text-[#5B6577]">
@@ -193,7 +193,7 @@ export const V2Pricing = () => {
             <span className="text-body font-extraboldNunito text-brand-200">
               {pricingExample.total.label}
             </span>
-            <span className="text-[16px] font-extraboldNunito text-brand-200">
+            <span className="text-[16px] font-blackNunito text-brand-200">
               {pricingExample.total.value}
             </span>
           </div>

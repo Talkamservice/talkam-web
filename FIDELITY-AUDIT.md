@@ -290,3 +290,63 @@ below are wired the same way.
 | (c) | FAQ rows use the native `<details>` marker to match the deck exactly; its exact glyph is drawn by the browser, so it is Chrome's triangle rather than an asset we control. |
 
 ---
+## 4. For Business
+
+Deck: `TalkAM For Business.dc.html` · Route: `/for-business`
+Deck section order: NAV → HERO → sector strip → why-TalkAM grid → seat management
+→ privacy band → session billing → three steps → CTA → FOOTER. Section order,
+copy, dashboard previews and card content were already faithful.
+
+| # | Section | Deck | Implementation (before) | Type |
+|---|---------|------|--------------------------|------|
+| 119 | Font weight 900 | every hero/section `<h2>`, the hero stat figures and the CTA's primary button are `font-weight:900` | the app self-hosted Nunito only up to ExtraBold (800), so every 900 fell back a weight | weight |
+| 120 | Nav links | **five** — The App · **For Business** (active: white/800 + 2px `#017FC8` underline) · For Therapists · Pricing · Journal | four, no active treatment | wrong content |
+| 121 | Nav CTA | solid `#017FC8`, 13px/800, padding `11px 22px`, shadow `0 8px 20px rgba(1,127,200,0.35)` | translucent white pill | colour |
+| 122 | Nav padding | `22px 56px` | 26px vertical | size |
+| 123 | Hero band padding | `92px 56px 120px` | `pt-[52px]` — hero 53px short | size |
+| 124 | Hero eyebrow | `margin-bottom:22px` | `mb-5` (20px) | size |
+| 125 | Hero paragraph | `font-size:18px; line-height:1.65` | `text-h4` — the DS token forces **1.35** line-height | size |
+| 126 | Hero buttons | padding `16px 32px`, radius 14, 16px/800 | `DsButton size="lg"` — fixed 56px height, px 28, 700 | size |
+| 127 | Hero stat figures | `font-size:26px; font-weight:900` | `text-h2` (24px/800) | size |
+| 128 | "Care that scales…" h2 | 38px/900 | 800 | weight |
+| 129 | Section lead paragraph | `font-size:16px; line-height:1.65` | `text-body-lg` — forces 1.7 | size |
+| 130 | "Invite in bulk…" / "Only pay for sessions…" h2 | 32px/900 | `text-display` (32px/**1.15 forced**) /800 | size |
+| 131 | Privacy band icon tile | `margin:0 auto 22px` | `mb-5` (20px) | size |
+| 132 | Privacy band h2 | 34px/900 | 800 | weight |
+| 133 | Privacy band paragraph | `font-size:17px; line-height:1.7` | `text-h4` (18px/1.35) | size |
+| 134 | Privacy band pill | `margin-top:22px` | `mt-5` (20px) | size |
+| 135 | "Live for your team…" h2 | 36px/900 | 800 | weight |
+| 136 | Step titles | `font-size:18px; font-weight:800` (line-height normal) | `text-h4` — forces 1.35 | size |
+| 137 | CTA h2 | 40px/900 | 800 | weight |
+| 138 | CTA paragraph | `font-size:17px; margin-bottom:30px` | `text-h4` (18px/1.35), `mb-7` (28px) | size |
+| 139 | CTA buttons | padding `16px 34px`; primary is **900**, secondary 800 | `DsButton size="lg"` — fixed height, px 28, 700 | size |
+
+**Discrepancies found: 21 — all 21 fixed.**
+
+### ✅ PASS — For Business
+
+Section heights, deck vs implementation, after the fixes: nav+hero 811/819,
+sector strip 142/142, why-TalkAM 825/820, seat management 636/636, privacy
+band 451/451, session billing 636/636, three steps 496/491, CTA 413/418,
+footer 338/340.
+
+Files: `src/routes/v2/forbusiness/forbusiness.jsx`,
+`src/assets/fonts/Nunito-Black.ttf` (new), `src/index.css`,
+`tailwind.config.js`, `src/constants/v2routes.js`.
+
+**Allowed deviations**
+
+| Kind | Deviation |
+|------|-----------|
+| (a) | Deck cross-links are real routes. |
+| (b) | Below `lg` the hero stacks, the browser frame is hidden (the deck's own `.hide-sm` does the same below 820px), and the 3-up grids reflow. |
+
+**Applied across the whole v2 site, listed here because it is new:** the
+`black-nunito` (900) face was added — `src/assets/fonts/Nunito-Black.ttf`,
+exposed as Tailwind's `font-blackNunito`. Every deck sets `font-weight:900` on
+its hero headings and display figures; without the face the browser silently
+fell back to ExtraBold. The landing hero + stats, the pricing h1 + prices, and
+the employee dashboard's greeting, KPI figures and streak counter were
+re-pointed at it too.
+
+---
