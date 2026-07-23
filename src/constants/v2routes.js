@@ -21,14 +21,23 @@ export const V2 = {
   blog: at("/blog"),
   blogPost: (slug = ":slug") => at(`/blog/${slug}`),
 
-  // B2B auth
+  // B2B auth & onboarding
   businessLogin: at("/business/login"),
   businessSignUp: at("/business/sign-up"),
   businessVerify: at("/business/verify"),
+  businessSeats: at("/business/seats"),
+  businessPlan: at("/business/plan"),
+  businessTherapistBench: at("/business/therapist-bench"),
+  businessInvite: at("/business/invite"),
+  businessInviteSent: at("/business/invite-sent"),
+  businessJoin: at("/business/join"),
+  businessConsent: at("/business/consent"),
+  businessTopics: at("/business/topics"),
+  businessSelfCheck: at("/business/self-check"),
+  businessWelcome: at("/business/welcome"),
   businessTwoFactor: at("/business/two-factor"),
   businessForgotPassword: at("/business/forgot-password"),
-  businessResetPassword: at("/business/reset-password"),
-  businessTherapistApply: at("/business/therapist-apply"),
+  businessTherapistApply: at("/business/join"),
 
   // B2B dashboards
   admin: at("/business/admin"),

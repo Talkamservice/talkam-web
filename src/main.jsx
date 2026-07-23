@@ -704,6 +704,154 @@ const router = createBrowserRouter([
     ],
   },
 
+  /* B2B auth & onboarding — 15 screens sharing the split AuthLayout. */
+  {
+    path: "/v2/business",
+    errorElement: <ErrorPage />,
+    lazy: async () => {
+      let { AuthLayout } = await import("./routes/v2/business/auth/authlayout");
+      return { Component: AuthLayout };
+    },
+    children: [
+      { index: true, loader: () => redirect("login") },
+      {
+        path: "sign-up",
+        lazy: async () => {
+          let { CompanySignup } = await import(
+            "./routes/v2/business/auth/screens/companysetup"
+          );
+          return { Component: CompanySignup };
+        },
+      },
+      {
+        path: "verify",
+        lazy: async () => {
+          let { DomainVerify } = await import(
+            "./routes/v2/business/auth/screens/companysetup"
+          );
+          return { Component: DomainVerify };
+        },
+      },
+      {
+        path: "seats",
+        lazy: async () => {
+          let { ChooseSeats } = await import(
+            "./routes/v2/business/auth/screens/companysetup"
+          );
+          return { Component: ChooseSeats };
+        },
+      },
+      {
+        path: "plan",
+        lazy: async () => {
+          let { PlanBilling } = await import(
+            "./routes/v2/business/auth/screens/companysetup"
+          );
+          return { Component: PlanBilling };
+        },
+      },
+      {
+        path: "therapist-bench",
+        lazy: async () => {
+          let { TherapistBench } = await import(
+            "./routes/v2/business/auth/screens/teamonboarding"
+          );
+          return { Component: TherapistBench };
+        },
+      },
+      {
+        path: "invite",
+        lazy: async () => {
+          let { TeamInvite } = await import(
+            "./routes/v2/business/auth/screens/teamonboarding"
+          );
+          return { Component: TeamInvite };
+        },
+      },
+      {
+        path: "invite-sent",
+        lazy: async () => {
+          let { InvitesSent } = await import(
+            "./routes/v2/business/auth/screens/teamonboarding"
+          );
+          return { Component: InvitesSent };
+        },
+      },
+      {
+        path: "join",
+        lazy: async () => {
+          let { InviteLanding } = await import(
+            "./routes/v2/business/auth/screens/teamonboarding"
+          );
+          return { Component: InviteLanding };
+        },
+      },
+      {
+        path: "consent",
+        lazy: async () => {
+          let { Consent } = await import(
+            "./routes/v2/business/auth/screens/memberonboarding"
+          );
+          return { Component: Consent };
+        },
+      },
+      {
+        path: "topics",
+        lazy: async () => {
+          let { TopicsOfInterest } = await import(
+            "./routes/v2/business/auth/screens/memberonboarding"
+          );
+          return { Component: TopicsOfInterest };
+        },
+      },
+      {
+        path: "self-check",
+        lazy: async () => {
+          let { SelfCheck } = await import(
+            "./routes/v2/business/auth/screens/memberonboarding"
+          );
+          return { Component: SelfCheck };
+        },
+      },
+      {
+        path: "welcome",
+        lazy: async () => {
+          let { OnboardingComplete } = await import(
+            "./routes/v2/business/auth/screens/memberonboarding"
+          );
+          return { Component: OnboardingComplete };
+        },
+      },
+      {
+        path: "login",
+        lazy: async () => {
+          let { SignIn } = await import(
+            "./routes/v2/business/auth/screens/signin"
+          );
+          return { Component: SignIn };
+        },
+      },
+      {
+        path: "two-factor",
+        lazy: async () => {
+          let { TwoFactor } = await import(
+            "./routes/v2/business/auth/screens/signin"
+          );
+          return { Component: TwoFactor };
+        },
+      },
+      {
+        path: "forgot-password",
+        lazy: async () => {
+          let { ForgotPassword } = await import(
+            "./routes/v2/business/auth/screens/signin"
+          );
+          return { Component: ForgotPassword };
+        },
+      },
+    ],
+  },
+
   {
     path: "*",
     element: <NotFound />,
