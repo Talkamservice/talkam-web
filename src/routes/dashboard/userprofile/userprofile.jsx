@@ -133,7 +133,7 @@ export const Profile = () => {
                                                     <BlueTickIcon />
                                                     :
                                                     <span
-                                                        onClick={() => navigate("/pricing")}
+                                                        onClick={() => navigate("/plus")}
                                                         className={` ${isLoggedInUser && !user?.data?.active_subscription ? "block" : "hidden"} w-fit flex items-center gap-1 font-normal border border-[#D1F2F7] text-[8px] px-2 py-1 rounded-full bg-gradient-to-r from-[#FDFFFF] to-[#D1F2F7] cursor-pointer sm:ml-4`}
                                                     >
                                                         <BlueTickIcon />

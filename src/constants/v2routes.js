@@ -1,18 +1,20 @@
 /**
- * Route map for the TalkAM v2 web platform (marketing site + B2B dashboards).
+ * Route map for the TalkAM web platform (marketing site + B2B dashboards).
  *
- * DECISION — every v2 route is namespaced under `/v2` so the build is purely
- * additive: the v1 app already owns `/` (redirects to /home), `/pricing`,
- * `/login` and `/sign-up`. Promoting v2 to the site root later is a one-line
- * change to V2_ROOT plus the router mount path — no component touches.
+ * These are the site's canonical URLs — the marketing site is served from the
+ * root. The legacy v1 community app keeps its own paths (/home, /ads,
+ * /settings, /groups, …) and is reached directly rather than from "/".
+ *
+ * Only two paths ever collided with v1: "/" (v1 used to redirect it to /home)
+ * and "/pricing" (v1's TalkAM Plus consumer upgrade, now at /plus).
  */
-export const V2_ROOT = "/v2";
+export const V2_ROOT = "";
 
 const at = (path = "") => `${V2_ROOT}${path}`;
 
 export const V2 = {
-  root: V2_ROOT,
-  landing: at(""),
+  root: "/",
+  landing: "/",
   pricing: at("/pricing"),
   forBusiness: at("/for-business"),
   forTherapists: at("/for-therapists"),

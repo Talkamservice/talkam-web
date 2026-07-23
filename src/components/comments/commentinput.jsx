@@ -344,7 +344,7 @@ export const CommentInput = ({
                         className="bg-gradient-to-r from-[#D1F2F7] via-[#FDFFFF] to-[#D1F2F7] text-[10px] font-semibold sm:rounded-bl-xl sm:rounded-br-xl p-2 flex items-center justify-center text-center"
                     >
                         <p>
-                            You have used up your 5 free anonymous post, to post anonymously without limit, {" "} <Link to="/pricing" className="text-tprimary-50 pl-.5 underline underline-offset-2 inline">upgrade to TalkAM plus today</Link>
+                            You have used up your 5 free anonymous post, to post anonymously without limit, {" "} <Link to="/plus" className="text-tprimary-50 pl-.5 underline underline-offset-2 inline">upgrade to TalkAM plus today</Link>
                         </p>
                     </motion.div>
                     :

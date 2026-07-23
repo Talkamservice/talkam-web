@@ -96,7 +96,7 @@ export const CreateGroup = () => {
                                 >
                                     <p>
                                         Open unlimited public and private groups when you, {" "}
-                                        <Link to="/pricing" className="text-tprimary-50 pl-.5 underline underline-offset-2 inline">upgrade to TalkAM plus today</Link>
+                                        <Link to="/plus" className="text-tprimary-50 pl-.5 underline underline-offset-2 inline">upgrade to TalkAM plus today</Link>
                                     </p>
                                 </div>
                                 :

@@ -28,10 +28,6 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        index: true,
-        loader: () => redirect("home"),
-      },
-      {
         path: "home",
         lazy: async () => {
           let { Home } = await import("./routes/dashboard/home/home");
@@ -119,7 +115,9 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "pricing",
+        // TalkAM Plus (v1 consumer upgrade). Moved off "/pricing" so the
+        // marketing site can own that URL; /plus is a clearer name anyway.
+        path: "plus",
         lazy: async () => {
           let { Pricing } = await import("./routes/dashboard/pricing/pricing");
           return { Component: Pricing };
@@ -627,12 +625,16 @@ const router = createBrowserRouter([
     },
   },
   /* ═════════════════════════════════════════════════════════════════════
-   * TalkAM v2 — marketing site + B2B dashboards.
-   * Mounted under /v2 so it runs in parallel with v1 without colliding on
-   * "/", "/pricing", "/login" or "/sign-up". See src/constants/v2routes.js.
+   * Marketing site — served from the root.
+   *
+   * This shares `path: "/"` with the v1 app tree above. That is fine: only
+   * this tree has an index route, so bare "/" resolves here, while "/home",
+   * "/ads", "/settings" etc. resolve to v1 by child match. React Router ranks
+   * by specificity, not declaration order, so the order of the two blocks
+   * does not matter. See src/constants/v2routes.js.
    * ═════════════════════════════════════════════════════════════════════ */
   {
-    path: "/v2",
+    path: "/",
     errorElement: <ErrorPage />,
     lazy: async () => {
       let { MarketingLayout } = await import(
@@ -706,7 +708,7 @@ const router = createBrowserRouter([
 
   /* B2B auth & onboarding — 15 screens sharing the split AuthLayout. */
   {
-    path: "/v2/business",
+    path: "/business",
     errorElement: <ErrorPage />,
     lazy: async () => {
       let { AuthLayout } = await import("./routes/v2/business/auth/authlayout");
@@ -854,7 +856,7 @@ const router = createBrowserRouter([
 
   /* B2B Admin (HR) dashboard — modal provider wraps the shell. */
   {
-    path: "/v2/business/admin",
+    path: "/business/admin",
     errorElement: <ErrorPage />,
     lazy: async () => {
       let { AdminModalProvider } = await import(
@@ -968,7 +970,7 @@ const router = createBrowserRouter([
 
   /* B2B Employee (member) dashboard. */
   {
-    path: "/v2/business/employee",
+    path: "/business/employee",
     errorElement: <ErrorPage />,
     lazy: async () => {
       let { EmployeeProvider } = await import(
@@ -1055,7 +1057,7 @@ const router = createBrowserRouter([
 
   /* B2B Therapist (provider) dashboard. */
   {
-    path: "/v2/business/therapist",
+    path: "/business/therapist",
     errorElement: <ErrorPage />,
     lazy: async () => {
       let { TherapistProvider } = await import(

@@ -26,7 +26,7 @@ export const TalkAmPlusCard = ({ plan }) => {
             <Button
                 className="!rounded-full !text-xs xl:!text-sm"
                 fullWidth
-                onClick={() => navigate("/pricing")}
+                onClick={() => navigate("/plus")}
             >
                 {isMonitor ? 'Upgrade to TalkAM plus' : "Upgrade to plus"}
             </Button>
