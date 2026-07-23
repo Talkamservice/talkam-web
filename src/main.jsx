@@ -648,6 +648,13 @@ const router = createBrowserRouter([
           return { Component: V2Landing };
         },
       },
+      {
+        path: "pricing",
+        lazy: async () => {
+          let { V2Pricing } = await import("./routes/v2/pricing/pricing");
+          return { Component: V2Pricing };
+        },
+      },
     ],
   },
 

@@ -8,18 +8,31 @@ import { V2, MARKETING_NAV } from "../../../constants/v2routes";
 
 /**
  * Marketing site nav.
- * Spec: "TalkAM Landing Page.dc.html" § Option 1C — NAV.
- * Transparent over the hero gradient on the landing page; solid navy
- * elsewhere (`solid` prop).
+ * Spec: "TalkAM Landing Page.dc.html" § Option 1C — NAV (dark tone, sits over
+ * the hero gradient) and "TalkAM Pricing.dc.html" — NAV (light tone, white bar
+ * with a hairline rule) for pages whose hero is light.
  */
-export const MarketingNav = ({ solid }) => {
+export const MarketingNav = ({ tone = "dark" }) => {
   const [open, setOpen] = useState(false);
+  const light = tone === "light";
+
+  const linkClass = (isActive) =>
+    classNames(
+      "text-body font-semiboldNunito transition-colors",
+      light
+        ? isActive
+          ? "text-brand-400 font-boldNunito"
+          : "text-ink-600 hover:text-navy-800"
+        : isActive
+          ? "text-white"
+          : "text-white/65 hover:text-white"
+    );
 
   return (
     <header
       className={classNames(
         "relative z-20 w-full font-regularNunito",
-        solid && "bg-navy-800"
+        light && "border-b border-ink-100 bg-white"
       )}
     >
       <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-6 px-6 py-5 lg:px-14 lg:py-[26px]">
@@ -27,7 +40,10 @@ export const MarketingNav = ({ solid }) => {
           <img
             src={TalkamWordmark}
             alt="TalkAM"
-            className="h-[22px] w-auto [filter:brightness(0)_invert(1)] lg:h-[26px]"
+            className={classNames(
+              "h-[22px] w-auto lg:h-[26px]",
+              !light && "[filter:brightness(0)_invert(1)]"
+            )}
           />
         </Link>
 
@@ -35,23 +51,14 @@ export const MarketingNav = ({ solid }) => {
         <nav className="hidden items-center gap-9 lg:flex">
           {MARKETING_NAV.map((item) =>
             item.hash ? (
-              <a
-                key={item.label}
-                href={item.to}
-                className="text-body font-semiboldNunito text-white/65 transition-colors hover:text-white"
-              >
+              <a key={item.label} href={item.to} className={linkClass(false)}>
                 {item.label}
               </a>
             ) : (
               <NavLink
                 key={item.label}
                 to={item.to}
-                className={({ isActive }) =>
-                  classNames(
-                    "text-body font-semiboldNunito transition-colors hover:text-white",
-                    isActive ? "text-white" : "text-white/65"
-                  )
-                }
+                className={({ isActive }) => linkClass(isActive)}
               >
                 {item.label}
               </NavLink>
@@ -62,7 +69,7 @@ export const MarketingNav = ({ solid }) => {
         <div className="flex items-center gap-3">
           <DsButton
             to={V2.businessLogin}
-            variant="translucent"
+            variant={light ? "brand" : "translucent"}
             size="sm"
             className="hidden rounded-full px-5 py-2.5 sm:inline-flex"
           >
@@ -73,7 +80,7 @@ export const MarketingNav = ({ solid }) => {
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             onClick={() => setOpen((prev) => !prev)}
-            className="text-white lg:hidden"
+            className={classNames("lg:hidden", light ? "text-navy-800" : "text-white")}
           >
             {open ? <Icon.X size={24} /> : <Icon.Menu size={24} />}
           </button>
@@ -82,7 +89,14 @@ export const MarketingNav = ({ solid }) => {
 
       {/* Mobile drawer */}
       {open ? (
-        <nav className="border-t border-white/10 bg-navy-900/95 px-6 py-4 backdrop-blur lg:hidden">
+        <nav
+          className={classNames(
+            "border-t px-6 py-4 lg:hidden",
+            light
+              ? "border-ink-100 bg-white"
+              : "border-white/10 bg-navy-900/95 backdrop-blur"
+          )}
+        >
           <ul className="flex flex-col">
             {MARKETING_NAV.map((item) => (
               <li key={item.label}>
@@ -90,7 +104,10 @@ export const MarketingNav = ({ solid }) => {
                   <a
                     href={item.to}
                     onClick={() => setOpen(false)}
-                    className="block py-3 text-body-lg font-semiboldNunito text-white/75"
+                    className={classNames(
+                      "block py-3 text-body-lg font-semiboldNunito",
+                      light ? "text-ink-600" : "text-white/75"
+                    )}
                   >
                     {item.label}
                   </a>
@@ -98,7 +115,10 @@ export const MarketingNav = ({ solid }) => {
                   <Link
                     to={item.to}
                     onClick={() => setOpen(false)}
-                    className="block py-3 text-body-lg font-semiboldNunito text-white/75"
+                    className={classNames(
+                      "block py-3 text-body-lg font-semiboldNunito",
+                      light ? "text-ink-600" : "text-white/75"
+                    )}
                   >
                     {item.label}
                   </Link>
@@ -108,7 +128,7 @@ export const MarketingNav = ({ solid }) => {
             <li className="pt-3 sm:hidden">
               <DsButton
                 to={V2.businessLogin}
-                variant="translucent"
+                variant={light ? "brand" : "translucent"}
                 size="md"
                 fullWidth
                 className="rounded-full"

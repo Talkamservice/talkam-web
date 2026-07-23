@@ -30,6 +30,8 @@ const VARIANTS = {
   // On dark surfaces — used by the marketing nav
   translucent:
     "bg-white/10 text-white border-[1.5px] border-white/25 hover:bg-white/20",
+  // White CTA on a saturated brand band
+  inverse: "bg-white text-brand-400 hover:bg-ink-50",
 };
 
 const SIZES = {
@@ -105,6 +107,7 @@ DsButton.propTypes = {
     "ghost",
     "destructive",
     "translucent",
+    "inverse",
   ]),
   size: PropTypes.oneOf(["sm", "md", "lg", "pill"]),
   fullWidth: PropTypes.bool,

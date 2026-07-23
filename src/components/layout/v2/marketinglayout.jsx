@@ -40,6 +40,7 @@ export const MarketingLayout = () => {
 export const MarketingHero = ({
   className,
   innerClassName,
+  navTone = "dark",
   glows = [],
   children,
 }) => (
@@ -51,7 +52,7 @@ export const MarketingHero = ({
         className={classNames("pointer-events-none absolute rounded-full", glow)}
       />
     ))}
-    <MarketingNav />
+    <MarketingNav tone={navTone} />
     <div
       className={classNames(
         "relative z-[1] mx-auto max-w-[1440px] px-6 lg:px-14",
@@ -66,6 +67,8 @@ export const MarketingHero = ({
 MarketingHero.propTypes = {
   /** Extra classes on the <section> — set the background here. */
   className: PropTypes.string,
+  /** "dark" over a dark hero, "light" for pages with a light hero. */
+  navTone: PropTypes.oneOf(["dark", "light"]),
   /** Tailwind class strings positioning each decorative radial glow. */
   glows: PropTypes.arrayOf(PropTypes.string),
   children: PropTypes.node,
