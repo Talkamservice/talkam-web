@@ -69,6 +69,11 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 @font-face {
+  font-family: "medium-nunito";
+  src: url("./assets/fonts/Nunito-Medium.ttf");
+}
+
+@font-face {
   font-family: "semibold-nunito";
   src: url("./assets/fonts/Nunito-SemiBold.ttf");
 }
@@ -92,4 +97,78 @@ input[type=range]::-webkit-slider-thumb {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * TalkAM v2 (design-system) motion.
+ * Ported from the deck files' <style> blocks. All classes are v2-only and
+ * unused by any v1 page.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+@keyframes v2-float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes v2-reveal-up {
+  from { opacity: 0; transform: translateY(48px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.v2-float {
+  animation: v2-float-y 5s ease-in-out infinite;
+}
+
+/* Visible by default — useScrollReveal arms and then reveals these. Keeping
+   the resting state visible means content never disappears if JS is absent. */
+.v2-reveal-armed {
+  opacity: 0;
+  transform: translateY(48px);
+}
+
+.v2-reveal-in {
+  animation: v2-reveal-up 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.v2-phone-shot {
+  transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.4s ease;
+  will-change: transform;
+}
+
+.v2-dash-tilt {
+  transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (min-width: 1024px) {
+  .v2-phone-shot:hover {
+    transform: perspective(1200px) rotateY(-7deg) translateY(-12px);
+    box-shadow: 0 50px 100px rgba(0, 0, 0, 0.4);
+  }
+
+  .v2-dash-tilt:hover {
+    transform: perspective(1500px) rotateY(5deg) rotateX(1.5deg) scale(1.01);
+  }
+}
+
+@keyframes v2-pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(1, 127, 200, 0.45); }
+  50% { box-shadow: 0 0 0 7px rgba(1, 127, 200, 0); }
+}
+
+.v2-live-dot {
+  animation: v2-pulse-dot 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v2-float,
+  .v2-reveal-in,
+  .v2-live-dot {
+    animation: none;
+  }
+
+  .v2-reveal-armed {
+    opacity: 1;
+    transform: none;
+  }
 }
