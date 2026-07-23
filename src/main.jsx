@@ -966,6 +966,93 @@ const router = createBrowserRouter([
     ],
   },
 
+  /* B2B Employee (member) dashboard. */
+  {
+    path: "/v2/business/employee",
+    errorElement: <ErrorPage />,
+    lazy: async () => {
+      let { EmployeeProvider } = await import(
+        "./routes/v2/business/employee/employeelayout"
+      );
+      return { Component: EmployeeProvider };
+    },
+    children: [
+      {
+        lazy: async () => {
+          let { EmployeeLayout } = await import(
+            "./routes/v2/business/employee/employeelayout"
+          );
+          return { Component: EmployeeLayout };
+        },
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              let { EmployeeHome } = await import(
+                "./routes/v2/business/employee/pages/employeepages"
+              );
+              return { Component: EmployeeHome };
+            },
+          },
+          {
+            path: "sessions",
+            lazy: async () => {
+              let { EmployeeSessions } = await import(
+                "./routes/v2/business/employee/pages/employeepages"
+              );
+              return { Component: EmployeeSessions };
+            },
+          },
+          {
+            path: "checkins",
+            lazy: async () => {
+              let { EmployeeCheckins } = await import(
+                "./routes/v2/business/employee/pages/employeepages"
+              );
+              return { Component: EmployeeCheckins };
+            },
+          },
+          {
+            path: "community",
+            lazy: async () => {
+              let { EmployeeCommunity } = await import(
+                "./routes/v2/business/employee/pages/employeepages"
+              );
+              return { Component: EmployeeCommunity };
+            },
+          },
+          {
+            path: "messages",
+            lazy: async () => {
+              let { EmployeeMessages } = await import(
+                "./routes/v2/business/employee/pages/employeepages"
+              );
+              return { Component: EmployeeMessages };
+            },
+          },
+          {
+            path: "profile",
+            lazy: async () => {
+              let { EmployeeProfile } = await import(
+                "./routes/v2/business/employee/pages/employeepages"
+              );
+              return { Component: EmployeeProfile };
+            },
+          },
+          {
+            path: "help",
+            lazy: async () => {
+              let { EmployeeHelp } = await import(
+                "./routes/v2/business/employee/pages/employeepages"
+              );
+              return { Component: EmployeeHelp };
+            },
+          },
+        ],
+      },
+    ],
+  },
+
   {
     path: "*",
     element: <NotFound />,
