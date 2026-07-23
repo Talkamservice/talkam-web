@@ -111,9 +111,12 @@ input[type=range]::-webkit-slider-thumb {
   50% { transform: translateY(-12px); }
 }
 
+/* Animates the independent `translate` property, not `transform`, so the
+   reveal composes with elements that carry their own transform (e.g. the
+   3D-tilted dashboard frames) instead of overwriting it. */
 @keyframes v2-reveal-up {
-  from { opacity: 0; transform: translateY(48px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; translate: 0 48px; }
+  to { opacity: 1; translate: 0 0; }
 }
 
 .v2-float {
@@ -124,7 +127,7 @@ input[type=range]::-webkit-slider-thumb {
    the resting state visible means content never disappears if JS is absent. */
 .v2-reveal-armed {
   opacity: 0;
-  transform: translateY(48px);
+  translate: 0 48px;
 }
 
 .v2-reveal-in {
@@ -169,6 +172,6 @@ input[type=range]::-webkit-slider-thumb {
 
   .v2-reveal-armed {
     opacity: 1;
-    transform: none;
+    translate: none;
   }
 }

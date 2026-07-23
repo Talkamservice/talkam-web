@@ -655,6 +655,15 @@ const router = createBrowserRouter([
           return { Component: V2Pricing };
         },
       },
+      {
+        path: "for-business",
+        lazy: async () => {
+          let { V2ForBusiness } = await import(
+            "./routes/v2/forbusiness/forbusiness"
+          );
+          return { Component: V2ForBusiness };
+        },
+      },
     ],
   },
 
