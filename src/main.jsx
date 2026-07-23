@@ -852,6 +852,120 @@ const router = createBrowserRouter([
     ],
   },
 
+  /* B2B Admin (HR) dashboard — modal provider wraps the shell. */
+  {
+    path: "/v2/business/admin",
+    errorElement: <ErrorPage />,
+    lazy: async () => {
+      let { AdminModalProvider } = await import(
+        "./routes/v2/business/admin/adminmodals"
+      );
+      return { Component: AdminModalProvider };
+    },
+    children: [
+      {
+        lazy: async () => {
+          let { AdminLayout } = await import(
+            "./routes/v2/business/admin/adminlayout"
+          );
+          return { Component: AdminLayout };
+        },
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              let { AdminOverview } = await import(
+                "./routes/v2/business/admin/pages/overview"
+              );
+              return { Component: AdminOverview };
+            },
+          },
+          {
+            path: "employees",
+            lazy: async () => {
+              let { AdminEmployees } = await import(
+                "./routes/v2/business/admin/pages/employees"
+              );
+              return { Component: AdminEmployees };
+            },
+          },
+          {
+            path: "therapists",
+            lazy: async () => {
+              let { AdminTherapistNetwork } = await import(
+                "./routes/v2/business/admin/pages/therapists"
+              );
+              return { Component: AdminTherapistNetwork };
+            },
+          },
+          {
+            path: "my-therapists",
+            lazy: async () => {
+              let { AdminMyTherapists } = await import(
+                "./routes/v2/business/admin/pages/therapists"
+              );
+              return { Component: AdminMyTherapists };
+            },
+          },
+          {
+            path: "reports",
+            lazy: async () => {
+              let { AdminReports } = await import(
+                "./routes/v2/business/admin/pages/reportsbilling"
+              );
+              return { Component: AdminReports };
+            },
+          },
+          {
+            path: "billing",
+            lazy: async () => {
+              let { AdminBilling } = await import(
+                "./routes/v2/business/admin/pages/reportsbilling"
+              );
+              return { Component: AdminBilling };
+            },
+          },
+          {
+            path: "trust",
+            lazy: async () => {
+              let { AdminTrust } = await import(
+                "./routes/v2/business/admin/pages/settingsmisc"
+              );
+              return { Component: AdminTrust };
+            },
+          },
+          {
+            path: "settings",
+            lazy: async () => {
+              let { AdminSettings } = await import(
+                "./routes/v2/business/admin/pages/settingsmisc"
+              );
+              return { Component: AdminSettings };
+            },
+          },
+          {
+            path: "activity",
+            lazy: async () => {
+              let { AdminActivity } = await import(
+                "./routes/v2/business/admin/pages/settingsmisc"
+              );
+              return { Component: AdminActivity };
+            },
+          },
+          {
+            path: "help",
+            lazy: async () => {
+              let { AdminHelp } = await import(
+                "./routes/v2/business/admin/pages/settingsmisc"
+              );
+              return { Component: AdminHelp };
+            },
+          },
+        ],
+      },
+    ],
+  },
+
   {
     path: "*",
     element: <NotFound />,
