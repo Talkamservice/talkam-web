@@ -197,3 +197,46 @@ Files: `src/components/v2/dashboard/dashboardshell.jsx`,
 | (c) | The deck's QR block is a hard-coded 64-cell pattern, not a scannable code; transcribed cell-for-cell from the deck's `qrSeed`, so it is equally non-scannable. |
 
 ---
+## 2. Landing — variant 1C
+
+Deck: `TalkAM Landing Page.dc.html` § **OPTION 1C — PRODUCT-FORWARD** (lines
+465–815; variants 1A and 1B are deliberately not implemented) · Route: `/`
+Deck section order: NAV + HERO → APP SHOWCASE → APP DOWNLOAD BANNER →
+FOR BUSINESS → FOR PROFESSIONALS → STATS → FOOTER.
+
+Section order, components, copy, phone mock-ups, browser-frame dashboard,
+store badges and footer groups were already a faithful transcription. The
+discrepancies were dimensional.
+
+| # | Section | Deck | Implementation (before) | Type |
+|---|---------|------|--------------------------|------|
+| 103 | Global line-height | decks inherit the browser default (`normal`) and set an explicit line-height only where it matters | Tailwind preflight imposes `1.5` on every unstyled line box, inflating every text block | size |
+| 104 | Hero band padding | `52px 72px 80px` — **72px** horizontal, unlike every other band | `px-6 lg:px-14` (56px), so the eyebrow, h1, form and phone all sat 16px too far left/right | size |
+| 105 | Nav "Business Login →" | `rgba(255,255,255,0.08)` fill, 1.5px `rgba(255,255,255,0.25)` border, **13px**/700, padding `10px 20px`, pill | `bg-white/10`, `text-caption` (12px), fixed `h-8` (32px) from the `sm` button size | colour/size |
+| 106 | Stats labels | no max-width — every label sits on one line | `max-w-[220px]` wrapped "Community members already on the web" onto two lines and grew the band by 26px | size |
+| 107 | Stats grid | uniform `gap:16px` | `gap-x-4 gap-y-10` | size |
+| 108 | "Explore for Business →" | bespoke button — radius **13**, padding `14px 28px`, **15px**/800 | `DsButton size="lg"` — radius 14, fixed 56px height, 16px/700 | size |
+| 109 | "Apply as a Professional" | bespoke button — 56px tall, radius 14, padding `0 30px`, **15px**/800 | `DsButton size="lg"` — px 28, 16px/700 | size |
+
+**Discrepancies found: 7 — all 7 fixed.**
+
+### ✅ PASS — Landing 1C
+
+Section heights, deck vs implementation, after the fixes: hero 891/887,
+app showcase 965/965, download banner 178/178, for business 628/628,
+for professionals 349/351, stats 263/263, footer 338/340. Re-screenshotted
+every band at 1440 and compared; zero unapproved differences.
+
+Files: `src/components/layout/v2/marketinglayout.jsx`, `marketingnav.jsx`,
+`src/routes/v2/landing/sections/{hero,bands,forbusiness}.jsx`.
+
+**Allowed deviations**
+
+| Kind | Deviation |
+|------|-----------|
+| (a) | The deck stacks variants 1A / 1B / 1C in one document behind `.dv-opt` anchors. Only 1C is built, as chosen; the variant anchors have no counterpart. |
+| (a) | The deck's cross-page links point at sibling `.dc.html` files; they are real routes here. |
+| (b) | Below `lg` the hero stacks (copy above phone), the three showcase phones wrap, and the stats grid drops to 2-up. The deck specifies nothing below 1180px. |
+| (c) | `.pf-shot:hover` / `.dash-tilt:hover` use `animation-timeline: view()` in the deck, which no browser resolves consistently outside the design tool; the equivalent entrance is driven by `useScrollReveal` with the same 0.9s curve. |
+
+---

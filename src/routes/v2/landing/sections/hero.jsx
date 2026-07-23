@@ -149,6 +149,9 @@ const FeedPost = ({ post }) => (
 export const LandingHero = () => (
   <MarketingHero
     className="bg-ds-hero"
+    /* Deck: the 1C hero band is `padding:52px 72px 80px` — 72px, not the 56px
+       the other bands use. */
+    padClassName="px-6 lg:px-[72px]"
     innerClassName="flex flex-col items-center gap-12 pb-16 pt-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:pb-20 lg:pt-[52px]"
     glows={[
       "-right-[100px] -top-[120px] h-[640px] w-[640px] bg-[radial-gradient(circle,rgba(1,127,200,0.22)_0%,transparent_65%)]",

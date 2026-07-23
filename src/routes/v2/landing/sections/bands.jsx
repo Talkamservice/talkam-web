@@ -49,11 +49,12 @@ export const ForProfessionals = () => (
         </div>
       </div>
 
+      {/* Deck: bespoke button — 56px tall, radius 14, padding 0 30px, 15px/800. */}
       <DsButton
         to={V2.forTherapists}
         variant="therapy"
         size="lg"
-        className="shrink-0 shadow-[0_10px_24px_rgba(59,168,143,0.3)] transition-transform hover:-translate-y-[3px] hover:shadow-[0_16px_32px_rgba(59,168,143,0.4)]"
+        className="shrink-0 px-[30px] text-[15px] font-extraboldNunito shadow-[0_10px_24px_rgba(59,168,143,0.3)] transition-transform hover:-translate-y-[3px] hover:shadow-[0_16px_32px_rgba(59,168,143,0.4)]"
       >
         Apply as a Professional
       </DsButton>
@@ -67,7 +68,8 @@ export const StatsBand = () => (
       <div className="mb-9 text-center">
         <DsEyebrow className="text-brand-200">TalkAM today</DsEyebrow>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4 lg:gap-4">
+      {/* Deck: `repeat(4,1fr)` gap 16, `.stat-grid>div+div` hairline divider. */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {landingStats.map((stat, i) => (
           <div
             key={stat.value}
@@ -78,9 +80,7 @@ export const StatsBand = () => (
             <div className="mb-2 text-[30px] font-extraboldNunito tracking-[-0.02em] text-brand-200 lg:text-[38px]">
               {stat.value}
             </div>
-            <p className="mx-auto max-w-[220px] text-caption leading-[1.5] text-white/60">
-              {stat.label}
-            </p>
+            <p className="text-caption leading-[1.5] text-white/60">{stat.label}</p>
           </div>
         ))}
       </div>

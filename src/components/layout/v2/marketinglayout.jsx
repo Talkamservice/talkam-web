@@ -26,7 +26,10 @@ export const MarketingLayout = () => {
   useScrollReveal(pathname);
 
   return (
-    <div className="min-h-dvh bg-white font-regularNunito text-navy-800 antialiased">
+    /* `leading-[normal]`: the decks inherit the browser default line-height and
+       set an explicit one only where it matters. Tailwind's preflight would
+       otherwise impose 1.5 on every unstyled line box. */
+    <div className="min-h-dvh bg-white font-regularNunito leading-[normal] text-navy-800 antialiased">
       <Outlet />
       <MarketingFooter />
     </div>
@@ -40,6 +43,8 @@ export const MarketingLayout = () => {
 export const MarketingHero = ({
   className,
   innerClassName,
+  /** Horizontal padding — most decks use 56px, landing 1C's hero uses 72px. */
+  padClassName = "px-6 lg:px-14",
   navTone = "dark",
   navCta,
   glows = [],
@@ -56,7 +61,8 @@ export const MarketingHero = ({
     <MarketingNav tone={navTone} {...navCta} />
     <div
       className={classNames(
-        "relative z-[1] mx-auto max-w-[1440px] px-6 lg:px-14",
+        "relative z-[1] mx-auto max-w-[1440px]",
+        padClassName,
         innerClassName
       )}
     >

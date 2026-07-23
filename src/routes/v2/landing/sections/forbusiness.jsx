@@ -36,11 +36,12 @@ export const LandingForBusiness = () => (
             </div>
           ))}
         </div>
+        {/* Deck: bespoke button — radius 13, padding 14px 28px, 15px/800. */}
         <DsButton
           to={V2.forBusiness}
           variant="brand"
           size="lg"
-          className="shadow-[0_10px_24px_rgba(1,127,200,0.35)]"
+          className="h-auto rounded-[13px] px-7 py-3.5 text-[15px] font-extraboldNunito shadow-[0_10px_24px_rgba(1,127,200,0.35)]"
         >
           Explore for Business →
         </DsButton>

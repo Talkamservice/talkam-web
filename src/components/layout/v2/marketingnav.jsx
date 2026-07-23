@@ -73,11 +73,16 @@ export const MarketingNav = ({
         </nav>
 
         <div className="flex items-center gap-3">
+          {/* Deck: `rgba(255,255,255,0.08)` fill, 1.5px `rgba(255,255,255,0.25)`
+              border, 13px/700, padding 10px 20px, fully rounded. */}
           <DsButton
             to={ctaTo}
             variant={resolvedCta}
             size="sm"
-            className="hidden rounded-full px-5 py-2.5 sm:inline-flex"
+            className={classNames(
+              "hidden h-auto rounded-full px-5 py-2.5 text-[13px] sm:inline-flex",
+              !light && "!bg-white/[0.08] hover:!bg-white/[0.16]"
+            )}
           >
             {ctaLabel}
           </DsButton>
