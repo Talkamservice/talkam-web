@@ -1,19 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════
  * MOCK DATA — B2B Employee (member) dashboard
- * UI-only phase. Transcribed from "TalkAM B2B Employee Dashboard.dc.html".
+ * Transcribed verbatim from "TalkAM B2B Employee Dashboard.dc.html".
  *
- * Tone here is warm and personal, and the privacy assurance is persistent:
- * nothing on these screens is ever visible to the employer.
+ * Every value below is copied from the deck's `renderVals()` block. Do not
+ * paraphrase copy or re-order lists — the deck is the specification.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-export const employeeWorkspace = {
-  name: "Chidinma Eze",
-  meta: "Zenith Bank Nigeria",
-  initial: "C",
-  accent: "#017FC8",
-  portalLabel: "My Wellbeing",
-};
-
+/** Sidebar footer identity — deck: `<aside>` footer block. */
 export const employeeUser = {
   name: "Chidinma Eze",
   role: "Zenith Bank Nigeria",
@@ -22,24 +15,42 @@ export const employeeUser = {
   avatarColor: "#015C94",
 };
 
+export const employeePortalLabel = "My Wellbeing";
+
+/** Deck: `pageDefs`. */
 export const employeePageMeta = {
-  home: { title: "Home", subtitle: "Your private wellbeing space" },
-  sessions: { title: "My Sessions", subtitle: "Upcoming, past and your care team" },
-  checkins: { title: "Check-ins & Mood", subtitle: "Private to you — always" },
-  community: { title: "Community", subtitle: "Anonymous spaces to talk freely" },
-  messages: { title: "Messages", subtitle: "Your care team" },
-  profile: { title: "Profile & Privacy", subtitle: "Consent, security and preferences" },
-  help: { title: "Help & Support", subtitle: "Answers and someone to talk to" },
+  home: { title: "Home", subtitle: "Chidinma · Zenith Bank Nigeria" },
+  sessions: { title: "My Sessions", subtitle: "1 upcoming · 4 past sessions" },
+  checkins: {
+    title: "Check-ins & Mood",
+    subtitle: "Private trend summary — full history on mobile",
+  },
+  community: { title: "Community", subtitle: "Anonymous · trending this week" },
+  messages: { title: "Messages", subtitle: "Encrypted · therapist chat" },
+  profile: { title: "Profile & Privacy", subtitle: "Account, consent & safety" },
+  help: {
+    title: "Help & Support",
+    subtitle: "Answers, guides, and live help when you need it",
+  },
 };
 
-export const MOODS = [
-  { key: "great", emoji: "😄", label: "Great" },
-  { key: "good", emoji: "🙂", label: "Good" },
-  { key: "okay", emoji: "😐", label: "Okay" },
-  { key: "low", emoji: "😔", label: "Low" },
-  { key: "rough", emoji: "😣", label: "Rough" },
+/** Deck: `notifications` seed state. */
+export const employeeNotifications = [
+  { id: "n1", text: "Reminder: your session with Dr. Adewale K. is tomorrow at 2:00 PM", time: "2h ago", read: false, kind: "reminder" },
+  { id: "n2", text: "How was your session with Dr. Chioma O.? Leave feedback", time: "1d ago", read: false, kind: "feedback" },
+  { id: "n3", text: "Don't forget your daily check-in today", time: "1d ago", read: false, kind: "checkin" },
+  { id: "n4", text: "Dr. Adewale K. sent you a new message", time: "3d ago", read: true, kind: "message" },
 ];
 
+/** Deck: `notifKindColor`. */
+export const NOTIF_KIND_COLOR = {
+  reminder: "#017FC8",
+  feedback: "#DBB66E",
+  checkin: "#AC4242",
+  message: "#3BA88F",
+};
+
+/** Deck: `MOOD_MESSAGES`. */
 export const MOOD_MESSAGES = {
   great: "That's wonderful to hear — keep doing what's working for you! 🌟",
   good: "Glad you're doing well. Small steady days add up.",
@@ -49,162 +60,210 @@ export const MOOD_MESSAGES = {
     "That sounds really hard. You don't have to carry it alone — your therapist and TalkAM's support line are here anytime.",
 };
 
-export const CHECKIN_FACTORS = [
-  { key: "work", label: "Work" },
-  { key: "sleep", label: "Sleep" },
-  { key: "family", label: "Family" },
-  { key: "health", label: "Health" },
-  { key: "money", label: "Finances" },
-  { key: "social", label: "Relationships" },
-  { key: "exercise", label: "Exercise" },
-  { key: "rest", label: "Rest" },
+/**
+ * Deck: `buildMoodPicker` — Great → Rough. Used by Check-ins, the pre-session
+ * modal and the feedback modal.
+ */
+export const MOODS = [
+  { key: "great", emoji: "😄", label: "Great" },
+  { key: "good", emoji: "🙂", label: "Good" },
+  { key: "okay", emoji: "😐", label: "Okay" },
+  { key: "low", emoji: "😔", label: "Low" },
+  { key: "rough", emoji: "😣", label: "Rough" },
 ];
+
+/**
+ * Deck: `homeMoodRow` — Rough → Great. Deliberately the reverse of `MOODS`;
+ * the deck runs the Home check-in in the opposite direction.
+ */
+export const HOME_MOODS = [
+  { key: "rough", emoji: "😣", label: "Rough" },
+  { key: "low", emoji: "😔", label: "Low" },
+  { key: "okay", emoji: "😐", label: "Okay" },
+  { key: "good", emoji: "🙂", label: "Good" },
+  { key: "great", emoji: "😄", label: "Great" },
+];
+
+/** Deck: `factorTags`. */
+export const CHECKIN_FACTORS = [
+  { key: "work", label: "Work", emoji: "💼" },
+  { key: "sleep", label: "Sleep", emoji: "😴" },
+  { key: "family", label: "Family", emoji: "👨‍👩‍👧" },
+  { key: "health", label: "Health", emoji: "🩺" },
+  { key: "money", label: "Finances", emoji: "💰" },
+  { key: "social", label: "Relationships", emoji: "💬" },
+  { key: "exercise", label: "Exercise", emoji: "🏃" },
+  { key: "rest", label: "Rest", emoji: "🧘" },
+];
+
+/** Deck: `typeMeta` + `nextSession`. */
+export const SESSION_TYPE_META = {
+  video: { label: "Video session", short: "Video" },
+  voice: { label: "Voice session", short: "Voice" },
+};
 
 export const nextSession = {
   therapist: "Dr. Adewale K.",
   initials: "AK",
-  typeLabel: "Video session",
   whenLabel: "Today · 4:00 PM WAT",
   whenRangeLabel: "Today · 4:00 PM – 4:50 PM WAT",
-  focus: "Work stress",
 };
 
-/** 14-day mood trend — height % per day. */
-export const moodTrend = [55, 42, 60, 48, 65, 70, 58, 72, 66, 80, 62, 75, 84, 78];
+/** Deck: `homeTrendRaw` — Home fortnight area chart. */
+export const homeTrendRaw = [40, 55, 45, 60, 50, 70, 65, 75, 68, 80, 72, 85, 78, 88];
 
-export const wellbeingSnapshot = {
-  streak: 7,
-  averageMood: "Good",
-  daysLogged: 21,
-  monthDelta: "+12%",
-  sessionsUsed: 4,
-  sessionsTotal: 6,
-};
-
-export const recentCheckins = [
-  { day: "Yesterday", mood: "🙂", label: "Good", tags: "Work · Sleep", note: "Slept better, work felt manageable." },
-  { day: "Tue", mood: "😐", label: "Okay", tags: "Work", note: "Long day, but I took a proper lunch break." },
-  { day: "Mon", mood: "😔", label: "Low", tags: "Work · Finances", note: "Money worries kept surfacing." },
-  { day: "Sun", mood: "😄", label: "Great", tags: "Rest · Family", note: "Real rest day. Felt like myself." },
+/** Deck: `wellbeingSnapshot`. */
+export const wellbeingSnapshot = [
+  { value: "7", label: "day check-in streak", accent: "#3BA88F" },
+  { value: "4 / 6", label: "sessions used this quarter", accent: "#017FC8" },
+  { value: "+18%", label: "mood vs last month", accent: "#1F8A5B" },
 ];
 
-export const topFactors = [
-  { label: "Work", pct: 42, color: "#017FC8" },
-  { label: "Sleep", pct: 28, color: "#3BA88F" },
-  { label: "Finances", pct: 18, color: "#DBB66E" },
-  { label: "Relationships", pct: 12, color: "#6B44A8" },
-];
-
-export const upcomingSessions = [
+/** Deck: `recommended`. */
+export const recommended = [
   {
-    id: "s1",
-    therapist: "Dr. Adewale K.",
-    initials: "AK",
-    avatarBg: "#017FC8",
-    type: "Video",
-    when: "Today · 4:00 PM",
-    focus: "Work stress",
-    number: "Session 5",
+    tag: "GUIDED",
+    title: "5-minute box breathing",
+    sub: "Calm your nervous system before a busy day",
+    tint: "#EEF4FC",
+    accent: "#017FC8",
+    icon: "M22 12h-4l-3 9L9 3l-3 9H2",
+  },
+  {
+    tag: "READ",
+    title: "Setting boundaries at work",
+    sub: "A practical guide from the TalkAM library",
+    tint: "#E8F7F4",
+    accent: "#1F6B59",
+    icon: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
   },
 ];
 
-export const pastSessions = [
-  { id: "p1", therapist: "Dr. Adewale K.", initials: "AK", avatarBg: "#017FC8", type: "Video", when: "Jul 9 · 2:00 PM", focus: "Work stress", rated: true, rating: 5 },
-  { id: "p2", therapist: "Dr. Adewale K.", initials: "AK", avatarBg: "#017FC8", type: "Voice", when: "Jul 2 · 4:00 PM", focus: "Sleep", rated: true, rating: 5 },
-  { id: "p3", therapist: "Dr. Chioma O.", initials: "CO", avatarBg: "#3BA88F", type: "Video", when: "Jun 25 · 11:00 AM", focus: "Intake", rated: false },
+/** Deck: `qrSeed` — deterministic QR-ish 8×8 pattern for the "Get the app" card. */
+export const qrSeed = [
+  1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1,
+  1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1,
+  0, 0, 0, 0, 1, 0, 0, 1, 1, 1,
 ];
 
+/** Deck: `sessSummary` (uncapped state). */
+export const sessionSummary = [
+  { value: "1", label: "Upcoming", accent: "#017FC8" },
+  { value: "4", label: "Completed", accent: "#141B34" },
+  { value: "2 / 6", label: "Sessions used", accent: "#1F8A5B" },
+  { value: "😄", label: "Mood trending up", accent: "#9A6E0A" },
+];
+
+/** Deck: `sessionPrep`. */
+export const sessionPrep = [
+  { done: true, label: "Complete your pre-session mood check-in" },
+  { done: true, label: "Find a quiet, private space" },
+  { done: false, label: "Jot down what you'd like to talk about" },
+];
+
+/** Deck: `careTeam`. */
 export const careTeam = {
   name: "Dr. Adewale K.",
   initials: "AK",
-  title: "Clinical Psychologist · CBT",
+  avatarBg: "#017FC8",
+  title: "Clinical Psychologist",
+  focus: "Anxiety · Work stress",
   rating: "4.9",
-  sessions: 4,
-  continuity: "You've had 4 sessions together — continuity helps.",
+  sessions: "4 sessions together",
+  note: "Continuing work on boundary-setting and box-breathing.",
 };
 
-export const prepChecklist = [
-  { key: "mood", label: "Pre-session mood check-in", note: "Helps your therapist see where you're starting from" },
-  { key: "quiet", label: "Find a quiet, private space", note: "Somewhere you won't be interrupted for 50 minutes" },
-  { key: "talking", label: "Jot down talking points", note: "One or two things you want to get to" },
+/** Deck: `pastRaw` → `pastSessions`. */
+export const pastSessions = [
+  { name: "Dr. Chioma O.", date: "Jul 2 · Video · 50 min", initials: "CO", avatarBg: "#3BA88F", status: "Completed", canRate: true, preMood: "low", postMood: "good" },
+  { name: "Dr. Adewale K.", date: "Jun 25 · Voice · 50 min", initials: "AK", avatarBg: "#017FC8", status: "Completed", canRate: false, preMood: "okay", postMood: "good" },
+  { name: "Dr. Adewale K.", date: "Jun 11 · Video · 50 min", initials: "AK", avatarBg: "#017FC8", status: "Completed", canRate: false },
+  { name: "Dr. Chioma O.", date: "May 28 · Video · 50 min", initials: "CO", avatarBg: "#3BA88F", status: "No-show", canRate: false },
 ];
 
-export const bookingSlots = [
-  { key: "thu10", day: "Thu", date: "Jul 17", time: "10:00 AM" },
-  { key: "thu16", day: "Thu", date: "Jul 17", time: "4:00 PM" },
-  { key: "fri11", day: "Fri", date: "Jul 18", time: "11:00 AM" },
-  { key: "fri15", day: "Fri", date: "Jul 18", time: "3:00 PM" },
-  { key: "mon09", day: "Mon", date: "Jul 21", time: "9:00 AM" },
-  { key: "mon14", day: "Mon", date: "Jul 21", time: "2:00 PM" },
+export const MOOD_EMOJI = { great: "😄", good: "🙂", okay: "😐", low: "😔", rough: "😣" };
+
+/** Deck: `moodStats` — Check-ins stat strip. */
+export const moodStats = [
+  { value: "9", label: "day streak", accent: "#3BA88F" },
+  { value: "🙂", label: "avg mood", accent: "#017FC8" },
+  { value: "12 / 14", label: "days logged", accent: "#141B34" },
+  { value: "+18%", label: "vs last month", accent: "#1F8A5B" },
 ];
 
-export const communityGroups = [
-  { name: "Work Stress", members: "2.4k members", topic: "Work Stress", tone: "brand", posts: 18 },
-  { name: "Anxiety Support", members: "3.1k members", topic: "Anxiety", tone: "teal", posts: 42 },
-  { name: "Sleep & Rest", members: "980 members", topic: "Sleep", tone: "gold", posts: 9 },
-  { name: "General Support", members: "5.6k members", topic: "General", tone: "purple", posts: 63 },
+/** Deck: `moodBarsRaw` — Check-ins 14-day bar chart. */
+export const moodBarsRaw = [55, 62, 48, 70, 66, 58, 72, 80, 64, 58, 75, 68, 60, 74];
+
+/** Deck: `baseCheckins`. */
+export const baseCheckins = [
+  { day: "Yesterday", mood: "😐", label: "Okay", tags: "Sleep · Work", note: "Tired but managed the workload." },
+  { day: "Mon, Jul 7", mood: "😄", label: "Great", tags: "Exercise · Social", note: "Good session with Dr. Adewale." },
+  { day: "Sun, Jul 6", mood: "🙂", label: "Good", tags: "Family · Rest", note: "Restful day with family." },
 ];
 
+/** Deck: `topFactors`. */
+export const topFactors = [
+  { label: "Work", pct: 64, color: "#017FC8" },
+  { label: "Sleep", pct: 48, color: "#6B44A8" },
+  { label: "Rest", pct: 32, color: "#3BA88F" },
+];
+
+/** Deck: `topicRaw` + `chipPalette`. */
+export const communityTopics = [
+  { name: "Work Stress", posts: 214, snippet: "Anyone else feel like Mondays never end lately?", time: "2h ago", chipBg: "#EEF4FC", chipFg: "#015C94" },
+  { name: "Anxiety", posts: 181, snippet: "Small win today — I spoke up in the meeting.", time: "4h ago", chipBg: "#FFF0F0", chipFg: "#8B2E2E" },
+  { name: "Relationships", posts: 97, snippet: "How do you set boundaries without guilt?", time: "6h ago", chipBg: "#F5F0FF", chipFg: "#6B44A8" },
+  { name: "Grief", posts: 42, snippet: "One year today. Still figuring out how to sit with it.", time: "8h ago", chipBg: "#F0F0F2", chipFg: "#717171" },
+  { name: "Depression", posts: 88, snippet: "Getting out of bed felt like a win today.", time: "11h ago", chipBg: "#E8F7F4", chipFg: "#1F6B59" },
+  { name: "General Support", posts: 130, snippet: "Just needed somewhere to say I’m proud of myself.", time: "13h ago", chipBg: "#FBF5E8", chipFg: "#9A6E0A" },
+];
+
+/** Deck: `threadDefs`. */
 export const messageThreads = [
-  {
-    id: "t1",
-    name: "Dr. Adewale K.",
-    initials: "AK",
-    avatarBg: "#017FC8",
-    preview: "See you at 4 — bring the notes if you made any.",
-    time: "2h",
-    unread: 2,
-    messages: [
-      { from: "them", text: "Hi Chidinma — just confirming our session today at 4:00 PM.", time: "9:12 AM" },
-      { from: "me", text: "Yes, that still works. Thank you.", time: "9:30 AM" },
-      { from: "them", text: "See you at 4 — bring the notes if you made any.", time: "9:31 AM" },
-    ],
-  },
-  {
-    id: "t2",
-    name: "TalkAM Support",
-    initials: "TA",
-    avatarBg: "#3BA88F",
-    preview: "Your session allowance resets on 1 Aug.",
-    time: "3d",
-    unread: 0,
-    messages: [
-      { from: "them", text: "Your session allowance resets on 1 Aug.", time: "Mon" },
-    ],
-  },
+  { key: "ak", name: "Dr. Adewale K.", preview: "That’s completely understandable —", initials: "AK", avatarBg: "#017FC8" },
+  { key: "co", name: "Dr. Chioma O.", preview: "See you at our next session!", initials: "CO", avatarBg: "#3BA88F" },
+  { key: "support", name: "TalkAM Support", preview: "Your session receipt is ready", initials: "TS", avatarBg: "#858585" },
 ];
 
-export const consentToggles = [
-  { key: "account", title: "Account operation", note: "Required to log you in and keep your account secure", locked: true, on: true },
-  { key: "session", title: "Session delivery", note: "Required to book and deliver your therapy sessions", locked: true, on: true },
-  { key: "community", title: "Anonymous community", note: "Post and reply in the community feed", locked: false, on: true },
-  { key: "research", title: "Anonymised research", note: "Let de-identified data improve TalkAM's programs", locked: false, on: false },
+/** Deck: the three bubbles hard-coded in the Messages pane. */
+export const conversation = [
+  { from: "them", text: "How are you feeling ahead of Thursday's session?" },
+  { from: "me", text: "A bit anxious about the work deadline we discussed, but doing okay." },
+  { from: "them", text: "That's completely understandable — let's make it the focus on Thursday." },
 ];
 
-export const notificationPrefs = [
-  { key: "reminders", title: "Session reminders", note: "24 hours and 1 hour before", on: true },
-  { key: "checkin", title: "Daily check-in nudge", note: "A gentle reminder each evening", on: true },
-  { key: "messages", title: "New messages", note: "When your care team writes to you", on: true },
-  { key: "community", title: "Community activity", note: "Replies to your posts", on: false },
+/** Deck: Profile & Privacy — consent rows. */
+export const consentRows = [
+  { key: "account", title: "Account operation", note: "Required", locked: true },
+  { key: "session", title: "Session delivery", note: "Required", locked: true },
+  { key: "community", title: "Anonymous community", note: "Optional", locked: false, on: true },
+  { key: "research", title: "Anonymised research", note: "Optional", locked: false, on: false },
 ];
 
-export const employeeNotifications = [
-  { id: "n1", text: "Reminder: your session with Dr. Adewale K. is today at 4:00 PM", time: "2h ago", read: false, tone: "brand" },
-  { id: "n2", text: "How was your session with Dr. Chioma O.? Leave feedback", time: "1d ago", read: false, tone: "gold" },
-  { id: "n3", text: "Don't forget your daily check-in today", time: "1d ago", read: false, tone: "teal" },
-  { id: "n4", text: "Dr. Adewale K. sent you a new message", time: "3d ago", read: true, tone: "grey" },
-];
-
-export const wellnessResources = [
-  { title: "5 grounding techniques for when panic hits", meta: "5 min read · Anxiety & Stress", slug: "grounding-techniques-for-panic" },
-  { title: "The science of a good night's sleep", meta: "7 min read · Self-Care", slug: "science-of-a-good-nights-sleep" },
-  { title: "Managing anxiety at work without burning out", meta: "6 min read · Workplace Wellbeing", slug: "managing-anxiety-at-work" },
-];
-
+/** Deck: `employeeFaqs`. */
 export const employeeFaqs = [
-  { q: "Can my employer see my sessions or mood check-ins?", a: "No. Your employer only ever sees anonymised, company-wide totals — and only once at least 5 people have responded. Your individual sessions, messages, mood entries and community posts are never visible to them, under any circumstance." },
-  { q: "How many sessions do I get?", a: "Your company sets a per-cycle allowance — yours is 6 sessions this cycle. You can see what's left on Home and My Sessions. If you reach the cap you can ask your admin to top up." },
-  { q: "What happens if I need to cancel?", a: "Cancel or reschedule from My Sessions. Cancelling more than 24 hours ahead frees the session back to your allowance." },
-  { q: "Is my community activity linked to my work account?", a: "No. You participate under a pseudonym that is never linked to your work identity or shown to your employer." },
-  { q: "What if I'm in crisis right now?", a: "TalkAM is not an emergency service. If you are in immediate danger, contact local emergency services. For urgent non-emergency support, use the crisis resources on this page or message your care team." },
+  { q: "Can my employer see my sessions or messages?", a: "No. Zenith Bank only ever sees anonymised, aggregate trends across the whole team — never your individual sessions, mood check-ins, messages, or community activity." },
+  { q: "How do I book or reschedule a session?", a: "Go to My Sessions to book a new slot, or use Reschedule / Cancel on an upcoming session. Cancelling ≥24h ahead is a full refund; under 24h is 50%; no-shows are not refunded." },
+  { q: "What happens to my account if I leave the company?", a: "Your personal TalkAM account and session history stay yours. You’ll just move off the company plan — you can keep using TalkAM on your own, or reach out to us about continuing coverage." },
+  { q: "Is the community feed anonymous?", a: "Yes — posting and browsing the community happens under an anonymous username in the mobile app. Nothing you post there is tied to your work identity." },
+  { q: "How do I change my therapist?", a: 'Open Messages or My Sessions and select "Find a different therapist" — you can browse and switch at any time, at no extra cost.' },
+  { q: "I’m in crisis right now — what do I do?", a: "If you are in immediate danger, please contact local emergency services. You can also message your therapist directly or use the crisis resources linked in the mobile app’s Community tab." },
+];
+
+/** Deck: `slotDefs` — reschedule modal. */
+export const rescheduleSlots = [
+  { key: "thu10", label: "Thu Jul 9 · 10:00 AM" },
+  { key: "thu4", label: "Thu Jul 9 · 4:00 PM" },
+  { key: "fri9", label: "Fri Jul 10 · 9:00 AM" },
+  { key: "fri2", label: "Fri Jul 10 · 2:00 PM" },
+  { key: "mon11", label: "Mon Jul 13 · 11:00 AM" },
+  { key: "mon3", label: "Mon Jul 13 · 3:00 PM" },
+];
+
+/** Deck: `reasonDefs` — report modal. */
+export const reportReasons = [
+  { key: "late", label: "Therapist was late or unavailable" },
+  { key: "unprofessional", label: "Unprofessional conduct" },
+  { key: "chat", label: "Inappropriate message in chat" },
+  { key: "other", label: "Something else" },
 ];

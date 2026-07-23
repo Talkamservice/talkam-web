@@ -1,23 +1,70 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import classNames from "classnames";
-import * as Icon from "react-feather";
-import {
-  Modal,
-  PrimaryButton,
-  SecondaryButton,
-  InfoStrip,
-} from "../../../../components/v2/dashboard/chrome";
+import { V2 } from "../../../../constants/v2routes";
 import {
   MOODS,
   MOOD_MESSAGES,
-  bookingSlots,
-  nextSession,
+  SESSION_TYPE_META,
+  rescheduleSlots,
+  reportReasons,
 } from "../../../../fakedata/v2/employee";
 
-/** Modals for the employee dashboard. Spec: § MODALS of the employee deck. */
+/**
+ * Employee dashboard modals.
+ * Spec: § MODALS of "TalkAM B2B Employee Dashboard.dc.html" — each one is a
+ * fixed `rgba(10,18,32,0.55)` scrim with an 18px-radius white sheet.
+ */
 
-const MoodRow = ({ value, onPick }) => (
-  <div className="flex flex-wrap gap-2">
+const Scrim = ({ children, onClose }) => {
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[500] flex items-center justify-center overflow-y-auto bg-[rgba(10,18,32,0.55)] p-6">
+      {children}
+    </div>
+  );
+};
+
+const Sheet = ({ width, className, children }) => (
+  <div
+    role="dialog"
+    aria-modal="true"
+    className={classNames(
+      "my-auto w-full rounded-[18px] bg-white shadow-[0_24px_60px_rgba(0,0,0,0.35)]",
+      className
+    )}
+    style={{ maxWidth: width }}
+  >
+    {children}
+  </div>
+);
+
+/** Deck: the 28×28 `#F2F3F7` close square in titled modals. */
+const SheetHeader = ({ title, onClose }) => (
+  <div className="flex items-center justify-between gap-3 border-b border-ink-100 px-6 py-[22px]">
+    <div className="text-[16px] font-extraboldNunito text-navy-800">{title}</div>
+    <button
+      type="button"
+      onClick={onClose}
+      aria-label="Close"
+      className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-[8px] bg-surface-page"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="2">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  </div>
+);
+
+/** Deck: `buildMoodPicker(..., small=true)` — used by the pre-session + feedback modals. */
+const SmallMoodRow = ({ value, onPick }) => (
+  <div className="flex gap-2">
     {MOODS.map((m) => (
       <button
         key={m.key}
@@ -25,320 +72,659 @@ const MoodRow = ({ value, onPick }) => (
         onClick={() => onPick(m.key)}
         aria-pressed={value === m.key}
         className={classNames(
-          "flex flex-1 basis-[84px] cursor-pointer flex-col items-center gap-1 rounded-ds-md border-[1.5px] px-2 py-3 transition-colors",
+          "flex flex-1 cursor-pointer flex-col items-center gap-1 rounded-[10px] border-[1.5px] px-1.5 py-2.5",
           value === m.key
-            ? "border-brand-400 bg-brand-25"
-            : "border-ink-200 bg-white hover:bg-ink-50"
+            ? "border-[#017FC8] bg-[#EEF4FC] text-[#015C94]"
+            : "border-surface-line bg-[#F8F9FC] text-[#717171]"
         )}
       >
-        <span className="text-h2">{m.emoji}</span>
-        <span className="text-[11px] font-boldNunito text-ink-600">{m.label}</span>
+        <span className="text-[22px]">{m.emoji}</span>
+        <span className="text-[10px] font-boldNunito">{m.label}</span>
       </button>
     ))}
   </div>
 );
 
-const BookingModal = ({ open, close, showToast }) => {
-  const [slot, setSlot] = useState("thu10");
-  const [type, setType] = useState("video");
-
-  return (
-    <Modal open={open} onClose={close} title="Book a session" subtitle="Dr. Adewale K. · Clinical Psychologist">
-      <div className="mb-4">
-        <div className="mb-2 text-[11px] font-boldNunito text-ink-400">SESSION TYPE</div>
-        <div className="flex gap-2">
-          {[
-            { key: "video", label: "Video", icon: <Icon.Video size={15} /> },
-            { key: "voice", label: "Voice", icon: <Icon.Mic size={15} /> },
-            { key: "chat", label: "Chat", icon: <Icon.MessageCircle size={15} /> },
-          ].map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setType(t.key)}
-              aria-pressed={type === t.key}
-              className={classNames(
-                "flex flex-1 cursor-pointer items-center justify-center gap-[7px] rounded-[10px] border-[1.5px] p-[11px] text-[13px] font-boldNunito",
-                type === t.key
-                  ? "border-navy-800 bg-navy-800 text-white"
-                  : "border-ink-200 bg-surface-page text-ink-600"
-              )}
-            >
-              {t.icon}
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <div className="mb-2 text-[11px] font-boldNunito text-ink-400">AVAILABLE SLOTS</div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {bookingSlots.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              onClick={() => setSlot(s.key)}
-              aria-pressed={slot === s.key}
-              className={classNames(
-                "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-2.5 text-center",
-                slot === s.key ? "border-brand-400 bg-brand-25" : "border-ink-200 bg-white"
-              )}
-            >
-              <div className="text-[11px] text-ink-400">
-                {s.day} · {s.date}
-              </div>
-              <div className="text-[13px] font-boldNunito text-navy-800">{s.time}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <InfoStrip className="mb-4">
-        This session draws 1 from your monthly allowance. You have 2 remaining.
-      </InfoStrip>
-
-      <div className="flex justify-end gap-2">
-        <SecondaryButton onClick={close}>Cancel</SecondaryButton>
-        <PrimaryButton
-          onClick={() => {
-            close();
-            showToast("Session booked — you'll get a reminder 24h before");
-          }}
-        >
-          Confirm booking
-        </PrimaryButton>
-      </div>
-    </Modal>
-  );
-};
-
-const PreSessionMoodModal = ({ open, close, showToast }) => {
-  const [mood, setMood] = useState(null);
-
-  return (
-    <Modal open={open} onClose={close} title="Before you join" subtitle="A quick check-in — only you and your therapist see this">
-      <div className="mb-4">
-        <MoodRow value={mood} onPick={setMood} />
-        {mood ? (
-          <p className="mt-3 rounded-ds-md bg-wellness-50 px-3.5 py-3 text-caption leading-[1.6] text-wellness-600">
-            {MOOD_MESSAGES[mood]}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="mb-4 flex flex-col gap-2">
-        {[
-          "Find a quiet, private space",
-          "Headphones if you have them",
-          "One or two things you'd like to get to",
-        ].map((item) => (
-          <div key={item} className="flex items-center gap-2.5 text-[13px] text-ink-600">
-            <Icon.Check size={15} className="shrink-0 text-wellness-400" />
-            {item}
-          </div>
-        ))}
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <SecondaryButton onClick={close}>Not yet</SecondaryButton>
-        <PrimaryButton
-          disabled={!mood}
-          onClick={() => {
-            close();
-            showToast("Joining your session room…");
-          }}
-        >
-          Join session room →
-        </PrimaryButton>
-      </div>
-    </Modal>
-  );
-};
-
-const RescheduleModal = ({ open, close, showToast }) => {
-  const [slot, setSlot] = useState("fri11");
-  return (
-    <Modal open={open} onClose={close} title="Reschedule session" subtitle={nextSession.whenRangeLabel}>
-      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {bookingSlots.map((s) => (
-          <button
-            key={s.key}
-            type="button"
-            onClick={() => setSlot(s.key)}
-            aria-pressed={slot === s.key}
-            className={classNames(
-              "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-2.5 text-center",
-              slot === s.key ? "border-brand-400 bg-brand-25" : "border-ink-200 bg-white"
-            )}
-          >
-            <div className="text-[11px] text-ink-400">
-              {s.day} · {s.date}
-            </div>
-            <div className="text-[13px] font-boldNunito text-navy-800">{s.time}</div>
-          </button>
-        ))}
-      </div>
-      <div className="flex justify-end gap-2">
-        <SecondaryButton onClick={close}>Keep current time</SecondaryButton>
-        <PrimaryButton
-          onClick={() => {
-            close();
-            showToast("Session rescheduled");
-          }}
-        >
-          Reschedule
-        </PrimaryButton>
-      </div>
-    </Modal>
-  );
-};
-
-const CancelModal = ({ open, close, showToast }) => (
-  <Modal open={open} onClose={close} title="Cancel this session?" width="max-w-[440px]">
-    <p className="mb-4 text-[13px] leading-[1.7] text-ink-500">
-      Your session with {nextSession.therapist} on {nextSession.whenLabel} will be
-      cancelled. Cancelling more than 24 hours ahead returns the session to your monthly
-      allowance.
-    </p>
-    <div className="flex justify-end gap-2">
-      <SecondaryButton onClick={close}>Keep session</SecondaryButton>
-      <button
-        type="button"
-        onClick={() => {
-          close();
-          showToast("Session cancelled");
-        }}
-        className="cursor-pointer rounded-[10px] bg-signal-error px-4 py-[9px] text-[13px] font-boldNunito text-white hover:bg-surface-errorInk"
-      >
-        Cancel session
-      </button>
-    </div>
-  </Modal>
+const NavyButton = ({ className, children, ...props }) => (
+  <button
+    type="button"
+    className={classNames(
+      "h-[46px] cursor-pointer rounded-[12px] bg-navy-800 text-[13px] font-extraboldNunito text-white",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </button>
 );
 
-const FeedbackModal = ({ open, close, showToast }) => {
-  const [stars, setStars] = useState(4);
+const GreyButton = ({ className, children, ...props }) => (
+  <button
+    type="button"
+    className={classNames(
+      "h-[46px] cursor-pointer rounded-[10px] border border-ink-200 bg-surface-page text-[13px] font-boldNunito text-navy-800",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+const RedButton = ({ className, children, ...props }) => (
+  <button
+    type="button"
+    className={classNames(
+      "h-[46px] cursor-pointer rounded-[10px] bg-[#AC4242] text-[13px] font-extraboldNunito text-white",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+/* ── Reschedule ───────────────────────────────────────────────────────────── */
+
+const RescheduleModal = ({ close, showToast }) => {
+  const [slot, setSlot] = useState("thu10");
   return (
-    <Modal open={open} onClose={close} title="How was your session?" subtitle="Your rating is private to TalkAM">
-      <div className="mb-4 flex justify-center gap-2">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            onClick={() => setStars(n)}
-            aria-label={`${n} stars`}
-            className={classNames(
-              "cursor-pointer text-[32px] leading-none transition-colors",
-              n <= stars ? "text-gold-400" : "text-ink-200"
-            )}
+    <Scrim onClose={close}>
+      <Sheet width={460}>
+        <SheetHeader title="Reschedule session" onClose={close} />
+        <div className="flex flex-col gap-3.5 px-6 py-[22px]">
+          <div className="text-[12px] leading-[1.6] text-ink-500">
+            Currently: Today · 4:00 PM with Dr. Adewale K. Pick a new available slot below.
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {rescheduleSlots.map((s) => (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => setSlot(s.key)}
+                aria-pressed={slot === s.key}
+                className={classNames(
+                  "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-[11px] text-center text-[12.5px] font-boldNunito",
+                  slot === s.key
+                    ? "border-navy-800 bg-navy-800 text-white"
+                    : "border-ink-200 bg-surface-page text-ink-600"
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div className="rounded-[10px] bg-[#FBF5E8] px-3 py-2.5 text-[11.5px] leading-[1.6] text-[#9A6E0A]">
+            Rescheduling more than 24h before your session is free and instant.
+          </div>
+          <NavyButton
+            onClick={() => {
+              close();
+              showToast("Session rescheduled");
+            }}
           >
-            ★
-          </button>
-        ))}
+            Confirm New Time
+          </NavyButton>
+        </div>
+      </Sheet>
+    </Scrim>
+  );
+};
+
+/* ── Cancel ───────────────────────────────────────────────────────────────── */
+
+const CancelModal = ({ close, showToast }) => (
+  <Scrim onClose={close}>
+    <Sheet width={420} className="p-6">
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF0F0]">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#AC4242" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="15" y1="9" x2="9" y2="15" />
+          <line x1="9" y1="9" x2="15" y2="15" />
+        </svg>
       </div>
-      <textarea
-        rows={3}
-        placeholder="Anything you'd like to add? (optional)"
-        className="mb-4 w-full resize-none rounded-ds-md border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
-      />
-      <div className="flex justify-end gap-2">
-        <SecondaryButton onClick={close}>Skip</SecondaryButton>
-        <PrimaryButton
+      <div className="mb-2 text-[17px] font-extraboldNunito text-navy-800">
+        Cancel this session?
+      </div>
+      <div className="mb-[18px] text-[13px] leading-[1.7] text-ink-500">
+        Your session with Dr. Adewale K. is more than 24 hours away — you&apos;ll receive a{" "}
+        <strong className="font-boldNunito text-[#3BA88F]">full refund</strong>. Cancelling
+        within 24 hours refunds 50%; no-shows are not refunded.
+      </div>
+      <div className="flex gap-2.5">
+        <GreyButton className="flex-1" onClick={close}>
+          Keep Session
+        </GreyButton>
+        <RedButton
+          className="flex-1"
+          onClick={() => {
+            close();
+            showToast("Session cancelled");
+          }}
+        >
+          Cancel Session
+        </RedButton>
+      </div>
+    </Sheet>
+  </Scrim>
+);
+
+/* ── Feedback ─────────────────────────────────────────────────────────────── */
+
+const FeedbackModal = ({ close, showToast }) => {
+  const [star, setStar] = useState(4);
+  const [postMood, setPostMood] = useState(null);
+
+  return (
+    <Scrim onClose={close}>
+      <Sheet width={440} className="p-6">
+        <div className="mb-1 text-[16px] font-extraboldNunito text-navy-800">
+          How was your session?
+        </div>
+        <div className="mb-[18px] text-[12px] text-ink-400">
+          With Dr. Chioma O. · Jul 2 — private, only visible to you and TalkAM
+        </div>
+        <div className="mb-[18px] flex justify-center gap-2">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setStar(n)}
+              aria-label={`${n} stars`}
+              className={classNames(
+                "cursor-pointer text-[34px] leading-none",
+                n <= star ? "text-gold-400" : "text-ink-200"
+              )}
+            >
+              ★
+            </button>
+          ))}
+        </div>
+        <div className="mb-[9px] text-center text-[12.5px] font-boldNunito text-navy-800">
+          How do you feel after this session?
+        </div>
+        <div className="mb-3.5">
+          <SmallMoodRow value={postMood} onPick={setPostMood} />
+        </div>
+        <div className="mb-3.5 rounded-[10px] bg-[#F8F9FC] px-[13px] py-2.5 text-[11.5px] leading-[1.6] text-ink-600">
+          {postMood ? MOOD_MESSAGES[postMood] : "Pick how you feel now — this is just for you."}
+        </div>
+        <textarea
+          placeholder="Optional — what went well, or what could improve?"
+          className="mb-4 h-[70px] w-full resize-none rounded-[12px] border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
+        />
+        <NavyButton
+          className="w-full"
           onClick={() => {
             close();
             showToast("Thanks — your feedback helps");
           }}
         >
-          Submit rating
-        </PrimaryButton>
-      </div>
-    </Modal>
+          Submit Feedback
+        </NavyButton>
+      </Sheet>
+    </Scrim>
   );
 };
 
-const CapReachedModal = ({ open, close, showToast }) => (
-  <Modal open={open} onClose={close} title="You've used all 6 sessions this cycle" width="max-w-[460px]">
-    <InfoStrip tone="gold" className="mb-4">
-      New bookings are paused until your allowance resets on 1 Aug, or your admin tops
-      up. Any session already scheduled still goes ahead.
-    </InfoStrip>
-    <p className="mb-4 text-[13px] leading-[1.7] text-ink-500">
-      We can let your HR admin know you&apos;d like more sessions. They see the request
-      only — never why you asked.
-    </p>
-    <div className="flex justify-end gap-2">
-      <SecondaryButton onClick={close}>Not now</SecondaryButton>
-      <PrimaryButton
-        onClick={() => {
-          close();
-          showToast("Request sent to your admin · confirmation emailed");
-        }}
-      >
-        Notify admin to top up
-      </PrimaryButton>
-    </div>
-  </Modal>
-);
+/* ── Pre-session mood ─────────────────────────────────────────────────────── */
 
-const ReportModal = ({ open, close, showToast }) => {
-  const [reason, setReason] = useState("late");
-  const reasons = [
-    { key: "late", label: "Therapist was late" },
-    { key: "conduct", label: "Unprofessional conduct" },
-    { key: "tech", label: "Technical problems" },
-    { key: "other", label: "Something else" },
-  ];
+const PreSessionMoodModal = ({ close, open }) => {
+  const [mood, setMood] = useState(null);
   return (
-    <Modal open={open} onClose={close} title="Report a concern" subtitle="Goes to TalkAM Trust & Safety — never to your employer">
-      <div className="mb-4 flex flex-col gap-2">
-        {reasons.map((r) => (
+    <Scrim onClose={close}>
+      <Sheet width={420} className="p-6">
+        <div className="mb-1 text-[16px] font-extraboldNunito text-navy-800">
+          Before you join…
+        </div>
+        <div className="mb-[18px] text-[12px] text-ink-400">
+          How are you feeling right now? This helps track your progress over time —
+          private, never shared with Zenith Bank.
+        </div>
+        <div className="mb-4">
+          <SmallMoodRow value={mood} onPick={setMood} />
+        </div>
+        <button
+          type="button"
+          onClick={() => open("inCall")}
+          className="h-[46px] w-full cursor-pointer rounded-[12px] bg-[#3BA88F] text-[13px] font-extraboldNunito text-white"
+        >
+          Continue to Session Room →
+        </button>
+      </Sheet>
+    </Scrim>
+  );
+};
+
+/* ── Booking ──────────────────────────────────────────────────────────────── */
+
+const BookingModal = ({ close, showToast, sessionType, setSessionType }) => {
+  const [type, setType] = useState(sessionType);
+
+  const chip = (active) =>
+    classNames(
+      "flex flex-1 cursor-pointer items-center justify-center gap-[7px] rounded-[10px] border-[1.5px] p-[11px] text-[13px] font-boldNunito",
+      active ? "border-navy-800 bg-navy-800 text-white" : "border-ink-200 bg-surface-page text-ink-600"
+    );
+
+  return (
+    <Scrim onClose={close}>
+      <Sheet width={440}>
+        <SheetHeader title="Book a session" onClose={close} />
+        <div className="flex flex-col gap-4 px-6 py-[22px]">
+          <div className="flex items-center gap-3 rounded-[12px] bg-[#F8F9FC] px-3.5 py-3">
+            <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[#017FC8] text-[13px] font-extraboldNunito text-white">
+              AK
+            </span>
+            <div>
+              <div className="text-[13px] font-boldNunito text-navy-800">Dr. Adewale K.</div>
+              <div className="text-[11px] text-ink-400">
+                Anxiety · CBT · Today at 4:00 PM WAT
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-[12px] font-boldNunito text-ink-600">
+              How would you like to connect?
+            </label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setType("video")} className={chip(type === "video")}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="23 7 16 12 23 17 23 7" />
+                  <rect x="1" y="5" width="15" height="14" rx="2" />
+                </svg>
+                Video call
+              </button>
+              <button type="button" onClick={() => setType("voice")} className={chip(type === "voice")}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+                Voice call
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-[12px] bg-[#EEF4FC] px-3.5 py-3 text-[11.5px] leading-[1.6] text-brand-600">
+            We&apos;ll send you a reminder before 4:00 PM today, and Dr. Adewale K. will see
+            this on their schedule right away.
+          </div>
+
           <button
-            key={r.key}
             type="button"
-            onClick={() => setReason(r.key)}
-            aria-pressed={reason === r.key}
+            onClick={() => {
+              setSessionType(type);
+              close();
+              showToast("Session booked for 4:00 PM today");
+            }}
+            className="h-12 cursor-pointer rounded-[12px] bg-navy-800 text-[14px] font-extraboldNunito text-white"
+          >
+            Confirm Session →
+          </button>
+        </div>
+      </Sheet>
+    </Scrim>
+  );
+};
+
+/* ── Session cap reached ──────────────────────────────────────────────────── */
+
+const CapReachedModal = ({ close, showToast }) => {
+  const [requested, setRequested] = useState(false);
+
+  return (
+    <Scrim onClose={close}>
+      <Sheet width={440} className="overflow-hidden">
+        <div className="px-[26px] pb-5 pt-[26px] text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[16px] bg-[#FBF0F0]">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#AC4242" strokeWidth="2.2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <div className="mb-2 text-[18px] font-extraboldNunito text-navy-800">
+            You&apos;ve reached your monthly session limit
+          </div>
+          <div className="text-[13px] leading-[1.6] text-[#6B7280]">
+            You&apos;ve used all <b className="text-navy-800">6 of 6</b> sessions in your
+            Zenith Bank plan for this billing month. To keep booking, ask your admin to top
+            up your organisation&apos;s session pool.
+          </div>
+        </div>
+
+        {requested ? (
+          <div className="px-[26px] pb-[26px]">
+            <div className="mb-3.5 flex items-start gap-[11px] rounded-[12px] border border-[#C4E8DF] bg-wellness-25 px-4 py-3.5">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F6B59" strokeWidth="2.5" strokeLinecap="round" className="mt-px shrink-0">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <div className="text-[12px] leading-[1.6] text-wellness-600">
+                <b>Your admin has been notified.</b> We&apos;ve emailed a confirmation to
+                your inbox — you&apos;ll get a notification here as soon as more sessions
+                are added to the pool.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={close}
+              className="h-12 w-full cursor-pointer rounded-[12px] bg-navy-800 text-[13.5px] font-extraboldNunito text-white"
+            >
+              Done
+            </button>
+          </div>
+        ) : (
+          <div className="px-[26px] pb-[26px]">
+            <div className="mb-3.5 rounded-[12px] bg-[#EEF4FC] px-3.5 py-3 text-[11.5px] leading-[1.6] text-brand-600">
+              Notifying your admin sends them a top-up request. We&apos;ll email you a copy
+              and let you know the moment more sessions are added — your allowance also
+              resets automatically next billing month.
+            </div>
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={close}
+                className="h-12 flex-1 cursor-pointer rounded-[12px] border border-ink-200 bg-surface-page text-[13.5px] font-boldNunito text-ink-600"
+              >
+                Not now
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRequested(true);
+                  showToast("Request sent to your admin · confirmation emailed");
+                }}
+                className="h-12 flex-[1.4] cursor-pointer rounded-[12px] bg-navy-800 text-[13.5px] font-extraboldNunito text-white"
+              >
+                Notify admin to top up
+              </button>
+            </div>
+          </div>
+        )}
+      </Sheet>
+    </Scrim>
+  );
+};
+
+/* ── In-call screen ───────────────────────────────────────────────────────── */
+
+const InCallScreen = ({ open, sessionType }) => {
+  const [seconds, setSeconds] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const [cameraOn, setCameraOn] = useState(true);
+  const isVideo = sessionType === "video";
+
+  useEffect(() => {
+    const id = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const label = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+
+  return (
+    <div className="fixed inset-0 z-[600] flex flex-col bg-[#0A1220]">
+      <div className="flex items-center justify-between px-[26px] py-5">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-[#AC4242]" />
+          <span className="text-[13px] font-boldNunito text-white">{label}</span>
+        </div>
+        <span className="text-[12px] text-white/40">Encrypted · not recorded</span>
+      </div>
+
+      <div className="relative flex flex-1 items-center justify-center">
+        {isVideo ? (
+          <>
+            <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(160deg,#141B34,#0D2240)]">
+              <span className="flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#017FC8] text-[40px] font-extraboldNunito text-white">
+                AK
+              </span>
+            </div>
+            <div className="absolute bottom-6 right-6 flex h-[100px] w-[140px] items-center justify-center overflow-hidden rounded-[14px] border-2 border-white/[0.15] bg-[#1A2E5A]">
+              {cameraOn ? (
+                <span className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#3BA88F] text-[18px] font-extraboldNunito text-white">
+                  C
+                </span>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2">
+                  <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              )}
+              <span className="absolute bottom-1.5 left-2 text-[9px] font-boldNunito text-white/60">
+                YOU
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-[18px]">
+            <div className="relative flex h-[140px] w-[140px] items-center justify-center rounded-full bg-[rgba(1,127,200,0.15)]">
+              <span className="absolute -inset-3.5 rounded-full border-2 border-[rgba(1,127,200,0.25)]" />
+              <span className="flex h-[100px] w-[100px] items-center justify-center rounded-full bg-[#017FC8] text-[32px] font-extraboldNunito text-white">
+                AK
+              </span>
+            </div>
+            <div className="text-[16px] font-extraboldNunito text-white">Dr. Adewale K.</div>
+            <div className="text-[12px] text-white/40">Voice call · {label}</div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-center gap-4 p-7">
+        <button
+          type="button"
+          onClick={() => setMuted((v) => !v)}
+          aria-label={muted ? "Unmute" : "Mute"}
+          className={classNames(
+            "flex h-[52px] w-[52px] cursor-pointer items-center justify-center rounded-full",
+            muted ? "bg-[#AC4242]" : "bg-white/[0.12]"
+          )}
+        >
+          {muted ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+              <line x1="1" y1="1" x2="23" y2="23" />
+              <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
+              <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+            </svg>
+          )}
+        </button>
+
+        {isVideo ? (
+          <button
+            type="button"
+            onClick={() => setCameraOn((v) => !v)}
+            aria-label={cameraOn ? "Turn camera off" : "Turn camera on"}
             className={classNames(
-              "cursor-pointer rounded-[10px] border-[1.5px] px-3.5 py-3 text-left text-[13px] font-semiboldNunito",
-              reason === r.key
-                ? "border-brand-400 bg-brand-25 text-brand-600"
-                : "border-ink-200 bg-white text-ink-600"
+              "flex h-[52px] w-[52px] cursor-pointer items-center justify-center rounded-full",
+              cameraOn ? "bg-white/[0.12]" : "bg-[#AC4242]"
             )}
           >
-            {r.label}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+              <polygon points="23 7 16 12 23 17 23 7" />
+              <rect x="1" y="5" width="15" height="14" rx="2" />
+            </svg>
           </button>
-        ))}
-      </div>
-      <textarea
-        rows={3}
-        placeholder="Tell us what happened (optional)"
-        className="mb-4 w-full resize-none rounded-ds-md border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
-      />
-      <div className="flex justify-end gap-2">
-        <SecondaryButton onClick={close}>Cancel</SecondaryButton>
-        <PrimaryButton
-          onClick={() => {
-            close();
-            showToast("Report submitted — our team will follow up");
-          }}
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => open("feedback")}
+          aria-label="End call"
+          className="flex h-[52px] w-[60px] cursor-pointer items-center justify-center rounded-[26px] bg-[#AC4242]"
         >
-          Submit report
-        </PrimaryButton>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" stroke="none">
+            <path d="M21.5 15.9l-3.8-1.1c-.5-.1-1 0-1.3.4l-1.7 1.7c-2.5-1.3-4.6-3.4-5.9-5.9l1.7-1.7c.4-.4.5-.9.4-1.3L9.8 4.2c-.2-.6-.8-1-1.4-.9L4.7 4C4 4.1 3.5 4.7 3.5 5.4 3.9 14 10.2 20.1 18.6 20.5c.7 0 1.3-.5 1.4-1.2l.7-3.7c.1-.6-.3-1.2-.9-1.4z" />
+          </svg>
+        </button>
       </div>
-    </Modal>
+    </div>
   );
 };
 
-export const EmployeeModals = ({ modal, context, close, showToast }) => (
-  <>
-    <BookingModal open={modal === "booking"} close={close} showToast={showToast} />
-    <PreSessionMoodModal open={modal === "preSessionMood"} close={close} showToast={showToast} />
-    <RescheduleModal open={modal === "reschedule"} close={close} showToast={showToast} />
-    <CancelModal open={modal === "cancel"} close={close} showToast={showToast} />
-    <FeedbackModal open={modal === "feedback"} close={close} showToast={showToast} />
-    <CapReachedModal open={modal === "capReached"} close={close} showToast={showToast} />
-    <ReportModal open={modal === "report"} close={close} showToast={showToast} />
-  </>
+/* ── Report ───────────────────────────────────────────────────────────────── */
+
+const ReportModal = ({ close, showToast }) => {
+  const [reason, setReason] = useState("late");
+  return (
+    <Scrim onClose={close}>
+      <Sheet width={460} className="p-6">
+        <div className="mb-1 text-[16px] font-extraboldNunito text-navy-800">
+          Report a concern
+        </div>
+        <div className="mb-4 text-[12px] text-ink-400">
+          Goes directly to TalkAM&apos;s Trust &amp; Safety team — never to your employer
+        </div>
+        <div className="mb-4 flex flex-col gap-2">
+          {reportReasons.map((r) => (
+            <button
+              key={r.key}
+              type="button"
+              onClick={() => setReason(r.key)}
+              aria-pressed={reason === r.key}
+              className={classNames(
+                "cursor-pointer rounded-[10px] border-[1.5px] px-3.5 py-[11px] text-left text-[13px] font-semiboldNunito",
+                reason === r.key
+                  ? "border-[#FFCDD2] bg-[#FFF0F0] text-[#8B2E2E]"
+                  : "border-surface-line bg-[#F8F9FC] text-ink-600"
+              )}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+        <textarea
+          placeholder="Add any detail that might help (optional)"
+          className="mb-4 h-[70px] w-full resize-none rounded-[12px] border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
+        />
+        <div className="flex gap-2.5">
+          <GreyButton className="flex-1" onClick={close}>
+            Cancel
+          </GreyButton>
+          <RedButton
+            className="flex-1"
+            onClick={() => {
+              close();
+              showToast("Report submitted — our team will follow up");
+            }}
+          >
+            Submit Report
+          </RedButton>
+        </div>
+      </Sheet>
+    </Scrim>
+  );
+};
+
+/* ── Delete account ───────────────────────────────────────────────────────── */
+
+const DeleteAccountModal = ({ close }) => (
+  <Scrim onClose={close}>
+    <Sheet width={440} className="p-6 text-center">
+      <div className="mx-auto mb-4 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#FFF0F0]">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#AC4242" strokeWidth="2">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14H6L5 6" />
+        </svg>
+      </div>
+      <div className="mb-2 text-[17px] font-extraboldNunito text-navy-800">
+        Delete your TalkAM account?
+      </div>
+      <div className="mb-[18px] text-left text-[13px] leading-[1.7] text-ink-500">
+        Your community posts are anonymised (username replaced with [deleted]). Session
+        notes are permanently erased within 30 days. This cannot be undone.
+      </div>
+      <input
+        placeholder="Type DELETE to confirm"
+        aria-label="Type DELETE to confirm"
+        className="mb-3.5 h-[46px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-center text-[13px] text-ink-800"
+      />
+      <div className="flex gap-2.5">
+        <GreyButton className="flex-1" onClick={close}>
+          Keep Account
+        </GreyButton>
+        <RedButton className="flex-1">Delete Forever</RedButton>
+      </div>
+    </Sheet>
+  </Scrim>
 );
 
-export { MoodRow };
+/* ── Sign out ─────────────────────────────────────────────────────────────── */
+
+const SignOutModal = ({ close }) => (
+  <Scrim onClose={close}>
+    <Sheet width={380} className="p-6 text-center">
+      <div className="mb-2 text-[16px] font-extraboldNunito text-navy-800">
+        Sign out of TalkAM?
+      </div>
+      <div className="mb-5 text-[13px] leading-[1.6] text-ink-500">
+        You&apos;ll need your work email and password to sign back in.
+      </div>
+      <div className="flex gap-2.5">
+        <button
+          type="button"
+          onClick={close}
+          className="h-11 flex-1 cursor-pointer rounded-[10px] border border-ink-200 bg-surface-page text-[13px] font-boldNunito text-navy-800"
+        >
+          Stay Signed In
+        </button>
+        <Link
+          to={V2.businessLogin}
+          className="flex h-11 flex-1 items-center justify-center rounded-[10px] bg-navy-800 text-[13px] font-extraboldNunito text-white"
+        >
+          Sign Out
+        </Link>
+      </div>
+    </Sheet>
+  </Scrim>
+);
+
+/* ── Router ───────────────────────────────────────────────────────────────── */
+
+export const EmployeeModals = ({
+  modal,
+  close,
+  open,
+  showToast,
+  sessionType,
+  setSessionType,
+}) => {
+  switch (modal) {
+    case "reschedule":
+      return <RescheduleModal close={close} showToast={showToast} />;
+    case "cancel":
+      return <CancelModal close={close} showToast={showToast} />;
+    case "feedback":
+      return <FeedbackModal close={close} showToast={showToast} />;
+    case "preSessionMood":
+      return <PreSessionMoodModal close={close} open={open} />;
+    case "booking":
+      return (
+        <BookingModal
+          close={close}
+          showToast={showToast}
+          sessionType={sessionType}
+          setSessionType={setSessionType}
+        />
+      );
+    case "capReached":
+      return <CapReachedModal close={close} showToast={showToast} />;
+    case "inCall":
+      return <InCallScreen open={open} sessionType={sessionType} />;
+    case "report":
+      return <ReportModal close={close} showToast={showToast} />;
+    case "deleteAccount":
+      return <DeleteAccountModal close={close} />;
+    case "signout":
+      return <SignOutModal close={close} />;
+    default:
+      return null;
+  }
+};
+
+export { SmallMoodRow, SESSION_TYPE_META };
