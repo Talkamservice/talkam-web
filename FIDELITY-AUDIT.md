@@ -240,3 +240,53 @@ Files: `src/components/layout/v2/marketinglayout.jsx`, `marketingnav.jsx`,
 | (c) | `.pf-shot:hover` / `.dash-tilt:hover` use `animation-timeline: view()` in the deck, which no browser resolves consistently outside the design tool; the equivalent entrance is driven by `useScrollReveal` with the same 0.9s curve. |
 
 ---
+## 3. Pricing
+
+Deck: `TalkAM Pricing.dc.html` · Route: `/pricing`
+Deck section order: NAV → HERO → PRICING LAYERS → BILLING SUMMARY BAND →
+WHAT'S INCLUDED → FAIRNESS PRICING EXPLAINER → FAQ → CTA → FOOTER.
+
+The body was a faithful transcription — tier names, prices, units, badges,
+notes, the six "Every plan includes" cards, the ₦475,000 worked example and
+the six FAQ entries all matched the deck verbatim. The discrepancies were the
+page chrome.
+
+| # | Section | Deck | Implementation (before) | Type |
+|---|---------|------|--------------------------|------|
+| 110 | Nav links | **Features · Pricing · FAQ**, "Pricing" active in `#017FC8`/700 | the landing nav — The App · For Business · For Therapists · Journal | wrong content |
+| 111 | Nav logo / padding | 24px logo, `24px 56px` padding | 26px logo, 26px vertical padding | size |
+| 112 | Footer | single `40px 56px` row: `© … All rights reserved.` + **Terms of Use · Privacy Policy · Business Login** | the landing four-column footer | wrong component |
+| 113 | Hero eyebrow pill | `margin-bottom:22px` | `mb-5` (20px) | size |
+| 114 | Hero lead paragraph | `font-size:16px`, `margin:0 auto 8px` | `text-body-lg` (16px/**1.7 forced**), no bottom margin | size |
+| 115 | FAQ disclosure marker | the Pricing deck does **not** hide the native `<details>` marker — rows show the browser triangle on the **left**, and more than one row can be open | `DsAccordion` `+`/`–` on the right, single-open | icon/behaviour |
+| 116 | FAQ question size | `font-size:14px` (line-height normal) | `text-body` → forced 1.65 line-height, rows 4px taller | size |
+| 117 | CTA paragraph | `font-size:14px` | `text-body` → forced 1.65 | size |
+| 118 | CTA button | an **inline** `<a>`, radius 13, padding `14px 30px`, 15px/800 — being inline is what keeps the blue band 241px tall | `DsButton size="lg"` block pill: radius 14, fixed 56px height, 16px/700, band 33px taller | size |
+
+**Discrepancies found: 9 — all 9 fixed.**
+
+### ✅ PASS — Pricing
+
+Section heights, deck vs implementation, after the fixes: nav+hero 392/392,
+pricing layers 331/331, billing band 141/142, every-plan-includes 505/507,
+how-we-price-it 427/427, FAQ 592/582, CTA 241/246, footer 96/98.
+
+Files: `src/routes/v2/pricing/pricing.jsx`,
+`src/components/layout/v2/{marketingnav,marketingfooter,marketinglayout}.jsx`,
+`src/components/v2/accordion.jsx`, `src/constants/v2routes.js`.
+
+**Note on the marketing chrome:** every marketing deck draws its own nav row
+and its own footer, and they genuinely differ (link sets, active treatment,
+CTA label and fill, four-column vs single-row footer). The nav and footer are
+now per-page props rather than one shared set — the remaining marketing pages
+below are wired the same way.
+
+**Allowed deviations**
+
+| Kind | Deviation |
+|------|-----------|
+| (a) | The deck's `.dc.html` cross-links are real routes; "Features" and "FAQ" point at the landing page's `#app` / `#faq` anchors, which is where those sections live. |
+| (b) | Below `lg` the three tier cards stack, the billing band wraps its CTA, and the nav collapses to a drawer. |
+| (c) | FAQ rows use the native `<details>` marker to match the deck exactly; its exact glyph is drawn by the browser, so it is Chrome's triangle rather than an asset we control. |
+
+---

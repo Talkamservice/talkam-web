@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { MarketingFooter } from "../../../components/layout/v2/marketingfooter";
 import { Link, useParams, Navigate } from "react-router-dom";
 import { MarketingNav } from "../../../components/layout/v2/marketingnav";
 import { DsButton } from "../../../components/v2/button";
@@ -254,6 +255,7 @@ export const V2BlogArticle = () => {
       </article>
 
       <NewsletterBand />
+      <MarketingFooter />
     </>
   );
 };

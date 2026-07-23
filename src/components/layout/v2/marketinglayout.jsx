@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import classNames from "classnames";
 import PropTypes from "prop-types";
 import { MarketingNav } from "./marketingnav";
-import { MarketingFooter } from "./marketingfooter";
 import { useScrollReveal } from "../../../hooks/useScrollReveal";
 
 /**
@@ -12,7 +11,9 @@ import { useScrollReveal } from "../../../hooks/useScrollReveal";
  *
  * Each page owns its own hero background, so the nav is composed into the
  * page's <MarketingHero> rather than rendered here — see the deck, where the
- * nav sits inside the hero gradient and the gradient differs per page.
+ * nav sits inside the hero gradient and the gradient differs per page. The
+ * footer is likewise per-page: the decks alternate between the four-column
+ * footer and a single-row minimal one.
  */
 export const MarketingLayout = () => {
   const { pathname, hash } = useLocation();
@@ -31,7 +32,6 @@ export const MarketingLayout = () => {
        otherwise impose 1.5 on every unstyled line box. */
     <div className="min-h-dvh bg-white font-regularNunito leading-[normal] text-navy-800 antialiased">
       <Outlet />
-      <MarketingFooter />
     </div>
   );
 };

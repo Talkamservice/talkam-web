@@ -1,4 +1,5 @@
 import classNames from "classnames";
+import { MarketingFooter } from "../../../components/layout/v2/marketingfooter";
 import { MarketingHero } from "../../../components/layout/v2/marketinglayout";
 import { BrowserFrame } from "../../../components/v2/frames";
 import { ShowcaseBand, ShowcasePoints } from "../../../components/v2/showcaseband";
@@ -268,6 +269,7 @@ export const V2ForTherapists = () => {
           </DsButton>
         </div>
       </section>
+      <MarketingFooter />
     </>
   );
 };

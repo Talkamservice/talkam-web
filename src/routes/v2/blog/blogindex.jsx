@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { MarketingFooter } from "../../../components/layout/v2/marketingfooter";
 import { Link } from "react-router-dom";
 import classNames from "classnames";
 import { MarketingHero } from "../../../components/layout/v2/marketinglayout";
@@ -214,6 +215,7 @@ export const V2BlogIndex = () => {
       </section>
 
       <NewsletterBand />
+      <MarketingFooter />
     </>
   );
 };

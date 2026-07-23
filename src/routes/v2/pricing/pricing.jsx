@@ -3,8 +3,9 @@ import { MarketingHero } from "../../../components/layout/v2/marketinglayout";
 import { DsButton } from "../../../components/v2/button";
 import { DsEyebrow } from "../../../components/v2/badge";
 import { DsAccordion } from "../../../components/v2/accordion";
+import { MarketingFooter } from "../../../components/layout/v2/marketingfooter";
 import { usePageMeta } from "../../../hooks/usePageMeta";
-import { V2 } from "../../../constants/v2routes";
+import { V2, PRICING_NAV } from "../../../constants/v2routes";
 import {
   pricingTiers,
   pricingIncluded,
@@ -61,16 +62,22 @@ export const V2Pricing = () => {
       {/* HERO */}
       <MarketingHero
         navTone="light"
+        navCta={{
+          links: PRICING_NAV,
+          active: "Pricing",
+          logoClassName: "h-[22px] lg:h-6",
+          padClassName: "py-5 lg:py-6",
+        }}
         className="bg-white"
         innerClassName="pb-10 pt-14 text-center lg:pt-[72px]"
       >
-        <span className="mb-5 inline-flex items-center rounded-full bg-brand-25 px-3.5 py-[7px]">
+        <span className="mb-[22px] inline-flex items-center rounded-full bg-brand-25 px-3.5 py-[7px]">
           <DsEyebrow className="text-brand-400">TalkAM for Business</DsEyebrow>
         </span>
         <h1 className="mb-3.5 text-[34px] font-extraboldNunito tracking-[-0.02em] text-navy-800 sm:text-[42px] lg:text-[48px]">
           Simple, transparent pricing.
         </h1>
-        <p className="mx-auto max-w-[640px] text-body-lg leading-[1.7] text-[#5B6577]">
+        <p className="mx-auto mb-2 max-w-[640px] text-[16px] leading-[1.7] text-[#5B6577]">
           Three clear layers, billed after your team activates. No upfront charge,
           no hidden per-session surprises.
         </p>
@@ -198,7 +205,8 @@ export const V2Pricing = () => {
         <h2 className="mb-8 text-center text-[24px] font-extraboldNunito tracking-[-0.01em] text-navy-800 lg:text-[28px]">
           Pricing questions
         </h2>
-        <DsAccordion items={pricingFaqs} className="mx-auto max-w-[700px]" />
+        {/* Deck: plain <details> — native disclosure marker, several can be open. */}
+        <DsAccordion items={pricingFaqs} marker="native" className="mx-auto max-w-[700px]" />
       </section>
 
       {/* CTA */}
@@ -206,11 +214,28 @@ export const V2Pricing = () => {
         <h2 className="mb-2.5 text-[24px] font-extraboldNunito text-white lg:text-[28px]">
           Ready to bring TalkAM to your team?
         </h2>
-        <p className="mb-6 text-body text-white/75">Set up takes about 10 minutes.</p>
-        <DsButton to={V2.businessSignUp} variant="inverse" size="lg">
+        <p className="mb-6 text-[14px] text-white/75">Set up takes about 10 minutes.</p>
+        {/* Deck: an inline `<a>` — radius 13, padding 14px 30px, 15px/800. The
+            inline display is deliberate: it is what sets the band's height. */}
+        <DsButton
+          to={V2.businessSignUp}
+          variant="inverse"
+          size="lg"
+          className="!inline h-auto rounded-[13px] px-[30px] py-3.5 text-[15px] font-extraboldNunito"
+        >
           Get Started →
         </DsButton>
       </section>
+
+      {/* Deck: single-row footer — © · Terms of Use · Privacy Policy · Business Login */}
+      <MarketingFooter
+        variant="minimal"
+        links={[
+          { label: "Terms of Use", to: V2.terms },
+          { label: "Privacy Policy", to: V2.privacy },
+          { label: "Business Login", to: V2.businessLogin },
+        ]}
+      />
     </>
   );
 };

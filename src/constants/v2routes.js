@@ -47,11 +47,39 @@ export const V2 = {
   therapist: at("/business/therapist"),
 };
 
-/** Primary marketing nav — spec: Landing 1C nav row. */
+/**
+ * Marketing nav link sets. Each deck specifies its own row — they are NOT the
+ * same set, so every page passes the one its deck shows.
+ */
+
+/** Spec: Landing 1C — NAV. */
 export const MARKETING_NAV = [
   { label: "The App", to: `${V2.landing}#app`, hash: true },
   { label: "For Business", to: V2.forBusiness },
   { label: "For Therapists", to: V2.forTherapists },
+  { label: "Journal", to: V2.blog },
+];
+
+/** Spec: "TalkAM Pricing.dc.html" — NAV. */
+export const PRICING_NAV = [
+  { label: "Features", to: `${V2.landing}#app`, hash: true },
+  { label: "Pricing", to: V2.pricing },
+  { label: "FAQ", to: `${V2.landing}#faq`, hash: true },
+];
+
+/** Spec: "TalkAM For Business.dc.html" / "TalkAM For Therapists.dc.html" — NAV. */
+export const PRODUCT_NAV = [
+  { label: "The App", to: V2.landing },
+  { label: "For Business", to: V2.forBusiness },
+  { label: "For Therapists", to: V2.forTherapists },
+  { label: "Pricing", to: V2.pricing },
+  { label: "Journal", to: V2.blog },
+];
+
+/** Spec: "TalkAM Blog.dc.html" — NAV (three links only). */
+export const JOURNAL_NAV = [
+  { label: "The App", to: V2.landing },
+  { label: "For Business", to: V2.pricing },
   { label: "Journal", to: V2.blog },
 ];
 

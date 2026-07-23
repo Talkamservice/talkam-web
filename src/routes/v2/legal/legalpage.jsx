@@ -1,7 +1,9 @@
 import PropTypes from "prop-types";
 import { MarketingHero } from "../../../components/layout/v2/marketinglayout";
+import { MarketingFooter } from "../../../components/layout/v2/marketingfooter";
 import { DsEyebrow } from "../../../components/v2/badge";
 import { usePageMeta } from "../../../hooks/usePageMeta";
+import { V2 } from "../../../constants/v2routes";
 import { privacyPolicy, termsOfUse } from "../../../fakedata/v2/legal";
 
 /**
@@ -10,16 +12,20 @@ import { privacyPolicy, termsOfUse } from "../../../fakedata/v2/legal";
  * both decks are the same 760px measure, differing only in copy and the
  * NDPA callout.
  */
-const LegalPage = ({ doc, metaDescription }) => {
+const LegalPage = ({ doc, footerLinks, metaDescription }) => {
   usePageMeta(`${doc.title} — TalkAM`, metaDescription);
 
   return (
-    <MarketingHero
-      navTone="light"
-      className="bg-white"
-      innerClassName="!max-w-[760px] !px-6 pb-20 pt-12 lg:pb-24 lg:pt-16"
-    >
-      <DsEyebrow className="mb-2.5 block text-brand-400">Legal</DsEyebrow>
+    <>
+      <MarketingHero
+        navTone="light"
+        /* Deck: logo + "Business Login →" only — no nav links. */
+        navCta={{ links: [], logoClassName: "h-[22px] lg:h-6", padClassName: "py-5 lg:py-6" }}
+        className="bg-white"
+        padClassName="px-6"
+        innerClassName="!max-w-[760px] pb-20 pt-12 lg:pb-24 lg:pt-16"
+      >
+        <DsEyebrow className="mb-2.5 block text-brand-400">Legal</DsEyebrow>
       <h1 className="mb-2 text-[28px] font-extraboldNunito tracking-[-0.01em] text-navy-800 lg:text-[36px]">
         {doc.title}
       </h1>
@@ -63,13 +69,17 @@ const LegalPage = ({ doc, metaDescription }) => {
         >
           {doc.contact.email}
         </a>
-        .
-      </div>
-    </MarketingHero>
+          .
+        </div>
+      </MarketingHero>
+
+      <MarketingFooter variant="minimal" links={footerLinks} />
+    </>
   );
 };
 
 LegalPage.propTypes = {
+  footerLinks: PropTypes.array.isRequired,
   doc: PropTypes.shape({
     title: PropTypes.string.isRequired,
     lastUpdated: PropTypes.string.isRequired,
@@ -82,6 +92,12 @@ LegalPage.propTypes = {
 export const V2PrivacyPolicy = () => (
   <LegalPage
     doc={privacyPolicy}
+    /* Deck: Pricing · Terms of Use · Business Login */
+    footerLinks={[
+      { label: "Pricing", to: V2.pricing },
+      { label: "Terms of Use", to: V2.terms },
+      { label: "Business Login", to: V2.businessLogin },
+    ]}
     metaDescription="How TalkAM collects, uses and protects your data — NDPA 2023 compliant, with a hard wall between employer and individual employee data."
   />
 );
@@ -89,6 +105,12 @@ export const V2PrivacyPolicy = () => (
 export const V2TermsOfUse = () => (
   <LegalPage
     doc={termsOfUse}
+    /* Deck: Pricing · Privacy Policy · Business Login */
+    footerLinks={[
+      { label: "Pricing", to: V2.pricing },
+      { label: "Privacy Policy", to: V2.privacy },
+      { label: "Business Login", to: V2.businessLogin },
+    ]}
     metaDescription="The terms governing your use of TalkAM as a community member, therapy client, verified therapist, or business customer."
   />
 );

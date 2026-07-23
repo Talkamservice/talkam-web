@@ -1,4 +1,5 @@
 import { usePageMeta } from "../../../hooks/usePageMeta";
+import { MarketingFooter } from "../../../components/layout/v2/marketingfooter";
 import { LandingHero } from "./sections/hero";
 import { AppShowcase } from "./sections/appshowcase";
 import { LandingForBusiness } from "./sections/forbusiness";
@@ -25,6 +26,7 @@ export const V2Landing = () => {
       <LandingForBusiness />
       <ForProfessionals />
       <StatsBand />
+      <MarketingFooter />
     </>
   );
 };
