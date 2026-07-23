@@ -69,7 +69,7 @@ export const AuthLayout = () => {
 
   return (
     <OnboardingContext.Provider value={value}>
-      <div className="flex min-h-dvh flex-col bg-surface-page font-regularNunito">
+      <div className="flex min-h-dvh flex-col bg-surface-page font-regularNunito leading-[normal]">
         {showSwitcher ? (
           <div className="flex flex-shrink-0 items-center gap-1.5 overflow-x-auto bg-navy-900 px-6 py-2.5">
             <span className="mr-2.5 flex-shrink-0 whitespace-nowrap text-[10px] font-boldNunito tracking-[0.08em] text-white/30">
@@ -115,17 +115,17 @@ export const AuthLayout = () => {
               />
             </Link>
 
-            <div className="relative z-[1] mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-brand-400/30 bg-brand-400/[0.14] px-3.5 py-1.5">
+            <div className="relative z-[1] mb-[22px] inline-flex w-fit items-center gap-2 rounded-full border border-brand-400/[0.28] bg-brand-400/[0.14] px-3.5 py-1.5">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
               <span className="text-[11px] font-boldNunito tracking-[0.07em] text-brand-200">
                 {brand.eyebrow}
               </span>
             </div>
 
-            <h2 className="relative z-[1] mb-3.5 max-w-[360px] text-[24px] font-extraboldNunito leading-[1.2] text-white lg:text-[30px]">
+            <h2 className="relative z-[1] mb-3.5 max-w-[360px] text-[24px] font-blackNunito leading-[1.2] text-white lg:text-[30px]">
               {brand.title}
             </h2>
-            <p className="relative z-[1] mb-8 max-w-[340px] text-body leading-[1.7] text-white/55 lg:mb-10">
+            <p className="relative z-[1] mb-8 max-w-[340px] text-[14px] leading-[1.7] text-white/55 lg:mb-10">
               {brand.body}
             </p>
 

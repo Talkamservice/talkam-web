@@ -475,3 +475,49 @@ Files: `src/routes/v2/blog/{blogindex,blogarticle}.jsx`,
 | (b) | Below `lg` the 3-up grid reflows, the TOC rail drops above the body, and the nav collapses to a drawer. |
 
 ---
+## 8. B2B Auth & Onboarding
+
+Deck: `TalkAM B2B Auth.dc.html` · Routes: `/business/*`
+Deck screens (`sc-if` states): Company Signup, Domain Verify, Choose Seats,
+Plan & Billing, Therapist Bench, Invite Team, Invites Sent, Invite Landing,
+Consent, Topics of Interest, Self Check-in, Complete, Sign In, Two-Factor,
+Forgot Password — 15 screens, all present as routes.
+
+This deck was already transcribed closely: the 38% brand panel, its per-screen
+eyebrow/title/body/points, every form field, the seat-tier table, the session
+bundle blocks, the price-calculation breakdown, the consent cards and the step
+eyebrows all matched. Only the brand panel needed correcting.
+
+| # | Section | Deck | Implementation (before) | Type |
+|---|---------|------|--------------------------|------|
+| 171 | Brand panel eyebrow | `margin-bottom:22px`, border `rgba(1,127,200,0.28)` | `mb-5` (20px), `border-brand-400/30` | size/colour |
+| 172 | Brand panel title | 30px/**900** | 800 | weight |
+| 173 | Brand panel body | `font-size:14px; line-height:1.7` | `text-body` — the DS token forces 1.65 | size |
+| 174 | Shell line-height | browser default | Tailwind preflight's 1.5 on every unstyled line box | size |
+
+**Discrepancies found: 4 — all 4 fixed.**
+
+### ✅ PASS — B2B Auth & Onboarding
+
+All twelve deck-tabbed screens re-screenshotted at 1440×900 against the deck
+and compared field by field. Rendered heights (deck content, excluding the
+deck's own switcher bar, vs implementation): signup 900/900, domain 900/900,
+seats 1282/1293, plan 1225/1225, therapist bench 900/900, invite 902/900,
+invite landing 900/900, consent 900/900, topics 900/900, self check-in
+900/900, sign in 900/900, forgot password 900/900.
+
+Files: `src/routes/v2/business/auth/authlayout.jsx`.
+
+**Allowed deviations**
+
+| Kind | Deviation |
+|------|-----------|
+| (a) | The deck's "AUTH & ONBOARDING —" module switcher is a design-tool affordance; each screen is a real route. It is still reachable for review by appending `?screens=1` to any auth URL. |
+| (b) | Below `lg` the 38% brand panel stacks above the 460px form column and its bullet list is hidden, as the deck has no layout below its 1180px minimum. |
+
+**Noted, not changed:** on Company Signup the deck's Headcount `<select>` marks
+`100 – 300` as `selected` in its markup, but the deck's React runtime drops the
+attribute and renders `50 – 100`. The implementation follows the deck's markup
+(`100 – 300`), not its runtime bug.
+
+---
