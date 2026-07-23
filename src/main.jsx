@@ -673,6 +673,20 @@ const router = createBrowserRouter([
           return { Component: V2ForTherapists };
         },
       },
+      {
+        path: "privacy-policy",
+        lazy: async () => {
+          let { V2PrivacyPolicy } = await import("./routes/v2/legal/legalpage");
+          return { Component: V2PrivacyPolicy };
+        },
+      },
+      {
+        path: "terms",
+        lazy: async () => {
+          let { V2TermsOfUse } = await import("./routes/v2/legal/legalpage");
+          return { Component: V2TermsOfUse };
+        },
+      },
     ],
   },
 
