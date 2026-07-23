@@ -687,6 +687,20 @@ const router = createBrowserRouter([
           return { Component: V2TermsOfUse };
         },
       },
+      {
+        path: "blog",
+        lazy: async () => {
+          let { V2BlogIndex } = await import("./routes/v2/blog/blogindex");
+          return { Component: V2BlogIndex };
+        },
+      },
+      {
+        path: "blog/:slug",
+        lazy: async () => {
+          let { V2BlogArticle } = await import("./routes/v2/blog/blogarticle");
+          return { Component: V2BlogArticle };
+        },
+      },
     ],
   },
 

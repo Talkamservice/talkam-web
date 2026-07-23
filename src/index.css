@@ -143,6 +143,16 @@ input[type=range]::-webkit-slider-thumb {
   transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
+/* Journal cards lift on hover (deck: .card-lift). */
+.v2-card-lift {
+  transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.28s ease;
+}
+
+.v2-card-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 26px 50px rgba(20, 27, 52, 0.16);
+}
+
 @media (min-width: 1024px) {
   .v2-phone-shot:hover {
     transform: perspective(1200px) rotateY(-7deg) translateY(-12px);
@@ -168,6 +178,11 @@ input[type=range]::-webkit-slider-thumb {
   .v2-reveal-in,
   .v2-live-dot {
     animation: none;
+  }
+
+  .v2-card-lift,
+  .v2-card-lift:hover {
+    transform: none;
   }
 
   .v2-reveal-armed {
