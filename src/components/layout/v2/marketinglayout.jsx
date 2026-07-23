@@ -41,6 +41,7 @@ export const MarketingHero = ({
   className,
   innerClassName,
   navTone = "dark",
+  navCta,
   glows = [],
   children,
 }) => (
@@ -52,7 +53,7 @@ export const MarketingHero = ({
         className={classNames("pointer-events-none absolute rounded-full", glow)}
       />
     ))}
-    <MarketingNav tone={navTone} />
+    <MarketingNav tone={navTone} {...navCta} />
     <div
       className={classNames(
         "relative z-[1] mx-auto max-w-[1440px] px-6 lg:px-14",
@@ -69,6 +70,8 @@ MarketingHero.propTypes = {
   className: PropTypes.string,
   /** "dark" over a dark hero, "light" for pages with a light hero. */
   navTone: PropTypes.oneOf(["dark", "light"]),
+  /** Overrides for the nav's right-hand CTA: { ctaLabel, ctaTo, ctaVariant }. */
+  navCta: PropTypes.object,
   /** Tailwind class strings positioning each decorative radial glow. */
   glows: PropTypes.arrayOf(PropTypes.string),
   children: PropTypes.node,

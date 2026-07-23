@@ -664,6 +664,15 @@ const router = createBrowserRouter([
           return { Component: V2ForBusiness };
         },
       },
+      {
+        path: "for-therapists",
+        lazy: async () => {
+          let { V2ForTherapists } = await import(
+            "./routes/v2/fortherapists/fortherapists"
+          );
+          return { Component: V2ForTherapists };
+        },
+      },
     ],
   },
 

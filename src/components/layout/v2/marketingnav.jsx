@@ -12,9 +12,15 @@ import { V2, MARKETING_NAV } from "../../../constants/v2routes";
  * the hero gradient) and "TalkAM Pricing.dc.html" — NAV (light tone, white bar
  * with a hairline rule) for pages whose hero is light.
  */
-export const MarketingNav = ({ tone = "dark" }) => {
+export const MarketingNav = ({
+  tone = "dark",
+  ctaLabel = "Business Login →",
+  ctaTo = V2.businessLogin,
+  ctaVariant,
+}) => {
   const [open, setOpen] = useState(false);
   const light = tone === "light";
+  const resolvedCta = ctaVariant || (light ? "brand" : "translucent");
 
   const linkClass = (isActive) =>
     classNames(
@@ -68,12 +74,12 @@ export const MarketingNav = ({ tone = "dark" }) => {
 
         <div className="flex items-center gap-3">
           <DsButton
-            to={V2.businessLogin}
-            variant={light ? "brand" : "translucent"}
+            to={ctaTo}
+            variant={resolvedCta}
             size="sm"
             className="hidden rounded-full px-5 py-2.5 sm:inline-flex"
           >
-            Business Login →
+            {ctaLabel}
           </DsButton>
           <button
             type="button"
@@ -127,14 +133,14 @@ export const MarketingNav = ({ tone = "dark" }) => {
             ))}
             <li className="pt-3 sm:hidden">
               <DsButton
-                to={V2.businessLogin}
-                variant={light ? "brand" : "translucent"}
+                to={ctaTo}
+                variant={resolvedCta}
                 size="md"
                 fullWidth
                 className="rounded-full"
                 onClick={() => setOpen(false)}
               >
-                Business Login →
+                {ctaLabel}
               </DsButton>
             </li>
           </ul>

@@ -1,6 +1,7 @@
 import classNames from "classnames";
 import { MarketingHero } from "../../../components/layout/v2/marketinglayout";
 import { BrowserFrame } from "../../../components/v2/frames";
+import { ShowcaseBand, ShowcasePoints } from "../../../components/v2/showcaseband";
 import {
   OverviewPreview,
   EmployeesPreview,
@@ -22,35 +23,6 @@ import {
  * TalkAM For Business — marketing page.
  * Spec: "TalkAM For Business.dc.html". UI only.
  */
-
-/** Alternating copy + dashboard-screenshot band. */
-const ShowcaseBand = ({ reverse, tint, url, preview, children }) => (
-  <section
-    className={classNames("px-6 py-14 lg:px-14 lg:py-[92px]", tint ? "bg-[#F7F9FC]" : "bg-white")}
-  >
-    <div
-      className={classNames(
-        "mx-auto flex max-w-[1180px] flex-col items-center gap-10 lg:gap-14",
-        reverse ? "lg:flex-row-reverse" : "lg:flex-row"
-      )}
-    >
-      <BrowserFrame
-        url={url}
-        className={classNames(
-          "v2-reveal w-full min-w-0 flex-1 !border-[#EDEFF3] !shadow-[0_40px_90px_rgba(20,27,52,0.16)]",
-          reverse
-            ? "lg:[transform:perspective(1600px)_rotateY(-9deg)_rotateX(3deg)]"
-            : "lg:[transform:perspective(1600px)_rotateY(9deg)_rotateX(3deg)]"
-        )}
-      >
-        <div className="overflow-x-auto">
-          <div className="min-w-[540px]">{preview}</div>
-        </div>
-      </BrowserFrame>
-      <div className="v2-reveal w-full flex-1 lg:max-w-[440px]">{children}</div>
-    </div>
-  </section>
-);
 
 export const V2ForBusiness = () => {
   usePageMeta(
@@ -201,21 +173,7 @@ export const V2ForBusiness = () => {
           Upload a roster or add people one by one. Every employee shows as an
           anonymised ID — you see status and usage, never who said what.
         </p>
-        <div className="flex flex-col gap-3.5">
-          {seatManagementPoints.map((point) => (
-            <div key={point.title} className="flex items-start gap-3">
-              <span className="text-h4 font-extraboldNunito leading-tight text-wellness-400">
-                ✓
-              </span>
-              <div>
-                <div className="text-body font-extraboldNunito text-navy-800">
-                  {point.title}
-                </div>
-                <div className="text-[13px] text-ink-500">{point.body}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ShowcasePoints points={seatManagementPoints} />
       </ShowcaseBand>
 
       {/* PRIVACY WALL */}
