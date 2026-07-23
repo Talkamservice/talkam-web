@@ -4,7 +4,7 @@ import { Link, useParams, Navigate } from "react-router-dom";
 import { MarketingNav } from "../../../components/layout/v2/marketingnav";
 import { DsButton } from "../../../components/v2/button";
 import { usePageMeta } from "../../../hooks/usePageMeta";
-import { V2, APP_STORE_URL } from "../../../constants/v2routes";
+import { V2, APP_STORE_URL, JOURNAL_NAV } from "../../../constants/v2routes";
 import {
   findArticleBySlug,
   relatedArticles,
@@ -113,15 +113,15 @@ export const V2BlogArticle = () => {
   return (
     <>
       <div className="bg-navy-800">
-        <MarketingNav />
+        <MarketingNav links={JOURNAL_NAV} active="Journal" padClassName="py-5 lg:py-6" />
       </div>
 
       <article className="bg-white">
         {/* HEADER */}
-        <header className="mx-auto max-w-[760px] px-6 pb-7 pt-11">
+        <header className="mx-auto max-w-[760px] px-6 pb-[30px] pt-11">
           <nav
             aria-label="Breadcrumb"
-            className="mb-5 flex items-center gap-2 text-[12.5px] font-semiboldNunito text-[#9299A8]"
+            className="mb-[22px] flex items-center gap-2 text-[12.5px] font-semiboldNunito text-[#9299A8]"
           >
             <Link to={V2.blog} className="font-boldNunito text-brand-400 hover:text-brand-600">
               Journal
@@ -132,9 +132,9 @@ export const V2BlogArticle = () => {
             </span>
           </nav>
 
-          <CategoryTint article={article} className="mb-4" />
+          <CategoryTint article={article} className="mb-[18px]" />
 
-          <h1 className="mb-4 text-[30px] font-extraboldNunito leading-[1.12] tracking-[-0.02em] text-navy-800 sm:text-[36px] lg:text-[44px]">
+          <h1 className="mb-[18px] text-[30px] font-blackNunito leading-[1.12] tracking-[-0.02em] text-navy-800 [text-wrap:pretty] sm:text-[36px] lg:text-[44px]">
             {article.title}
           </h1>
           <p className="mb-7 text-[17px] font-mediumNunito leading-[1.6] text-[#5B6577] lg:text-[19px]">
@@ -255,7 +255,7 @@ export const V2BlogArticle = () => {
       </article>
 
       <NewsletterBand />
-      <MarketingFooter />
+      <MarketingFooter variant="journal" />
     </>
   );
 };

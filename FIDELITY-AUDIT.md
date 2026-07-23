@@ -430,3 +430,48 @@ Files: `src/routes/v2/legal/legalpage.jsx`.
 | (b) | The 760px measure keeps its 24px gutters below `lg`; nothing else changes. |
 
 ---
+## 7. Blog — The TalkAM Journal
+
+Deck: `TalkAM Blog.dc.html` · Routes: `/blog`, `/blog/:slug`
+Deck views: INDEX (`isIndex`) and ARTICLE (`isArticle`) — two `sc-if` states,
+two real routes here. Index order: NAV → index header → featured → category
+filter → grid → newsletter → footer. Article order: NAV → article header →
+cover → TOC + body → in-app CTA → author card → related → newsletter → footer.
+
+Section order, all nine article records, the category chips and counts, the
+newsletter band and the article body blocks (p / h2 / quote / callout / list)
+were already faithful.
+
+| # | Section | Deck | Implementation (before) | Type |
+|---|---------|------|--------------------------|------|
+| 162 | Nav links | **three** — The App · For Business · **Journal** (active: white/800 + 2px `#017FC8` underline) | the four-link landing nav, no active treatment | wrong content |
+| 163 | Nav padding | `24px 56px` | 26px vertical | size |
+| 164 | Index eyebrow pill border | `rgba(1,127,200,0.32)` | `border-brand-400/30` | colour |
+| 165 | Index h1 | 58px/**900**, `margin-bottom:18px` | 800, `mb-4` (16px) | size |
+| 166 | Footer | the Journal deck draws a **trimmed** footer: `56px` top padding, 40px gap above the rule, PRODUCT with **three** links (The App · Pricing · **Journal** in `#68B4E1`/700 as the current page), and **no BUSINESS column** | the full landing footer — five PRODUCT links plus a BUSINESS column | extra elements |
+| 167 | Article header padding | `44px 24px 30px` | `pb-7` (28px) | size |
+| 168 | Article breadcrumb | `margin-bottom:22px` | `mb-5` (20px) | size |
+| 169 | Article category pill | `margin-bottom:18px` | `mb-4` (16px) | size |
+| 170 | Article h1 | 44px/**900**, `text-wrap:pretty`, `margin-bottom:18px` — wraps to three lines in the 760px measure | 800 (wrapped to two lines), no `text-wrap`, `mb-4` | size |
+
+**Discrepancies found: 9 — all 9 fixed.**
+
+### ✅ PASS — Blog
+
+Total heights, deck vs implementation: index 3241/3236, article 3853/3860.
+Re-screenshotted both views at 1440 and compared section by section: hero,
+featured card, filter chips, the 3×3 grid, newsletter band, footer; and on the
+article, header, cover, TOC, body blocks, quote, list, related and footer.
+
+Files: `src/routes/v2/blog/{blogindex,blogarticle}.jsx`,
+`src/components/layout/v2/marketingfooter.jsx`, `src/constants/v2routes.js`.
+
+**Allowed deviations**
+
+| Kind | Deviation |
+|------|-----------|
+| (a) | The deck's `isIndex` / `isArticle` states are two routes. |
+| (a) | **Cover images.** Every cover in the deck is an unfilled `<image-slot>` — a dashed "Drop cover" / "Drop hero image" box the design tool shows when no asset has been uploaded. Rendering that on a live site is not viable, so covers use the article's own deck-defined category colour as a gradient. Sizes, radii, shadows and the category pill overlay are unchanged. |
+| (b) | Below `lg` the 3-up grid reflows, the TOC rail drops above the body, and the nav collapses to a drawer. |
+
+---

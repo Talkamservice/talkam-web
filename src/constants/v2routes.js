@@ -112,6 +112,20 @@ export const FOOTER_GROUPS = [
   },
 ];
 
+/** Spec: "TalkAM Blog.dc.html" — FOOTER (three-link PRODUCT column, no BUSINESS). */
+export const JOURNAL_FOOTER_GROUPS = [
+  {
+    title: "Product",
+    links: [
+      { label: "The App", to: V2.landing },
+      { label: "Pricing", to: V2.pricing },
+      { label: "Journal", to: V2.blog, current: true },
+    ],
+  },
+  FOOTER_GROUPS[1],
+  FOOTER_GROUPS[2],
+];
+
 /** Live store listings for the TalkAM mobile app. */
 export const APP_STORE_URL =
   "https://apps.apple.com/za/app/talkam-tech/id6740508182";

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
+import classNames from "classnames";
 import TalkamWordmark from "../../../assets/svgs/talkam-logo.svg";
-import { V2, FOOTER_GROUPS } from "../../../constants/v2routes";
+import { V2, FOOTER_GROUPS, JOURNAL_FOOTER_GROUPS } from "../../../constants/v2routes";
 
 /**
  * Marketing site footer.
@@ -30,14 +31,31 @@ export const MarketingFooter = ({ variant = "full", links }) =>
       </div>
     </footer>
   ) : (
-    <FullFooter />
+    <FullFooter journal={variant === "journal"} />
   );
 
-/** Spec: "TalkAM Landing Page.dc.html" § Option 1C — FOOTER. */
-const FullFooter = () => (
-  <footer className="bg-navy-900 px-6 pb-7 pt-14 font-regularNunito lg:px-14 lg:pt-[60px]">
+/**
+ * Spec: "TalkAM Landing Page.dc.html" § Option 1C — FOOTER, and the same block
+ * on For Business / For Therapists.
+ *
+ * The Journal deck draws a trimmed version of it: `56px` top padding, a 40px
+ * gap above the rule, a three-link PRODUCT column with "Journal" marked as the
+ * current page, and no BUSINESS column.
+ */
+const FullFooter = ({ journal }) => (
+  <footer
+    className={classNames(
+      "bg-navy-900 px-6 pb-7 pt-14 font-regularNunito lg:px-14",
+      journal ? "lg:pt-14" : "lg:pt-[60px]"
+    )}
+  >
     <div className="mx-auto max-w-[1440px]">
-      <div className="mb-11 flex flex-wrap justify-between gap-10">
+      <div
+        className={classNames(
+          "flex flex-wrap justify-between gap-10",
+          journal ? "mb-10" : "mb-11"
+        )}
+      >
         <div className="max-w-[280px]">
           <img
             src={TalkamWordmark}
@@ -51,14 +69,22 @@ const FullFooter = () => (
         </div>
 
         <div className="flex flex-wrap gap-10 lg:gap-16">
-          {FOOTER_GROUPS.map((group) => (
+          {(journal ? JOURNAL_FOOTER_GROUPS : FOOTER_GROUPS).map((group) => (
             <div key={group.title}>
               <div className="mb-4 text-[11px] font-boldNunito uppercase tracking-[0.08em] text-white/35">
                 {group.title}
               </div>
               <div className="flex flex-col gap-[11px]">
                 {group.links.map((link) =>
-                  link.hash ? (
+                  link.current ? (
+                    <span
+                      key={link.label}
+                      aria-current="page"
+                      className="text-[13px] font-boldNunito text-brand-200"
+                    >
+                      {link.label}
+                    </span>
+                  ) : link.hash ? (
                     <a
                       key={link.label}
                       href={link.to}
@@ -80,17 +106,19 @@ const FullFooter = () => (
             </div>
           ))}
 
-          <div>
-            <div className="mb-4 text-[11px] font-boldNunito uppercase tracking-[0.08em] text-white/35">
-              Business
+          {journal ? null : (
+            <div>
+              <div className="mb-4 text-[11px] font-boldNunito uppercase tracking-[0.08em] text-white/35">
+                Business
+              </div>
+              <Link
+                to={V2.businessLogin}
+                className="text-[13px] font-boldNunito text-brand-200 transition-colors hover:text-white"
+              >
+                Business Login →
+              </Link>
             </div>
-            <Link
-              to={V2.businessLogin}
-              className="text-[13px] font-boldNunito text-brand-200 transition-colors hover:text-white"
-            >
-              Business Login →
-            </Link>
-          </div>
+          )}
         </div>
       </div>
 

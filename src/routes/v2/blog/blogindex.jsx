@@ -5,7 +5,7 @@ import classNames from "classnames";
 import { MarketingHero } from "../../../components/layout/v2/marketinglayout";
 import { DsEyebrow } from "../../../components/v2/badge";
 import { usePageMeta } from "../../../hooks/usePageMeta";
-import { V2 } from "../../../constants/v2routes";
+import { V2, JOURNAL_NAV } from "../../../constants/v2routes";
 import {
   blogArticles,
   featuredArticle,
@@ -63,16 +63,18 @@ export const V2BlogIndex = () => {
       {/* HERO */}
       <MarketingHero
         className="bg-ds-hero"
+        navCta={{ links: JOURNAL_NAV, active: "Journal", padClassName: "py-5 lg:py-6" }}
+        /* Deck: index header is `padding:56px 56px 72px`. */
         innerClassName="flex flex-col items-center pb-16 pt-10 text-center lg:pb-[72px] lg:pt-14"
         glows={[
           "-right-[100px] -top-[140px] h-[560px] w-[560px] bg-[radial-gradient(circle,rgba(1,127,200,0.20)_0%,transparent_65%)]",
           "left-[28%] -bottom-[180px] h-[460px] w-[460px] bg-[radial-gradient(circle,rgba(59,168,143,0.14)_0%,transparent_65%)]",
         ]}
       >
-        <span className="mb-6 inline-flex items-center rounded-full border border-brand-400/30 bg-brand-400/[0.16] px-4 py-2">
+        <span className="mb-6 inline-flex items-center rounded-full border border-brand-400/[0.32] bg-brand-400/[0.16] px-4 py-2">
           <DsEyebrow className="text-brand-200">The TalkAM Journal</DsEyebrow>
         </span>
-        <h1 className="mb-4 max-w-[780px] text-[34px] font-extraboldNunito leading-[1.06] tracking-[-0.02em] text-white sm:text-[44px] lg:text-[58px]">
+        <h1 className="mb-[18px] max-w-[780px] text-[34px] font-blackNunito leading-[1.06] tracking-[-0.02em] text-white sm:text-[44px] lg:text-[58px]">
           Stories &amp; science for a{" "}
           <span className="bg-gradient-to-r from-brand-200 to-wellness-400 bg-clip-text text-transparent">
             healthier mind
@@ -215,7 +217,7 @@ export const V2BlogIndex = () => {
       </section>
 
       <NewsletterBand />
-      <MarketingFooter />
+      <MarketingFooter variant="journal" />
     </>
   );
 };
