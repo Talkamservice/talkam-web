@@ -350,3 +350,48 @@ the employee dashboard's greeting, KPI figures and streak counter were
 re-pointed at it too.
 
 ---
+## 5. For Therapists
+
+Deck: `TalkAM For Therapists.dc.html` · Route: `/for-therapists`
+Deck section order: NAV → HERO → trust strip → feature grid → sessions band →
+earnings band → how it works (`#howitworks`) → testimonial → CTA → FOOTER.
+Same author and skeleton as For Business, and the same class of discrepancies.
+
+| # | Section | Deck | Implementation (before) | Type |
+|---|---------|------|--------------------------|------|
+| 140 | Nav links | five — The App · For Business · **For Therapists** (active: white/800 + 2px **`#3BA88F`** underline) · Pricing · Journal | four, no active treatment | wrong content |
+| 141 | Nav CTA | **teal `#3BA88F`**, label **"Apply as a therapist →"**, 13px/800, padding `11px 22px`, shadow `0 8px 20px rgba(59,168,143,0.35)` | translucent pill labelled "Business Login →" | copy/colour |
+| 142 | Nav padding | `22px 56px` | 26px vertical | size |
+| 143 | Hero band padding | `92px 56px 120px` | `pt-[52px]` — hero 34px short | size |
+| 144 | Hero eyebrow | `margin-bottom:22px` | `mb-5` (20px) | size |
+| 145 | Hero h1 | 56px/**900** | 800 | weight |
+| 146 | Hero paragraph | `18px / 1.65` | `text-h4` — forces 1.35 | size |
+| 147 | Hero buttons | padding `16px 32px`, radius 14, 16px/800 | `DsButton size="lg"` — fixed 56px, px 28, 700 | size |
+| 148 | Hero stat figures | 26px/900 | `text-h2` (24px/800) | size |
+| 149 | Trust strip figures | 28px/900 | `text-h2` (24px/800) | size |
+| 150 | "Everything you need…" h2 | 38px/900 | 800 | weight |
+| 151 | Section lead paragraph | `16px / 1.65` | `text-body-lg` — forces 1.7 | size |
+| 152 | "Sessions, requests…" / "Clear earnings…" h2 | 32px/900 | `text-display` (32px/1.15 forced)/800 | size |
+| 153 | "From application…" h2 | 36px/900 | 800 | weight |
+| 154 | CTA h2 | 40px/900 | 800 | weight |
+| 155 | CTA paragraph | `17px`, `margin-bottom:30px` | `text-h4` (18px/1.35), `mb-7` | size |
+| 156 | CTA button | padding `16px 34px`, **900** | `DsButton size="lg"` — fixed height, px 28, 700 | size |
+
+**Discrepancies found: 17 — all 17 fixed.**
+
+### ✅ PASS — For Therapists
+
+Section heights, deck vs implementation, after the fixes: nav+hero 778/778,
+trust strip 139/141, feature grid 799/794, sessions 636/636, earnings 636/636,
+how it works 483/478, testimonial 371/373, CTA 357/362, footer 338/340.
+
+Files: `src/routes/v2/fortherapists/fortherapists.jsx`.
+
+**Allowed deviations**
+
+| Kind | Deviation |
+|------|-----------|
+| (a) | Deck cross-links are real routes. |
+| (b) | Below `lg` the hero stacks, the browser frame hides (matching the deck's own `.hide-sm` below 820px), and the grids reflow. |
+
+---
