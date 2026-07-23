@@ -626,6 +626,31 @@ const router = createBrowserRouter([
       return { Component: SaveProfile };
     },
   },
+  /* ═════════════════════════════════════════════════════════════════════
+   * TalkAM v2 — marketing site + B2B dashboards.
+   * Mounted under /v2 so it runs in parallel with v1 without colliding on
+   * "/", "/pricing", "/login" or "/sign-up". See src/constants/v2routes.js.
+   * ═════════════════════════════════════════════════════════════════════ */
+  {
+    path: "/v2",
+    errorElement: <ErrorPage />,
+    lazy: async () => {
+      let { MarketingLayout } = await import(
+        "./components/layout/v2/marketinglayout"
+      );
+      return { Component: MarketingLayout };
+    },
+    children: [
+      {
+        index: true,
+        lazy: async () => {
+          let { V2Landing } = await import("./routes/v2/landing/landing");
+          return { Component: V2Landing };
+        },
+      },
+    ],
+  },
+
   {
     path: "*",
     element: <NotFound />,
