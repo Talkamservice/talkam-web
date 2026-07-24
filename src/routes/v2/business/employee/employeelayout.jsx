@@ -6,12 +6,16 @@ import { Toast } from "../../../../components/v2/dashboard/chrome";
 import { usePageMeta } from "../../../../hooks/usePageMeta";
 import { V2 } from "../../../../constants/v2routes";
 import {
-  employeeUser,
   employeePortalLabel,
   employeePageMeta,
-  employeeNotifications,
   NOTIF_KIND_COLOR,
-} from "../../../../fakedata/v2/employee";
+  initialsOf,
+} from "../../../../constants/employeedashboard";
+import { useGetMeV2Query } from "../../../../services/v2/authApiSliceV2";
+import {
+  useGetBookingsQuery,
+  useGetNotificationsQuery,
+} from "../../../../services/v2/employeeApiSlice";
 import { EmployeeModals } from "./employeemodals";
 
 /**
@@ -30,28 +34,8 @@ export const useEmployee = () => {
 
 const at = (path) => `${V2.employee}${path}`;
 
-/** Deck: sidebar `<nav>` — order, labels, count pills and their tones. */
-const NAV_SECTIONS = [
-  {
-    items: [
-      { to: V2.employee, end: true, label: "Home", icon: <Icon.Home size={16} /> },
-      { to: at("/sessions"), label: "My Sessions", icon: <Icon.Calendar size={16} />, count: "1", countTone: "teal" },
-      { to: at("/checkins"), label: "Check-ins & Mood", icon: <Icon.Activity size={16} /> },
-      { to: at("/community"), label: "Community", icon: <Icon.MessageSquare size={16} /> },
-      { to: at("/messages"), label: "Messages", icon: <Icon.MessageCircle size={16} />, count: "2", countTone: "blue" },
-    ],
-  },
-  {
-    label: "ACCOUNT",
-    items: [
-      { to: at("/profile"), label: "Profile & Privacy", icon: <Icon.User size={16} /> },
-      { to: at("/help"), label: "Help & Support", icon: <Icon.HelpCircle size={16} /> },
-    ],
-  },
-];
-
 /** Deck: the teal strip directly under the logo block. */
-const PrivacySidebarStrip = () => (
+const PrivacySidebarStrip = ({ company }) => (
   <div className="flex items-center gap-2 rounded-[10px] border border-[rgba(59,168,143,0.25)] bg-[rgba(59,168,143,0.12)] px-2.5 py-2">
     <svg
       width="13"
@@ -65,16 +49,29 @@ const PrivacySidebarStrip = () => (
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
     </svg>
     <span className="text-[10.5px] leading-[1.4] text-[#6FCDB6]">
-      Private by default — Zenith Bank never sees this
+      Private by default — {company} never sees this
     </span>
   </div>
 );
+
+/**
+ * Maps a notification's type onto the deck's four dot colours. The API's
+ * notification `type` vocabulary is broader than the deck's four, so anything
+ * unrecognised falls back to the reminder blue rather than rendering colourless.
+ */
+const notificationKind = (notification) => {
+  const type = String(notification?.type ?? "").toLowerCase();
+
+  if (type.includes("message")) return "message";
+  if (type.includes("checkin") || type.includes("mood") || type.includes("wellness")) return "checkin";
+  if (type.includes("review") || type.includes("feedback") || type.includes("rate")) return "feedback";
+  return "reminder";
+};
 
 export const EmployeeProvider = () => {
   const [modal, setModal] = useState(null);
   const [context, setContext] = useState(null);
   const [toast, setToast] = useState(null);
-  const [homeMood, setHomeMood] = useState(null);
   const [sessionType, setSessionType] = useState("video");
   const timer = useRef(null);
 
@@ -91,8 +88,8 @@ export const EmployeeProvider = () => {
   }, []);
 
   const value = useMemo(
-    () => ({ open, close, showToast, homeMood, setHomeMood, sessionType, setSessionType }),
-    [open, close, showToast, homeMood, sessionType]
+    () => ({ open, close, showToast, sessionType, setSessionType }),
+    [open, close, showToast, sessionType]
   );
 
   return (
@@ -121,23 +118,93 @@ export const EmployeeLayout = () => {
   const { pathname } = useLocation();
   const { open } = useEmployee();
 
+  const { data: me } = useGetMeV2Query();
+  const { data: bookings } = useGetBookingsQuery();
+  const { data: notificationPage } = useGetNotificationsQuery();
+
+  const company = me?.business?.organization?.name ?? "Your employer";
+  // v1 UserResource exposes one `name` (full name) — there is no first_name.
+  const fullName = me?.name ?? "";
+
+  const user = {
+    name: fullName || me?.username || "",
+    role: company,
+    initials: initialsOf(fullName || me?.username || ""),
+    avatarBg: "#EEF4FC",
+    avatarColor: "#015C94",
+  };
+
+  const upcomingCount = bookings?.summary?.upcoming ?? 0;
+  const pastCount = bookings?.past?.length ?? 0;
+
+  const rawNotifications = notificationPage?.data ?? notificationPage ?? [];
+  const notifications = (Array.isArray(rawNotifications) ? rawNotifications : []).map((n) => ({
+    id: n.id,
+    text: n.message ?? n.title ?? "",
+    time: n.created_at_human ?? n.created_at ?? "",
+    read: !!n.read_at,
+    kind: notificationKind(n),
+  }));
+  const unread = notifications.filter((n) => !n.read).length;
+
+  /* Deck: sidebar nav — order, labels, count pills and their tones. Counts
+     are live; a zero count hides the pill rather than showing "0". */
+  const navSections = [
+    {
+      items: [
+        { to: V2.employee, end: true, label: "Home", icon: <Icon.Home size={16} /> },
+        {
+          to: at("/sessions"),
+          label: "My Sessions",
+          icon: <Icon.Calendar size={16} />,
+          count: upcomingCount ? String(upcomingCount) : undefined,
+          countTone: "teal",
+        },
+        { to: at("/checkins"), label: "Check-ins & Mood", icon: <Icon.Activity size={16} /> },
+        { to: at("/community"), label: "Community", icon: <Icon.MessageSquare size={16} /> },
+        {
+          to: at("/messages"),
+          label: "Messages",
+          icon: <Icon.MessageCircle size={16} />,
+          count: unread ? String(unread) : undefined,
+          countTone: "blue",
+        },
+      ],
+    },
+    {
+      label: "ACCOUNT",
+      items: [
+        { to: at("/profile"), label: "Profile & Privacy", icon: <Icon.User size={16} /> },
+        { to: at("/help"), label: "Help & Support", icon: <Icon.HelpCircle size={16} /> },
+      ],
+    },
+  ];
+
   const segment = pathname.replace(V2.employee, "").replace(/^\//, "") || "home";
   const meta = employeePageMeta[segment] ?? employeePageMeta.home;
+
+  /* The deck's Home and Sessions subtitles quote live numbers. */
+  const subtitle =
+    segment === "home"
+      ? [fullName.split(" ")[0], company].filter(Boolean).join(" · ")
+      : segment === "sessions"
+        ? `${upcomingCount} upcoming · ${pastCount} past session${pastCount === 1 ? "" : "s"}`
+        : meta.subtitle;
 
   usePageMeta(`${meta.title} — TalkAM`);
 
   return (
     <DashboardShell
-      sections={NAV_SECTIONS}
+      sections={navSections}
       width={224}
       portalLabel={employeePortalLabel}
-      topBlock={<PrivacySidebarStrip />}
-      user={employeeUser}
+      topBlock={<PrivacySidebarStrip company={company} />}
+      user={user}
       onSignOut={() => open("signout")}
-      notifications={employeeNotifications}
+      notifications={notifications}
       notifKindColor={NOTIF_KIND_COLOR}
       title={meta.title}
-      subtitle={meta.subtitle}
+      subtitle={subtitle}
       topbarAction={
         /* Deck: teal `#3BA88F` pill with a 0 4px 12px rgba(59,168,143,0.25) shadow. */
         <button

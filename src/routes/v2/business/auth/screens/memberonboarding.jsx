@@ -364,7 +364,8 @@ export const OnboardingComplete = () => {
 
   const role = me?.business?.role ?? o.landingRole;
   const isTherapist = role === "therapist";
-  const firstName = me?.first_name ?? "";
+  // v1 UserResource exposes one `name` (full name) — there is no first_name.
+  const firstName = (me?.name ?? "").split(" ")[0];
   const primary = o.primaryConcern ?? selfCheck?.primary_concern ?? "";
 
   return (

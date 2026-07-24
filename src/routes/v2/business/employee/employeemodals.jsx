@@ -1,14 +1,40 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import classNames from "classnames";
 import { V2 } from "../../../../constants/v2routes";
 import {
   MOODS,
   MOOD_MESSAGES,
   SESSION_TYPE_META,
-  rescheduleSlots,
   reportReasons,
-} from "../../../../fakedata/v2/employee";
+  initialsOf,
+} from "../../../../constants/employeedashboard";
+import { logOut } from "../../../../services/authSlice";
+import {
+  useCancelBookingMutation,
+  useRescheduleBookingMutation,
+  useReviewBookingMutation,
+  useSaveSessionMoodMutation,
+  useGetTherapistsQuery,
+  useGetTherapistSlotsQuery,
+  useCreateBookingMutation,
+  useGetCareTeamQuery,
+  useReportUserMutation,
+  useDeleteAccountMutation,
+  useGetBookingsQuery,
+} from "../../../../services/v2/employeeApiSlice";
+import { useGetMeV2Query } from "../../../../services/v2/authApiSliceV2";
+
+/** Slot label in the deck's "Thu Jul 9 · 10:00 AM" shape. */
+const slotLabel = (iso) => {
+  const d = new Date(String(iso).replace(" ", "T"));
+  return `${d.toLocaleDateString("en-NG", { weekday: "short", month: "short", day: "numeric" })} · ${d.toLocaleTimeString("en-NG", { hour: "numeric", minute: "2-digit" })}`;
+};
+
+/** Hours until a session — drives the refund copy the deck spells out. */
+const hoursUntil = (iso) =>
+  (new Date(String(iso).replace(" ", "T")).getTime() - Date.now()) / 3600000;
 
 /**
  * Employee dashboard modals.
@@ -126,44 +152,73 @@ const RedButton = ({ className, children, ...props }) => (
 
 /* ── Reschedule ───────────────────────────────────────────────────────────── */
 
-const RescheduleModal = ({ close, showToast }) => {
-  const [slot, setSlot] = useState("thu10");
+const RescheduleModal = ({ close, showToast, session }) => {
+  const [slot, setSlot] = useState(null);
+  const [reschedule, { isLoading }] = useRescheduleBookingMutation();
+
+  const { data: slotData } = useGetTherapistSlotsQuery(
+    { id: session?.therapist_id },
+    { skip: !session?.therapist_id }
+  );
+
+  const slots = useMemo(
+    () => (slotData?.slots ?? slotData ?? []).slice(0, 6),
+    [slotData]
+  );
+
+  const confirm = async () => {
+    if (!slot) return;
+
+    try {
+      await reschedule({ id: session.id, starts_at: slot }).unwrap();
+      close();
+      showToast("Session rescheduled");
+    } catch {
+      showToast("Couldn't reschedule just now — please try again");
+    }
+  };
+
   return (
     <Scrim onClose={close}>
       <Sheet width={460}>
         <SheetHeader title="Reschedule session" onClose={close} />
         <div className="flex flex-col gap-3.5 px-6 py-[22px]">
           <div className="text-[12px] leading-[1.6] text-ink-500">
-            Currently: Today · 4:00 PM with Dr. Adewale K. Pick a new available slot below.
+            Currently: {slotLabel(session?.starts_at)} with {session?.therapist_name}. Pick a
+            new available slot below.
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {rescheduleSlots.map((s) => (
-              <button
-                key={s.key}
-                type="button"
-                onClick={() => setSlot(s.key)}
-                aria-pressed={slot === s.key}
-                className={classNames(
-                  "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-[11px] text-center text-[12.5px] font-boldNunito",
-                  slot === s.key
-                    ? "border-navy-800 bg-navy-800 text-white"
-                    : "border-ink-200 bg-surface-page text-ink-600"
-                )}
-              >
-                {s.label}
-              </button>
-            ))}
+            {slots.length === 0 ? (
+              <div className="col-span-2 rounded-[10px] bg-[#F8F9FC] px-3.5 py-3 text-[12px] leading-[1.6] text-ink-400">
+                No open slots in the next two weeks. Try messaging your therapist directly.
+              </div>
+            ) : (
+              slots.map((s) => {
+                const value = s.starts_at ?? s;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setSlot(value)}
+                    aria-pressed={slot === value}
+                    className={classNames(
+                      "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-[11px] text-center text-[12.5px] font-boldNunito",
+                      slot === value
+                        ? "border-navy-800 bg-navy-800 text-white"
+                        : "border-ink-200 bg-surface-page text-ink-600"
+                    )}
+                  >
+                    {slotLabel(value)}
+                  </button>
+                );
+              })
+            )}
           </div>
           <div className="rounded-[10px] bg-[#FBF5E8] px-3 py-2.5 text-[11.5px] leading-[1.6] text-[#9A6E0A]">
             Rescheduling more than 24h before your session is free and instant.
           </div>
-          <NavyButton
-            onClick={() => {
-              close();
-              showToast("Session rescheduled");
-            }}
-          >
-            Confirm New Time
+          <NavyButton onClick={confirm} disabled={!slot || isLoading}>
+            {isLoading ? "Rescheduling…" : "Confirm New Time"}
           </NavyButton>
         </div>
       </Sheet>
@@ -173,7 +228,21 @@ const RescheduleModal = ({ close, showToast }) => {
 
 /* ── Cancel ───────────────────────────────────────────────────────────────── */
 
-const CancelModal = ({ close, showToast }) => (
+const CancelModal = ({ close, showToast, session }) => {
+  const [cancelBooking, { isLoading }] = useCancelBookingMutation();
+  const moreThanADay = hoursUntil(session?.starts_at) > 24;
+
+  const confirm = async () => {
+    try {
+      await cancelBooking({ id: session.id }).unwrap();
+      close();
+      showToast("Session cancelled");
+    } catch {
+      showToast("Couldn't cancel just now — please try again");
+    }
+  };
+
+  return (
   <Scrim onClose={close}>
     <Sheet width={420} className="p-6">
       <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF0F0]">
@@ -187,33 +256,58 @@ const CancelModal = ({ close, showToast }) => (
         Cancel this session?
       </div>
       <div className="mb-[18px] text-[13px] leading-[1.7] text-ink-500">
-        Your session with Dr. Adewale K. is more than 24 hours away — you&apos;ll receive a{" "}
-        <strong className="font-boldNunito text-[#3BA88F]">full refund</strong>. Cancelling
-        within 24 hours refunds 50%; no-shows are not refunded.
+        Your session with {session?.therapist_name} is{" "}
+        {moreThanADay ? "more than 24 hours away" : "less than 24 hours away"} — you&apos;ll
+        receive a{" "}
+        <strong className="font-boldNunito text-[#3BA88F]">
+          {moreThanADay ? "full refund" : "50% refund"}
+        </strong>
+        . Cancelling within 24 hours refunds 50%; no-shows are not refunded.
       </div>
       <div className="flex gap-2.5">
         <GreyButton className="flex-1" onClick={close}>
           Keep Session
         </GreyButton>
-        <RedButton
-          className="flex-1"
-          onClick={() => {
-            close();
-            showToast("Session cancelled");
-          }}
-        >
-          Cancel Session
+        <RedButton className="flex-1" onClick={confirm} disabled={isLoading}>
+          {isLoading ? "Cancelling…" : "Cancel Session"}
         </RedButton>
       </div>
     </Sheet>
   </Scrim>
-);
+  );
+};
 
 /* ── Feedback ─────────────────────────────────────────────────────────────── */
 
-const FeedbackModal = ({ close, showToast }) => {
+const FeedbackModal = ({ close, showToast, session }) => {
   const [star, setStar] = useState(4);
   const [postMood, setPostMood] = useState(null);
+  const [comment, setComment] = useState("");
+  const [review, { isLoading }] = useReviewBookingMutation();
+  const [saveSessionMood] = useSaveSessionMoodMutation();
+
+  const submit = async () => {
+    if (!session?.id) {
+      close();
+      return;
+    }
+
+    try {
+      await review({ id: session.id, rating: star, comment: comment || undefined }).unwrap();
+
+      // The mood pair is separate from the review — a rating can be given
+      // without one, and vice versa.
+      if (postMood) {
+        const value = MOODS.find((m) => m.key === postMood)?.value;
+        await saveSessionMood({ id: session.id, phase: "post", mood: value }).unwrap();
+      }
+
+      close();
+      showToast("Thanks — your feedback helps");
+    } catch {
+      showToast("Couldn't submit that just now — please try again");
+    }
+  };
 
   return (
     <Scrim onClose={close}>
@@ -222,7 +316,9 @@ const FeedbackModal = ({ close, showToast }) => {
           How was your session?
         </div>
         <div className="mb-[18px] text-[12px] text-ink-400">
-          With Dr. Chioma O. · Jul 2 — private, only visible to you and TalkAM
+          {session?.therapist_name ? `With ${session.therapist_name} · ` : ""}
+          {session?.starts_at ? `${slotLabel(session.starts_at).split(" · ")[0]} — ` : ""}
+          private, only visible to you and TalkAM
         </div>
         <div className="mb-[18px] flex justify-center gap-2">
           {[1, 2, 3, 4, 5].map((n) => (
@@ -251,16 +347,12 @@ const FeedbackModal = ({ close, showToast }) => {
         </div>
         <textarea
           placeholder="Optional — what went well, or what could improve?"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
           className="mb-4 h-[70px] w-full resize-none rounded-[12px] border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
         />
-        <NavyButton
-          className="w-full"
-          onClick={() => {
-            close();
-            showToast("Thanks — your feedback helps");
-          }}
-        >
-          Submit Feedback
+        <NavyButton className="w-full" onClick={submit} disabled={isLoading}>
+          {isLoading ? "Submitting…" : "Submit Feedback"}
         </NavyButton>
       </Sheet>
     </Scrim>
@@ -269,8 +361,26 @@ const FeedbackModal = ({ close, showToast }) => {
 
 /* ── Pre-session mood ─────────────────────────────────────────────────────── */
 
-const PreSessionMoodModal = ({ close, open }) => {
+const PreSessionMoodModal = ({ close, open, session }) => {
   const [mood, setMood] = useState(null);
+  const [saveSessionMood, { isLoading }] = useSaveSessionMoodMutation();
+  const { data: me } = useGetMeV2Query();
+  const company = me?.business?.organization?.name ?? "your employer";
+
+  /** The mood is optional — "Continue" always gets you into the room. */
+  const proceed = async () => {
+    if (mood && session?.id) {
+      const value = MOODS.find((m) => m.key === mood)?.value;
+      try {
+        await saveSessionMood({ id: session.id, phase: "pre", mood: value }).unwrap();
+      } catch {
+        /* Never block joining a session on a check-in failing to save. */
+      }
+    }
+
+    open("inCall", session);
+  };
+
   return (
     <Scrim onClose={close}>
       <Sheet width={420} className="p-6">
@@ -279,17 +389,18 @@ const PreSessionMoodModal = ({ close, open }) => {
         </div>
         <div className="mb-[18px] text-[12px] text-ink-400">
           How are you feeling right now? This helps track your progress over time —
-          private, never shared with Zenith Bank.
+          private, never shared with {company}.
         </div>
         <div className="mb-4">
           <SmallMoodRow value={mood} onPick={setMood} />
         </div>
         <button
           type="button"
-          onClick={() => open("inCall")}
+          onClick={proceed}
+          disabled={isLoading}
           className="h-[46px] w-full cursor-pointer rounded-[12px] bg-[#3BA88F] text-[13px] font-extraboldNunito text-white"
         >
-          Continue to Session Room →
+          {isLoading ? "Saving…" : "Continue to Session Room →"}
         </button>
       </Sheet>
     </Scrim>
@@ -300,6 +411,40 @@ const PreSessionMoodModal = ({ close, open }) => {
 
 const BookingModal = ({ close, showToast, sessionType, setSessionType }) => {
   const [type, setType] = useState(sessionType);
+  const [slot, setSlot] = useState(null);
+
+  const { data: careTeam } = useGetCareTeamQuery();
+  const { data: directory } = useGetTherapistsQuery({ per_page: 1 });
+  const [createBooking, { isLoading }] = useCreateBookingMutation();
+
+  /* Prefer the member's existing therapist — continuity of care is the point
+     of the card. Fall back to the first of the directory for a new member. */
+  const suggested = careTeam?.therapist ?? directory?.data?.[0] ?? null;
+  const therapistId = suggested?.id;
+
+  const { data: slotData } = useGetTherapistSlotsQuery(
+    { id: therapistId },
+    { skip: !therapistId }
+  );
+  const slots = useMemo(() => (slotData?.slots ?? slotData ?? []).slice(0, 6), [slotData]);
+  const chosen = slot ?? slots[0]?.starts_at ?? slots[0] ?? null;
+
+  const confirm = async () => {
+    if (!therapistId || !chosen) return;
+
+    try {
+      await createBooking({
+        therapist_id: therapistId,
+        starts_at: chosen,
+        format: type,
+      }).unwrap();
+      setSessionType(type);
+      close();
+      showToast(`Session booked for ${slotLabel(chosen)}`);
+    } catch {
+      showToast("Couldn't book that slot — it may have just been taken");
+    }
+  };
 
   const chip = (active) =>
     classNames(
@@ -314,15 +459,47 @@ const BookingModal = ({ close, showToast, sessionType, setSessionType }) => {
         <div className="flex flex-col gap-4 px-6 py-[22px]">
           <div className="flex items-center gap-3 rounded-[12px] bg-[#F8F9FC] px-3.5 py-3">
             <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[#017FC8] text-[13px] font-extraboldNunito text-white">
-              AK
+              {initialsOf(suggested?.name ?? "")}
             </span>
             <div>
-              <div className="text-[13px] font-boldNunito text-navy-800">Dr. Adewale K.</div>
+              <div className="text-[13px] font-boldNunito text-navy-800">
+                {suggested?.name ?? "Finding you a therapist…"}
+              </div>
               <div className="text-[11px] text-ink-400">
-                Anxiety · CBT · Today at 4:00 PM WAT
+                {[suggested?.focus, chosen ? slotLabel(chosen) : null].filter(Boolean).join(" · ") ||
+                  "Checking availability"}
               </div>
             </div>
           </div>
+
+          {slots.length > 1 ? (
+            <div>
+              <span className="mb-2 block text-[12px] font-boldNunito text-ink-600">
+                Pick a time
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {slots.map((sl) => {
+                  const value = sl.starts_at ?? sl;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setSlot(value)}
+                      aria-pressed={chosen === value}
+                      className={classNames(
+                        "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-[11px] text-center text-[12.5px] font-boldNunito",
+                        chosen === value
+                          ? "border-navy-800 bg-navy-800 text-white"
+                          : "border-ink-200 bg-surface-page text-ink-600"
+                      )}
+                    >
+                      {slotLabel(value)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
 
           <div>
             <label className="mb-2 block text-[12px] font-boldNunito text-ink-600">
@@ -346,20 +523,17 @@ const BookingModal = ({ close, showToast, sessionType, setSessionType }) => {
           </div>
 
           <div className="rounded-[12px] bg-[#EEF4FC] px-3.5 py-3 text-[11.5px] leading-[1.6] text-brand-600">
-            We&apos;ll send you a reminder before 4:00 PM today, and Dr. Adewale K. will see
-            this on their schedule right away.
+            We&apos;ll send you a reminder before your session, and{" "}
+            {suggested?.name ?? "your therapist"} will see this on their schedule right away.
           </div>
 
           <button
             type="button"
-            onClick={() => {
-              setSessionType(type);
-              close();
-              showToast("Session booked for 4:00 PM today");
-            }}
-            className="h-12 cursor-pointer rounded-[12px] bg-navy-800 text-[14px] font-extraboldNunito text-white"
+            onClick={confirm}
+            disabled={!therapistId || !chosen || isLoading}
+            className="h-12 cursor-pointer rounded-[12px] bg-navy-800 text-[14px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:bg-[#C7CEDA]"
           >
-            Confirm Session →
+            {isLoading ? "Booking…" : "Confirm Session →"}
           </button>
         </div>
       </Sheet>
@@ -371,6 +545,12 @@ const BookingModal = ({ close, showToast, sessionType, setSessionType }) => {
 
 const CapReachedModal = ({ close, showToast }) => {
   const [requested, setRequested] = useState(false);
+  const { data: bookings } = useGetBookingsQuery();
+  const { data: me } = useGetMeV2Query();
+
+  const used = bookings?.summary?.sessions_used ?? 0;
+  const allowed = bookings?.summary?.sessions_allowed ?? used;
+  const company = me?.business?.organization?.name ?? "your company";
 
   return (
     <Scrim onClose={close}>
@@ -387,9 +567,9 @@ const CapReachedModal = ({ close, showToast }) => {
             You&apos;ve reached your monthly session limit
           </div>
           <div className="text-[13px] leading-[1.6] text-[#6B7280]">
-            You&apos;ve used all <b className="text-navy-800">6 of 6</b> sessions in your
-            Zenith Bank plan for this billing month. To keep booking, ask your admin to top
-            up your organisation&apos;s session pool.
+            You&apos;ve used all <b className="text-navy-800">{used} of {allowed}</b> sessions
+            in your {company} plan for this billing month. To keep booking, ask your admin to
+            top up your organisation&apos;s session pool.
           </div>
         </div>
 
@@ -448,11 +628,16 @@ const CapReachedModal = ({ close, showToast }) => {
 
 /* ── In-call screen ───────────────────────────────────────────────────────── */
 
-const InCallScreen = ({ open, sessionType }) => {
+const InCallScreen = ({ open, sessionType, session }) => {
   const [seconds, setSeconds] = useState(0);
   const [muted, setMuted] = useState(false);
   const [cameraOn, setCameraOn] = useState(true);
-  const isVideo = sessionType === "video";
+  const { data: me } = useGetMeV2Query();
+
+  const isVideo = (session?.format ?? sessionType) === "video";
+  const therapistName = session?.therapist_name ?? "";
+  const therapistInitials = initialsOf(therapistName);
+  const myInitial = (me?.name ?? me?.username ?? "").charAt(0).toUpperCase();
 
   useEffect(() => {
     const id = setInterval(() => setSeconds((s) => s + 1), 1000);
@@ -476,13 +661,13 @@ const InCallScreen = ({ open, sessionType }) => {
           <>
             <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(160deg,#141B34,#0D2240)]">
               <span className="flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#017FC8] text-[40px] font-extraboldNunito text-white">
-                AK
+                {therapistInitials}
               </span>
             </div>
             <div className="absolute bottom-6 right-6 flex h-[100px] w-[140px] items-center justify-center overflow-hidden rounded-[14px] border-2 border-white/[0.15] bg-[#1A2E5A]">
               {cameraOn ? (
                 <span className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#3BA88F] text-[18px] font-extraboldNunito text-white">
-                  C
+                  {myInitial}
                 </span>
               ) : (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2">
@@ -500,10 +685,10 @@ const InCallScreen = ({ open, sessionType }) => {
             <div className="relative flex h-[140px] w-[140px] items-center justify-center rounded-full bg-[rgba(1,127,200,0.15)]">
               <span className="absolute -inset-3.5 rounded-full border-2 border-[rgba(1,127,200,0.25)]" />
               <span className="flex h-[100px] w-[100px] items-center justify-center rounded-full bg-[#017FC8] text-[32px] font-extraboldNunito text-white">
-                AK
+                {therapistInitials}
               </span>
             </div>
-            <div className="text-[16px] font-extraboldNunito text-white">Dr. Adewale K.</div>
+            <div className="text-[16px] font-extraboldNunito text-white">{therapistName}</div>
             <div className="text-[12px] text-white/40">Voice call · {label}</div>
           </div>
         )}
@@ -554,7 +739,7 @@ const InCallScreen = ({ open, sessionType }) => {
 
         <button
           type="button"
-          onClick={() => open("feedback")}
+          onClick={() => open("feedback", session)}
           aria-label="End call"
           className="flex h-[52px] w-[60px] cursor-pointer items-center justify-center rounded-[26px] bg-[#AC4242]"
         >
@@ -569,8 +754,29 @@ const InCallScreen = ({ open, sessionType }) => {
 
 /* ── Report ───────────────────────────────────────────────────────────────── */
 
-const ReportModal = ({ close, showToast }) => {
+const ReportModal = ({ close, showToast, session }) => {
   const [reason, setReason] = useState("late");
+  const [detail, setDetail] = useState("");
+  const [reportUser, { isLoading }] = useReportUserMutation();
+  const { data: careTeam } = useGetCareTeamQuery();
+
+  const submit = async () => {
+    const label = reportReasons.find((r) => r.key === reason)?.label ?? reason;
+    const targetId = session?.therapist_id ?? careTeam?.therapist?.id ?? null;
+
+    try {
+      await reportUser({
+        user_id: targetId,
+        reason: label,
+        description: detail || label,
+      }).unwrap();
+      close();
+      showToast("Report submitted — our team will follow up");
+    } catch {
+      showToast("Couldn't submit that report — please try again");
+    }
+  };
+
   return (
     <Scrim onClose={close}>
       <Sheet width={460} className="p-6">
@@ -600,20 +806,16 @@ const ReportModal = ({ close, showToast }) => {
         </div>
         <textarea
           placeholder="Add any detail that might help (optional)"
+          value={detail}
+          onChange={(e) => setDetail(e.target.value)}
           className="mb-4 h-[70px] w-full resize-none rounded-[12px] border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
         />
         <div className="flex gap-2.5">
           <GreyButton className="flex-1" onClick={close}>
             Cancel
           </GreyButton>
-          <RedButton
-            className="flex-1"
-            onClick={() => {
-              close();
-              showToast("Report submitted — our team will follow up");
-            }}
-          >
-            Submit Report
+          <RedButton className="flex-1" onClick={submit} disabled={isLoading}>
+            {isLoading ? "Submitting…" : "Submit Report"}
           </RedButton>
         </div>
       </Sheet>
@@ -623,7 +825,27 @@ const ReportModal = ({ close, showToast }) => {
 
 /* ── Delete account ───────────────────────────────────────────────────────── */
 
-const DeleteAccountModal = ({ close }) => (
+const DeleteAccountModal = ({ close, showToast }) => {
+  const [confirmation, setConfirmation] = useState("");
+  const [deleteAccount, { isLoading }] = useDeleteAccountMutation();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const confirmed = confirmation.trim().toUpperCase() === "DELETE";
+
+  const submit = async () => {
+    if (!confirmed) return;
+
+    try {
+      await deleteAccount({}).unwrap();
+      dispatch(logOut());
+      navigate(V2.businessLogin, { replace: true });
+    } catch {
+      showToast?.("Couldn't delete your account just now — please contact support");
+    }
+  };
+
+  return (
   <Scrim onClose={close}>
     <Sheet width={440} className="p-6 text-center">
       <div className="mx-auto mb-4 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#FFF0F0]">
@@ -642,21 +864,29 @@ const DeleteAccountModal = ({ close }) => (
       <input
         placeholder="Type DELETE to confirm"
         aria-label="Type DELETE to confirm"
+        value={confirmation}
+        onChange={(e) => setConfirmation(e.target.value)}
         className="mb-3.5 h-[46px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-center text-[13px] text-ink-800"
       />
       <div className="flex gap-2.5">
         <GreyButton className="flex-1" onClick={close}>
           Keep Account
         </GreyButton>
-        <RedButton className="flex-1">Delete Forever</RedButton>
+        <RedButton className="flex-1" onClick={submit} disabled={!confirmed || isLoading}>
+          {isLoading ? "Deleting…" : "Delete Forever"}
+        </RedButton>
       </div>
     </Sheet>
   </Scrim>
-);
+  );
+};
 
 /* ── Sign out ─────────────────────────────────────────────────────────────── */
 
-const SignOutModal = ({ close }) => (
+const SignOutModal = ({ close }) => {
+  const dispatch = useDispatch();
+
+  return (
   <Scrim onClose={close}>
     <Sheet width={380} className="p-6 text-center">
       <div className="mb-2 text-[16px] font-extraboldNunito text-navy-800">
@@ -675,6 +905,8 @@ const SignOutModal = ({ close }) => (
         </button>
         <Link
           to={V2.businessLogin}
+          replace
+          onClick={() => dispatch(logOut())}
           className="flex h-11 flex-1 items-center justify-center rounded-[10px] bg-navy-800 text-[13px] font-extraboldNunito text-white"
         >
           Sign Out
@@ -682,12 +914,14 @@ const SignOutModal = ({ close }) => (
       </div>
     </Sheet>
   </Scrim>
-);
+  );
+};
 
 /* ── Router ───────────────────────────────────────────────────────────────── */
 
 export const EmployeeModals = ({
   modal,
+  context,
   close,
   open,
   showToast,
@@ -696,13 +930,13 @@ export const EmployeeModals = ({
 }) => {
   switch (modal) {
     case "reschedule":
-      return <RescheduleModal close={close} showToast={showToast} />;
+      return <RescheduleModal close={close} showToast={showToast} session={context} />;
     case "cancel":
-      return <CancelModal close={close} showToast={showToast} />;
+      return <CancelModal close={close} showToast={showToast} session={context} />;
     case "feedback":
-      return <FeedbackModal close={close} showToast={showToast} />;
+      return <FeedbackModal close={close} showToast={showToast} session={context} />;
     case "preSessionMood":
-      return <PreSessionMoodModal close={close} open={open} />;
+      return <PreSessionMoodModal close={close} open={open} session={context} />;
     case "booking":
       return (
         <BookingModal
@@ -715,11 +949,11 @@ export const EmployeeModals = ({
     case "capReached":
       return <CapReachedModal close={close} showToast={showToast} />;
     case "inCall":
-      return <InCallScreen open={open} sessionType={sessionType} />;
+      return <InCallScreen open={open} sessionType={sessionType} session={context} />;
     case "report":
-      return <ReportModal close={close} showToast={showToast} />;
+      return <ReportModal close={close} showToast={showToast} session={context} />;
     case "deleteAccount":
-      return <DeleteAccountModal close={close} />;
+      return <DeleteAccountModal close={close} showToast={showToast} />;
     case "signout":
       return <SignOutModal close={close} />;
     default:

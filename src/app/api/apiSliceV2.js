@@ -26,6 +26,18 @@ const baseQuery = fetchBaseQuery({
 export const apiSliceV2 = createApi({
   reducerPath: "apiV2",
   baseQuery: baseQuery,
-  tagTypes: ["Organization", "Invitations", "SelfCheck", "Me"],
+  tagTypes: [
+    "Organization",
+    "Invitations",
+    "SelfCheck",
+    "Me",
+    "MoodCheckins",
+    "Bookings",
+    "PrivacySettings",
+    "NotificationPreferences",
+    "Notifications",
+    "Conversations",
+    "Messages",
+  ],
   endpoints: (builder) => ({}),
 });
