@@ -6,7 +6,7 @@ import {
   sessionPreview,
   moodPreview,
   appShowcaseCaptions,
-} from "../../../../fakedata/v2/landing";
+} from "../../../../constants/marketing/landing";
 
 /**
  * "Inside the app" — three phone instances.

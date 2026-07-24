@@ -1,9 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════════════
- * MOCK DATA — TalkAM landing page (variant 1C)
+ * STATIC CONTENT — TalkAM landing page (variant 1C)
  *
- * UI-only phase. Nothing here hits an API. When the landing page is wired up,
- * replace these exports with RTK Query hooks from src/services/ — the shapes
- * below are what the components consume.
+ * This is the page's real editorial copy and its decorative device previews —
+ * not backend data. The hero community-feed preview is deliberately illustrative
+ * (showing real community posts on a public page would break the anonymity
+ * model), and the stat counters are curated marketing figures, not live counts.
+ * See planning-docs/web-api/06-marketing-legal.md for the rationale.
  *
  * Copy + figures are transcribed from "TalkAM Landing Page.dc.html" § 1C.
  * ═══════════════════════════════════════════════════════════════════════════ */

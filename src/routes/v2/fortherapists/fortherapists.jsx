@@ -19,7 +19,7 @@ import {
   therapistSessionPoints,
   therapistSteps,
   therapistTestimonial,
-} from "../../../fakedata/v2/fortherapists";
+} from "../../../constants/marketing/fortherapists";
 
 /**
  * TalkAM For Therapists — marketing page.

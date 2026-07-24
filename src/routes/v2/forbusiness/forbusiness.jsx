@@ -18,7 +18,7 @@ import {
   businessFeatures,
   seatManagementPoints,
   businessSteps,
-} from "../../../fakedata/v2/forbusiness";
+} from "../../../constants/marketing/forbusiness";
 
 /**
  * TalkAM For Business — marketing page.

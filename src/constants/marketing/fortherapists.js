@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
- * MOCK DATA — TalkAM For Therapists page
- * UI-only phase. Copy + figures transcribed from
- * "TalkAM For Therapists.dc.html".
+ * STATIC CONTENT — TalkAM For Therapists page
+ * The page's real editorial copy + decorative preview mockups; not backend data.
+ * Copy + figures transcribed from "TalkAM For Therapists.dc.html".
+ * See planning-docs/web-api/06-marketing-legal.md for the static-content rationale.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 export const therapistTrustStats = [

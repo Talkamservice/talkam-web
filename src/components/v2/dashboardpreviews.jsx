@@ -1,8 +1,8 @@
 import classNames from "classnames";
 import PropTypes from "prop-types";
 import TalkamWordmark from "../../assets/svgs/talkam-logo.svg";
-import { businessPreview } from "../../fakedata/v2/landing";
-import { employeeRoster, billingPreview } from "../../fakedata/v2/forbusiness";
+import { businessPreview } from "../../constants/marketing/landing";
+import { employeeRoster, billingPreview } from "../../constants/marketing/forbusiness";
 
 /**
  * Static, decorative screenshots of the admin dashboard, shown inside a

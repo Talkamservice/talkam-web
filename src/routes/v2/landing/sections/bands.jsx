@@ -2,7 +2,7 @@ import { DsButton } from "../../../../components/v2/button";
 import { DsEyebrow } from "../../../../components/v2/badge";
 import { StoreBadges } from "../../../../components/v2/storebadges";
 import { V2 } from "../../../../constants/v2routes";
-import { therapistPerks, landingStats } from "../../../../fakedata/v2/landing";
+import { therapistPerks, landingStats } from "../../../../constants/marketing/landing";
 
 /**
  * The three full-width bands between the app showcase and the footer.

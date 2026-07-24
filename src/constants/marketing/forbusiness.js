@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
- * MOCK DATA — TalkAM For Business page
- * UI-only phase. Copy + figures transcribed from "TalkAM For Business.dc.html".
+ * STATIC CONTENT — TalkAM For Business page
+ * The page's real editorial copy + decorative preview mockups; not backend data.
+ * Copy + figures transcribed from "TalkAM For Business.dc.html".
+ * See planning-docs/web-api/06-marketing-legal.md for the static-content rationale.
  *
  * NOTE: the deck's billing preview reads "64 sessions × ₦15,000", which
  * contradicts the flat ₦8,000/session rate on the Pricing deck. Transcribed

@@ -2,7 +2,7 @@ import { useState } from "react";
 import classNames from "classnames";
 import { MarketingHero } from "../../../../components/layout/v2/marketinglayout";
 import { PhoneFrame } from "../../../../components/v2/frames";
-import { heroFeedPosts } from "../../../../fakedata/v2/landing";
+import { heroFeedPosts } from "../../../../constants/marketing/landing";
 import TalkamWordmark from "../../../../assets/svgs/talkam-logo.svg";
 
 /**

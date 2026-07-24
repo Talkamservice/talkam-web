@@ -4,7 +4,7 @@ import {
   therapistHomePreview,
   therapistSessions,
   therapistEarnings,
-} from "../../fakedata/v2/fortherapists";
+} from "../../constants/marketing/fortherapists";
 
 /**
  * Static, decorative screenshots of the therapist dashboard for the For

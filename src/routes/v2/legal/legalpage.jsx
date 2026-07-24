@@ -4,16 +4,23 @@ import { MarketingFooter } from "../../../components/layout/v2/marketingfooter";
 import { DsEyebrow } from "../../../components/v2/badge";
 import { usePageMeta } from "../../../hooks/usePageMeta";
 import { V2 } from "../../../constants/v2routes";
-import { privacyPolicy, termsOfUse } from "../../../fakedata/v2/legal";
+import { useGetLegalDocumentQuery } from "../../../services/v2/legalApiSlice";
 
 /**
  * Shared long-form legal document layout.
  * Spec: "TalkAM Privacy Policy.dc.html" and "TalkAM Terms of Use.dc.html" —
  * both decks are the same 760px measure, differing only in copy and the
  * NDPA callout.
+ *
+ * `slug` ∈ { "privacy", "terms" } selects the document from the legal API.
  */
-const LegalPage = ({ doc, footerLinks, metaDescription }) => {
-  usePageMeta(`${doc.title} — TalkAM`, metaDescription);
+const LegalPage = ({ slug, title, footerLinks, metaDescription }) => {
+  const { data: doc } = useGetLegalDocumentQuery(slug);
+
+  usePageMeta(`${doc?.title ?? title} — TalkAM`, metaDescription);
+
+  // Hold the page until the document resolves rather than flash an empty shell.
+  if (!doc) return null;
 
   return (
     <>
@@ -79,19 +86,16 @@ const LegalPage = ({ doc, footerLinks, metaDescription }) => {
 };
 
 LegalPage.propTypes = {
+  slug: PropTypes.oneOf(["privacy", "terms"]).isRequired,
+  title: PropTypes.string.isRequired,
   footerLinks: PropTypes.array.isRequired,
-  doc: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    lastUpdated: PropTypes.string.isRequired,
-    callout: PropTypes.string,
-    sections: PropTypes.array.isRequired,
-    contact: PropTypes.object.isRequired,
-  }).isRequired,
+  metaDescription: PropTypes.string,
 };
 
 export const V2PrivacyPolicy = () => (
   <LegalPage
-    doc={privacyPolicy}
+    slug="privacy"
+    title="Privacy Policy"
     /* Deck: Pricing · Terms of Use · Business Login */
     footerLinks={[
       { label: "Pricing", to: V2.pricing },
@@ -104,7 +108,8 @@ export const V2PrivacyPolicy = () => (
 
 export const V2TermsOfUse = () => (
   <LegalPage
-    doc={termsOfUse}
+    slug="terms"
+    title="Terms of Use"
     /* Deck: Pricing · Privacy Policy · Business Login */
     footerLinks={[
       { label: "Pricing", to: V2.pricing },

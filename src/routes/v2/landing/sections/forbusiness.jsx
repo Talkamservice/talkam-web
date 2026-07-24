@@ -3,7 +3,7 @@ import { OverviewPreview } from "../../../../components/v2/dashboardpreviews";
 import { DsButton } from "../../../../components/v2/button";
 import { DsEyebrow } from "../../../../components/v2/badge";
 import { V2 } from "../../../../constants/v2routes";
-import { businessBenefits } from "../../../../fakedata/v2/landing";
+import { businessBenefits } from "../../../../constants/marketing/landing";
 
 /**
  * "TalkAM for Business" band with the admin dashboard shown in a browser frame.
