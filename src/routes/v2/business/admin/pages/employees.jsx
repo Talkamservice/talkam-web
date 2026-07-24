@@ -320,7 +320,7 @@ const Directory = () => {
               : `Showing ${(currentPage - 1) * EMPLOYEES_PER_PAGE + 1}–${Math.min(
                   currentPage * EMPLOYEES_PER_PAGE,
                   filtered.length
-                )} of ${filtered.length}`}
+                )} of ${filtered.length} employees`}
           </span>
           <div className="flex gap-1.5">
             <button

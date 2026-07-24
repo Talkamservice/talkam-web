@@ -17,6 +17,26 @@ import PropTypes from "prop-types";
 export const DsAccordion = ({ items, marker = "plus", className }) => {
   const [openIndex, setOpenIndex] = useState(null);
 
+  if (marker === "none") {
+    /* Deck: the dashboard Help screens use `summary{list-style:none}` with no
+       ::after rule at all — a `#F8F9FC` card and no disclosure glyph. */
+    return (
+      <div className={classNames("flex flex-col gap-2", className)}>
+        {items.map((item) => (
+          <details
+            key={item.q}
+            className="rounded-[12px] border border-[#EEEEEE] bg-[#F8F9FC] px-4 py-[13px]"
+          >
+            <summary className="cursor-pointer list-none text-[13px] font-boldNunito text-navy-800 [&::-webkit-details-marker]:hidden">
+              {item.q}
+            </summary>
+            <p className="mb-0 mt-2.5 text-[12.5px] leading-[1.65] text-[#5B6577]">{item.a}</p>
+          </details>
+        ))}
+      </div>
+    );
+  }
+
   if (marker === "native") {
     return (
       <div className={classNames("flex flex-col gap-2.5", className)}>
@@ -72,5 +92,5 @@ DsAccordion.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.shape({ q: PropTypes.string, a: PropTypes.string })
   ).isRequired,
-  marker: PropTypes.oneOf(["plus", "native"]),
+  marker: PropTypes.oneOf(["plus", "native", "none"]),
 };

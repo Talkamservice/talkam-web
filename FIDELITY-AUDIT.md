@@ -521,3 +521,52 @@ attribute and renders `50 – 100`. The implementation follows the deck's markup
 (`100 – 300`), not its runtime bug.
 
 ---
+## 9. B2B Admin Dashboard
+
+Deck: `TalkAM B2B Dashboard.dc.html` · Routes: `/business/admin/*`
+Deck screens: Overview, Employees, Therapist Network, My Therapists, Reports,
+Billing, Trust & Safety, Settings, Activity Log, Help & Support.
+
+Page titles/subtitles, the KPI row, session-activity chart, Top Topics, the
+Recent Sessions table, the employee directory rows, the Team Needs bars and the
+billing/settings panels were already verbatim.
+
+| # | Section | Deck | Implementation (before) | Type |
+|---|---------|------|--------------------------|------|
+| 175 | Topbar search | present — `#F2F3F7` field, `#E8E9EF` border, 180px input | **missing** (the shared shell defaulted it off after the employee-deck fix) | missing |
+| 176 | Topbar bell dot | drawn unconditionally (this deck has no notification panel) | dot only rendered when a notifications array was supplied — so no dot | missing |
+| 177 | Company switcher | carries a chevron-down and opens a dropdown: `WORKSPACE` header, current-workspace row with a blue tick, **Company settings**, **Activity log** | plain card, no chevron, not interactive | missing |
+| 178 | Sidebar profile menu | **My profile · Activity log · Sign out** (sign-out in `#8B2E2E` on `#FFF5F5` hover) | single "Sign out" row | missing |
+| 179 | Nav section labels | `MENU` / `MANAGE` | "Menu" / "Manage" | copy |
+| 180 | MANAGE items | Settings, Help & Support (Activity Log is reached from the two dropdowns) | Settings, **Activity Log**, Help & Support | extra element |
+| 181 | "My Therapists" count pill | `rgba(59,168,143,0.28)` bg, **`#7FDCC6`** text (the employee deck uses `#6FCDB6` for the same tone) | `#6FCDB6` | colour |
+| 182 | Therapist Network grid | **six** network therapists — `provider:'own'` entries belong on My Therapists | **seven**, including the in-house "Dr. Ifeoma O." | extra element |
+| 183 | Therapist access seats | `netSeatsUsed = myTherapists.length` → **`5 / 50`**, "45 available" | `50 / 50`, "0 available" | wrong value |
+| 184 | Therapist rate label | "₦8,000 / session (B2B rate)" | "₦8,000 per B2B session" | copy |
+| 185 | Help FAQ rows | `summary{list-style:none}` with **no `::after`** — no disclosure glyph at all; card is `#F8F9FC`, radius 12, border `#EEEEEE`, padding `13px 16px`, summary 13px | `DsAccordion` `+`/`–` on the right, white card, radius 14, padding `16px 20px` | icon/style |
+| 186 | Help — Informly launcher | fixed 52×52 `#017FC8` FAB bottom-right, shadow `0 10px 28px rgba(1,127,200,0.4)` | **missing** | missing |
+| 187 | Employees pager | "Showing 1–5 of 10 **employees**" | "Showing 1–5 of 10" | copy |
+
+**Discrepancies found: 13 — all 13 fixed.**
+
+### ✅ PASS — B2B Admin Dashboard
+
+Page heights, deck vs implementation, after the fixes: overview 905/926,
+employees 900/900, therapist network 1122/1134, my therapists 900/900,
+reports 900/900, billing 1914/1895, trust & safety 900/900, settings
+1490/1505, help & support 900/900.
+
+Files: `src/components/v2/dashboard/dashboardshell.jsx`,
+`src/components/v2/accordion.jsx`,
+`src/routes/v2/business/admin/{adminlayout.jsx,pages/*}`,
+`src/fakedata/v2/admin.js`.
+
+**Allowed deviations**
+
+| Kind | Deviation |
+|------|-----------|
+| (a) | The deck's ten `sc-if` page states are ten routes. |
+| (b) | Below `lg` the 232px sidebar becomes a slide-over, tables scroll horizontally, and the KPI/therapist grids reflow. |
+| (c) | The deck's own runtime fails to expand the Employees table's `sc-for`, so that deck screen renders one blank row. The implementation renders the five rows the deck's `employeesData` defines (EMP-0047 / 0112 / 0203 / 0089 / 0167, matching departments, statuses, session counts and last-active values). |
+
+---

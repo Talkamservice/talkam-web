@@ -50,7 +50,9 @@ const CountPill = ({ tone, children }) => (
         ? "bg-[rgba(172,66,66,0.28)] text-[#FF9B9B]"
         : tone === "teal"
           ? "bg-[rgba(59,168,143,0.28)] text-[#6FCDB6]"
-          : "bg-[rgba(1,127,200,0.28)] text-[#68B4E1]"
+          : tone === "tealBright"
+            ? "bg-[rgba(59,168,143,0.28)] text-[#7FDCC6]"
+            : "bg-[rgba(1,127,200,0.28)] text-[#68B4E1]"
     )}
   >
     {children}
@@ -60,6 +62,7 @@ const CountPill = ({ tone, children }) => (
 export const DashboardShell = ({
   sections,
   workspace,
+  workspaceMenu,
   topBlock,
   user,
   userMenu,
@@ -71,17 +74,20 @@ export const DashboardShell = ({
   onSignOut,
   notifications = [],
   notifKindColor = {},
+  /** Decks without a notification panel still draw the unread dot. */
+  bellDot = false,
   topbarAction,
   title,
   subtitle,
 }) => {
   const [navOpen, setNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [readAll, setReadAll] = useState(false);
 
   const rows = notifications.map((n) => ({ ...n, read: readAll || n.read }));
-  const hasUnread = rows.some((n) => !n.read);
+  const hasUnread = bellDot || rows.some((n) => !n.read);
 
   return (
     /* `leading-[normal]`: the decks inherit the browser default line-height and
@@ -129,8 +135,26 @@ export const DashboardShell = ({
         {topBlock ? (
           <div className="border-b border-white/[0.06] px-3 py-2.5">{topBlock}</div>
         ) : workspace ? (
-          <div className="border-b border-white/[0.06] px-3 py-2.5">
-            <div className="flex items-center gap-2 rounded-[10px] border border-white/[0.08] bg-white/[0.06] px-2.5 py-2">
+          <div className="relative border-b border-white/[0.06] px-3 py-2.5">
+            {workspaceMenu && workspaceOpen ? (
+              <div className="absolute inset-x-3 top-[60px] z-[120] overflow-hidden rounded-[12px] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.28)]">
+                {workspaceMenu}
+              </div>
+            ) : null}
+            <div
+              role={workspaceMenu ? "button" : undefined}
+              tabIndex={workspaceMenu ? 0 : undefined}
+              onClick={workspaceMenu ? () => setWorkspaceOpen((v) => !v) : undefined}
+              onKeyDown={
+                workspaceMenu
+                  ? (e) => e.key === "Enter" && setWorkspaceOpen((v) => !v)
+                  : undefined
+              }
+              className={classNames(
+                "flex items-center gap-2 rounded-[10px] border border-white/[0.08] bg-white/[0.06] px-2.5 py-2",
+                workspaceMenu && "cursor-pointer"
+              )}
+            >
               <span
                 className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[7px] text-[11px] font-extraboldNunito text-white"
                 style={{ background: workspace.accent }}
@@ -143,6 +167,17 @@ export const DashboardShell = ({
                 </div>
                 <div className="text-[10px] text-white/35">{workspace.meta}</div>
               </div>
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(255,255,255,0.35)"
+                strokeWidth="2"
+                className="shrink-0"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
             </div>
           </div>
         ) : null}
@@ -188,13 +223,17 @@ export const DashboardShell = ({
         {/* User */}
         <div className="relative border-t border-white/[0.06] px-3.5 py-3">
           {userMenu && profileOpen ? (
-            <div className="absolute inset-x-3.5 bottom-16 z-[130] overflow-hidden rounded-ds-md bg-white shadow-[0_12px_32px_rgba(0,0,0,0.28)]">
-              <Link
-                to={signOutTo}
-                className="flex items-center gap-2.5 px-3.5 py-2.5 text-[12.5px] font-boldNunito text-surface-errorInk hover:bg-surface-errorField"
-              >
-                <Icon.LogOut size={15} /> Sign out
-              </Link>
+            <div className="absolute inset-x-3.5 bottom-16 z-[130] overflow-hidden rounded-[12px] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.28)]">
+              {userMenu === true ? (
+                <Link
+                  to={signOutTo}
+                  className="flex items-center gap-2.5 px-3.5 py-2.5 text-[12.5px] font-boldNunito text-surface-errorInk hover:bg-surface-errorField"
+                >
+                  <Icon.LogOut size={15} /> Sign out
+                </Link>
+              ) : (
+                userMenu
+              )}
             </div>
           ) : null}
           {userMenu ? (
@@ -341,9 +380,10 @@ const UserIdentity = ({ user }) => (
 DashboardShell.propTypes = {
   sections: PropTypes.array.isRequired,
   workspace: PropTypes.object,
+  workspaceMenu: PropTypes.node,
   topBlock: PropTypes.node,
   user: PropTypes.object.isRequired,
-  userMenu: PropTypes.bool,
+  userMenu: PropTypes.oneOfType([PropTypes.bool, PropTypes.node]),
   width: PropTypes.number,
   logoGradient: PropTypes.string,
   portalLabel: PropTypes.string,

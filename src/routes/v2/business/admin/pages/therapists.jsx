@@ -34,6 +34,7 @@ export const AdminTherapistNetwork = () => {
   const visible = useMemo(() => {
     const q = search.toLowerCase().trim();
     return therapists
+      .filter((t) => t.provider !== "own")
       .filter((t) => specialty === "All Specialties" || t.specialty === specialty)
       .filter((t) => (q ? `${t.name} ${t.specialty}`.toLowerCase().includes(q) : true));
   }, [search, specialty]);
@@ -191,7 +192,7 @@ export const AdminTherapistNetwork = () => {
                   <span className="text-[11.5px] font-boldNunito text-navy-800">
                     {t.billing === "self"
                       ? "Settled directly with you"
-                      : `${naira(8000)} per B2B session`}
+                      : `${naira(8000)} / session (B2B rate)`}
                   </span>
                 </div>
 

@@ -155,7 +155,9 @@ export const teamNeeds = [
 ];
 
 export const networkStats = {
-  seatsUsed: 50,
+  /** Deck: `netSeatsUsed = myTherapists.length` — the five therapists in the
+   *  organisation's own bench, not the whole network. */
+  seatsUsed: 5,
   seatsTotal: 50,
   sessionsUsed: 21,
   sessionsBundle: 25,
