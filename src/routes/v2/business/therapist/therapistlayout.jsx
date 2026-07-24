@@ -11,12 +11,14 @@ import {
 } from "../../../../components/v2/dashboard/chrome";
 import { usePageMeta } from "../../../../hooks/usePageMeta";
 import { V2 } from "../../../../constants/v2routes";
+import { useDispatch } from "react-redux";
+import { therapistPortalLabel, therapistPageMeta, initialsOf } from "../../../../constants/therapistdashboard";
+import { logOut } from "../../../../services/authSlice";
+import { useGetMeV2Query } from "../../../../services/v2/authApiSliceV2";
 import {
-  therapistUser,
-  therapistPortalLabel,
-  therapistBusinessTag,
-  therapistPageMeta,
-} from "../../../../fakedata/v2/therapist";
+  useGetTherapistHomeQuery,
+  useGetTherapistSessionsQuery,
+} from "../../../../services/v2/therapistApiSlice";
 
 /**
  * Therapist (provider) dashboard shell.
@@ -35,15 +37,16 @@ export const useTherapist = () => {
 const at = (path) => `${V2.therapist}${path}`;
 
 /** Deck: sidebar `<nav>` — order, labels and count-pill tones. */
-const NAV_SECTIONS = [
+const navSections = ({ upcoming, unread, showEarnings }) => [
   {
     items: [
       { to: V2.therapist, end: true, label: "Home", icon: <Icon.Home size={16} /> },
       { to: at("/availability"), label: "Availability", icon: <Icon.Clock size={16} /> },
-      { to: at("/sessions"), label: "Sessions", icon: <Icon.Calendar size={16} />, count: "5", countTone: "blue" },
-      { to: at("/messages"), label: "Client Messages", icon: <Icon.MessageCircle size={16} />, count: "3", countTone: "blue" },
+      { to: at("/sessions"), label: "Sessions", icon: <Icon.Calendar size={16} />, count: upcoming ? String(upcoming) : undefined, countTone: "blue" },
+      { to: at("/messages"), label: "Client Messages", icon: <Icon.MessageCircle size={16} />, count: unread ? String(unread) : undefined, countTone: "blue" },
       { to: at("/analytics"), label: "Analytics", icon: <Icon.BarChart2 size={16} /> },
-      { to: at("/earnings"), label: "Earnings", icon: <Icon.DollarSign size={16} /> },
+      // The Earnings module is hidden for business-employed therapists (§04).
+      ...(showEarnings ? [{ to: at("/earnings"), label: "Earnings", icon: <Icon.DollarSign size={16} /> }] : []),
     ],
   },
   {
@@ -56,30 +59,24 @@ const NAV_SECTIONS = [
 ];
 
 /** Deck: the two verification strips directly under the logo block. */
-const VerificationStrips = () => (
+const VerificationStrips = ({ isVerified, employer }) => (
   <>
     <div className="flex items-center gap-2 rounded-[10px] border border-[rgba(219,182,110,0.28)] bg-[rgba(219,182,110,0.12)] px-2.5 py-2">
       <span className="shrink-0 text-[12px] text-gold-400">✦</span>
       <span className="text-[10.5px] leading-[1.4] text-[#E9CE95]">
-        Verified Therapist · MDCN Confirmed
+        {isVerified ? "Verified Therapist · MDCN Confirmed" : "Verification in progress"}
       </span>
     </div>
-    <div className="mt-2 flex items-center gap-2 rounded-[10px] border border-[rgba(104,180,225,0.28)] bg-[rgba(104,180,225,0.12)] px-2.5 py-2">
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#68B4E1"
-        strokeWidth="2"
-        className="shrink-0"
-      >
-        <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" />
-      </svg>
-      <span className="text-[10.5px] leading-[1.4] text-[#A9D5EF]">
-        {therapistBusinessTag} · Paid by business
-      </span>
-    </div>
+    {employer ? (
+      <div className="mt-2 flex items-center gap-2 rounded-[10px] border border-[rgba(104,180,225,0.28)] bg-[rgba(104,180,225,0.12)] px-2.5 py-2">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#68B4E1" strokeWidth="2" className="shrink-0">
+          <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" />
+        </svg>
+        <span className="text-[10.5px] leading-[1.4] text-[#A9D5EF]">
+          Employed by {employer} · Paid by business
+        </span>
+      </div>
+    ) : null}
   </>
 );
 
@@ -103,10 +100,11 @@ export const TherapistProvider = () => {
   }, []);
 
   const resolve = useCallback((key) => setResolved((p) => [...p, key]), []);
+  const dispatch = useDispatch();
 
   const value = useMemo(
-    () => ({ open, close, showToast, resolved, resolve }),
-    [open, close, showToast, resolved, resolve]
+    () => ({ open, close, showToast, resolved, resolve, signOut: () => dispatch(logOut()) }),
+    [open, close, showToast, resolved, resolve, dispatch]
   );
 
   return (
@@ -131,23 +129,48 @@ export const TherapistProvider = () => {
 export const TherapistLayout = () => {
   const { pathname } = useLocation();
 
+  const { data: me } = useGetMeV2Query();
+  const { data: home } = useGetTherapistHomeQuery();
+  const { data: sessions } = useGetTherapistSessionsQuery();
+
+  const employment = home?.employment ?? {};
+  const showEarnings = !employment.is_business_employed;
+  const upcoming = sessions?.upcoming?.length ?? 0;
+  const unread = home?.attention?.unread_messages ?? 0;
+
+  const fullName = me?.name ?? "";
+  const user = {
+    name: fullName || me?.username || "",
+    role: me?.therapist?.credential_type ?? "Therapist",
+    initials: initialsOf(fullName || me?.username || ""),
+    avatarBg: "#017FC8",
+    avatarColor: "#fff",
+  };
+
   const segment = pathname.replace(V2.therapist, "").replace(/^\//, "") || "home";
   const meta = therapistPageMeta[segment] ?? therapistPageMeta.home;
+
+  const subtitle =
+    segment === "home"
+      ? [fullName, new Date().toLocaleDateString("en-NG", { weekday: "long", month: "short", day: "numeric" })].filter(Boolean).join(" · ")
+      : segment === "sessions"
+        ? `${upcoming} upcoming`
+        : meta.subtitle;
 
   usePageMeta(`${meta.title} — TalkAM for Therapists`);
 
   return (
     <DashboardShell
-      sections={NAV_SECTIONS}
+      sections={navSections({ upcoming, unread, showEarnings })}
       width={224}
       /* Deck: the therapist logo tile is a darker blue ramp than the other two. */
       logoGradient="linear-gradient(135deg,#017FC8,#015C94)"
       portalLabel={therapistPortalLabel}
-      topBlock={<VerificationStrips />}
-      user={therapistUser}
-      bellDot
+      topBlock={<VerificationStrips isVerified={!!me?.therapist?.is_verified} employer={employment.employer_name} />}
+      user={user}
+      bellDot={(home?.attention?.pending_notes ?? 0) + unread > 0}
       title={meta.title}
-      subtitle={meta.subtitle}
+      subtitle={subtitle}
       topbarAction={
         /* Deck: blue `#017FC8` pill — "Manage Availability" — not a teal CTA. */
         <Link

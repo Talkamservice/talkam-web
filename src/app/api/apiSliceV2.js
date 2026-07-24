@@ -43,6 +43,13 @@ export const apiSliceV2 = createApi({
     "AdminTherapists",
     "AdminSafety",
     "AdminActivity",
+    "TherapistHome",
+    "TherapistAnalytics",
+    "TherapistAvailability",
+    "TherapistSessions",
+    "TherapistNotes",
+    "TherapistEarnings",
+    "TherapistProfile",
   ],
   endpoints: (builder) => ({}),
 });

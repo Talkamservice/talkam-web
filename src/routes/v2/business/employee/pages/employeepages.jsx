@@ -1668,7 +1668,11 @@ export const EmployeeHelp = () => {
 
   /* The v1 FAQ endpoint returns categories each holding their questions; the
      deck shows one flat accordion. */
-  const faqs = (categories ?? []).flatMap((c) => c.faq ?? []);
+  // `/user/faqs` returns every category; the employee Help screen shows only
+  // the employee set (the therapist dashboard adds its own category).
+  const faqs = (categories ?? [])
+    .filter((c) => c.name === "Employee Dashboard")
+    .flatMap((c) => c.faq ?? []);
 
   return (
     <>
