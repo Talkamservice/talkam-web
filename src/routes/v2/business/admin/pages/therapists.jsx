@@ -13,13 +13,12 @@ import {
   SecondaryButton,
 } from "../../../../../components/v2/dashboard/chrome";
 import { useAdminModal } from "../adminmodals";
+import { TOPIC_BAR_COLOURS, avatarColour, naira } from "../../../../../constants/admindashboard";
+import { Withheld } from "../../../../../components/v2/dashboard/chrome";
 import {
-  therapists,
-  specialtyOptions,
-  teamNeeds,
-  networkStats,
-  naira,
-} from "../../../../../fakedata/v2/admin";
+  useGetAdminTherapistsQuery,
+  useGetTeamNeedsQuery,
+} from "../../../../../services/v2/adminApiSlice";
 
 /** Admin › Therapist Network and My Therapists. */
 
@@ -31,16 +30,25 @@ export const AdminTherapistNetwork = () => {
   const [specialty, setSpecialty] = useState("All Specialties");
   const [added, setAdded] = useState([]);
 
+  const { data, isLoading } = useGetAdminTherapistsQuery();
+  const { data: teamNeeds } = useGetTeamNeedsQuery();
+
+  const therapists = data?.therapists ?? [];
+  const specialtyOptions = ["All Specialties", ...(data?.specialties ?? [])];
+  const networkStats = data?.stats ?? {};
+
   const visible = useMemo(() => {
     const q = search.toLowerCase().trim();
     return therapists
-      .filter((t) => t.provider !== "own")
       .filter((t) => specialty === "All Specialties" || t.specialty === specialty)
-      .filter((t) => (q ? `${t.name} ${t.specialty}`.toLowerCase().includes(q) : true));
-  }, [search, specialty]);
+      .filter((t) => (q ? `${t.name} ${t.specialty ?? ""}`.toLowerCase().includes(q) : true));
+  }, [therapists, search, specialty]);
 
-  const seatsAvailable = networkStats.seatsTotal - networkStats.seatsUsed;
-  const sessionsRemaining = networkStats.sessionsBundle - networkStats.sessionsUsed;
+  const seatsAvailable = (networkStats.seats_total ?? 0) - (networkStats.seats_used ?? 0);
+  const sessionsRemaining =
+    networkStats.sessions_used === null || networkStats.sessions_used === undefined
+      ? null
+      : (networkStats.sessions_bundle ?? 0) - networkStats.sessions_used;
 
   return (
     <>
@@ -82,33 +90,42 @@ export const AdminTherapistNetwork = () => {
       <Card>
         <div className="mb-0.5 flex flex-wrap items-center justify-between gap-2">
           <div className="text-body font-extraboldNunito text-navy-800">Team Needs</div>
-          <Badge tone="purple">ANONYMISED · n=214</Badge>
+          <Badge tone="purple">
+            ANONYMISED{teamNeeds?.cohort ? ` · n=${teamNeeds.cohort}` : ""}
+          </Badge>
         </div>
         <p className="mb-4 text-caption leading-[1.5] text-ink-400">
           From employees&apos; private onboarding self-check-ins — never individual
           answers, only company-wide patterns once at least 5 people respond. Use this
           to prioritise which specialties to onboard next.
         </p>
-        <div className="flex flex-col gap-[11px]">
-          {teamNeeds.map((need) => (
-            <div key={need.label}>
-              <div className="mb-1.5 flex justify-between gap-3">
-                <span className="text-[12.5px] font-semiboldNunito text-ink-800">
-                  {need.label}
-                </span>
-                <span className="text-[12.5px] font-boldNunito text-navy-800">
-                  {need.pct}%
-                </span>
+        {teamNeeds?.suppressed ? (
+          <Withheld cohort={teamNeeds.cohort} />
+        ) : (
+          <div className="flex flex-col gap-[11px]">
+            {(teamNeeds?.value ?? []).map((need, i) => (
+              <div key={need.category}>
+                <div className="mb-1.5 flex justify-between gap-3">
+                  <span className="text-[12.5px] font-semiboldNunito text-ink-800">
+                    {need.label}
+                  </span>
+                  <span className="text-[12.5px] font-boldNunito text-navy-800">
+                    {need.percent}%
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-[3px] bg-ink-100">
+                  <div
+                    className="h-1.5 rounded-[3px]"
+                    style={{
+                      width: `${need.percent}%`,
+                      backgroundColor: TOPIC_BAR_COLOURS[i % TOPIC_BAR_COLOURS.length],
+                    }}
+                  />
+                </div>
               </div>
-              <div className="h-1.5 rounded-[3px] bg-ink-100">
-                <div
-                  className="h-1.5 rounded-[3px]"
-                  style={{ width: `${need.pct * 2}%`, backgroundColor: need.color }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Stats strip */}
@@ -116,15 +133,15 @@ export const AdminTherapistNetwork = () => {
         {[
           {
             label: "THERAPIST ACCESS SEATS",
-            value: `${networkStats.seatsUsed} / ${networkStats.seatsTotal}`,
+            value: `${networkStats.seats_used ?? 0} / ${networkStats.seats_total ?? 0}`,
             note: `${seatsAvailable} available`,
           },
           {
             label: "SESSIONS REMAINING",
-            value: `${sessionsRemaining} / ${networkStats.sessionsBundle}`,
+            value: sessionsRemaining === null ? "—" : `${sessionsRemaining} / ${networkStats.sessions_bundle ?? 0}`,
             note: "This month's bundle",
           },
-          { label: "NEXT RESET", value: networkStats.nextReset, note: "Unused sessions expire" },
+          { label: "NEXT RESET", value: networkStats.next_reset ?? "—", note: "Unused sessions expire" },
         ].map((stat) => (
           <Card key={stat.label}>
             <div className="mb-2 text-[11px] font-boldNunito tracking-[0.06em] text-ink-400">
@@ -140,14 +157,14 @@ export const AdminTherapistNetwork = () => {
       {visible.length ? (
         <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((t) => {
-            const inNetwork = t.inNetwork || added.includes(t.id);
+            const inNetwork = t.in_network || added.includes(t.id);
             return (
               <Card key={t.id}>
                 <div className="mb-3 flex items-center gap-[11px]">
                   <div className="relative shrink-0">
                     <span
                       className="flex h-11 w-11 items-center justify-center rounded-full text-[15px] font-extraboldNunito text-white"
-                      style={{ background: t.avatarBg }}
+                      style={{ background: avatarColour(t.name) }}
                     >
                       {t.initials}
                     </span>
@@ -169,19 +186,19 @@ export const AdminTherapistNetwork = () => {
                 <div className="mb-2.5 flex gap-4 border-y border-ink-100 py-2.5">
                   <div>
                     <div className="text-[15px] font-extraboldNunito text-navy-800">
-                      {t.sessions}
+                      {t.reviews}
                     </div>
                     <div className="text-[10px] text-ink-400">sessions</div>
                   </div>
                   <div>
                     <div className="text-[15px] font-extraboldNunito text-navy-800">
-                      {t.rating}
+                      {t.rating ?? "—"}
                     </div>
                     <div className="text-[10px] text-ink-400">avg rating</div>
                   </div>
                   <div>
                     <div className="text-[15px] font-extraboldNunito text-brand-400">
-                      {t.availability}
+                      {t.is_verified ? "Verified" : "Pending review"}
                     </div>
                     <div className="text-[10px] text-ink-400">next slot</div>
                   </div>
@@ -190,7 +207,7 @@ export const AdminTherapistNetwork = () => {
                 <div className="mb-3 flex items-center gap-1.5 rounded-ds-sm bg-ink-50 px-2.5 py-[7px]">
                   <Icon.DollarSign size={13} className="text-brand-400" />
                   <span className="text-[11.5px] font-boldNunito text-navy-800">
-                    {t.billing === "self"
+                    {!t.is_verified
                       ? "Settled directly with you"
                       : `${naira(8000)} / session (B2B rate)`}
                   </span>
@@ -241,8 +258,12 @@ export const AdminTherapistNetwork = () => {
 
 export const AdminMyTherapists = () => {
   const { open } = useAdminModal();
-  const mine = therapists.filter((t) => t.inNetwork);
-  const seatsAvailable = networkStats.seatsTotal - networkStats.seatsUsed;
+  const { data } = useGetAdminTherapistsQuery();
+  const therapists = data?.therapists ?? [];
+  const networkStats = data?.stats ?? {};
+
+  const mine = therapists.filter((t) => t.in_network);
+  const seatsAvailable = (networkStats.seats_total ?? 0) - (networkStats.seats_used ?? 0);
 
   return (
     <>
@@ -255,7 +276,7 @@ export const AdminMyTherapists = () => {
       <div className="grid gap-3.5 sm:grid-cols-3">
         {[
           { label: "THERAPISTS ACTIVE", value: String(mine.length), tone: "text-navy-800" },
-          { label: "SEATS USED", value: String(networkStats.seatsUsed), tone: "text-navy-800" },
+          { label: "SEATS USED", value: String(networkStats.seats_used ?? 0), tone: "text-navy-800" },
           { label: "SEATS AVAILABLE", value: String(seatsAvailable), tone: "text-[#1F8A5B]" },
         ].map((stat) => (
           <Card key={stat.label}>
@@ -289,7 +310,7 @@ export const AdminMyTherapists = () => {
                 <div className="flex items-center gap-2.5">
                   <span
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-caption font-extraboldNunito text-white"
-                    style={{ background: t.avatarBg }}
+                    style={{ background: avatarColour(t.name) }}
                   >
                     {t.initials}
                   </span>
@@ -299,15 +320,18 @@ export const AdminMyTherapists = () => {
                 </div>
               </Td>
               <Td>
-                <Badge tone={t.provider === "own" ? "purple" : "blue"}>
-                  {t.provider === "own" ? "Your provider" : "TalkAM network"}
+                <Badge tone={t.is_verified ? "blue" : "purple"}>
+                  {t.is_verified ? "TalkAM network" : "Pending review"}
                 </Badge>
               </Td>
               <Td>{t.specialty}</Td>
-              <Td className="font-boldNunito text-ink-600">{t.monthSessions}</Td>
+              {/* Company-wide count for this therapist, withheld below the cohort floor. */}
+              <Td className="font-boldNunito text-ink-600">
+                {t.month_sessions === null || t.month_sessions === undefined ? "—" : t.month_sessions}
+              </Td>
               <Td>
-                <Badge tone={t.billing === "self" ? "gold" : "green"}>
-                  {t.billing === "self" ? "Self-billed" : "Via TalkAM"}
+                <Badge tone="green">
+                  {"Via TalkAM"}
                 </Badge>
               </Td>
               <Td>

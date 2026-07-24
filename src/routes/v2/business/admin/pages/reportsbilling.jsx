@@ -13,17 +13,22 @@ import {
   PrimaryButton,
   SecondaryButton,
 } from "../../../../../components/v2/dashboard/chrome";
+import { Withheld, AdminSkeleton } from "../../../../../components/v2/dashboard/chrome";
 import { useAdminModal } from "../adminmodals";
+import { naira } from "../../../../../constants/admindashboard";
 import {
-  reportCards,
-  companyMonthly,
-  roi,
+  useGetAdminReportsQuery,
+  useGetAdminOverviewQuery,
+  downloadCsv,
+} from "../../../../../services/v2/adminApiSlice";
+import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
+import { useSelector } from "react-redux";
+import { selectCurrentToken } from "../../../../../services/authSlice";
+import {
   currentPlan,
   invoices,
-  networkStats,
   PLANS,
   tierForSeats,
-  naira,
   CURRENT_SEATS,
 } from "../../../../../fakedata/v2/admin";
 
@@ -35,10 +40,48 @@ const REPORT_BTN = {
   gold: "bg-gold-50 text-gold-600 hover:bg-gold-100",
 };
 
+/** Presentation for the three report cards; the copy comes from the API. */
+const REPORT_STYLE = {
+  usage: { iconBg: "bg-brand-25", iconColor: "#017FC8", tone: "primary" },
+  wellness: { iconBg: "bg-wellness-50", iconColor: "#3BA88F", tone: "teal" },
+  roi: { iconBg: "bg-gold-50", iconColor: "#9A6E0A", tone: "gold" },
+};
+
 export const AdminReports = () => {
   const { open, showToast } = useAdminModal();
   const [digest, setDigest] = useState(true);
-  const max = Math.max(...companyMonthly.map((m) => m.value));
+
+  const { data, isLoading } = useGetAdminReportsQuery();
+  const { data: overview } = useGetAdminOverviewQuery();
+  const { data: me } = useGetMeV2Query();
+  const token = useSelector(selectCurrentToken);
+
+  const reportCards = (data?.reports ?? []).map((card) => ({
+    ...card,
+    ...(REPORT_STYLE[card.key] ?? REPORT_STYLE.usage),
+  }));
+
+  const trend = data?.monthly_trend;
+  const companyMonthly = trend?.value ?? [];
+  const max = Math.max(...companyMonthly.map((m) => m.value), 1);
+  const roi = overview?.roi;
+
+  /* Growth since the first month with any sessions. */
+  const first = companyMonthly.find((m) => m.value > 0);
+  const last = companyMonthly[companyMonthly.length - 1];
+  const growth =
+    first && last && first.value > 0 && first !== last
+      ? Math.round(((last.value - first.value) / first.value) * 100)
+      : null;
+
+  const download = async (key, title) => {
+    try {
+      await downloadCsv(`/business/reports/${key}/download`, token, `talkam-${key}.csv`);
+      showToast(`${title} download started`);
+    } catch {
+      showToast("Couldn't generate that report — please try again");
+    }
+  };
 
   return (
     <>
@@ -69,24 +112,25 @@ export const AdminReports = () => {
                 <div className="flex justify-between gap-3">
                   <span className="text-[11px] text-ink-500">Gross productivity value</span>
                   <span className="text-[11.5px] font-boldNunito text-navy-800">
-                    {roi.grossValue}
+                    {naira(roi?.value?.gross_value)}
                   </span>
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-[11px] text-ink-500">Program cost this month</span>
                   <span className="text-[11.5px] font-boldNunito text-navy-800">
-                    {roi.programCost}
+                    {naira(roi?.value?.program_cost)}
                   </span>
                 </div>
                 <div className="flex justify-between gap-3 border-t border-[#F0E4C8] pt-1.5">
                   <span className="text-[11.5px] font-boldNunito text-navy-800">Net ROI</span>
                   <span className="text-caption font-extraboldNunito text-gold-600">
-                    {roi.netROI} · {roi.multiple}
+                    {naira(roi?.value?.net_roi)}
+                    {roi?.value?.multiple ? ` · ${roi.value.multiple}x return` : ""}
                   </span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => open("roi")}
+                  onClick={() => open("roi", roi)}
                   className="mt-0.5 cursor-pointer text-left text-[10.5px] text-gold-600 underline"
                 >
                   See the 4 factors behind this number
@@ -95,19 +139,17 @@ export const AdminReports = () => {
             ) : null}
 
             <div className="mt-auto flex items-center justify-between gap-3">
-              <span className="text-[11px] text-ink-400">
-                Last generated: {card.generated}
-              </span>
+              <span className="text-[11px] text-ink-400">Anonymised · generated on request</span>
               <button
                 type="button"
-                onClick={() => showToast(`${card.title} download started`)}
+                onClick={() => download(card.key, card.title)}
                 className={classNames(
                   "inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-[9px] px-3 py-1.5 text-[12px] font-boldNunito transition-colors",
                   REPORT_BTN[card.tone]
                 )}
               >
                 <Icon.Download size={12} />
-                Download PDF
+                Download CSV
               </button>
             </div>
           </Card>
@@ -120,12 +162,21 @@ export const AdminReports = () => {
           <div className="text-body font-extraboldNunito text-navy-800">
             Engagement Since Launch
           </div>
-          <span className="text-[11px] font-boldNunito text-wellness-400">↑ 312% since Feb</span>
+          {growth !== null ? (
+            <span className="text-[11px] font-boldNunito text-wellness-400">
+              ↑ {growth}% since {first.label}
+            </span>
+          ) : null}
         </div>
         <p className="mb-4 text-caption leading-[1.5] text-ink-400">
           Total sessions booked company-wide, month over month, since your first employee
           activated. Anonymised — no individual breakdown.
         </p>
+        {isLoading ? (
+          <AdminSkeleton className="h-[120px]" />
+        ) : trend?.suppressed ? (
+          <Withheld cohort={trend.cohort} />
+        ) : (
         <div className="flex h-[120px] items-end gap-2.5">
           {companyMonthly.map((m, i) => (
             <div key={m.label} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
@@ -143,6 +194,7 @@ export const AdminReports = () => {
             </div>
           ))}
         </div>
+        )}
       </Card>
 
       {/* Scheduled reports */}
@@ -159,7 +211,7 @@ export const AdminReports = () => {
             <div className="mb-0.5 text-[13px] font-boldNunito text-ink-800">
               Monthly digest every 1st of the month
             </div>
-            <div className="text-[11px] text-ink-500">Sent to adaeze.okonkwo@zenithbank.com</div>
+            <div className="text-[11px] text-ink-500">Sent to {me?.email ?? "your work email"}</div>
           </div>
           <Toggle on={digest} label="Monthly digest" onClick={() => setDigest((v) => !v)} />
         </div>

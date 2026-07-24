@@ -8,10 +8,8 @@ import {
   InfoStrip,
   Toast,
 } from "../../../../components/v2/dashboard/chrome";
+import { naira } from "../../../../constants/admindashboard";
 import {
-  roi,
-  ROI_INPUTS,
-  naira,
   invoices,
   topUpOptions,
   seatPackOptions,
@@ -207,7 +205,10 @@ const CsvUploadModal = ({ open, close, showToast }) => {
   );
 };
 
-const RoiModal = ({ open, close }) => (
+const RoiModal = ({ open, close, context }) => {
+  const roi = context?.value ?? {};
+
+  return (
   <Modal
     open={open}
     onClose={close}
@@ -217,10 +218,10 @@ const RoiModal = ({ open, close }) => (
   >
     <div className="mb-4 flex flex-col gap-2.5">
       {[
-        { label: "Sessions delivered this month", value: String(ROI_INPUTS.sessionsThisMonth) },
-        { label: "Absenteeism days avoided per session", value: String(ROI_INPUTS.daysPerSession ?? roi.daysPerSession) },
-        { label: "Average daily productivity value", value: roi.dailyValue },
-        { label: "Program cost this month", value: roi.programCost },
+        { label: "Sessions delivered this month", value: String(roi.sessions ?? 0) },
+        { label: "Absenteeism days avoided per session", value: String(roi.days_per_session ?? 0) },
+        { label: "Average daily productivity value", value: naira(roi.daily_value) },
+        { label: "Program cost this month", value: naira(roi.program_cost) },
       ].map((row) => (
         <div
           key={row.label}
@@ -235,16 +236,16 @@ const RoiModal = ({ open, close }) => (
     <div className="mb-4 rounded-ds-md bg-gold-50 p-4">
       <div className="mb-2 flex justify-between gap-4">
         <span className="text-caption text-ink-500">Gross productivity value</span>
-        <span className="text-[13px] font-boldNunito text-navy-800">{roi.grossValue}</span>
+        <span className="text-[13px] font-boldNunito text-navy-800">{naira(roi.gross_value)}</span>
       </div>
       <div className="mb-2 flex justify-between gap-4">
         <span className="text-caption text-ink-500">Less program cost</span>
-        <span className="text-[13px] font-boldNunito text-navy-800">− {roi.programCost}</span>
+        <span className="text-[13px] font-boldNunito text-navy-800">− {naira(roi.program_cost)}</span>
       </div>
       <div className="flex justify-between gap-4 border-t border-[#F0E4C8] pt-2">
         <span className="text-[13px] font-boldNunito text-navy-800">Net ROI</span>
         <span className="text-body font-extraboldNunito text-gold-600">
-          {roi.netROI} · {roi.multiple}
+          {naira(roi.net_roi)}{roi.multiple ? ` · ${roi.multiple}x return` : ""}
         </span>
       </div>
     </div>
@@ -255,7 +256,8 @@ const RoiModal = ({ open, close }) => (
       aggregates — no individual employee data is used.
     </p>
   </Modal>
-);
+  );
+};
 
 const TopUpModal = ({ open, close, showToast }) => {
   const [key, setKey] = useState("25");
@@ -412,19 +414,20 @@ const InvoiceModal = ({ open, close, context }) => {
 };
 
 const EmployeeModal = ({ open, close, context }) => (
-  <Modal open={open} onClose={close} title={context?.id ?? "Employee"} subtitle="Anonymised record">
+  <Modal open={open} onClose={close} title={context?.id ?? "Employee"} subtitle="Seat record">
     <InfoStrip tone="purple" className="mb-4">
-      You can see status and session <strong>counts</strong> only. Session content,
-      chat messages, therapist notes and community activity are never visible to an
-      employer account.
+      You see seat administration only. Session counts, session content, chat messages,
+      therapist notes and community activity are never visible to an employer account —
+      not even in aggregate below 5 users.
     </InfoStrip>
     <div className="flex flex-col gap-2.5">
       {[
         ["Employee ID", context?.id],
-        ["Department", context?.dept],
+        ["Work email", context?.email],
+        ["Department", context?.department],
+        ["Role", context?.role],
         ["Status", context?.status],
-        ["Sessions used", context ? `${context.used} / ${context.total}` : "—"],
-        ["Last active", context?.lastActive],
+        ["Seated since", context?.activated_at ?? "—"],
       ].map(([label, value]) => (
         <div key={label} className="flex justify-between gap-4 border-b border-ink-100 pb-2.5">
           <span className="text-caption text-ink-500">{label}</span>
@@ -442,9 +445,15 @@ const ConfirmModal = ({ open, close, showToast, context }) => (
       <SecondaryButton onClick={close}>Cancel</SecondaryButton>
       <button
         type="button"
-        onClick={() => {
-          close();
-          showToast(context?.toast ?? "Done");
+        onClick={async () => {
+          try {
+            if (context?.onConfirm) await context.onConfirm();
+            close();
+            showToast(context?.toast ?? "Done");
+          } catch {
+            close();
+            showToast("Couldn't complete that action — please try again");
+          }
         }}
         className="cursor-pointer rounded-[10px] bg-signal-error px-4 py-[9px] text-[13px] font-boldNunito text-white hover:bg-surface-errorInk"
       >
@@ -547,7 +556,7 @@ const TherapistModal = ({ open, close, context }) => (
   </Modal>
 );
 
-const ReportModal = ({ open, close }) => (
+const ReportModal = ({ open, close, context }) => (
   <Modal open={open} onClose={close} title="RPT-0231" subtitle="Under review by TalkAM Trust & Safety">
     <InfoStrip tone="red" className="mb-4">
       Reports never include session content, chat text, or clinical notes. You see
@@ -607,7 +616,7 @@ const AdminModals = ({ modal, context, close, showToast }) => (
   <>
     <InviteModal open={modal === "invite"} close={close} showToast={showToast} />
     <CsvUploadModal open={modal === "csv"} close={close} showToast={showToast} />
-    <RoiModal open={modal === "roi"} close={close} />
+    <RoiModal open={modal === "roi"} close={close} context={context} />
     <TopUpModal open={modal === "topUp"} close={close} showToast={showToast} />
     <AddSeatsModal open={modal === "addSeats"} close={close} showToast={showToast} />
     <InvoiceModal open={modal === "invoice"} close={close} context={context} />
@@ -616,7 +625,7 @@ const AdminModals = ({ modal, context, close, showToast }) => (
     <CapacityModal open={modal === "capacity"} close={close} showToast={showToast} />
     <AddOwnTherapistModal open={modal === "addOwn"} close={close} showToast={showToast} />
     <TherapistModal open={modal === "therapist"} close={close} context={context} />
-    <ReportModal open={modal === "report"} close={close} />
+    <ReportModal open={modal === "report"} close={close} context={context} />
     <PlanCheckoutModal open={modal === "planCheckout"} close={close} showToast={showToast} context={context} />
   </>
 );

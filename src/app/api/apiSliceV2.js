@@ -38,6 +38,11 @@ export const apiSliceV2 = createApi({
     "Notifications",
     "Conversations",
     "Messages",
+    "AdminInsights",
+    "AdminEmployees",
+    "AdminTherapists",
+    "AdminSafety",
+    "AdminActivity",
   ],
   endpoints: (builder) => ({}),
 });

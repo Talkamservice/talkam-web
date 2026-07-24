@@ -14,15 +14,24 @@ import {
   SecondaryButton,
 } from "../../../../../components/v2/dashboard/chrome";
 import { useAdminModal } from "../adminmodals";
+import { EMPLOYEES_PER_PAGE } from "../../../../../constants/admindashboard";
 import {
-  employees,
-  employeeDepartments,
-  employeeStatuses,
-  EMPLOYEES_PER_PAGE,
-  sessionActivityLog,
-} from "../../../../../fakedata/v2/admin";
+  useGetAdminEmployeesQuery,
+  useGetAdminOverviewQuery,
+  useDeactivateEmployeeMutation,
+  useReactivateEmployeeMutation,
+} from "../../../../../services/v2/adminApiSlice";
+import { useResendInvitationMutation } from "../../../../../services/v2/businessApiSlice";
 
-/** Admin › Employees. Spec: "TalkAM B2B Dashboard.dc.html" § EMPLOYEES. */
+/**
+ * Admin › Employees. Spec: "TalkAM B2B Dashboard.dc.html" § EMPLOYEES.
+ *
+ * The deck's "SESSIONS USED" and "LAST ACTIVE" columns are NOT served: a
+ * per-person therapy-session count and an activity timestamp are individual
+ * data, and the privacy promise forbids showing them to an employer. They are
+ * replaced by ROLE and SEATED SINCE — administrative facts the admin already
+ * holds. See planning-docs/web-api/03-admin-dashboard.md §0.
+ */
 
 const STATUS_TONE = { active: "green", invited: "blue", inactive: "grey" };
 
@@ -36,13 +45,22 @@ const Directory = () => {
   const [resent, setResent] = useState([]);
   const [nudged, setNudged] = useState([]);
 
+  const { data, isLoading } = useGetAdminEmployeesQuery();
+  const [deactivate] = useDeactivateEmployeeMutation();
+  const [reactivate] = useReactivateEmployeeMutation();
+  const [resendInvitation] = useResendInvitationMutation();
+
+  const employees = data?.employees ?? [];
+  const employeeDepartments = ["All Departments", ...(data?.departments ?? [])];
+  const employeeStatuses = ["All Status", "Active", "Invited", "Inactive"];
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return employees
-      .filter((e) => dept === "All Departments" || e.dept === dept)
+      .filter((e) => dept === "All Departments" || e.department === dept)
       .filter((e) => status === "All Status" || e.status === status.toLowerCase())
-      .filter((e) => (q ? `${e.id} ${e.email} ${e.dept}`.toLowerCase().includes(q) : true));
-  }, [search, dept, status]);
+      .filter((e) => (q ? `${e.id} ${e.email} ${e.department}`.toLowerCase().includes(q) : true));
+  }, [employees, search, dept, status]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / EMPLOYEES_PER_PAGE));
   const currentPage = Math.min(page, pageCount);
@@ -174,12 +192,18 @@ const Directory = () => {
         </div>
       ) : null}
 
+      {/*
+        The mock promised "session counts" here. A per-person session count is
+        individual data the privacy rule forbids, so it is not shown — and this
+        copy is corrected to match, rather than telling HR they can see something
+        they cannot. See planning-docs/web-api/03-admin-dashboard.md §0.
+      */}
       <InfoStrip tone="purple">
-        <strong className="font-boldNunito">What you can see:</strong> names, department,
-        invite status, and session <em>counts</em>.{" "}
-        <strong className="font-boldNunito">What you can never see:</strong> session
-        content, chat messages, therapist notes, or community activity — even in
-        aggregate below 5 users.
+        <strong className="font-boldNunito">What you can see:</strong> who holds a seat,
+        their department, and their invite status.{" "}
+        <strong className="font-boldNunito">What you can never see:</strong> individual
+        session counts, session content, chat messages, therapist notes, or community
+        activity — even in aggregate below 5 users.
       </InfoStrip>
 
       {/* Table */}
@@ -197,13 +221,12 @@ const Directory = () => {
             "EMPLOYEE",
             "DEPARTMENT",
             "STATUS",
-            "SESSIONS USED",
-            "LAST ACTIVE",
+            "ROLE",
+            "SEATED SINCE",
             "ACTIONS",
           ]}
         >
           {visible.map((e) => {
-            const pct = Math.round((e.used / e.total) * 100);
             return (
               <Tr key={e.id}>
                 <Td>
@@ -219,40 +242,27 @@ const Directory = () => {
                   <div className="text-[13px] font-boldNunito text-ink-800">{e.id}</div>
                   <div className="text-[11px] font-regularNunito text-ink-400">{e.email}</div>
                 </Td>
-                <Td>{e.dept}</Td>
+                <Td>{e.department ?? "—"}</Td>
                 <Td>
                   <Badge tone={STATUS_TONE[e.status]} dot={e.status === "active"} className="capitalize">
                     {e.status}
                   </Badge>
                 </Td>
-                <Td>
-                  <div
-                    className={classNames(
-                      "mb-1 text-[13px] font-boldNunito",
-                      pct >= 80 ? "text-signal-error" : "text-ink-800"
-                    )}
-                  >
-                    {e.used} / {e.total}
-                  </div>
-                  <div className="h-1 w-20 rounded-[2px] bg-ink-100">
-                    <div
-                      className={classNames(
-                        "h-1 rounded-[2px]",
-                        pct >= 80 ? "bg-signal-error" : "bg-brand-400"
-                      )}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </Td>
-                <Td className="text-caption text-ink-500">{e.lastActive}</Td>
+                <Td className="capitalize">{e.role ?? "—"}</Td>
+                <Td className="text-caption text-ink-500">{e.activated_at ?? "—"}</Td>
                 <Td>
                   {e.status === "invited" ? (
                     <button
                       type="button"
                       disabled={resent.includes(e.id)}
-                      onClick={() => {
-                        setResent((p) => [...p, e.id]);
-                        showToast(`Invite resent to ${e.id}`);
+                      onClick={async () => {
+                        try {
+                          await resendInvitation(e.invitation_id).unwrap();
+                          setResent((p) => [...p, e.id]);
+                          showToast(`Invite resent to ${e.email}`);
+                        } catch {
+                          showToast("Couldn't resend that invite — please try again");
+                        }
                       }}
                       className={classNames(
                         "rounded-[7px] px-2.5 py-1.5 text-[11px] font-boldNunito",
@@ -267,9 +277,14 @@ const Directory = () => {
                     <button
                       type="button"
                       disabled={nudged.includes(e.id)}
-                      onClick={() => {
-                        setNudged((p) => [...p, e.id]);
-                        showToast(`Nudge sent to ${e.id}`);
+                      onClick={async () => {
+                        try {
+                          await reactivate(e.member_id).unwrap();
+                          setNudged((p) => [...p, e.id]);
+                          showToast(`${e.id} reactivated`);
+                        } catch {
+                          showToast("No free seats — increase your seat count first");
+                        }
                       }}
                       className={classNames(
                         "rounded-[7px] px-2.5 py-1.5 text-[11px] font-boldNunito",
@@ -278,7 +293,7 @@ const Directory = () => {
                           : "cursor-pointer bg-gold-50 text-gold-600 hover:bg-gold-100"
                       )}
                     >
-                      {nudged.includes(e.id) ? "Nudged ✓" : "Send nudge"}
+                      {nudged.includes(e.id) ? "Reactivated ✓" : "Reactivate"}
                     </button>
                   ) : (
                     <div className="flex gap-1.5">
@@ -298,6 +313,7 @@ const Directory = () => {
                             body: "They lose access at the end of the current billing period. Their individual TalkAM account and history stay with them.",
                             confirmLabel: "Deactivate",
                             toast: `${e.id} deactivated`,
+                            onConfirm: () => deactivate(e.member_id).unwrap(),
                           })
                         }
                         aria-label={`Deactivate ${e.id}`}
@@ -368,7 +384,9 @@ const Reminders = () => {
   const { showToast } = useAdminModal();
   const [autoReminder, setAutoReminder] = useState(true);
   const [autoFollowup, setAutoFollowup] = useState(true);
-  const [sent, setSent] = useState([]);
+
+  const { data: overview, isLoading } = useGetAdminOverviewQuery();
+  const floor = overview?.cohort_floor ?? 5;
 
   return (
     <>
@@ -419,59 +437,43 @@ const Reminders = () => {
         </div>
       </Card>
 
+      {/*
+        The deck showed a per-session log here (employee · therapist · time ·
+        status). Naming an employee alongside their therapist and appointment
+        time is individual data, so this is served as a department rollup
+        instead. See planning-docs/web-api/03-admin-dashboard.md §0.
+      */}
       <PanelCard
-        title="Session Activity Log"
-        subtitle="Whether a session was held — never what happened in it"
+        title="Sessions by Department"
+        subtitle="Whether sessions happened — never who attended or what happened in them"
       >
-        <Table head={["EMPLOYEE", "THERAPIST", "SCHEDULED", "STATUS", "ACTION"]}>
-          {sessionActivityLog.map((s) => (
-            <Tr key={s.id}>
-              <Td first>{s.employeeId}</Td>
-              <Td>{s.therapistName}</Td>
-              <Td className="text-caption text-ink-500">{s.datetime}</Td>
-              <Td>
-                <Badge
-                  tone={s.status === "held" ? "green" : s.status === "missed" ? "red" : "blue"}
-                  className="capitalize"
-                >
-                  {s.status}
-                </Badge>
+        <Table head={["DEPARTMENT", "PEOPLE", "SESSIONS THIS MONTH", "STATUS"]}>
+          {(overview?.departments ?? []).map((row) => (
+            <Tr key={row.department}>
+              <Td first>{row.department}</Td>
+              <Td>{row.members}</Td>
+              <Td className="text-caption text-ink-500">
+                {row.suppressed ? "—" : row.value}
               </Td>
               <Td>
-                {s.status === "held" ? (
-                  <span className="text-[11px] font-boldNunito text-wellness-400">
-                    Session held ✓
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={sent.includes(s.id)}
-                    onClick={() => {
-                      setSent((p) => [...p, s.id]);
-                      showToast(
-                        s.status === "missed"
-                          ? `Follow-up sent to ${s.employeeId}`
-                          : `Reminder sent to ${s.employeeId}`
-                      );
-                    }}
-                    className={classNames(
-                      "rounded-[7px] px-2.5 py-1.5 text-[11px] font-boldNunito",
-                      sent.includes(s.id)
-                        ? "cursor-default bg-wellness-50 text-wellness-600"
-                        : "cursor-pointer bg-brand-25 text-brand-600 hover:bg-brand-50"
-                    )}
-                  >
-                    {sent.includes(s.id)
-                      ? "Sent ✓"
-                      : s.status === "missed"
-                        ? "Send follow-up"
-                        : "Send reminder"}
-                  </button>
-                )}
+                <Badge tone={row.suppressed ? "gold" : "green"} className="capitalize">
+                  {row.suppressed ? "Withheld" : "Reported"}
+                </Badge>
               </Td>
             </Tr>
           ))}
         </Table>
+
+        {!isLoading && (overview?.departments ?? []).length === 0 ? (
+          <div className="px-5 py-4 text-[12px] leading-[1.6] text-ink-400">
+            No departments yet — assign departments when you invite people.
+          </div>
+        ) : null}
+
+        <div className="border-t border-ink-100 bg-[#FAFAFA] px-5 py-3 text-[11px] leading-[1.6] text-ink-400">
+          Departments with fewer than {floor} people are withheld so no individual can be
+          identified.
+        </div>
       </PanelCard>
     </>
   );

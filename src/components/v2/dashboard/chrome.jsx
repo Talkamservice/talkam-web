@@ -301,8 +301,41 @@ export const KpiCard = ({ icon, iconBg, badge, value, label, dark, children }) =
       </div>
       <div className="mb-[3px] text-[28px] font-extraboldNunito text-navy-800">{value}</div>
       <div className="text-caption text-ink-400">{label}</div>
+      {/* Optional footnote — used for the "withheld until N employees" note.
+          Renders nothing when absent, so the card is unchanged without it. */}
+      {children}
     </Card>
   );
 
 Modal.propTypes = { open: PropTypes.bool, onClose: PropTypes.func, title: PropTypes.string };
 Toggle.propTypes = { on: PropTypes.bool, label: PropTypes.string };
+
+/**
+ * The suppressed-aggregate state for the admin dashboard.
+ *
+ * Shown wherever a company-wide figure is withheld because too few employees
+ * contributed. It says WHY, so an admin never reads a blank panel as "nobody
+ * used it" — see planning-docs/web-api/03-admin-dashboard.md §2.
+ */
+export const Withheld = ({ cohort, floor = 5, className }) => (
+  <div
+    className={classNames(
+      "flex items-center gap-2.5 rounded-[10px] bg-[#F8F9FC] px-3.5 py-3 text-[11.5px] leading-[1.6] text-ink-400",
+      className
+    )}
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9299A8" strokeWidth="2" className="shrink-0">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+    </svg>
+    <span>
+      Not enough data yet. Figures appear once at least {floor} employees have joined
+      {typeof cohort === "number" ? ` \u2014 you have ${cohort}` : ""}. This protects your
+      team&apos;s anonymity.
+    </span>
+  </div>
+);
+
+/** Loading placeholder on the deck's own ink-100 surface — no layout shift. */
+export const AdminSkeleton = ({ className }) => (
+  <div className={classNames("animate-pulse rounded-[10px] bg-ink-100", className)} />
+);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import classNames from "classnames";
 import * as Icon from "react-feather";
 import {
@@ -15,12 +15,15 @@ import {
 } from "../../../../../components/v2/dashboard/chrome";
 import { DsAccordion } from "../../../../../components/v2/accordion";
 import { useAdminModal } from "../adminmodals";
+import { STATUS_TONE } from "../../../../../constants/admindashboard";
 import {
-  safetyReports,
-  activityLog,
-  adminFaqs,
-  adminUser,
-} from "../../../../../fakedata/v2/admin";
+  useGetSafetyReportsQuery,
+  useGetAdminActivityQuery,
+  useUpdateCompanyProfileMutation,
+} from "../../../../../services/v2/adminApiSlice";
+import { useGetOrganizationQuery } from "../../../../../services/v2/businessApiSlice";
+import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
+import { useGetFaqsQuery } from "../../../../../services/v2/employeeApiSlice";
 
 /** Admin › Trust & Safety, Settings, Activity Log, Help & Support. */
 
@@ -28,6 +31,7 @@ import {
 
 export const AdminTrust = () => {
   const { open } = useAdminModal();
+  const { data: safetyReports = [], isLoading } = useGetSafetyReportsQuery();
 
   return (
     <>
@@ -42,23 +46,27 @@ export const AdminTrust = () => {
           {safetyReports.map((r) => (
             <Tr key={r.id}>
               <Td first>{r.id}</Td>
-              <Td>
-                {r.reported}{" "}
-                <span className="font-regularNunito text-ink-400">({r.reportedRole})</span>
+              {/* Which SIDE of the relationship, never which person — the
+                  reporter and the named party stay anonymous to the employer. */}
+              <Td className="capitalize">
+                <span className="font-regularNunito text-ink-400">{r.reported_role}</span>
               </Td>
               <Td>
-                <Badge tone={r.categoryTone}>{r.category}</Badge>
+                <Badge tone="purple">{r.category}</Badge>
               </Td>
-              <Td className="text-ink-500">{r.filedBy}</Td>
+              <Td className="text-ink-500">{r.filed_by}</Td>
               <Td className="text-ink-500">{r.date}</Td>
               <Td>
-                <Badge tone={r.statusTone} dot={r.statusTone === "green"}>
+                <Badge
+                  tone={STATUS_TONE[r.status] ?? "gold"}
+                  dot={r.status === "Resolved"}
+                >
                   {r.status}
                 </Badge>
               </Td>
               <Td>
                 <SecondaryButton
-                  onClick={() => open("report")}
+                  onClick={() => open("report", r)}
                   className="!px-2.5 !py-1.5 !text-[11px]"
                 >
                   View
@@ -67,6 +75,13 @@ export const AdminTrust = () => {
             </Tr>
           ))}
         </Table>
+
+        {!isLoading && safetyReports.length === 0 ? (
+          <div className="px-5 py-4 text-[12px] leading-[1.6] text-ink-400">
+            No reports raised. Employees and therapists can report a concern from any
+            session or chat.
+          </div>
+        ) : null}
       </PanelCard>
 
       <Card>
@@ -102,6 +117,33 @@ export const AdminSettings = () => {
   const [capOn, setCapOn] = useState(true);
   const [cap, setCap] = useState(6);
 
+  const { data: org } = useGetOrganizationQuery();
+  const { data: me } = useGetMeV2Query();
+  const [updateProfile, { isLoading: isSaving }] = useUpdateCompanyProfileMutation();
+
+  const organization = org?.organization;
+  const adminEmail = me?.email ?? "your work email";
+
+  const [form, setForm] = useState({ name: "", industry: "Banking & Finance", hr_contact_email: "" });
+  useEffect(() => {
+    if (organization) {
+      setForm({
+        name: organization.name ?? "",
+        industry: organization.industry ?? "Banking & Finance",
+        hr_contact_email: organization.hr_contact_email ?? "",
+      });
+    }
+  }, [organization?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const saveCompany = async () => {
+    try {
+      await updateProfile(form).unwrap();
+      showToast("Company information saved");
+    } catch {
+      showToast("Couldn't save that just now — please try again");
+    }
+  };
+
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       {/* Company info */}
@@ -116,7 +158,7 @@ export const AdminSettings = () => {
             </label>
             <div className="flex items-center gap-3.5">
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[14px] bg-brand-400 text-h3 font-extraboldNunito text-white">
-                Z
+                {(form.name || "").charAt(0).toUpperCase()}
               </span>
               <SecondaryButton onClick={() => showToast("Image picker opens here")}>
                 Upload Image
@@ -131,16 +173,22 @@ export const AdminSettings = () => {
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-boldNunito text-ink-400">Company Name</span>
             <input
-              defaultValue="Zenith Bank Nigeria"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
             />
           </label>
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-boldNunito text-ink-400">Industry</span>
-            <select className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800">
+            <select
+              value={form.industry}
+              onChange={(e) => setForm((f) => ({ ...f, industry: e.target.value }))}
+              className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+            >
               <option>Banking &amp; Finance</option>
               <option>Technology</option>
               <option>Professional Services</option>
+              <option>Manufacturing</option>
             </select>
           </label>
           <label className="flex flex-col gap-1.5">
@@ -148,15 +196,14 @@ export const AdminSettings = () => {
               HR Contact Email
             </span>
             <input
-              defaultValue={adminUser.email}
+              type="email"
+              value={form.hr_contact_email}
+              onChange={(e) => setForm((f) => ({ ...f, hr_contact_email: e.target.value }))}
               className="h-[42px] rounded-[10px] border-[1.5px] border-brand-400 px-3.5 text-[13px] text-ink-800 shadow-focus-brand"
             />
           </label>
-          <PrimaryButton
-            className="w-fit"
-            onClick={() => showToast("Company information saved")}
-          >
-            Save Changes
+          <PrimaryButton className="w-fit" onClick={saveCompany} disabled={isSaving}>
+            {isSaving ? "Saving…" : "Save Changes"}
           </PrimaryButton>
         </div>
       </Card>
@@ -226,7 +273,7 @@ export const AdminSettings = () => {
             {twoFa ? (
               <>
                 2FA is on. A 6-digit code will be emailed to{" "}
-                <strong className="font-boldNunito">{adminUser.email}</strong> each time
+                <strong className="font-boldNunito">{adminEmail}</strong> each time
                 you sign in.
               </>
             ) : (
@@ -448,7 +495,10 @@ const ACTIVITY_ICON = {
   "user-minus": Icon.UserMinus,
 };
 
-export const AdminActivity = () => (
+export const AdminActivity = () => {
+  const { data: activityLog = [], isLoading } = useGetAdminActivityQuery();
+
+  return (
   <>
     <InfoStrip icon={<Icon.Clock size={15} className="shrink-0 text-brand-600" />}>
       A record of administrative actions taken in your workspace — invites, billing
@@ -506,13 +556,26 @@ export const AdminActivity = () => (
           </div>
         );
       })}
+
+      {!isLoading && activityLog.length === 0 ? (
+        <div className="px-[18px] py-4 text-[12px] leading-[1.6] text-ink-400">
+          No admin actions recorded yet.
+        </div>
+      ) : null}
     </PanelCard>
   </>
-);
+  );
+};
 
 /* ── HELP & SUPPORT ───────────────────────────────────────────────────── */
 
-export const AdminHelp = () => (
+export const AdminHelp = () => {
+  const { data: categories } = useGetFaqsQuery();
+  const adminFaqs = (categories ?? [])
+    .flatMap((c) => c.faq ?? [])
+    .map((f) => ({ q: f.question, a: f.answer }));
+
+  return (
   <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr] xl:items-start">
     <div className="flex flex-col gap-4">
       <Card>
@@ -604,4 +667,5 @@ export const AdminHelp = () => (
       </svg>
     </button>
   </div>
-);
+  );
+};
