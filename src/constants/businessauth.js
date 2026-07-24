@@ -1,17 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════════════
- * MOCK DATA — B2B auth & onboarding
- * UI-only phase. Copy, pricing tiers and defaults transcribed from
- * "TalkAM B2B Auth.dc.html".
- * ═══════════════════════════════════════════════════════════════════════════ */
-
-/** Demo company used throughout the onboarding flow. */
-export const DEMO_COMPANY = {
-  name: "Zenith Bank Nigeria",
-  domain: "zenithbank.com",
-  adminEmail: "adaeze.okonkwo@zenithbank.com",
-  inviteeName: "Chidinma Eze",
-  inviteeEmail: "chidinma.eze@zenithbank.com",
-};
+/**
+ * B2B auth & onboarding — static design copy.
+ *
+ * These are not data: they are the left brand panel's per-screen copy and the
+ * review-only screen switcher, both transcribed from
+ * "TalkAM B2B Auth.dc.html". Everything that IS data (pricing tiers, seat
+ * rates, consent keys, topic chips, the self-check questionnaire, invite rows)
+ * now comes from api/v2/business — see planning-docs/web-api/01-b2b-auth.md.
+ */
 
 /** Left brand panel copy, keyed by screen. */
 export const authBrandContent = {
@@ -107,86 +102,7 @@ export const authBrandContent = {
   },
 };
 
-/** Volume pricing tiers. `max: null` means "and above". */
-export const SEAT_TIERS = [
-  { min: 1, max: 100, price: 7000 },
-  { min: 101, max: 300, price: 6000 },
-  { min: 301, max: 500, price: 5500 },
-  { min: 501, max: null, price: 5000 },
-];
-
-export const EMP_SEAT_RATE = 2000;
-export const THERAPIST_ACCESS_RATE = 3500;
-export const SESSION_RATE = 8000;
-
-/** Blended-pricing constants from the deck's "how this price is calculated". */
-export const STANDARD_THERAPIST_RATE = 15000;
-export const NETWORK_AVERAGE_RATE = 15450;
-
-export const naira = (n) => `₦${Math.round(n).toLocaleString("en-NG")}`;
-
-export const bundleOptions = [
-  { key: "10", sessions: 10 },
-  { key: "25", sessions: 25, tag: "Most popular" },
-  { key: "50", sessions: 50 },
-];
-
-export const planFeatures = [
-  "Unlimited anonymous community access on mobile",
-  "Subsidised 1:1 therapy sessions (video, voice, chat)",
-  "Anonymised utilisation dashboard, refreshed daily",
-  "Monthly PDF report, board-ready",
-  "Up to 2 HR admin seats",
-  "Dedicated onboarding support",
-];
-
-export const inviteRows = [
-  { email: "chidinma.eze@zenithbank.com", dept: "Technology", role: "employee", initial: "C", avatarBg: "#017FC8" },
-  { email: "tunde.balogun@zenithbank.com", dept: "Finance", role: "employee", initial: "T", avatarBg: "#3BA88F" },
-  { email: "dr.ngozi.uba@practice.ng", dept: "Clinical", role: "therapist", initial: "N", avatarBg: "#9A6E0A" },
-  { email: "fatima.bello@zenithbank.com", dept: "Operations", role: "employee", initial: "F", avatarBg: "#6B44A8" },
-];
-
-export const consentDefs = [
-  { key: "account", title: "Account operation", tag: "REQUIRED", desc: "Basic account data needed to log you in and keep your account secure." },
-  { key: "session", title: "Session delivery", tag: "REQUIRED", desc: "Encrypted data needed to book, deliver and record your therapy sessions." },
-  { key: "community", title: "Anonymous community", tag: "OPTIONAL", desc: "Post and reply in the anonymous community feed. Off by default." },
-  { key: "research", title: "Anonymised research", tag: "OPTIONAL", desc: "Let aggregated, de-identified data improve TalkAM's programs." },
-];
-
-export const topicDefs = [
-  { key: "anxiety", label: "Anxiety" },
-  { key: "depression", label: "Depression" },
-  { key: "relationships", label: "Relationships" },
-  { key: "work", label: "Work Stress" },
-  { key: "grief", label: "Grief" },
-  { key: "general", label: "General Support" },
-];
-
-export const benchTopicDefs = [
-  { key: "anxiety", label: "Anxiety" },
-  { key: "depression", label: "Depression" },
-  { key: "relationships", label: "Relationships" },
-  { key: "work", label: "Work Stress" },
-  { key: "grief", label: "Grief" },
-  { key: "trauma", label: "PTSD / Trauma" },
-];
-
-export const assessmentDefs = [
-  { cat: "work", label: "Work-related stress", concern: "Work Stress" },
-  { cat: "anxiety", label: "Anxiety or worry", concern: "Anxiety" },
-  { cat: "sleep", label: "Sleep or low mood", concern: "Sleep & Mood" },
-  { cat: "relationships", label: "Relationships or family", concern: "Relationships" },
-];
-
-export const assessmentOptions = [
-  { val: 0, label: "Not at all" },
-  { val: 1, label: "Mild" },
-  { val: 2, label: "Moderate" },
-  { val: 3, label: "Significant" },
-];
-
-/** Ordered screen list — powers the review-only screen switcher. */
+/** Ordered screen list — powers the review-only screen switcher (`?screens=1`). */
 export const AUTH_SCREENS = [
   { id: "signup", label: "Company Signup", path: "sign-up" },
   { id: "domain", label: "Domain Verify", path: "verify" },

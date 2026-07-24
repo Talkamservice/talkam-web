@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import classNames from "classnames";
 import {
   useOnboarding,
@@ -10,28 +12,60 @@ import {
   AuthButton,
   OtpBoxes,
   InfoNote,
+  FormError,
+  apiErrorMessage,
 } from "../authlayout";
 import { usePageMeta } from "../../../../../hooks/usePageMeta";
 import { V2 } from "../../../../../constants/v2routes";
+import { setCredentials } from "../../../../../services/authSlice";
 import {
-  DEMO_COMPANY,
-  SEAT_TIERS,
-  EMP_SEAT_RATE,
-  THERAPIST_ACCESS_RATE,
-  SESSION_RATE,
-  STANDARD_THERAPIST_RATE,
-  NETWORK_AVERAGE_RATE,
-  naira,
-  bundleOptions,
-  planFeatures,
-} from "../../../../../fakedata/v2/auth";
+  useGetPricingConfigQuery,
+  useGetOrganizationQuery,
+  useRegisterCompanyMutation,
+  useVerifyDomainMutation,
+  useSaveSeatsMutation,
+  useSavePlanMutation,
+} from "../../../../../services/v2/businessApiSlice";
+import { useRequestOtpV2Mutation } from "../../../../../services/v2/authApiSliceV2";
 
 /** Screens 1–4: company signup, domain verify, seats, plan & billing. */
+
+const naira = (n) => `₦${Math.round(n || 0).toLocaleString("en-NG")}`;
 
 /* ── 1. COMPANY SIGNUP ─────────────────────────────────────────────────── */
 export const CompanySignup = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const o = useOnboarding();
   usePageMeta("Create your company account — TalkAM for Business");
+
+  const [registerCompany, { isLoading }] = useRegisterCompanyMutation();
+  const [error, setError] = useState(null);
+  const [form, setForm] = useState({
+    company_name: "",
+    work_email: "",
+    industry: "Banking & Finance",
+    headcount_band: "100 – 300",
+    password: "",
+  });
+
+  const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      const result = await registerCompany(form).unwrap();
+      const data = result?.data;
+
+      dispatch(setCredentials({ user: data?.user, accessToken: data?.token }));
+      o.set({ pendingEmail: form.work_email });
+      navigate(V2.businessVerify);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
 
   return (
     <>
@@ -42,15 +76,16 @@ export const CompanySignup = () => {
         only.
       </ScreenLead>
 
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          navigate(V2.businessVerify);
-        }}
-      >
+      <FormError>{error}</FormError>
+
+      <form className="flex flex-col gap-4" onSubmit={submit}>
         <Field label="Company name">
-          <input defaultValue={DEMO_COMPANY.name} className={authInputClass()} />
+          <input
+            required
+            value={form.company_name}
+            onChange={set("company_name")}
+            className={authInputClass()}
+          />
         </Field>
 
         <Field
@@ -60,14 +95,16 @@ export const CompanySignup = () => {
         >
           <input
             type="email"
-            defaultValue={DEMO_COMPANY.adminEmail}
+            required
+            value={form.work_email}
+            onChange={set("work_email")}
             className={authInputClass(true)}
           />
         </Field>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Industry">
-            <select className={authInputClass()} defaultValue="Banking & Finance">
+            <select className={authInputClass()} value={form.industry} onChange={set("industry")}>
               <option>Banking &amp; Finance</option>
               <option>Technology</option>
               <option>Professional Services</option>
@@ -75,7 +112,11 @@ export const CompanySignup = () => {
             </select>
           </Field>
           <Field label="Headcount">
-            <select className={authInputClass()} defaultValue="100 – 300">
+            <select
+              className={authInputClass()}
+              value={form.headcount_band}
+              onChange={set("headcount_band")}
+            >
               <option>50 – 100</option>
               <option>100 – 300</option>
               <option>300 – 500</option>
@@ -85,11 +126,17 @@ export const CompanySignup = () => {
         </div>
 
         <Field label="Create password" hint="Min. 8 characters, at least 1 number">
-          <input type="password" defaultValue="passw0rd12" className={authInputClass()} />
+          <input
+            type="password"
+            required
+            value={form.password}
+            onChange={set("password")}
+            className={authInputClass()}
+          />
         </Field>
 
-        <AuthButton type="submit" className="mt-1.5">
-          Continue →
+        <AuthButton type="submit" disabled={isLoading} className="mt-1.5">
+          {isLoading ? "Creating account…" : "Continue →"}
         </AuthButton>
 
         <p className="text-center text-caption text-ink-400">
@@ -110,7 +157,45 @@ export const CompanySignup = () => {
 /* ── 2. DOMAIN CONFIRMATION ────────────────────────────────────────────── */
 export const DomainVerify = () => {
   const navigate = useNavigate();
+  const o = useOnboarding();
   usePageMeta("Confirm your business domain — TalkAM for Business");
+
+  const { data: org } = useGetOrganizationQuery();
+  const [verifyDomain, { isLoading }] = useVerifyDomainMutation();
+  const [requestOtp, { isLoading: isResending }] = useRequestOtpV2Mutation();
+
+  const [code, setCode] = useState("");
+  const [error, setError] = useState(null);
+  const [resent, setResent] = useState(false);
+
+  const organization = org?.organization;
+  const email = o.pendingEmail || organization?.hr_contact_email || "your work email";
+  const companyName = organization?.name || "your company";
+  const domain = organization?.domain || "your domain";
+
+  const submit = async () => {
+    setError(null);
+
+    try {
+      await verifyDomain({ code }).unwrap();
+      navigate(V2.businessSeats);
+    } catch (err) {
+      setError(apiErrorMessage(err, "That code didn't work. Request a new one."));
+      setCode("");
+    }
+  };
+
+  const resend = async () => {
+    setError(null);
+    setResent(false);
+
+    try {
+      await requestOtp({ type: "verify_email", email }).unwrap();
+      setResent(true);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
 
   return (
     <>
@@ -118,13 +203,15 @@ export const DomainVerify = () => {
       <ScreenTitle>Confirm your business domain</ScreenTitle>
       <ScreenLead className="mb-6">
         We&apos;ve sent a 6-digit code to{" "}
-        <strong className="text-navy-800">{DEMO_COMPANY.adminEmail}</strong>. This
-        confirms {DEMO_COMPANY.name} owns{" "}
-        <strong className="text-navy-800">{DEMO_COMPANY.domain}</strong> before any
+        <strong className="text-navy-800">{email}</strong>. This
+        confirms {companyName} owns{" "}
+        <strong className="text-navy-800">{domain}</strong> before any
         employee can join.
       </ScreenLead>
 
-      <OtpBoxes filled={["4", "7", "2"]} />
+      <OtpBoxes value={code} onChange={setCode} disabled={isLoading} />
+
+      <FormError>{error}</FormError>
 
       <InfoNote
         icon={
@@ -140,14 +227,19 @@ export const DomainVerify = () => {
       </InfoNote>
 
       <p className="mb-6 text-caption text-ink-400">
-        Didn&apos;t get it?{" "}
-        <button type="button" className="cursor-pointer font-boldNunito text-brand-400">
+        {resent ? "A new code is on its way. " : "Didn't get it? "}
+        <button
+          type="button"
+          onClick={resend}
+          disabled={isResending}
+          className="cursor-pointer font-boldNunito text-brand-400"
+        >
           Resend code
         </button>
       </p>
 
-      <AuthButton onClick={() => navigate(V2.businessSeats)}>
-        Verify &amp; Continue →
+      <AuthButton disabled={code.length < 6 || isLoading} onClick={submit}>
+        {isLoading ? "Verifying…" : "Verify & Continue →"}
       </AuthButton>
     </>
   );
@@ -159,6 +251,24 @@ export const ChooseSeats = () => {
   const o = useOnboarding();
   usePageMeta("Choose your seats — TalkAM for Business");
 
+  const { data: pricing } = useGetPricingConfigQuery();
+  const { data: org } = useGetOrganizationQuery();
+  const [saveSeats, { isLoading }] = useSaveSeatsMutation();
+  const [error, setError] = useState(null);
+
+  const tiers = pricing?.seat_tiers ?? [];
+  const bundleOptions = pricing?.bundle_options ?? [];
+  const empRate = pricing?.employee_seat_rate ?? 0;
+  const therapistRate = pricing?.therapist_access_rate ?? 0;
+  const sessionRate = pricing?.session_rate ?? 0;
+
+  // Seed the stepper from what the company already saved, once.
+  const savedSeats = org?.organization?.seats_licensed;
+  useEffect(() => {
+    if (savedSeats) o.set({ seatsCount: String(savedSeats) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedSeats]);
+
   const seats = parseInt(o.seatsCount, 10) || 0;
   const seatsInvalid = seats <= 0;
 
@@ -167,10 +277,25 @@ export const ChooseSeats = () => {
       ? Math.max(parseInt(o.customBundle, 10) || 0, 0)
       : parseInt(o.bundleKey, 10) || 0;
 
-  const empSeatMonthly = seats * EMP_SEAT_RATE;
-  const therapistMonthly = o.therapistAccessOn ? seats * THERAPIST_ACCESS_RATE : 0;
-  const bundleMonthly = o.therapistAccessOn ? bundleSessions * SESSION_RATE : 0;
+  const empSeatMonthly = seats * empRate;
+  const therapistMonthly = o.therapistAccessOn ? seats * therapistRate : 0;
+  const bundleMonthly = o.therapistAccessOn ? bundleSessions * sessionRate : 0;
   const grandTotal = empSeatMonthly + therapistMonthly + bundleMonthly;
+
+  const submit = async () => {
+    setError(null);
+
+    try {
+      await saveSeats({
+        seats_licensed: seats,
+        therapist_access: o.therapistAccessOn,
+        bundle_sessions: bundleSessions,
+      }).unwrap();
+      navigate(V2.businessPlan);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
 
   return (
     <>
@@ -220,7 +345,7 @@ export const ChooseSeats = () => {
           Volume pricing tier
         </div>
         <div className="flex flex-col gap-1.5">
-          {SEAT_TIERS.map((tier) => {
+          {tiers.map((tier) => {
             const isCurrent =
               !seatsInvalid && seats >= tier.min && (tier.max === null || seats <= tier.max);
             return (
@@ -263,8 +388,8 @@ export const ChooseSeats = () => {
               </span>
             </div>
             <p className="text-caption leading-[1.55] text-ink-500">
-              ₦3,500 / seat / month — flat, per employee seat. Unlocks TalkAM-verified
-              therapists for your team.
+              {naira(therapistRate)} / seat / month — flat, per employee seat. Unlocks
+              TalkAM-verified therapists for your team.
             </p>
           </div>
           <button
@@ -293,7 +418,8 @@ export const ChooseSeats = () => {
               Pre-purchase a Session Bundle
             </div>
             <p className="mb-3.5 text-[11.5px] leading-[1.5] text-ink-400">
-              Sessions are ₦8,000 each, drawn down as they happen. Buy in blocks:
+              Sessions are {naira(sessionRate)} each, drawn down as they happen. Buy in
+              blocks:
             </p>
 
             <div className="flex gap-2.5">
@@ -319,7 +445,7 @@ export const ChooseSeats = () => {
                     </div>
                     <div className="mb-[5px] text-[10.5px] text-ink-400">sessions</div>
                     <div className="text-caption font-extraboldNunito text-brand-400">
-                      {naira(opt.sessions * SESSION_RATE)}
+                      {naira(opt.sessions * sessionRate)}
                     </div>
                   </button>
                 );
@@ -362,10 +488,10 @@ export const ChooseSeats = () => {
               {o.bundleKey === "custom" ? (
                 <div className="mt-3 flex items-center justify-between border-t border-[#C9E2F9] pt-3">
                   <span className="text-[11.5px] text-ink-500">
-                    {bundleSessions} × ₦8,000
+                    {bundleSessions} × {naira(sessionRate)}
                   </span>
                   <span className="text-body font-extraboldNunito text-brand-400">
-                    {naira(bundleSessions * SESSION_RATE)}
+                    {naira(bundleSessions * sessionRate)}
                   </span>
                 </div>
               ) : null}
@@ -382,7 +508,7 @@ export const ChooseSeats = () => {
         <div className="flex flex-col gap-[9px]">
           <div className="flex justify-between gap-3">
             <span className="text-[12.5px] text-white/65">
-              Employee Seats · {seats} × ₦2,000
+              Employee Seats · {seats} × {naira(empRate)}
             </span>
             <span className="text-[13px] font-boldNunito text-white">
               {naira(empSeatMonthly)}
@@ -392,7 +518,7 @@ export const ChooseSeats = () => {
             <>
               <div className="flex justify-between gap-3">
                 <span className="text-[12.5px] text-white/65">
-                  Therapist Network Access · {seats} × ₦3,500
+                  Therapist Network Access · {seats} × {naira(therapistRate)}
                 </span>
                 <span className="text-[13px] font-boldNunito text-white">
                   {naira(therapistMonthly)}
@@ -400,7 +526,7 @@ export const ChooseSeats = () => {
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-[12.5px] text-white/65">
-                  Session Bundle · {bundleSessions} × ₦8,000
+                  Session Bundle · {bundleSessions} × {naira(sessionRate)}
                 </span>
                 <span className="text-[13px] font-boldNunito text-white">
                   {naira(bundleMonthly)}
@@ -417,8 +543,10 @@ export const ChooseSeats = () => {
         </div>
       </div>
 
-      <AuthButton disabled={seatsInvalid} onClick={() => navigate(V2.businessPlan)}>
-        Continue with {o.seatsCount} Seats →
+      <FormError>{error}</FormError>
+
+      <AuthButton disabled={seatsInvalid || isLoading} onClick={submit}>
+        {isLoading ? "Saving…" : `Continue with ${o.seatsCount} Seats →`}
       </AuthButton>
     </>
   );
@@ -430,12 +558,36 @@ export const PlanBilling = () => {
   const o = useOnboarding();
   usePageMeta("Your plan & billing — TalkAM for Business");
 
-  const seats = parseInt(o.seatsCount, 10) || 0;
-  const tier =
-    SEAT_TIERS.find((t) => seats >= t.min && (t.max === null || seats <= t.max)) ??
-    SEAT_TIERS[0];
-  const fairness = NETWORK_AVERAGE_RATE / STANDARD_THERAPIST_RATE;
-  const perSeat = tier.price * fairness;
+  const { data: pricing } = useGetPricingConfigQuery();
+  const { data: org } = useGetOrganizationQuery();
+  const [savePlan, { isLoading }] = useSavePlanMutation();
+  const [error, setError] = useState(null);
+
+  const quote = org?.quote;
+  const blended = quote?.blended;
+  const seats = quote?.seats ?? 0;
+  const tierPrice = quote?.tier?.price ?? 0;
+  const fairness = blended?.fairness_multiplier ?? 1;
+  const perSeat = blended?.per_seat ?? 0;
+  const planName = pricing?.plan?.name ?? "";
+  const planFeatures = pricing?.plan?.features ?? [];
+  const bank = pricing?.bank_details ?? {};
+
+  const proceed = async (persist) => {
+    setError(null);
+
+    if (!persist) {
+      navigate(V2.businessTherapistBench);
+      return;
+    }
+
+    try {
+      await savePlan({ pay_method: o.payMethod }).unwrap();
+      navigate(V2.businessTherapistBench);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
 
   return (
     <>
@@ -451,7 +603,7 @@ export const PlanBilling = () => {
           {seats} SEATS
         </span>
         <div className="mb-1.5 text-caption font-boldNunito tracking-[0.04em] text-brand-400">
-          WELLBEING LITE
+          {planName.toUpperCase()}
         </div>
         <div className="mb-1 flex items-baseline gap-1.5">
           <span className="text-display font-extraboldNunito text-navy-800">
@@ -460,7 +612,7 @@ export const PlanBilling = () => {
           <span className="text-[13px] text-ink-400">/ employee / month</span>
         </div>
         <p className="mb-[18px] text-caption text-ink-400">
-          {naira(perSeat * Math.max(seats, 1))} total/month · billed monthly
+          {naira(blended?.total_monthly)} total/month · billed monthly
         </p>
 
         <div className="mb-[18px] flex flex-col gap-2.5">
@@ -481,7 +633,7 @@ export const PlanBilling = () => {
           <div className="flex justify-between gap-3">
             <span className="text-caption text-ink-500">Seat tier rate ({seats} seats)</span>
             <span className="text-caption font-boldNunito text-navy-800">
-              {naira(tier.price)}/seat
+              {naira(tierPrice)}/seat
             </span>
           </div>
           <div className="flex justify-between gap-3">
@@ -489,7 +641,7 @@ export const PlanBilling = () => {
               Therapist rate fairness adjustment
             </span>
             <span className="text-caption font-boldNunito text-navy-800">
-              {fairness.toFixed(2)}x (balanced)
+              {Number(fairness).toFixed(2)}x (balanced)
             </span>
           </div>
           <div className="flex justify-between gap-3 border-t border-surface-line pt-2">
@@ -543,11 +695,11 @@ export const PlanBilling = () => {
         {o.payMethod === "invoice" ? (
           <>
             <div className="mb-3.5 rounded-ds-md bg-ink-50 p-3.5 text-caption leading-[1.8] text-ink-600">
-              <strong className="font-boldNunito">TalkAM Ltd</strong> · Bank Transfer
+              <strong className="font-boldNunito">{bank.company}</strong> · Bank Transfer
               <br />
-              Account Name: TalkAM Technologies Ltd
+              Account Name: {bank.account_name}
               <br />
-              Bank: GTBank · Account No: 0123456789
+              Bank: {bank.bank} · Account No: {bank.account_number}
             </div>
             <p className="text-[11px] leading-[1.6] text-ink-400">
               Seats are invoiced monthly once your first employee activates — not
@@ -584,16 +736,23 @@ export const PlanBilling = () => {
         )}
       </div>
 
+      <FormError>{error}</FormError>
+
       <AuthButton
         tone="brand"
+        disabled={isLoading}
         className="mb-2.5"
-        onClick={() => navigate(V2.businessTherapistBench)}
+        onClick={() => proceed(true)}
       >
-        {o.payMethod === "card" ? "Continue to Flutterwave →" : "Confirm Plan & Continue →"}
+        {isLoading
+          ? "Saving…"
+          : o.payMethod === "card"
+            ? "Continue to Flutterwave →"
+            : "Confirm Plan & Continue →"}
       </AuthButton>
       <button
         type="button"
-        onClick={() => navigate(V2.businessTherapistBench)}
+        onClick={() => proceed(false)}
         className="w-full cursor-pointer text-center text-caption text-ink-400"
       >
         Skip billing setup for now — I&apos;ll add this later from the dashboard

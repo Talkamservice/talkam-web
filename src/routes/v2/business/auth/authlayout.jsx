@@ -1,10 +1,18 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import {
+  cloneElement,
+  createContext,
+  isValidElement,
+  useContext,
+  useId,
+  useMemo,
+  useState,
+} from "react";
 import { Outlet, Link, useLocation, useSearchParams } from "react-router-dom";
 import classNames from "classnames";
 import TalkamIcon from "../../../../assets/svgs/talkam-icon.svg";
 import TalkamWordmark from "../../../../assets/svgs/talkam-logo.svg";
 import { V2_ROOT } from "../../../../constants/v2routes";
-import { authBrandContent, AUTH_SCREENS } from "../../../../fakedata/v2/auth";
+import { authBrandContent, AUTH_SCREENS } from "../../../../constants/businessauth";
 
 /**
  * B2B auth & onboarding shell.
@@ -19,8 +27,10 @@ import { authBrandContent, AUTH_SCREENS } from "../../../../fakedata/v2/auth";
 
 const OnboardingContext = createContext(null);
 
-/** Shared wizard state. Deliberately local (not Redux) — it is throwaway UI
- *  state today, and swapping it for a real slice later touches only this file. */
+/** Shared wizard state — the in-flight choices that span more than one screen
+ *  (seat count before it is saved, the email a 2FA code was sent to, the
+ *  invite token being accepted). Persisted state lives on the server and is
+ *  read back through RTK Query; this only holds what is still being typed. */
 export const useOnboarding = () => {
   const ctx = useContext(OnboardingContext);
   if (!ctx) throw new Error("useOnboarding must be used inside AuthLayout");
@@ -35,11 +45,32 @@ const INITIAL = {
   payMethod: "invoice",
   benchTopics: [],
   csvErrored: false,
-  consents: { account: false, session: false, community: false, research: false },
-  selectedTopics: ["anxiety"],
+  csvErrorName: "",
+  inviteRows: [],
+  invitesSent: null,
+  pendingEmail: "",
+  selectedTopics: [],
   assessment: { work: null, anxiety: null, sleep: null, relationships: null },
   landingRole: "employee",
   twoFaRole: "admin",
+};
+
+/**
+ * Pulls a human message out of an RTK Query error. The API answers with
+ * `{message, errors: {field: [msg]}}` — the first field error is the most
+ * useful thing to show, falling back to the envelope message.
+ */
+export const apiErrorMessage = (error, fallback = "Something went wrong. Please try again.") => {
+  const body = error?.data;
+  if (!body) return fallback;
+
+  const fieldErrors = body.errors;
+  if (fieldErrors && typeof fieldErrors === "object") {
+    const first = Object.values(fieldErrors).flat()[0];
+    if (first) return first;
+  }
+
+  return body.message || fallback;
 };
 
 export const AuthLayout = () => {
@@ -175,20 +206,33 @@ export const ScreenLead = ({ className, children }) => (
   </p>
 );
 
-export const Field = ({ label, labelTone, hint, children }) => (
-  <div className="flex flex-col gap-1.5">
-    <label
-      className={classNames(
-        "text-caption font-boldNunito",
-        labelTone === "brand" ? "text-brand-400" : "text-ink-600"
-      )}
-    >
-      {label}
-    </label>
-    {children}
-    {hint ? <span className="text-[11px] text-ink-400">{hint}</span> : null}
-  </div>
-);
+/**
+ * Labelled control. The label is bound to its input with htmlFor/id (the id is
+ * generated and injected into the child) so screen readers and keyboard users
+ * get the association WCAG 2.1 AA requires — no visual change.
+ */
+export const Field = ({ label, labelTone, hint, children }) => {
+  const id = useId();
+  const control = isValidElement(children)
+    ? cloneElement(children, { id: children.props.id ?? id })
+    : children;
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={isValidElement(children) ? children.props.id ?? id : undefined}
+        className={classNames(
+          "text-caption font-boldNunito",
+          labelTone === "brand" ? "text-brand-400" : "text-ink-600"
+        )}
+      >
+        {label}
+      </label>
+      {control}
+      {hint ? <span className="text-[11px] text-ink-400">{hint}</span> : null}
+    </div>
+  );
+};
 
 /** Deck input style: 48px, 12px radius, 1.5px border. */
 export const authInputClass = (focused) =>
@@ -220,25 +264,54 @@ export const AuthButton = ({ tone = "navy", disabled, className, children, ...pr
   </button>
 );
 
-/** OTP boxes — the deck shows 3 filled, 3 empty. */
-export const OtpBoxes = ({ filled = ["4", "7", "2"], length = 6 }) => (
-  <div className="mb-5 flex gap-2.5">
-    {Array.from({ length }).map((_, i) => (
-      <div
-        key={i}
-        className={classNames(
-          "flex h-[60px] w-[52px] items-center justify-center rounded-ds-md border-[1.5px] text-[22px] font-extraboldNunito",
-          i < filled.length
-            ? "border-brand-400 bg-white text-navy-800"
-            : "border-ink-200 bg-ink-50 text-surface-muted",
-          i === 0 && "shadow-focus-brand"
-        )}
-      >
-        {i < filled.length ? filled[i] : "_"}
-      </div>
-    ))}
-  </div>
-);
+/**
+ * OTP boxes. Same markup the deck specifies — 52x60 cells, brand border once a
+ * digit lands, focus ring on the active cell (index 0 while empty, which is
+ * exactly the deck's resting state).
+ *
+ * Typing is captured by one transparent input stretched over the row rather
+ * than six separate fields: it keeps paste, backspace and mobile numeric
+ * keyboards working without touching a single visual class.
+ */
+export const OtpBoxes = ({ value = "", onChange, length = 6, disabled }) => {
+  const digits = value.split("");
+  const caret = Math.min(digits.length, length - 1);
+
+  return (
+    <div className="relative mb-5 flex gap-2.5">
+      {Array.from({ length }).map((_, i) => (
+        <div
+          key={i}
+          className={classNames(
+            "flex h-[60px] w-[52px] items-center justify-center rounded-ds-md border-[1.5px] text-[22px] font-extraboldNunito",
+            i < digits.length
+              ? "border-brand-400 bg-white text-navy-800"
+              : "border-ink-200 bg-ink-50 text-surface-muted",
+            i === caret && "shadow-focus-brand"
+          )}
+        >
+          {i < digits.length ? digits[i] : "_"}
+        </div>
+      ))}
+
+      {onChange ? (
+        <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          aria-label="Verification code"
+          maxLength={length}
+          value={value}
+          disabled={disabled}
+          onChange={(e) =>
+            onChange(e.target.value.replace(/\D/g, "").slice(0, length))
+          }
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        />
+      ) : null}
+    </div>
+  );
+};
 
 /** Tinted information strip (blue by default, purple for the privacy note). */
 export const InfoNote = ({ tone = "blue", icon, children }) => (
@@ -258,6 +331,29 @@ export const InfoNote = ({ tone = "blue", icon, children }) => (
       {children}
     </span>
   </div>
+);
+
+/**
+ * Inline error strip. Reuses the exact treatment the therapist-bench screen
+ * already uses for its "choose your seat count first" warning, so server
+ * errors read as part of the same design rather than a new component.
+ */
+export const FormError = ({ children }) =>
+  children ? (
+    <div
+      role="alert"
+      className="mb-5 rounded-ds-md bg-surface-errorTint px-4 py-3.5 text-[12.5px] leading-[1.6] text-surface-errorInk"
+    >
+      {children}
+    </div>
+  ) : null;
+
+/**
+ * Skeleton line for the brief moment a screen is waiting on its data. Uses the
+ * deck's own ink-100 surface so the layout never shifts.
+ */
+export const SkeletonLine = ({ className }) => (
+  <div className={classNames("animate-pulse rounded-ds-sm bg-ink-100", className)} />
 );
 
 /** Selectable pill used by the topics and therapist-bench pickers. */

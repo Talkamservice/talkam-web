@@ -1,4 +1,6 @@
-import { useNavigate } from "react-router-dom";
+import { useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import classNames from "classnames";
 import {
   useOnboarding,
@@ -6,14 +8,31 @@ import {
   ScreenTitle,
   ScreenLead,
   AuthButton,
-  InfoNote,
   SelectChip,
+  FormError,
+  SkeletonLine,
+  apiErrorMessage,
 } from "../authlayout";
 import { usePageMeta } from "../../../../../hooks/usePageMeta";
 import { V2 } from "../../../../../constants/v2routes";
-import { inviteRows, benchTopicDefs } from "../../../../../fakedata/v2/auth";
+import { setCredentials } from "../../../../../services/authSlice";
+import {
+  useGetOrganizationQuery,
+  useSaveBenchMutation,
+  useImportRosterMutation,
+  useSendInvitationsMutation,
+  useGetInvitationQuery,
+  useAcceptInvitationMutation,
+} from "../../../../../services/v2/businessApiSlice";
 
 /** Screens 5–7: therapist bench, team invite (+ CSV error state), invites sent. */
+
+/** Deck avatar palette. Picked deterministically so a row keeps its colour. */
+const AVATAR_COLOURS = ["#017FC8", "#3BA88F", "#9A6E0A", "#6B44A8"];
+const avatarColour = (email = "") => {
+  const sum = [...email].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return AVATAR_COLOURS[sum % AVATAR_COLOURS.length];
+};
 
 /* ── 4b. THERAPIST BENCH ───────────────────────────────────────────────── */
 export const TherapistBench = () => {
@@ -21,14 +40,36 @@ export const TherapistBench = () => {
   const o = useOnboarding();
   usePageMeta("Preview your therapist bench — TalkAM for Business");
 
-  const seats = parseInt(o.seatsCount, 10) || 0;
+  const { data: org, isLoading } = useGetOrganizationQuery();
+  const [saveBench, { isLoading: isSaving }] = useSaveBenchMutation();
+  const [error, setError] = useState(null);
+
+  const seats = org?.organization?.seats_licensed ?? 0;
+  const available = org?.bench?.available ?? [];
+  const therapistCount = org?.bench?.verified_therapist_count ?? 0;
+
+  const proceed = async (persist) => {
+    setError(null);
+
+    if (!persist) {
+      navigate(V2.businessInvite);
+      return;
+    }
+
+    try {
+      await saveBench({ bench_topics: o.benchTopics }).unwrap();
+      navigate(V2.businessInvite);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
 
   return (
     <>
       <StepEyebrow>OPTIONAL</StepEyebrow>
       <ScreenTitle>Preview your therapist bench</ScreenTitle>
 
-      {seats <= 0 ? (
+      {!isLoading && seats <= 0 ? (
         <div className="mb-5 rounded-ds-md bg-surface-errorTint px-4 py-3.5 text-[12.5px] leading-[1.6] text-surface-errorInk">
           Choose your seat count first — therapist matching is scaled to your team size
           and can&apos;t be set up before that.
@@ -42,28 +83,35 @@ export const TherapistBench = () => {
       </ScreenLead>
 
       <div className="mb-3.5 flex flex-wrap gap-2.5">
-        {benchTopicDefs.map((topic) => (
-          <SelectChip
-            key={topic.key}
-            selected={o.benchTopics.includes(topic.key)}
-            onClick={() => o.toggleIn("benchTopics", topic.key)}
-          >
-            {topic.label}
-          </SelectChip>
-        ))}
+        {isLoading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonLine key={i} className="h-[38px] w-[110px] rounded-full" />
+            ))
+          : available.map((topic) => (
+              <SelectChip
+                key={topic.key}
+                selected={o.benchTopics.includes(topic.key)}
+                onClick={() => o.toggleIn("benchTopics", topic.key)}
+              >
+                {topic.label}
+              </SelectChip>
+            ))}
       </div>
 
       <div className="mb-5 rounded-ds-md bg-brand-25 px-3.5 py-3 text-[11.5px] leading-[1.6] text-brand-600">
-        6 verified therapists already actively serve companies on TalkAM. We&apos;ll
-        prioritise onboarding more in your selected specialties as your team grows.
+        {therapistCount} verified therapists already actively serve companies on TalkAM.
+        We&apos;ll prioritise onboarding more in your selected specialties as your team
+        grows.
       </div>
 
-      <AuthButton className="mb-2.5" onClick={() => navigate(V2.businessInvite)}>
-        Continue to Team Invites →
+      <FormError>{error}</FormError>
+
+      <AuthButton className="mb-2.5" disabled={isSaving} onClick={() => proceed(true)}>
+        {isSaving ? "Saving…" : "Continue to Team Invites →"}
       </AuthButton>
       <button
         type="button"
-        onClick={() => navigate(V2.businessInvite)}
+        onClick={() => proceed(false)}
         className="w-full cursor-pointer text-center text-caption text-ink-400"
       >
         Skip for now
@@ -78,6 +126,57 @@ export const TeamInvite = () => {
   const o = useOnboarding();
   usePageMeta("Invite employees & therapists — TalkAM for Business");
 
+  const fileInput = useRef(null);
+  const [importRoster, { isLoading: isImporting }] = useImportRosterMutation();
+  const [sendInvitations, { isLoading: isSending }] = useSendInvitationsMutation();
+  const [error, setError] = useState(null);
+
+  const rows = o.inviteRows;
+
+  const onFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setError(null);
+
+    try {
+      const parsed = await importRoster(file).unwrap();
+      o.set({
+        csvErrored: false,
+        csvErrorName: "",
+        inviteRows: [...rows, ...(parsed?.rows ?? [])],
+      });
+
+      if (parsed?.invalid_count) {
+        setError(
+          `${parsed.invalid_count} row${parsed.invalid_count > 1 ? "s were" : " was"} skipped — check the email and role columns.`
+        );
+      }
+    } catch (err) {
+      o.set({ csvErrored: true, csvErrorName: file.name });
+    }
+  };
+
+  const send = async () => {
+    setError(null);
+
+    try {
+      const result = await sendInvitations({
+        invites: rows.map((row) => ({
+          email: row.email,
+          role: row.role,
+          department: row.department ?? null,
+        })),
+      }).unwrap();
+
+      o.set({ invitesSent: result?.data ?? null });
+      navigate(V2.businessInviteSent);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
+
   return (
     <>
       <StepEyebrow>ONBOARD YOUR TEAM</StepEyebrow>
@@ -86,6 +185,14 @@ export const TeamInvite = () => {
         Assign a role to each invite. Therapists get a professional application flow;
         employees go straight to onboarding.
       </ScreenLead>
+
+      <input
+        ref={fileInput}
+        type="file"
+        accept=".csv,text/csv"
+        onChange={onFile}
+        className="hidden"
+      />
 
       {o.csvErrored ? (
         <>
@@ -99,7 +206,7 @@ export const TeamInvite = () => {
             </span>
             <div className="flex-1">
               <div className="text-[13px] font-boldNunito text-surface-errorInk">
-                roster.pdf couldn&apos;t be used
+                {o.csvErrorName} couldn&apos;t be used
               </div>
               <div className="text-[11px] text-signal-error">
                 Only .csv files are supported
@@ -107,7 +214,10 @@ export const TeamInvite = () => {
             </div>
             <button
               type="button"
-              onClick={() => o.set({ csvErrored: false })}
+              onClick={() => {
+                o.set({ csvErrored: false, csvErrorName: "" });
+                fileInput.current?.click();
+              }}
               className="shrink-0 cursor-pointer rounded-[9px] bg-signal-error px-3.5 py-[7px] text-caption font-boldNunito text-white"
             >
               Try Again
@@ -129,7 +239,8 @@ export const TeamInvite = () => {
       ) : (
         <button
           type="button"
-          onClick={() => o.set({ csvErrored: true })}
+          onClick={() => fileInput.current?.click()}
+          disabled={isImporting}
           className="mb-[18px] flex w-full cursor-pointer items-center gap-3 rounded-[14px] border-2 border-dashed border-brand-200 bg-[linear-gradient(135deg,#EEF4FC,#D1EEFE)] p-4 text-left"
         >
           <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[11px] bg-white">
@@ -141,7 +252,7 @@ export const TeamInvite = () => {
           </span>
           <span className="flex-1">
             <span className="block text-[13px] font-boldNunito text-navy-800">
-              Upload CSV
+              {isImporting ? "Reading roster…" : "Upload CSV"}
             </span>
             <span className="block text-[11px] text-brand-600">
               email, role (employee / therapist), department
@@ -154,22 +265,22 @@ export const TeamInvite = () => {
       )}
 
       <div className="mb-[18px] flex flex-col gap-2">
-        {inviteRows.map((row) => (
+        {rows.map((row) => (
           <div
             key={row.email}
             className="flex items-center gap-2 rounded-ds-md border border-ink-200 bg-white px-3 py-2.5"
           >
             <span
               className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full text-caption font-extraboldNunito text-white"
-              style={{ background: row.avatarBg }}
+              style={{ background: avatarColour(row.email) }}
             >
-              {row.initial}
+              {row.email.charAt(0).toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-boldNunito text-ink-800">
                 {row.email}
               </div>
-              <div className="text-[10px] text-ink-400">{row.dept}</div>
+              <div className="text-[10px] text-ink-400">{row.department || "—"}</div>
             </div>
             <span
               className={classNames(
@@ -187,6 +298,7 @@ export const TeamInvite = () => {
 
       <button
         type="button"
+        onClick={() => fileInput.current?.click()}
         className="mb-4 flex cursor-pointer items-center gap-2 text-[13px] font-boldNunito text-brand-400"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#017FC8" strokeWidth="2.5" strokeLinecap="round">
@@ -214,12 +326,14 @@ export const TeamInvite = () => {
         </p>
       </div>
 
-      <AuthButton onClick={() => navigate(V2.businessInviteSent)}>
-        Send 4 Invites →
+      <FormError>{error}</FormError>
+
+      <AuthButton disabled={rows.length === 0 || isSending} onClick={send}>
+        {isSending ? "Sending…" : `Send ${rows.length} Invite${rows.length === 1 ? "" : "s"} →`}
       </AuthButton>
       <button
         type="button"
-        onClick={() => navigate(V2.businessTwoFactor)}
+        onClick={() => navigate(V2.admin, { replace: true })}
         className="mt-3.5 w-full cursor-pointer text-center text-caption text-ink-400"
       >
         Skip for now — go to dashboard
@@ -231,7 +345,21 @@ export const TeamInvite = () => {
 /* ── 5b. INVITES SENT ──────────────────────────────────────────────────── */
 export const InvitesSent = () => {
   const navigate = useNavigate();
+  const o = useOnboarding();
   usePageMeta("Invites sent — TalkAM for Business");
+
+  const sent = o.invitesSent;
+  const invitations = sent?.invitations ?? [];
+  const total = sent?.sent ?? 0;
+  const therapists = invitations.filter((row) => row.role === "therapist").length;
+  const employees = total - therapists;
+
+  const breakdown = [
+    employees > 0 ? `${employees} employee${employees === 1 ? "" : "s"} will complete community onboarding` : null,
+    therapists > 0 ? `${therapists} therapist${therapists === 1 ? "" : "s"} will be routed into the professional application flow` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <>
@@ -242,11 +370,11 @@ export const InvitesSent = () => {
       </div>
       <ScreenTitle>Invites sent</ScreenTitle>
       <ScreenLead className="mb-6 !leading-[1.7]">
-        4 invite emails are on their way. Each includes a unique link — 3 employees
-        will complete community onboarding, 1 therapist will be routed into the
-        professional application flow. Track status anytime from Employees.
+        {total} invite email{total === 1 ? " is" : "s are"} on their way. Each includes a
+        unique link{breakdown ? ` — ${breakdown}` : ""}. Track status anytime from
+        Employees.
       </ScreenLead>
-      <AuthButton tone="brand" onClick={() => navigate(V2.businessTwoFactor)}>
+      <AuthButton tone="brand" onClick={() => navigate(V2.admin, { replace: true })}>
         Go to Admin Dashboard →
       </AuthButton>
     </>
@@ -256,19 +384,74 @@ export const InvitesSent = () => {
 /* ── 6. INVITE LANDING (recipient) ─────────────────────────────────────── */
 export const InviteLanding = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const o = useOnboarding();
+  const [searchParams] = useSearchParams();
   usePageMeta("Complete your registration — TalkAM");
+
+  const token = searchParams.get("token") ?? "";
+  const { data: invite, isLoading, isError, error: loadError } = useGetInvitationQuery(token, {
+    skip: !token,
+  });
+  const [acceptInvitation, { isLoading: isAccepting }] = useAcceptInvitationMutation();
+
+  const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+
+  // The role is fixed by the invitation — the deck's two pills show which one
+  // the recipient was invited as.
+  const role = invite?.role ?? o.landingRole;
+  const company = invite?.organization_name ?? "";
+  const initial = invite?.organization_initial ?? "";
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      const result = await acceptInvitation({
+        token,
+        full_name: fullName,
+        password,
+      }).unwrap();
+
+      const data = result?.data;
+      dispatch(setCredentials({ user: data?.user, accessToken: data?.token }));
+      o.set({ landingRole: data?.role ?? role });
+      navigate(V2.businessConsent);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
+
+  if (!token || isError) {
+    return (
+      <>
+        <ScreenTitle>This invite link isn&apos;t valid</ScreenTitle>
+        <ScreenLead className="mb-6 !leading-[1.7]">
+          {token
+            ? apiErrorMessage(loadError, "It may have expired or already been used.")
+            : "The link is missing its token."}{" "}
+          Ask your administrator to send a new invite.
+        </ScreenLead>
+        <AuthButton tone="brand" onClick={() => navigate(V2.businessLogin)}>
+          Go to Sign In →
+        </AuthButton>
+      </>
+    );
+  }
 
   return (
     <>
       <div className="mb-6 flex items-center gap-2.5 rounded-ds-md border border-surface-line bg-ink-50 px-4 py-3.5">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-brand-400 text-[13px] font-extraboldNunito text-white">
-          Z
+          {initial}
         </span>
         <span className="text-[13px] text-ink-600">
           You were invited by{" "}
-          <strong className="text-navy-800">Zenith Bank Nigeria</strong> to join TalkAM
-          as a{o.landingRole === "therapist" ? " verified therapist." : "n employee."}
+          <strong className="text-navy-800">{company}</strong> to join TalkAM
+          as a{role === "therapist" ? " verified therapist." : "n employee."}
         </span>
       </div>
 
@@ -282,61 +465,62 @@ export const InviteLanding = () => {
         {[
           { key: "employee", label: "I'm a team member" },
           { key: "therapist", label: "I'm a therapist" },
-        ].map((role) => {
-          const active = o.landingRole === role.key;
+        ].map((option) => {
+          const active = role === option.key;
           return (
-            <button
-              key={role.key}
-              type="button"
-              onClick={() => o.set({ landingRole: role.key })}
-              aria-pressed={active}
+            <div
+              key={option.key}
+              aria-current={active}
               className={classNames(
-                "flex-1 cursor-pointer rounded-[10px] border-[1.5px] p-2.5 text-center text-caption font-boldNunito",
+                "flex-1 rounded-[10px] border-[1.5px] p-2.5 text-center text-caption font-boldNunito",
                 !active && "border-ink-200 bg-surface-page text-ink-400",
-                active && role.key === "employee" && "border-brand-400 bg-brand-25 text-brand-600",
-                active && role.key === "therapist" && "border-wellness-400 bg-wellness-50 text-wellness-600"
+                active && option.key === "employee" && "border-brand-400 bg-brand-25 text-brand-600",
+                active && option.key === "therapist" && "border-wellness-400 bg-wellness-50 text-wellness-600"
               )}
             >
-              {role.label}
-            </button>
+              {option.label}
+            </div>
           );
         })}
       </div>
 
-      <form
-        className="flex flex-col gap-3.5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          navigate(V2.businessConsent);
-        }}
-      >
+      <FormError>{error}</FormError>
+
+      <form className="flex flex-col gap-3.5" onSubmit={submit}>
         <div className="flex flex-col gap-1.5">
-          <label className="text-caption font-boldNunito text-ink-600">Full name</label>
+          <label htmlFor="invite-full-name" className="text-caption font-boldNunito text-ink-600">Full name</label>
           <input
-            defaultValue="Chidinma Eze"
+            id="invite-full-name"
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
             className="h-12 w-full rounded-ds-md border-[1.5px] border-ink-200 bg-white px-4 text-body text-navy-800"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-caption font-boldNunito text-ink-600">Work email</label>
+          <label htmlFor="invite-work-email" className="text-caption font-boldNunito text-ink-600">Work email</label>
           <input
+            id="invite-work-email"
             disabled
-            value="chidinma.eze@zenithbank.com"
+            value={isLoading ? "" : invite?.email ?? ""}
             className="h-12 w-full cursor-not-allowed rounded-ds-md border-[1.5px] border-ink-200 bg-ink-100 px-4 text-body text-ink-400"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-caption font-boldNunito text-ink-600">
+          <label htmlFor="invite-password" className="text-caption font-boldNunito text-ink-600">
             Create password
           </label>
           <input
+            id="invite-password"
             type="password"
-            defaultValue="passw0rd12"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="h-12 w-full rounded-ds-md border-[1.5px] border-ink-200 bg-white px-4 text-body text-navy-800"
           />
         </div>
-        <AuthButton type="submit" className="mt-1">
-          Continue →
+        <AuthButton type="submit" disabled={isLoading || isAccepting} className="mt-1">
+          {isAccepting ? "Creating your account…" : "Continue →"}
         </AuthButton>
       </form>
     </>
