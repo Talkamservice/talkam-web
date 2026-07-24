@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import classNames from "classnames";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import * as Icon from "react-feather";
 import { DashboardShell } from "../../../../components/v2/dashboard/dashboardshell";
 import {
@@ -13,10 +12,10 @@ import {
 import { usePageMeta } from "../../../../hooks/usePageMeta";
 import { V2 } from "../../../../constants/v2routes";
 import {
-  therapistWorkspace,
   therapistUser,
+  therapistPortalLabel,
+  therapistBusinessTag,
   therapistPageMeta,
-  nextSession,
 } from "../../../../fakedata/v2/therapist";
 
 /**
@@ -35,25 +34,54 @@ export const useTherapist = () => {
 
 const at = (path) => `${V2.therapist}${path}`;
 
+/** Deck: sidebar `<nav>` — order, labels and count-pill tones. */
 const NAV_SECTIONS = [
   {
     items: [
       { to: V2.therapist, end: true, label: "Home", icon: <Icon.Home size={16} /> },
-      { to: at("/sessions"), label: "Sessions", icon: <Icon.Calendar size={16} />, count: "5", countTone: "teal" },
       { to: at("/availability"), label: "Availability", icon: <Icon.Clock size={16} /> },
+      { to: at("/sessions"), label: "Sessions", icon: <Icon.Calendar size={16} />, count: "5", countTone: "blue" },
+      { to: at("/messages"), label: "Client Messages", icon: <Icon.MessageCircle size={16} />, count: "3", countTone: "blue" },
       { to: at("/analytics"), label: "Analytics", icon: <Icon.BarChart2 size={16} /> },
       { to: at("/earnings"), label: "Earnings", icon: <Icon.DollarSign size={16} /> },
-      { to: at("/messages"), label: "Messages", icon: <Icon.MessageCircle size={16} />, count: "3", countTone: "teal" },
     ],
   },
   {
-    label: "Account",
+    label: "ACCOUNT",
     items: [
-      { to: at("/profile"), label: "Profile & Account", icon: <Icon.User size={16} /> },
       { to: at("/help"), label: "Help & Support", icon: <Icon.HelpCircle size={16} /> },
+      { to: at("/profile"), label: "Profile & Account", icon: <Icon.User size={16} /> },
     ],
   },
 ];
+
+/** Deck: the two verification strips directly under the logo block. */
+const VerificationStrips = () => (
+  <>
+    <div className="flex items-center gap-2 rounded-[10px] border border-[rgba(219,182,110,0.28)] bg-[rgba(219,182,110,0.12)] px-2.5 py-2">
+      <span className="shrink-0 text-[12px] text-gold-400">✦</span>
+      <span className="text-[10.5px] leading-[1.4] text-[#E9CE95]">
+        Verified Therapist · MDCN Confirmed
+      </span>
+    </div>
+    <div className="mt-2 flex items-center gap-2 rounded-[10px] border border-[rgba(104,180,225,0.28)] bg-[rgba(104,180,225,0.12)] px-2.5 py-2">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#68B4E1"
+        strokeWidth="2"
+        className="shrink-0"
+      >
+        <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" />
+      </svg>
+      <span className="text-[10.5px] leading-[1.4] text-[#A9D5EF]">
+        {therapistBusinessTag} · Paid by business
+      </span>
+    </div>
+  </>
+);
 
 export const TherapistProvider = () => {
   const [modal, setModal] = useState(null);
@@ -102,7 +130,6 @@ export const TherapistProvider = () => {
 
 export const TherapistLayout = () => {
   const { pathname } = useLocation();
-  const { open } = useTherapist();
 
   const segment = pathname.replace(V2.therapist, "").replace(/^\//, "") || "home";
   const meta = therapistPageMeta[segment] ?? therapistPageMeta.home;
@@ -112,20 +139,24 @@ export const TherapistLayout = () => {
   return (
     <DashboardShell
       sections={NAV_SECTIONS}
-      workspace={therapistWorkspace}
+      width={224}
+      /* Deck: the therapist logo tile is a darker blue ramp than the other two. */
+      logoGradient="linear-gradient(135deg,#017FC8,#015C94)"
+      portalLabel={therapistPortalLabel}
+      topBlock={<VerificationStrips />}
       user={therapistUser}
-      accent="therapy"
+      bellDot
       title={meta.title}
       subtitle={meta.subtitle}
       topbarAction={
-        <button
-          type="button"
-          onClick={() => open("joinConfirm", nextSession)}
-          className="inline-flex shrink-0 cursor-pointer items-center gap-[7px] rounded-[10px] bg-wellness-400 px-4 py-[9px] text-[13px] font-boldNunito text-white shadow-[0_4px_12px_rgba(59,168,143,0.22)] transition-colors hover:bg-wellness-600"
+        /* Deck: blue `#017FC8` pill — "Manage Availability" — not a teal CTA. */
+        <Link
+          to={at("/availability")}
+          className="inline-flex shrink-0 cursor-pointer items-center gap-[7px] rounded-[10px] bg-brand-400 px-4 py-[9px] text-[13px] font-boldNunito text-white shadow-[0_4px_12px_rgba(1,127,200,0.25)] transition-colors hover:bg-brand-600"
         >
-          <Icon.Video size={13} />
-          <span className="hidden sm:inline">Join next session</span>
-        </button>
+          <Icon.Plus size={13} strokeWidth={2.5} />
+          <span className="hidden sm:inline">Manage Availability</span>
+        </Link>
       }
     />
   );

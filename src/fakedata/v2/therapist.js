@@ -7,31 +7,30 @@
  * matching the deck. Flagged for a product decision.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-export const therapistWorkspace = {
-  name: "Dr. Adewale Okafor",
-  meta: "Clinical Psychologist",
-  initial: "AO",
-  accent: "#3BA88F",
-  portalLabel: "Practice Portal",
-};
-
+/** Deck: sidebar footer identity. */
 export const therapistUser = {
   name: "Dr. Adewale Okafor",
-  role: "Verified therapist",
-  initials: "AO",
-  avatarBg: "#E8F7F4",
-  avatarColor: "#1F6B59",
+  role: "Anxiety · CBT Specialist",
+  initials: "AK",
+  avatarBg: "#017FC8",
+  avatarColor: "#fff",
 };
 
+export const therapistPortalLabel = "Professional Portal";
+
+/** Deck: `businessTagText` — the therapist is employed by a business account. */
+export const therapistBusinessTag = "Employed by Zenith Bank";
+
+/** Deck: `pageDefs`. */
 export const therapistPageMeta = {
-  home: { title: "Home", subtitle: "Start your day here" },
-  sessions: { title: "Sessions", subtitle: "Upcoming, past and incoming requests" },
-  availability: { title: "Availability", subtitle: "The slots clients can book" },
-  analytics: { title: "Analytics", subtitle: "Your practice at a glance" },
-  earnings: { title: "Earnings", subtitle: "Balance, payouts and payment method" },
-  messages: { title: "Messages", subtitle: "Your clients" },
-  profile: { title: "Profile & Account", subtitle: "Public profile, security and preferences" },
-  help: { title: "Help & Support", subtitle: "Answers and someone to talk to" },
+  home: { title: "Home", subtitle: "Dr. Adewale Okafor · Wednesday, Jul 8" },
+  availability: { title: "Availability", subtitle: "Weekly recurring schedule · shown in WAT" },
+  sessions: { title: "Sessions", subtitle: "5 upcoming this week" },
+  messages: { title: "Client Messages", subtitle: "Encrypted · booking name only" },
+  analytics: { title: "Analytics", subtitle: "Your performance on TalkAM" },
+  earnings: { title: "Earnings", subtitle: "B2B & consumer sessions · paid weekly" },
+  profile: { title: "Profile & Account", subtitle: "Public profile, credentials & security" },
+  help: { title: "Help & Support", subtitle: "Answers, guides, and live help when you need it" },
 };
 
 export const nextSession = {
@@ -166,20 +165,7 @@ export const analyticsByRange = {
   },
 };
 
-export const ratingBreakdown = [
-  { stars: 5, pct: 82 },
-  { stars: 4, pct: 14 },
-  { stars: 3, pct: 3 },
-  { stars: 2, pct: 1 },
-  { stars: 1, pct: 0 },
-];
 
-export const busiestSlots = [
-  { label: "Mon 9–10 AM", pct: 92 },
-  { label: "Wed 2–3 PM", pct: 86 },
-  { label: "Fri 11–12 PM", pct: 78 },
-  { label: "Thu 9–10 AM", pct: 64 },
-];
 
 export const earnings = {
   balance: "₦342,000",
@@ -224,14 +210,6 @@ export const therapistMessageThreads = [
   },
 ];
 
-export const therapistProfile = {
-  name: "Dr. Adewale Okafor",
-  rate: "15,000",
-  years: "9",
-  langs: "English, Yoruba",
-  formats: "Video · Voice · Chat",
-  bio: "MDCN-licensed clinical psychologist specialising in anxiety and cognitive behavioural therapy. Nine years supporting professionals through workplace stress, panic and burnout.",
-};
 
 export const therapistNotifPrefs = [
   { key: "booking", title: "New bookings", note: "When a client books a slot", on: true },
@@ -249,4 +227,140 @@ export const therapistFaqs = [
   { q: "Can I decline a client request?", a: "Yes. Requests appear under Sessions → Requests and you can accept or decline each one. Declining is never shared with the client as a reason." },
   { q: "Are sessions recorded?", a: "No. Video, voice and chat rooms are never recorded — not audio, not video, not transcript. Your written session notes are the only record and they are private to you." },
   { q: "How do I change my availability?", a: "Availability → toggle a day on or off, and add or remove slots. Changes apply to future bookings immediately; already-booked sessions are unaffected." },
+];
+
+/* ── Home (deck: "TalkAM B2B Therapist Dashboard.dc.html" § HOME) ───────── */
+
+/** Deck: `checklistItems` (businessEmployed branch) + `checklistTitle/Subtitle`. */
+export const onboardingChecklist = {
+  title: "Getting started: how your account works",
+  subtitle:
+    "A quick rundown for therapists employed by Zenith Bank — what TalkAM handles, and what your employer does.",
+  items: [
+    { key: "rate", tone: "true", title: "You’re salaried by Zenith Bank", sub: "As a business-employed therapist, you’re paid directly by Zenith Bank — not per session by TalkAM. Your pay is arranged with your employer." },
+    { key: "bundle", tone: "true", title: "No per-session payouts from TalkAM", sub: "Sessions you deliver here don’t generate TalkAM payouts or draw from a session bundle. That’s why the Earnings module isn’t shown for your account." },
+    { key: "payout", tone: "true", title: "TalkAM is your practice tool, not your payer", sub: "Use TalkAM to manage availability, sessions, client messages and your profile. Compensation questions go to your employer’s HR team." },
+    { key: "consumer", tone: "note", title: "You serve Zenith Bank’s team only", sub: "Your bookings come from employees on Zenith Bank’s plan. You’re not listed in the open consumer network unless your employer enables it." },
+    { key: "bank", tone: "action", title: "Complete your profile in the mobile app", sub: "Finish your public profile and credentials in the TalkAM mobile app so employees can find and book you with confidence." },
+  ],
+};
+
+export const CHECKLIST_TONE = {
+  true: { label: "HOW IT WORKS", bg: "#E8F7F4", fg: "#1F6B59" },
+  note: { label: "GOOD TO KNOW", bg: "#EEF4FC", fg: "#015C94" },
+  action: { label: "ACTION NEEDED", bg: "#FBF5E8", fg: "#9A6E0A" },
+};
+
+/** Deck: `followups`. */
+export const followups = [
+  { key: "notes", count: "2", title: "Session notes pending", sub: "Chidinma E. · Tunde B. — write up before your next session", cta: "Write notes", tint: "#FBF5E8", stroke: "#9A6E0A", accent: "#9A6E0A" },
+  { key: "reschedule", count: "1", title: "Reschedule request", sub: "Fatima B. asked to move Thursday 3:00 PM → Friday", cta: "Review", tint: "#F5F0FF", stroke: "#6B44A8", accent: "#6B44A8" },
+  { key: "messages", count: "3", title: "Unread client messages", sub: "Chidinma, Fatima and 1 other are waiting to hear back", cta: "Open inbox", tint: "#EEF4FC", stroke: "#017FC8", accent: "#017FC8" },
+];
+
+/** Deck: `homeStats`. */
+export const homeStats = [
+  { icon: "cal", tint: "#EEF4FC", stroke: "#017FC8", value: "5", label: "Sessions this week", delta: "▲ 2 vs last week", deltaColor: "#1F8A5B" },
+  { icon: "star", tint: "#FBF5E8", stroke: "#9A6E0A", value: "4.9", label: "Average rating", delta: "▲ 0.1 this month", deltaColor: "#1F8A5B" },
+  { icon: "users", tint: "#EEF4FC", stroke: "#017FC8", value: "64", label: "Sessions completed", delta: "18 active clients", deltaColor: "#858585" },
+];
+
+/** Deck: `todaySchedule`. */
+export const todaySchedule = [
+  { time: "10:00 AM", name: "Fatima B.", initials: "FB", avatarBg: "#6B44A8", format: "Video · 50 min", status: "Confirmed" },
+  { time: "4:00 PM", name: "Chidinma E.", initials: "CE", avatarBg: "#017FC8", format: "Video · 50 min", status: "Confirmed" },
+  { time: "4:30 PM", name: "Tunde B.", initials: "TB", avatarBg: "#017FC8", format: "Video · 50 min", status: "Awaiting client" },
+];
+
+/** Deck: `continuity`. */
+export const continuity = [
+  { name: "Chidinma Eze", initials: "CE", avatarBg: "#017FC8", when: "Today · 11:00 AM", tag: "Anxiety", note: "Revisit boundary-setting at work; check in on box-breathing practice." },
+  { name: "Tunde Bakare", initials: "TB", avatarBg: "#1F8A5B", when: "Today · 4:30 PM", tag: "Work stress", note: "Follow up on sleep routine and the workload conversation with his lead." },
+  { name: "Fatima Bello", initials: "FB", avatarBg: "#6B44A8", when: "Thu · 2:00 PM", tag: "Grief", note: "Second session — continue processing; introduce journalling if she’s open." },
+];
+
+/** Deck: `nextSession`. */
+export const homeNextSession = {
+  name: "Chidinma Eze",
+  initials: "CE",
+  avatarBg: "#017FC8",
+  countdown: "22 min",
+  time: "11:00 AM",
+  format: "Video · 50 min",
+  focus: "Work-related anxiety",
+  lastNote: "Practised box-breathing; wanted to revisit boundary-setting with her manager.",
+  sessionNo: "Session 4",
+};
+
+/** Deck: `latestReview` + `selfCareSessions`. */
+export const homeLatestReview = {
+  quote: "Dr. Okafor made me feel genuinely heard. The tools we worked on are already helping at work.",
+  author: "Chidinma E.",
+  when: "2 days ago",
+};
+export const selfCareSessions = 12;
+
+/* ── Analytics (deck § ANALYTICS) ───────────────────────────────────────── */
+
+export const analyticsRangeOpts = [
+  { key: "4w", label: "4 weeks" },
+  { key: "12w", label: "12 weeks" },
+  { key: "6m", label: "6 months" },
+];
+
+export const analyticsKpis = [
+  { label: "TOTAL SESSIONS", value: "64", sub: "+8 this month", subColor: "#1F8A5B" },
+  { label: "COMPLETION RATE", value: "96%", sub: "2 no-shows · 62 done", subColor: "#858585" },
+  { label: "AVG SESSION LENGTH", value: "48m", sub: "of 50m booked", subColor: "#858585" },
+  { label: "AVG RESPONSE TIME", value: "2.4h", sub: "▼ 0.6h faster", subColor: "#1F8A5B" },
+  { label: "REPEAT CLIENTS", value: "71%", sub: "booked a 2nd session", subColor: "#858585" },
+  { label: "AVG RATING", value: "4.9★", sub: "from 58 reviews", subColor: "#858585" },
+  { label: "CANCELLATIONS", value: "4%", sub: "below 8% network avg", subColor: "#1F8A5B" },
+  { label: "ACTIVE CLIENTS", value: "18", sub: "+3 this month", subColor: "#1F8A5B" },
+];
+
+export const sessionBarsRaw = [3, 4, 2, 5, 6, 4, 5, 7, 6, 5, 8, 5];
+
+export const topClientTopics = [
+  { label: "Anxiety", pct: 42, color: "#017FC8" },
+  { label: "Work Stress", pct: 31, color: "#017FC8" },
+  { label: "Relationships", pct: 27, color: "#DBB66E" },
+];
+
+export const outcomeTrendRaw = [58, 61, 60, 64, 67, 66, 70, 72, 71, 74, 77, 79];
+
+export const ratingBreakdown = [
+  { stars: "5★", pct: 86, count: "50", bar: "#017FC8" },
+  { stars: "4★", pct: 10, count: "6", bar: "#68B4E1" },
+  { stars: "3★", pct: 3, count: "2", bar: "#C9E2F9" },
+  { stars: "2★", pct: 0, count: "0", bar: "#E2E2E2" },
+  { stars: "1★", pct: 1, count: "0", bar: "#E2E2E2" },
+];
+
+export const busiestSlots = [
+  { day: "Mon", load: 60 }, { day: "Tue", load: 85 }, { day: "Wed", load: 100 },
+  { day: "Thu", load: 75 }, { day: "Fri", load: 90 }, { day: "Sat", load: 30 },
+  { day: "Sun", load: 10 },
+];
+
+/* ── Profile & Account (deck § PROFILE) ─────────────────────────────────── */
+
+export const therapistProfile = {
+  name: "Dr. Adewale Okafor",
+  bio: "MDCN-licensed clinical psychologist specialising in anxiety and cognitive behavioural therapy. Nine years supporting professionals through workplace stress, panic and burnout.",
+  specialties: ["Anxiety", "CBT", "PTSD/Trauma"],
+  years: "9",
+  rate: "15,000",
+  langs: "English, Yoruba",
+  formats: "Video · Voice · Chat",
+  email: "chidinma… no — dr.adewale.okafor@practice.ng",
+};
+
+export const therapistNotifRows = [
+  { key: "booking", title: "New bookings", sub: "When a client books a session with you", on: true },
+  { key: "reminder", title: "Session reminders", sub: "24 hours and 1 hour before each session", on: true },
+  { key: "message", title: "Client messages", sub: "When a client sends you a message", on: true },
+  { key: "cancel", title: "Cancellations & reschedules", sub: "When a client changes or cancels a session", on: true },
+  { key: "payout", title: "Weekly payout summary", sub: "Every Friday when your earnings are processed", on: true },
+  { key: "review", title: "New reviews", sub: "When a client leaves a rating or review", on: false },
 ];

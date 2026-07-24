@@ -570,3 +570,77 @@ Files: `src/components/v2/dashboard/dashboardshell.jsx`,
 | (c) | The deck's own runtime fails to expand the Employees table's `sc-for`, so that deck screen renders one blank row. The implementation renders the five rows the deck's `employeesData` defines (EMP-0047 / 0112 / 0203 / 0089 / 0167, matching departments, statuses, session counts and last-active values). |
 
 ---
+## 10. B2B Therapist Dashboard
+
+Deck: `TalkAM B2B Therapist Dashboard.dc.html` · Routes: `/business/therapist/*`
+Deck screens: Home, Availability, Sessions, Client Messages, Analytics,
+Earnings, Profile & Account, Help & Support.
+
+| # | Section | Deck | Implementation (before) | Type |
+|---|---------|------|--------------------------|------|
+| 188 | Sidebar width | `224px` | 232px (shell default) | size |
+| 189 | Logo tile gradient | `linear-gradient(135deg,#017FC8,#015C94)` | the admin ramp `…#02D8FD` | colour |
+| 190 | Portal label | "Professional Portal" | "Practice Portal" | copy |
+| 191 | Block under logo | **two strips** — gold "✦ Verified Therapist · MDCN Confirmed" and blue "Employed by Zenith Bank · Paid by business" | a generic workspace card ("Dr. Adewale Okafor / Clinical Psychologist") | wrong component |
+| 192 | Nav order | Home · **Availability** · Sessions `5` · **Client Messages** `3` · Analytics · Earnings | Home · Sessions · Availability · Analytics · Earnings · Messages | order |
+| 193 | Nav label | "Client Messages" | "Messages" | copy |
+| 194 | Count pill tones | both `rgba(1,127,200,0.28)` / `#68B4E1` (blue) | teal | colour |
+| 195 | ACCOUNT items | **Help & Support** then **Profile & Account** | Profile & Account then Help & Support | order |
+| 196 | Section label | `ACCOUNT` | "Account" | copy |
+| 197 | Sidebar footer | `AK` on `#017FC8` with white text; "Dr. Adewale Okafor" / **"Anxiety · CBT Specialist"** | `AO` on `#E8F7F4`; role "Verified therapist" | copy/colour |
+| 198 | Topbar CTA | **blue** `#017FC8` "Manage Availability", shadow `0 4px 12px rgba(1,127,200,0.25)` | teal "Join next session" | copy/colour |
+| 199 | Topbar bell dot | always drawn | absent | missing |
+| 200 | Page titles/subtitles | home `Dr. Adewale Okafor · Wednesday, Jul 8`; availability `Weekly recurring schedule · shown in WAT`; sessions `5 upcoming this week`; messages `Client Messages` / `Encrypted · booking name only`; analytics `Your performance on TalkAM`; earnings `B2B & consumer sessions · paid weekly`; profile `Public profile, credentials & security` | all seven rewritten | copy |
+| 201 | Home — greeting | 20px/900 + **V2 PREVIEW** pill + "You have 3 sessions today · next one starts soon" | `text-h2`/800, no pill, different sub | missing/size |
+| 202 | Home — onboarding carousel | "Getting started: how your account works" — purple-tinted card, 42px gradient tile, dismiss ×, a 5-slide carousel (`01`–`05` numerals, HOW IT WORKS / GOOD TO KNOW / ACTION NEEDED chips), prev arrow, 5 dots, Next / "Got it" | **missing entirely** | missing |
+| 203 | Home — UP NEXT hero | navy `135deg,#0F1E3D,#17305C` card: "UP NEXT", "Starts in 22 min" live pill, 52px radius-15 avatar, **Chidinma Eze**, "Session 4 · 11:00 AM · Video · 50 min", "Work-related anxiety" pill, "FROM YOUR LAST SESSION" inset, blue **Join Session →** + **Message** | teal card, "Anonymous · CBT follow-up", different copy and buttons | content replaced |
+| 204 | Home — Needs your attention | right column, 3 rows with a left accent border, numbered tinted square, title/sub and a coloured "… →" CTA (Write notes / Review / Open inbox); an "all caught up" empty state | full-width card, different copy, pill buttons, no empty state | content replaced |
+| 205 | Home — stats | **4 tiles**: `5` Sessions this week ▲2, `4.9` Average rating ▲0.1, `64` Sessions completed / 18 active clients, and a navy **"Manage availability →"** tile with "6 open slots this week" | `23` THIS WEEK, `4.9` RATING, `2` NOTES DUE, `78%` UTILISATION | content replaced |
+| 206 | Home — Today's schedule | "Today's schedule · Wednesday, Jul 8" — 3 rows (Fatima B. 10:00, Chidinma E. 4:00, Tunde B. 4:30) with Confirmed/Awaiting-client badges and Join Session | **missing** | missing |
+| 207 | Home — continuity | "Coming up · continuity of care" — 3 named clients with topic pills and notes | "Continuity of care" with anonymous IDs | content replaced |
+| 208 | Home — review / self-care | "Latest review" + "All reviews →", 5 gold stars, italic quote, "— Chidinma E. · 2 days ago"; teal self-care card "You've held **12 sessions** this week…" | different quote, attribution and self-care copy | copy |
+| 209 | Analytics | header "Your practice at a glance" + V2 pill + 4w/**12w**/6m range toggle; **8** KPI cards; [Sessions per week 12-bar chart ▏Top client topics]; [Client outcomes **area chart** + "▲ 21 pts" ▏Rating breakdown 5★–1★ with counts]; "When you're busiest" 7-day bars | 4 KPIs, an "Outcome trend" bar chart, a percentage rating breakdown, a "Busiest slots" list | content replaced |
+| 210 | Availability — info strip | "Slots are fixed at 50 minutes with a 10-minute buffer… you'll see a conflict warning instead." | "Changes apply to future bookings immediately… you currently publish 13 slots a week." | copy |
+| 211 | Availability — day rows | day name + an inline `N slots` pill on the **left**; slot chips `#F8F9FC` with a round ✕; "+ Add slot" is a **dashed blue** `#EEF4FC` chip; inactive days are a single greyed line | slot count on the right, teal chips, grey dashed add button, extra "Not accepting bookings on Saturdays." copy | style/extra |
+| 212 | Availability — Block specific dates | card with "Dec 25, 2026 ✕" / "Jan 1, 2027 ✕" chips, a date input and a navy **Block Date** button | **missing**; a "Save availability" button the deck does not have | missing/extra |
+| 213 | Profile & Account | `1fr 1fr` grid, five cards: **Public Profile** (✦ Verified badge, Full Name, About, Specialties chips + "+ Add", Years of experience / Session rate, Languages, Session formats, blue consumer-rate note, navy Save Changes), **Account** (email, Credential verification + Verified, Payout account + "Open App", 2FA toggle), **Notification Preferences** (6 named toggles), **Safety** ("Report a client"), **Danger Zone** (Deactivate profile temporarily / Delete my account) | 4 cards with different fields, labels and toggle copy; no specialties, no Danger Zone, no Account card | content replaced |
+
+**Discrepancies found: 26 — all 26 fixed.**
+
+### ✅ PASS — B2B Therapist Dashboard
+
+Page heights, deck vs implementation, after the fixes: home 1476/1476 (exact),
+availability 997/1079, sessions 900/900, client messages 900/900, analytics
+1113/1123, profile & account 1414/1425, help & support 900/900. Re-screenshotted
+each screen at 1440×900 and compared section by section.
+
+Files: `src/routes/v2/business/therapist/therapistlayout.jsx`,
+`src/routes/v2/business/therapist/pages/therapistpages.jsx`,
+`src/fakedata/v2/therapist.js`.
+
+**Allowed deviations**
+
+| Kind | Deviation |
+|------|-----------|
+| (a) | The deck's eight `sc-if` page states are eight routes. |
+| (a) | The deck hides the **Earnings** nav item whenever `businessEmployed` is true (its default), which would make the Earnings screen unreachable. It is kept in the nav so the route can be opened; every other nav item matches the deck's order and labels. |
+| (b) | Below `lg` the 224px sidebar becomes a slide-over and the 2-up/4-up grids reflow. |
+| (c) | The deck's own runtime prints `[object Object]` in the Profile "About" textarea; the implementation renders the bio string the deck's state actually holds. |
+
+---
+
+## Summary
+
+| Page | Found | Fixed | Commit |
+|------|-------|-------|--------|
+| B2B Employee Dashboard | 102 | 102 | `bd86d13` |
+| Landing 1C | 7 | 7 | `369ad37` |
+| Pricing | 9 | 9 | `e8179f9` |
+| For Business | 21 | 21 | `9e89b8c` |
+| For Therapists | 17 | 17 | `16fe4a5` |
+| Privacy Policy & Terms of Use | 5 | 5 | `7c24009` |
+| Blog | 9 | 9 | `d46a0fb` |
+| B2B Auth & Onboarding | 4 | 4 | `c63db41` |
+| B2B Admin Dashboard | 13 | 13 | `ed2e2a5` |
+| B2B Therapist Dashboard | 26 | 26 | this commit |
+| **Total** | **213** | **213** | |
