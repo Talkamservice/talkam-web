@@ -67,3 +67,11 @@ export const initialsOf = (name = "") =>
     .join("");
 
 export const EMPLOYEES_PER_PAGE = 5;
+
+/**
+ * Pick the volume tier a seat count falls into (web §07 billing). Operates on
+ * the `tiers` arrays returned by the billing catalogue; falls back to the last
+ * tier for counts above the highest band.
+ */
+export const tierForSeats = (tiers = [], seats) =>
+  tiers.find((t) => seats >= t.min && seats <= t.max) ?? tiers[tiers.length - 1];

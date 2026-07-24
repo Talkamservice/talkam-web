@@ -1,15 +1,22 @@
 /* ═══════════════════════════════════════════════════════════════════════════
- * MOCK DATA — TalkAM Pricing page
- * UI-only phase; replace with API/CMS data when Pricing is wired up.
- * Copy + figures transcribed from "TalkAM Pricing.dc.html".
+ * STATIC CONTENT — TalkAM Pricing page (web §07)
+ *
+ * The page's editorial copy (tier descriptions, the "every plan includes" grid,
+ * the FAQ). The actual RATES come from GET business/pricing-config so the numbers
+ * track the backend; the tier prices and the worked example are built from that
+ * config by the helpers below.
+ *
+ * Copy transcribed from "TalkAM Pricing.dc.html".
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-/** The three billing layers. */
-export const pricingTiers = [
+const naira = (n) => `₦${Math.round(n).toLocaleString("en-NG")}`;
+
+/** Per-tier copy; the price is filled from pricing-config. `rateKey` selects it. */
+const PRICING_TIER_COPY = [
   {
     id: "seats",
     name: "Employee Seats",
-    price: "₦2,000",
+    rateKey: "employee_seat_rate",
     unit: "/employee/mo",
     badge: "PER EMPLOYEE",
     highlight: false,
@@ -19,7 +26,7 @@ export const pricingTiers = [
   {
     id: "therapist-access",
     name: "Therapist Access",
-    price: "₦3,500",
+    rateKey: "therapist_access_rate",
     unit: "/employee/mo",
     badge: "MOST POPULAR",
     highlight: true,
@@ -29,7 +36,7 @@ export const pricingTiers = [
   {
     id: "session-bundle",
     name: "Session Bundle",
-    price: "₦8,000",
+    rateKey: "session_rate",
     unit: "/session",
     badge: "FLAT RATE",
     highlight: false,
@@ -37,6 +44,37 @@ export const pricingTiers = [
     note: "Reserved on your invoice; top up anytime. The same flat rate is paid to every therapist.",
   },
 ];
+
+/** Tier cards with the price pulled from pricing-config. */
+export const buildPricingTiers = (config) =>
+  PRICING_TIER_COPY.map((tier) => ({
+    ...tier,
+    price: naira(config?.[tier.rateKey] ?? 0),
+  }));
+
+/** The "EXAMPLE · 50 EMPLOYEES" panel, computed from the live rates. */
+const EXAMPLE_SEATS = 50;
+const EXAMPLE_BUNDLE = 25;
+
+export const buildPricingExample = (config) => {
+  const seatRate = config?.employee_seat_rate ?? 0;
+  const accessRate = config?.therapist_access_rate ?? 0;
+  const sessionRate = config?.session_rate ?? 0;
+
+  const seats = EXAMPLE_SEATS * seatRate;
+  const access = EXAMPLE_SEATS * accessRate;
+  const bundle = EXAMPLE_BUNDLE * sessionRate;
+
+  return {
+    heading: `EXAMPLE · ${EXAMPLE_SEATS} EMPLOYEES`,
+    lines: [
+      { label: `Employee Seats · ${EXAMPLE_SEATS} × ${naira(seatRate)}`, value: naira(seats) },
+      { label: `Therapist Access · ${EXAMPLE_SEATS} × ${naira(accessRate)}`, value: naira(access) },
+      { label: `Session Bundle · ${EXAMPLE_BUNDLE} × ${naira(sessionRate)}`, value: naira(bundle) },
+    ],
+    total: { label: "Total / month", value: naira(seats + access + bundle) },
+  };
+};
 
 /** "Every plan includes" grid. */
 export const pricingIncluded = [
@@ -65,17 +103,6 @@ export const pricingIncluded = [
     body: "Manage seats, invites, billing, and trust & safety from one place.",
   },
 ];
-
-/** Worked example panel — "EXAMPLE · 50 EMPLOYEES". */
-export const pricingExample = {
-  heading: "EXAMPLE · 50 EMPLOYEES",
-  lines: [
-    { label: "Employee Seats · 50 × ₦2,000", value: "₦100,000" },
-    { label: "Therapist Access · 50 × ₦3,500", value: "₦175,000" },
-    { label: "Session Bundle · 25 × ₦8,000", value: "₦200,000" },
-  ],
-  total: { label: "Total / month", value: "₦475,000" },
-};
 
 export const pricingFaqs = [
   {

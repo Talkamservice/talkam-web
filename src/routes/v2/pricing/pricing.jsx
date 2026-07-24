@@ -7,16 +7,19 @@ import { MarketingFooter } from "../../../components/layout/v2/marketingfooter";
 import { usePageMeta } from "../../../hooks/usePageMeta";
 import { V2, PRICING_NAV } from "../../../constants/v2routes";
 import {
-  pricingTiers,
+  buildPricingTiers,
+  buildPricingExample,
   pricingIncluded,
-  pricingExample,
   pricingFaqs,
-} from "../../../fakedata/v2/pricing";
+} from "../../../constants/marketing/pricing";
+import { useGetPricingConfigQuery } from "../../../services/v2/businessApiSlice";
 
 /**
  * TalkAM for Business — Pricing.
  * Spec: "TalkAM Pricing.dc.html".
- * UI only; the CTAs route into the B2B auth flow but make no request.
+ * The three headline rates come from GET business/pricing-config so the page's
+ * numbers track the backend; the surrounding copy is static. CTAs route into the
+ * B2B auth flow.
  */
 
 const TierCard = ({ tier }) => (
@@ -56,6 +59,10 @@ export const V2Pricing = () => {
     "Pricing — TalkAM for Business",
     "Three clear layers, billed after your team activates. No upfront charge, no hidden per-session surprises."
   );
+
+  const { data: config } = useGetPricingConfigQuery();
+  const pricingTiers = buildPricingTiers(config);
+  const pricingExample = buildPricingExample(config);
 
   return (
     <>

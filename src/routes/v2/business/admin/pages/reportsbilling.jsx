@@ -15,22 +15,17 @@ import {
 } from "../../../../../components/v2/dashboard/chrome";
 import { Withheld, AdminSkeleton } from "../../../../../components/v2/dashboard/chrome";
 import { useAdminModal } from "../adminmodals";
-import { naira } from "../../../../../constants/admindashboard";
+import { naira, tierForSeats } from "../../../../../constants/admindashboard";
 import {
   useGetAdminReportsQuery,
   useGetAdminOverviewQuery,
+  useGetBillingQuery,
+  useGetBillingInvoicesQuery,
   downloadCsv,
 } from "../../../../../services/v2/adminApiSlice";
 import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
 import { useSelector } from "react-redux";
 import { selectCurrentToken } from "../../../../../services/authSlice";
-import {
-  currentPlan,
-  invoices,
-  PLANS,
-  tierForSeats,
-  CURRENT_SEATS,
-} from "../../../../../fakedata/v2/admin";
 
 /** Admin › Reports and Billing. */
 
@@ -226,17 +221,27 @@ export const AdminBilling = () => {
   const [seats, setSeats] = useState("250");
   const [quoteSent, setQuoteSent] = useState(false);
 
-  const plan = PLANS[planKey];
+  const { data: billing } = useGetBillingQuery();
+  const { data: invoices = [] } = useGetBillingInvoicesQuery();
+
+  const PLANS = billing?.catalogue?.plans;
+  const currentPlan = billing?.current_plan;
+  const networkStats = billing?.usage;
+
+  const plan = PLANS?.[planKey];
   const seatNum = parseInt(seats, 10) || 0;
   const outOfRange =
-    !plan.custom && (seatNum < plan.minSeats || seatNum > plan.maxSeats);
-  const perSeat = plan.custom ? 0 : tierForSeats(plan.tiers, seatNum).price;
+    plan && !plan.custom && (seatNum < plan.minSeats || seatNum > plan.maxSeats);
+  const perSeat = !plan || plan.custom ? 0 : tierForSeats(plan.tiers, seatNum).price;
 
-  const sessionsRemaining = networkStats.sessionsBundle - networkStats.sessionsUsed;
-  const sessionPct = Math.round(
-    (networkStats.sessionsUsed / networkStats.sessionsBundle) * 100
-  );
+  const sessionsRemaining = (networkStats?.sessionsBundle ?? 0) - (networkStats?.sessionsUsed ?? 0);
+  const sessionPct = networkStats?.sessionsBundle
+    ? Math.round((networkStats.sessionsUsed / networkStats.sessionsBundle) * 100)
+    : 0;
   const sessionsLow = sessionsRemaining <= 5;
+
+  // Hold until the billing summary resolves — plan / usage drive the whole page.
+  if (!billing || !currentPlan || !PLANS) return <AdminSkeleton />;
 
   return (
     <>

@@ -79,6 +79,19 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       }),
       invalidatesTags: ["Organization", "Me"],
     }),
+
+    // Billing (web §07) — current plan, usage, current seats, plan catalogue.
+    getBilling: builder.query({
+      query: () => `/business/billing`,
+      transformResponse: (response) => response?.data,
+      providesTags: ["AdminBilling"],
+    }),
+
+    getBillingInvoices: builder.query({
+      query: () => `/business/billing/invoices`,
+      transformResponse: (response) => response?.data ?? [],
+      providesTags: ["AdminBilling"],
+    }),
   }),
 });
 
@@ -115,4 +128,6 @@ export const {
   useGetSafetyReportsQuery,
   useGetAdminActivityQuery,
   useUpdateCompanyProfileMutation,
+  useGetBillingQuery,
+  useGetBillingInvoicesQuery,
 } = adminApiSlice;

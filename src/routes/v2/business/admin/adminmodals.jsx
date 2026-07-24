@@ -8,16 +8,11 @@ import {
   InfoStrip,
   Toast,
 } from "../../../../components/v2/dashboard/chrome";
-import { naira } from "../../../../constants/admindashboard";
+import { naira, tierForSeats } from "../../../../constants/admindashboard";
 import {
-  invoices,
-  topUpOptions,
-  seatPackOptions,
-  CURRENT_SEATS,
-  PLANS,
-  tierForSeats,
-  networkStats,
-} from "../../../../fakedata/v2/admin";
+  useGetBillingQuery,
+  useGetBillingInvoicesQuery,
+} from "../../../../services/v2/adminApiSlice";
 
 /**
  * Modal + toast host for the admin dashboard.
@@ -261,7 +256,11 @@ const RoiModal = ({ open, close, context }) => {
 
 const TopUpModal = ({ open, close, showToast }) => {
   const [key, setKey] = useState("25");
-  const selected = topUpOptions.find((o) => o.key === key);
+  const { data: billing } = useGetBillingQuery();
+  const topUpOptions = billing?.catalogue?.topUpOptions ?? [];
+  const selected = topUpOptions.find((o) => o.key === key) ?? topUpOptions[0];
+
+  if (!selected) return null;
 
   return (
     <Modal open={open} onClose={close} title="Top up sessions" subtitle="₦8,000 per session">
@@ -312,10 +311,17 @@ const TopUpModal = ({ open, close, showToast }) => {
 
 const AddSeatsModal = ({ open, close, showToast }) => {
   const [key, setKey] = useState("25");
+  const { data: billing } = useGetBillingQuery();
+  const CURRENT_SEATS = billing?.current_seats ?? 0;
+  const plans = billing?.catalogue?.plans;
+  const seatPackOptions = billing?.catalogue?.seatPackOptions ?? [];
+  const liteTiers = plans?.lite?.tiers ?? [];
   const addQty = parseInt(key, 10);
   const newTotal = CURRENT_SEATS + addQty;
-  const oldPrice = tierForSeats(PLANS.lite.tiers, CURRENT_SEATS).price;
-  const newPrice = tierForSeats(PLANS.lite.tiers, newTotal).price;
+  const oldPrice = tierForSeats(liteTiers, CURRENT_SEATS)?.price ?? 0;
+  const newPrice = tierForSeats(liteTiers, newTotal)?.price ?? 0;
+
+  if (!plans) return null;
 
   return (
     <Modal open={open} onClose={close} title="Add seats" subtitle={`Currently ${CURRENT_SEATS} licensed seats`}>
@@ -383,7 +389,11 @@ const AddSeatsModal = ({ open, close, showToast }) => {
 };
 
 const InvoiceModal = ({ open, close, context }) => {
+  const { data: invoices = [] } = useGetBillingInvoicesQuery();
   const invoice = invoices.find((i) => i.id === context) ?? invoices[0];
+
+  if (!invoice) return null;
+
   return (
     <Modal open={open} onClose={close} title={invoice.id} subtitle={invoice.period}>
       <div className="mb-4 flex flex-col gap-2.5">
