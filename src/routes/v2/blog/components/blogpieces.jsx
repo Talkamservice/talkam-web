@@ -4,7 +4,8 @@ import classNames from "classnames";
 import PropTypes from "prop-types";
 import { DsEyebrow } from "../../../../components/v2/badge";
 import { V2 } from "../../../../constants/v2routes";
-import { BLOG_COLORS } from "../../../../fakedata/v2/blog";
+import { BLOG_COLORS } from "../../../../constants/journal";
+import { useSubscribeNewsletterMutation } from "../../../../services/v2/journalApiSlice";
 
 /** Cover artwork. The deck leaves these as empty image drop-slots, so the
  *  article's category gradient stands in until real cover images land. */
@@ -118,11 +119,19 @@ export const ArticleCard = ({ article, compact }) => (
 /** Teal newsletter band that closes both the index and article views. */
 export const NewsletterBand = () => {
   const [subscribed, setSubscribed] = useState(false);
+  const [email, setEmail] = useState("");
+  const [subscribe, { isLoading }] = useSubscribeNewsletterMutation();
 
-  // UI-only: no request is made.
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
-    setSubscribed(true);
+    try {
+      await subscribe({ email, source: "journal" }).unwrap();
+      setSubscribed(true);
+    } catch {
+      // The band has no error state in the deck; the browser's own email
+      // validation guards the common case, so a transient failure just leaves
+      // the form in place for a retry.
+    }
   };
 
   return (
@@ -165,15 +174,18 @@ export const NewsletterBand = () => {
             <input
               type="email"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@email.com"
               aria-label="Email address"
               className="h-[52px] w-full min-w-0 flex-1 rounded-ds-md border-[1.5px] border-wellness-600/20 bg-white px-[18px] text-body text-navy-800 outline-none placeholder:text-ink-400 focus:border-wellness-400 sm:w-[260px] sm:flex-none"
             />
             <button
               type="submit"
-              className="h-[52px] w-full shrink-0 cursor-pointer whitespace-nowrap rounded-ds-md bg-wellness-400 px-[26px] text-body font-extraboldNunito text-white shadow-[0_10px_22px_rgba(59,168,143,0.3)] transition-colors hover:bg-wellness-600 sm:w-auto"
+              disabled={isLoading}
+              className="h-[52px] w-full shrink-0 cursor-pointer whitespace-nowrap rounded-ds-md bg-wellness-400 px-[26px] text-body font-extraboldNunito text-white shadow-[0_10px_22px_rgba(59,168,143,0.3)] transition-colors hover:bg-wellness-600 disabled:opacity-60 sm:w-auto"
             >
-              Subscribe
+              {isLoading ? "Subscribing…" : "Subscribe"}
             </button>
           </form>
         )}

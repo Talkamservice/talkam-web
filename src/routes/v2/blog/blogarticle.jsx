@@ -5,11 +5,8 @@ import { MarketingNav } from "../../../components/layout/v2/marketingnav";
 import { DsButton } from "../../../components/v2/button";
 import { usePageMeta } from "../../../hooks/usePageMeta";
 import { V2, APP_STORE_URL, JOURNAL_NAV } from "../../../constants/v2routes";
-import {
-  findArticleBySlug,
-  relatedArticles,
-  BLOG_COLORS,
-} from "../../../fakedata/v2/blog";
+import { BLOG_COLORS } from "../../../constants/journal";
+import { useGetJournalArticleQuery } from "../../../services/v2/journalApiSlice";
 import {
   ArticleCard,
   ArticleCover,
@@ -82,7 +79,8 @@ const Block = ({ block, sectionIndex }) => {
 
 export const V2BlogArticle = () => {
   const { slug } = useParams();
-  const article = findArticleBySlug(slug);
+  const { data, isLoading, isError } = useGetJournalArticleQuery(slug);
+  const article = data?.article;
 
   // Compute before the early return so hook order stays stable.
   const { blocks, toc } = useMemo(() => {
@@ -105,9 +103,13 @@ export const V2BlogArticle = () => {
     article?.excerpt
   );
 
-  if (!article) return <Navigate to={V2.blog} replace />;
+  // A 404 (or a genuinely missing article once loaded) sends the reader back to
+  // the index; while the fetch is in flight we hold the page rather than flash a
+  // redirect.
+  if (isError) return <Navigate to={V2.blog} replace />;
+  if (isLoading || !article) return null;
 
-  const related = relatedArticles(article);
+  const related = data?.related ?? [];
   const accent = BLOG_COLORS[article.tone].hex;
 
   return (

@@ -50,6 +50,7 @@ export const apiSliceV2 = createApi({
     "TherapistNotes",
     "TherapistEarnings",
     "TherapistProfile",
+    "Journal",
   ],
   endpoints: (builder) => ({}),
 });

@@ -6,12 +6,8 @@ import { MarketingHero } from "../../../components/layout/v2/marketinglayout";
 import { DsEyebrow } from "../../../components/v2/badge";
 import { usePageMeta } from "../../../hooks/usePageMeta";
 import { V2, JOURNAL_NAV } from "../../../constants/v2routes";
-import {
-  blogArticles,
-  featuredArticle,
-  gridArticles,
-  BLOG_CATEGORY_ORDER,
-} from "../../../fakedata/v2/blog";
+import { BLOG_CATEGORY_ORDER } from "../../../constants/journal";
+import { useGetJournalArticlesQuery } from "../../../services/v2/journalApiSlice";
 import {
   ArticleCard,
   ArticleCover,
@@ -35,19 +31,26 @@ export const V2BlogIndex = () => {
   const [category, setCategory] = useState("all");
   const [query, setQuery] = useState("");
 
+  const { data: articles = [] } = useGetJournalArticlesQuery();
+
+  // The deck features the first article as Editor's Pick; the rest fill the
+  // grid — exactly as the mock derived them.
+  const featuredArticle = articles[0];
+  const gridArticles = articles.slice(1);
+
   const chips = useMemo(() => {
-    const counts = blogArticles.reduce((acc, article) => {
+    const counts = articles.reduce((acc, article) => {
       acc[article.category] = (acc[article.category] || 0) + 1;
       return acc;
     }, {});
-    return [{ key: "all", label: "All", count: blogArticles.length }].concat(
+    return [{ key: "all", label: "All", count: articles.length }].concat(
       BLOG_CATEGORY_ORDER.filter((c) => counts[c]).map((c) => ({
         key: c,
         label: c,
         count: counts[c],
       }))
     );
-  }, []);
+  }, [articles]);
 
   const visible = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -56,7 +59,7 @@ export const V2BlogIndex = () => {
       .filter((a) =>
         q ? `${a.title} ${a.excerpt} ${a.category}`.toLowerCase().includes(q) : true
       );
-  }, [category, query]);
+  }, [category, query, gridArticles]);
 
   return (
     <>
@@ -119,6 +122,7 @@ export const V2BlogIndex = () => {
             <DsEyebrow className="text-[#C79A3B]">Editor&apos;s pick</DsEyebrow>
           </div>
 
+          {featuredArticle && (
           <Link
             to={V2.blogPost(featuredArticle.slug)}
             className="v2-card-lift flex flex-col overflow-hidden rounded-[22px] border border-black/[0.07] bg-white shadow-[0_4px_16px_rgba(20,27,52,0.05)] lg:flex-row lg:gap-10"
@@ -153,6 +157,7 @@ export const V2BlogIndex = () => {
               </div>
             </div>
           </Link>
+          )}
         </div>
       </section>
 
