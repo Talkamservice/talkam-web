@@ -22,6 +22,16 @@ export const businessApiSlice = apiSliceV2.injectEndpoints({
       transformResponse: (response) => response?.data ?? [],
     }),
 
+    // Start the onboarding card checkout — returns the Flutterwave inline config
+    // ({reference, amount, currency, customer, meta}); amount 0 = nothing to charge.
+    checkoutPlan: builder.mutation({
+      query: () => ({
+        url: `/business/organization/plan/checkout`,
+        method: "POST",
+      }),
+      transformResponse: (response) => response?.data,
+    }),
+
     registerCompany: builder.mutation({
       query: (body) => ({
         url: `/business/register`,
@@ -162,6 +172,7 @@ export const businessApiSlice = apiSliceV2.injectEndpoints({
 export const {
   useGetPricingConfigQuery,
   useGetIndustriesQuery,
+  useCheckoutPlanMutation,
   useRegisterCompanyMutation,
   useGetInvitationQuery,
   useAcceptInvitationMutation,

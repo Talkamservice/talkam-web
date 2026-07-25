@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import classNames from "classnames";
+import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import {
   useOnboarding,
   StepEyebrow,
@@ -28,6 +29,7 @@ import {
   useVerifyDomainMutation,
   useSaveSeatsMutation,
   useSavePlanMutation,
+  useCheckoutPlanMutation,
 } from "../../../../../services/v2/businessApiSlice";
 import { useRequestOtpV2Mutation } from "../../../../../services/v2/authApiSliceV2";
 
@@ -589,7 +591,47 @@ export const PlanBilling = () => {
   const { data: pricing } = useGetPricingConfigQuery();
   const { data: org } = useGetOrganizationQuery();
   const [savePlan, { isLoading }] = useSavePlanMutation();
+  const [checkoutPlan, { isLoading: isCheckingOut }] = useCheckoutPlanMutation();
   const [error, setError] = useState(null);
+  const [checkout, setCheckout] = useState(null);
+
+  // Flutterwave inline checkout for the "Pay by card" path. The hook is set up
+  // at the top level (rules of hooks); we trigger the modal from an effect once
+  // the backend hands back a checkout, mirroring the consumer flow.
+  const flwConfig = {
+    public_key: import.meta.env.VITE_FLUTTERWAVE_KEY,
+    tx_ref: checkout?.reference ?? "",
+    amount: checkout?.amount ?? 0,
+    currency: checkout?.currency ?? "NGN",
+    payment_options: "card,mobilemoney,ussd",
+    customer: {
+      email: checkout?.customer?.email ?? "",
+      name: checkout?.customer?.name ?? "",
+    },
+    customizations: {
+      title: "TalkAM for Business",
+      description: "Session bundle — charged now so sessions are ready immediately",
+    },
+    meta: { ...(checkout?.meta ?? {}) },
+  };
+  const handleFlutterPayment = useFlutterwave(flwConfig);
+
+  useEffect(() => {
+    if (!checkout) return;
+    handleFlutterPayment({
+      callback: () => {
+        closePaymentModal();
+        navigate(V2.businessTherapistBench, { replace: true });
+      },
+      onClose: () => {
+        // The card window was dismissed — let them continue; the bundle can be
+        // paid later from the dashboard.
+        navigate(V2.businessTherapistBench, { replace: true });
+      },
+    });
+    setCheckout(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkout]);
 
   const quote = org?.quote;
   const blended = quote?.blended;
@@ -611,6 +653,24 @@ export const PlanBilling = () => {
 
     try {
       await savePlan({ pay_method: o.payMethod }).unwrap();
+
+      // Card: charge the session bundle now via Flutterwave. Falls through to the
+      // next step when there is nothing to charge (no bundle) or card isn't set up.
+      if (o.payMethod === "card") {
+        const result = await checkoutPlan().unwrap();
+
+        if (result?.amount > 0 && result?.reference) {
+          if (!import.meta.env.VITE_FLUTTERWAVE_KEY) {
+            setError(
+              "Card payments aren't available yet. Choose Invoice / bank transfer, or skip and add billing later from the dashboard."
+            );
+            return;
+          }
+          setCheckout(result); // the effect opens the Flutterwave modal
+          return;
+        }
+      }
+
       navigate(V2.businessTherapistBench);
     } catch (err) {
       setError(apiErrorMessage(err));
@@ -768,15 +828,17 @@ export const PlanBilling = () => {
 
       <AuthButton
         tone="brand"
-        disabled={isLoading}
+        disabled={isLoading || isCheckingOut}
         className="mb-2.5"
         onClick={() => proceed(true)}
       >
-        {isLoading
-          ? "Saving…"
-          : o.payMethod === "card"
-            ? "Continue to Flutterwave →"
-            : "Confirm Plan & Continue →"}
+        {isCheckingOut
+          ? "Opening checkout…"
+          : isLoading
+            ? "Saving…"
+            : o.payMethod === "card"
+              ? "Continue to Flutterwave →"
+              : "Confirm Plan & Continue →"}
       </AuthButton>
       <button
         type="button"
