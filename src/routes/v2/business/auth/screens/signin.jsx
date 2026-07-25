@@ -45,6 +45,28 @@ const DASHBOARDS = {
 const enterDashboard = (navigate, dashboard) =>
   navigate(DASHBOARDS[dashboard] ?? V2.employee, { replace: true });
 
+const ROLE_LABEL = { admin: "an admin", employee: "an employee", therapist: "a therapist" };
+
+/** The dashboards an account may actually enter, from its /me business context. */
+const eligibleRoles = (business) => {
+  const roles = new Set();
+  if (business?.role) roles.add(business.role); // membership role: admin | employee | therapist
+  if (business?.is_therapist) roles.add("therapist"); // a network therapist has no membership
+  return roles;
+};
+
+/**
+ * Resolve where a sign-in should land. A plain submit (Enter, `intendedRole`
+ * null) follows the account's own `dashboard`. A role button only lands you on
+ * that role's home if the account actually holds it — otherwise it returns a
+ * clear error rather than silently dropping you somewhere else.
+ */
+const resolveDestination = (intendedRole, business) => {
+  if (!intendedRole) return { dashboard: business?.dashboard ?? "employee" };
+  if (eligibleRoles(business).has(intendedRole)) return { dashboard: intendedRole };
+  return { error: `This account isn't registered as ${ROLE_LABEL[intendedRole]}.` };
+};
+
 /* ── 11. SIGN IN ───────────────────────────────────────────────────────── */
 export const SignIn = () => {
   const navigate = useNavigate();
@@ -55,33 +77,43 @@ export const SignIn = () => {
   const [login, { isLoading }] = useLoginV2Mutation();
   const [form, setForm] = useState({ input: "", password: "" });
   const [error, setError] = useState(null);
+  const [pendingRole, setPendingRole] = useState(null);
 
   const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
   /**
-   * The deck exposes three buttons so every dashboard is reachable during
-   * review. In the real product the destination is not the caller's to choose:
-   * all three submit the same credentials and the server's
-   * `business.dashboard` decides where you land.
+   * One credential set, three role buttons. A role button lands you on that
+   * dashboard only if your account holds the role; if it doesn't, we say so
+   * rather than sending you to the wrong home. A plain Enter follows whatever
+   * dashboard your account maps to. (An account can hold more than one role —
+   * e.g. an org admin who is also a network therapist.)
    */
-  const submit = async (e) => {
-    e?.preventDefault();
+  const submit = async (intendedRole = null) => {
     setError(null);
+    setPendingRole(intendedRole ?? "default");
 
     try {
       const result = await login(form).unwrap();
       const data = result?.data;
 
       if (data?.two_factor_required) {
-        o.set({ pendingEmail: data.email ?? form.input });
+        o.set({ pendingEmail: data.email ?? form.input, intendedRole: intendedRole ?? null });
         navigate(V2.businessTwoFactor);
         return;
       }
 
+      const destination = resolveDestination(intendedRole, data?.business);
+      if (destination.error) {
+        setError(destination.error);
+        return;
+      }
+
       dispatch(setCredentials({ user: data?.user, accessToken: data?.token }));
-      enterDashboard(navigate, data?.business?.dashboard);
+      enterDashboard(navigate, destination.dashboard);
     } catch (err) {
       setError(apiErrorMessage(err, "We couldn't sign you in. Check your details and try again."));
+    } finally {
+      setPendingRole(null);
     }
   };
 
@@ -95,7 +127,7 @@ export const SignIn = () => {
 
       <FormError>{error}</FormError>
 
-      <form className="flex flex-col gap-4" onSubmit={submit}>
+      <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); submit(null); }}>
         <Field label="Work email" labelTone="brand">
           <input
             type="email"
@@ -127,28 +159,31 @@ export const SignIn = () => {
           />
         </div>
 
-        {/* Three roles, one credential set — the server decides the destination. */}
+        {/* Pick the role you hold; the account decides whether that home opens. */}
         <div className="flex flex-col gap-2 sm:flex-row">
           <button
-            type="submit"
+            type="button"
+            onClick={() => submit("admin")}
             disabled={isLoading}
-            className="h-12 flex-1 cursor-pointer rounded-ds-md bg-navy-800 text-[13px] font-extraboldNunito text-white transition-colors hover:bg-navy-900"
+            className="h-12 flex-1 cursor-pointer rounded-ds-md bg-navy-800 text-[13px] font-extraboldNunito text-white transition-colors hover:bg-navy-900 disabled:opacity-70"
           >
-            {isLoading ? "Signing in…" : "Sign in as Admin"}
+            {pendingRole === "admin" ? "Signing in…" : "Sign in as Admin"}
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={() => submit("employee")}
             disabled={isLoading}
-            className="h-12 flex-1 cursor-pointer rounded-ds-md bg-brand-400 text-[13px] font-extraboldNunito text-white transition-colors hover:bg-brand-600"
+            className="h-12 flex-1 cursor-pointer rounded-ds-md bg-brand-400 text-[13px] font-extraboldNunito text-white transition-colors hover:bg-brand-600 disabled:opacity-70"
           >
-            as Employee
+            {pendingRole === "employee" ? "Signing in…" : "as Employee"}
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={() => submit("therapist")}
             disabled={isLoading}
-            className="h-12 flex-1 cursor-pointer rounded-ds-md bg-wellness-400 text-[13px] font-extraboldNunito text-white transition-colors hover:bg-wellness-600"
+            className="h-12 flex-1 cursor-pointer rounded-ds-md bg-wellness-400 text-[13px] font-extraboldNunito text-white transition-colors hover:bg-wellness-600 disabled:opacity-70"
           >
-            as Therapist
+            {pendingRole === "therapist" ? "Signing in…" : "as Therapist"}
           </button>
         </div>
       </form>
@@ -190,8 +225,17 @@ export const TwoFactor = () => {
       const result = await verifyTwoFactor({ email, code }).unwrap();
       const data = result?.data;
 
+      // Honour the role button pressed before 2FA (carried on the onboarding
+      // state); a mismatch is reported the same way as on the sign-in screen.
+      const destination = resolveDestination(o.intendedRole ?? null, data?.business);
+      if (destination.error) {
+        setError(destination.error);
+        setCode("");
+        return;
+      }
+
       dispatch(setCredentials({ user: data?.user, accessToken: data?.token }));
-      enterDashboard(navigate, data?.business?.dashboard);
+      enterDashboard(navigate, destination.dashboard);
     } catch (err) {
       setError(apiErrorMessage(err, "That code didn't work. Request a new one."));
       setCode("");

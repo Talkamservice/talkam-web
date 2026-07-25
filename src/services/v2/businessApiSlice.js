@@ -16,6 +16,12 @@ export const businessApiSlice = apiSliceV2.injectEndpoints({
       transformResponse: (response) => response?.data,
     }),
 
+    // Admin-managed industry list for the signup form.
+    getIndustries: builder.query({
+      query: () => `/business/industries`,
+      transformResponse: (response) => response?.data ?? [],
+    }),
+
     registerCompany: builder.mutation({
       query: (body) => ({
         url: `/business/register`,
@@ -155,6 +161,7 @@ export const businessApiSlice = apiSliceV2.injectEndpoints({
 
 export const {
   useGetPricingConfigQuery,
+  useGetIndustriesQuery,
   useRegisterCompanyMutation,
   useGetInvitationQuery,
   useAcceptInvitationMutation,

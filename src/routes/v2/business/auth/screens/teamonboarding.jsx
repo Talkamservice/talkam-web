@@ -158,6 +158,26 @@ export const TeamInvite = () => {
     }
   };
 
+  // A ready-to-fill template matching the parser's columns (email, role,
+  // department; role is employee or therapist, department optional). Generated
+  // client-side — no round-trip needed.
+  const downloadSampleCsv = () => {
+    const csv = [
+      "email,role,department",
+      "jane.doe@company.com,employee,Engineering",
+      "kwame.mensah@company.com,employee,Finance",
+      "dr.ada@practice.com,therapist,",
+    ].join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "talkam-team-invite-sample.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const send = async () => {
     setError(null);
 
@@ -230,8 +250,14 @@ export const TeamInvite = () => {
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             <span className="text-[11.5px] leading-[1.6] text-surface-errorInk">
-              File must be a .csv with columns: email, role, department. Max size 5MB.
-              Download our <strong className="font-boldNunito">sample template</strong>{" "}
+              File must be a .csv with columns: email, role, department. Max size 5MB.{" "}
+              <button
+                type="button"
+                onClick={downloadSampleCsv}
+                className="cursor-pointer font-boldNunito text-brand-400 underline-offset-2 hover:underline"
+              >
+                Download our sample template
+              </button>{" "}
               if you&apos;re not sure of the format.
             </span>
           </div>
@@ -263,6 +289,24 @@ export const TeamInvite = () => {
           </span>
         </button>
       )}
+
+      <div className="-mt-2.5 mb-4 flex items-center gap-1.5 text-[11px] text-ink-400">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        <span>
+          Not sure of the format?{" "}
+          <button
+            type="button"
+            onClick={downloadSampleCsv}
+            className="cursor-pointer font-boldNunito text-brand-400 underline-offset-2 hover:underline"
+          >
+            Download the sample CSV
+          </button>
+        </span>
+      </div>
 
       <div className="mb-[18px] flex flex-col gap-2">
         {rows.map((row) => (

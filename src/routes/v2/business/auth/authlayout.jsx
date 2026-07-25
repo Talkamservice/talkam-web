@@ -49,6 +49,7 @@ const INITIAL = {
   inviteRows: [],
   invitesSent: null,
   pendingEmail: "",
+  intendedRole: null,
   selectedTopics: [],
   assessment: { work: null, anxiety: null, sleep: null, relationships: null },
   landingRole: "employee",
@@ -355,6 +356,77 @@ export const FormError = ({ children }) =>
 export const SkeletonLine = ({ className }) => (
   <div className={classNames("animate-pulse rounded-ds-sm bg-ink-100", className)} />
 );
+
+/**
+ * Live password-strength meter for the signup form. The checks mirror the API's
+ * password rule (PinConstants::PASSWORD_REGEX): 8–32 chars with an uppercase,
+ * lowercase, number and special character. Renders nothing until the user types.
+ */
+export const PASSWORD_RULES = [
+  { key: "length", label: "8–32 characters", test: (v) => v.length >= 8 && v.length <= 32 },
+  { key: "upper", label: "Uppercase letter", test: (v) => /[A-Z]/.test(v) },
+  { key: "lower", label: "Lowercase letter", test: (v) => /[a-z]/.test(v) },
+  { key: "number", label: "Number", test: (v) => /\d/.test(v) },
+  { key: "special", label: "Special character (@$!%*?&#)", test: (v) => /[@$!%*?&#]/.test(v) },
+];
+
+/** True when a password satisfies every rule — handy for gating submit. */
+export const isPasswordValid = (value = "") => PASSWORD_RULES.every((r) => r.test(value));
+
+const STRENGTH_TIERS = [
+  { label: "Weak", color: "#C0564E", bar: "bg-[#C0564E]" },
+  { label: "Fair", color: "#C79A3B", bar: "bg-[#C79A3B]" },
+  { label: "Good", color: "#017FC8", bar: "bg-brand-400" },
+  { label: "Strong", color: "#3BA88F", bar: "bg-wellness-400" },
+];
+
+export const PasswordStrength = ({ value = "" }) => {
+  if (!value) return null;
+
+  const results = PASSWORD_RULES.map((rule) => ({ ...rule, met: rule.test(value) }));
+  const met = results.filter((r) => r.met).length;
+
+  // Only an all-rules-met password reads as "Strong" — it is also the point at
+  // which submit unlocks, so the label and the gate stay in step. 4 → Good,
+  // 3 → Fair, ≤2 → Weak.
+  const tier = STRENGTH_TIERS[Math.max(0, Math.min(3, met - 2))];
+
+  return (
+    <div className="mt-2" aria-live="polite">
+      <div className="flex items-center gap-2">
+        <div className="flex flex-1 gap-1">
+          {PASSWORD_RULES.map((_, i) => (
+            <span
+              key={i}
+              className={classNames(
+                "h-1.5 flex-1 rounded-full transition-colors",
+                i < met ? tier.bar : "bg-ink-100"
+              )}
+            />
+          ))}
+        </div>
+        <span className="text-[11px] font-boldNunito" style={{ color: tier.color }}>
+          {tier.label}
+        </span>
+      </div>
+
+      <ul className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1">
+        {results.map((rule) => (
+          <li
+            key={rule.key}
+            className={classNames(
+              "flex items-center gap-1 text-[11px]",
+              rule.met ? "text-wellness-600" : "text-ink-400"
+            )}
+          >
+            <span aria-hidden="true" className="text-[10px]">{rule.met ? "✓" : "○"}</span>
+            {rule.label}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 /** Selectable pill used by the topics and therapist-bench pickers. */
 export const SelectChip = ({ selected, children, ...props }) => (

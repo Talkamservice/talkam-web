@@ -14,12 +14,15 @@ import {
   InfoNote,
   FormError,
   apiErrorMessage,
+  PasswordStrength,
+  isPasswordValid,
 } from "../authlayout";
 import { usePageMeta } from "../../../../../hooks/usePageMeta";
 import { V2 } from "../../../../../constants/v2routes";
 import { setCredentials } from "../../../../../services/authSlice";
 import {
   useGetPricingConfigQuery,
+  useGetIndustriesQuery,
   useGetOrganizationQuery,
   useRegisterCompanyMutation,
   useVerifyDomainMutation,
@@ -40,16 +43,34 @@ export const CompanySignup = () => {
   usePageMeta("Create your company account — TalkAM for Business");
 
   const [registerCompany, { isLoading }] = useRegisterCompanyMutation();
+  const { data: industries = [] } = useGetIndustriesQuery();
+  const { data: pricing } = useGetPricingConfigQuery();
   const [error, setError] = useState(null);
   const [form, setForm] = useState({
     company_name: "",
     work_email: "",
-    industry: "Banking & Finance",
-    headcount_band: "100 – 300",
+    industry: "",
+    headcount_band: "",
     password: "",
   });
 
+  const headcountBands = pricing?.headcount_bands ?? [];
+
   const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
+
+  // Default the two dropdowns to the first fetched option once the lists arrive
+  // (without clobbering a choice the user has already made).
+  useEffect(() => {
+    if (!form.industry && industries.length) {
+      setForm((prev) => ({ ...prev, industry: industries[0].name }));
+    }
+  }, [industries, form.industry]);
+
+  useEffect(() => {
+    if (!form.headcount_band && headcountBands.length) {
+      setForm((prev) => ({ ...prev, headcount_band: headcountBands[0] }));
+    }
+  }, [headcountBands, form.headcount_band]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -105,10 +126,11 @@ export const CompanySignup = () => {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Industry">
             <select className={authInputClass()} value={form.industry} onChange={set("industry")}>
-              <option>Banking &amp; Finance</option>
-              <option>Technology</option>
-              <option>Professional Services</option>
-              <option>Manufacturing</option>
+              {industries.map((option) => (
+                <option key={option.id ?? option.name} value={option.name}>
+                  {option.name}
+                </option>
+              ))}
             </select>
           </Field>
           <Field label="Headcount">
@@ -117,15 +139,16 @@ export const CompanySignup = () => {
               value={form.headcount_band}
               onChange={set("headcount_band")}
             >
-              <option>50 – 100</option>
-              <option>100 – 300</option>
-              <option>300 – 500</option>
-              <option>500+</option>
+              {headcountBands.map((band) => (
+                <option key={band} value={band}>
+                  {band}
+                </option>
+              ))}
             </select>
           </Field>
         </div>
 
-        <Field label="Create password" hint="Min. 8 characters, at least 1 number">
+        <Field label="Create password">
           <input
             type="password"
             required
@@ -133,9 +156,14 @@ export const CompanySignup = () => {
             onChange={set("password")}
             className={authInputClass()}
           />
+          <PasswordStrength value={form.password} />
         </Field>
 
-        <AuthButton type="submit" disabled={isLoading} className="mt-1.5">
+        <AuthButton
+          type="submit"
+          disabled={isLoading || !isPasswordValid(form.password)}
+          className="mt-1.5"
+        >
           {isLoading ? "Creating account…" : "Continue →"}
         </AuthButton>
 
