@@ -16,6 +16,7 @@ import {
   FormError,
   apiErrorMessage,
   PasswordStrength,
+  PasswordInput,
   isPasswordValid,
 } from "../authlayout";
 import { usePageMeta } from "../../../../../hooks/usePageMeta";
@@ -151,12 +152,10 @@ export const CompanySignup = () => {
         </div>
 
         <Field label="Create password">
-          <input
-            type="password"
+          <PasswordInput
             required
             value={form.password}
             onChange={set("password")}
-            className={authInputClass()}
           />
           <PasswordStrength value={form.password} />
         </Field>
@@ -188,7 +187,7 @@ export const CompanySignup = () => {
 export const DomainVerify = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Confirm your business domain — TalkAM for Business");
+  usePageMeta("Confirm your business email — TalkAM for Business");
 
   const { data: org } = useGetOrganizationQuery();
   const [verifyDomain, { isLoading }] = useVerifyDomainMutation();
@@ -200,8 +199,6 @@ export const DomainVerify = () => {
 
   const organization = org?.organization;
   const email = o.pendingEmail || organization?.hr_contact_email || "your work email";
-  const companyName = organization?.name || "your company";
-  const domain = organization?.domain || "your domain";
 
   const submit = async () => {
     setError(null);
@@ -229,14 +226,12 @@ export const DomainVerify = () => {
 
   return (
     <>
-      <StepEyebrow>STEP 2 OF 4 · VERIFY DOMAIN</StepEyebrow>
-      <ScreenTitle>Confirm your business domain</ScreenTitle>
+      <StepEyebrow>STEP 2 OF 4 · VERIFY EMAIL</StepEyebrow>
+      <ScreenTitle>Confirm your business email</ScreenTitle>
       <ScreenLead className="mb-6">
         We&apos;ve sent a 6-digit code to{" "}
-        <strong className="text-navy-800">{email}</strong>. This
-        confirms {companyName} owns{" "}
-        <strong className="text-navy-800">{domain}</strong> before any
-        employee can join.
+        <strong className="text-navy-800">{email}</strong>. Enter it below to
+        verify your email and continue.
       </ScreenLead>
 
       <OtpBoxes value={code} onChange={setCode} disabled={isLoading} />
@@ -252,7 +247,7 @@ export const DomainVerify = () => {
           </svg>
         }
       >
-        Domain verification prevents anyone from creating a company account with an
+        Email verification prevents anyone from creating a company account with an
         address they don&apos;t control. Codes expire in 15 minutes.
       </InfoNote>
 
@@ -262,9 +257,9 @@ export const DomainVerify = () => {
           type="button"
           onClick={resend}
           disabled={isResending}
-          className="cursor-pointer font-boldNunito text-brand-400"
+          className="cursor-pointer font-boldNunito text-brand-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Resend code
+          {isResending ? "Sending…" : "Resend code"}
         </button>
       </p>
 
@@ -288,9 +283,8 @@ export const ChooseSeats = () => {
 
   const tiers = pricing?.seat_tiers ?? [];
   const bundleOptions = pricing?.bundle_options ?? [];
-  const empRate = pricing?.employee_seat_rate ?? 0;
-  const therapistRate = pricing?.therapist_access_rate ?? 0;
-  const sessionRate = pricing?.session_rate ?? 0;
+  const blockRate = pricing?.session_rate ?? 0;
+  const customRate = pricing?.session_custom_rate ?? blockRate;
 
   // Seed the stepper from what the company already saved, once.
   const savedSeats = org?.organization?.seats_licensed;
@@ -302,15 +296,28 @@ export const ChooseSeats = () => {
   const seats = parseInt(o.seatsCount, 10) || 0;
   const seatsInvalid = seats <= 0;
 
-  const bundleSessions =
-    o.bundleKey === "custom"
-      ? Math.max(parseInt(o.customBundle, 10) || 0, 0)
-      : parseInt(o.bundleKey, 10) || 0;
+  // Per-seat price comes from the volume tier the seat count lands in — the same
+  // "YOUR TIER" row shown below. It IS the facilitation fee, billed monthly.
+  const currentTier = tiers.find(
+    (t) => seats >= t.min && (t.max === null || seats <= t.max)
+  );
+  const seatRate = currentTier?.price ?? 0;
 
-  const empSeatMonthly = seats * empRate;
-  const therapistMonthly = o.therapistAccessOn ? seats * therapistRate : 0;
-  const bundleMonthly = o.therapistAccessOn ? bundleSessions * sessionRate : 0;
-  const grandTotal = empSeatMonthly + therapistMonthly + bundleMonthly;
+  const usesNetwork = o.therapistAccessOn;
+  const prepay = o.paymentTiming !== "postpay";
+  const isCustom = o.bundleKey === "custom";
+
+  const bundleSessions = isCustom
+    ? Math.max(parseInt(o.customBundle, 10) || 0, 0)
+    : parseInt(o.bundleKey, 10) || 0;
+
+  // A prepaid bundle prices at the block rate, or the +3% custom rate for a
+  // non-block quantity. Postpay (pay-as-you-go) buys nothing up front.
+  const sessionRate = isCustom ? customRate : blockRate;
+  const hasBundle = usesNetwork && prepay && bundleSessions > 0;
+
+  const seatsMonthly = seats * seatRate; // recurring
+  const bundleDueNow = hasBundle ? bundleSessions * sessionRate : 0; // one-off
 
   const submit = async () => {
     setError(null);
@@ -318,8 +325,10 @@ export const ChooseSeats = () => {
     try {
       await saveSeats({
         seats_licensed: seats,
-        therapist_access: o.therapistAccessOn,
-        bundle_sessions: bundleSessions,
+        therapist_access: usesNetwork,
+        payment_timing: usesNetwork ? o.paymentTiming : "prepay",
+        bundle_sessions: usesNetwork && prepay ? bundleSessions : 0,
+        bundle_custom: usesNetwork && prepay && isCustom,
       }).unwrap();
       navigate(V2.businessPlan);
     } catch (err) {
@@ -405,172 +414,224 @@ export const ChooseSeats = () => {
         </div>
       </div>
 
-      {/* Therapist network access */}
+      {/* Use TalkAM's therapist network */}
       <div className="mb-4 rounded-ds-lg border-[1.5px] border-[#C9E2F9] bg-white p-[18px]">
         <div className="flex items-start gap-3">
           <div className="flex-1">
             <div className="mb-1 flex flex-wrap items-center gap-2">
               <span className="text-body font-extraboldNunito text-navy-800">
-                Therapist Network Access
+                Use TalkAM&apos;s therapist network
               </span>
               <span className="rounded-full bg-wellness-50 px-2 py-[3px] text-[9px] font-extraboldNunito tracking-[0.04em] text-wellness-600">
                 RECOMMENDED
               </span>
             </div>
             <p className="text-caption leading-[1.55] text-ink-500">
-              {naira(therapistRate)} / seat / month — flat, per employee seat. Unlocks
-              TalkAM-verified therapists for your team.
+              Free to enable — your employees can book TalkAM-verified therapists. You
+              only pay for the sessions they actually use.
             </p>
           </div>
           <button
             type="button"
             role="switch"
-            aria-checked={o.therapistAccessOn}
-            aria-label="Therapist Network Access"
-            onClick={() => o.set({ therapistAccessOn: !o.therapistAccessOn })}
+            aria-checked={usesNetwork}
+            aria-label="Use TalkAM's therapist network"
+            onClick={() => o.set({ therapistAccessOn: !usesNetwork })}
             className={classNames(
               "relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors",
-              o.therapistAccessOn ? "bg-wellness-400" : "bg-ink-200"
+              usesNetwork ? "bg-wellness-400" : "bg-ink-200"
             )}
           >
             <span
               className={classNames(
                 "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-all",
-                o.therapistAccessOn ? "left-[22px]" : "left-0.5"
+                usesNetwork ? "left-[22px]" : "left-0.5"
               )}
             />
           </button>
         </div>
 
-        {o.therapistAccessOn ? (
+        {usesNetwork ? (
           <div className="mt-4 border-t border-ink-100 pt-4">
+            {/* Prepay vs pay-as-you-go */}
             <div className="mb-1 text-caption font-boldNunito text-navy-800">
-              Pre-purchase a Session Bundle
+              How do you want to pay for sessions?
             </div>
-            <p className="mb-3.5 text-[11.5px] leading-[1.5] text-ink-400">
-              Sessions are {naira(sessionRate)} each, drawn down as they happen. Buy in
-              blocks:
+            <p className="mb-3 text-[11.5px] leading-[1.5] text-ink-400">
+              Prepay a bundle up front (cheaper per session), or pay as you go and settle
+              for what your team uses each month.
             </p>
-
-            <div className="flex gap-2.5">
-              {bundleOptions.map((opt) => {
-                const active = o.bundleKey === opt.key;
-                return (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => o.set({ bundleKey: opt.key, customBundle: "" })}
-                    className={classNames(
-                      "relative flex-1 cursor-pointer rounded-ds-md border-[1.5px] px-2.5 py-3.5 text-center",
-                      active ? "border-brand-400 bg-brand-25" : "border-ink-200 bg-white"
-                    )}
-                  >
-                    {opt.tag ? (
-                      <span className="absolute -top-[9px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-400 px-[9px] py-[3px] text-[9px] font-extraboldNunito tracking-[0.04em] text-white">
-                        {opt.tag}
-                      </span>
-                    ) : null}
-                    <div className="text-h3 font-extraboldNunito text-navy-800">
-                      {opt.sessions}
-                    </div>
-                    <div className="mb-[5px] text-[10.5px] text-ink-400">sessions</div>
-                    <div className="text-caption font-extraboldNunito text-brand-400">
-                      {naira(opt.sessions * sessionRate)}
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="mb-4 flex gap-2.5">
+              {[
+                { key: "prepay", label: "Prepay a bundle" },
+                { key: "postpay", label: "Pay as you go" },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => o.set({ paymentTiming: opt.key })}
+                  aria-pressed={o.paymentTiming === opt.key}
+                  className={classNames(
+                    "flex-1 cursor-pointer rounded-[10px] border-[1.5px] p-[11px] text-center text-[12.5px] font-boldNunito",
+                    o.paymentTiming === opt.key
+                      ? "border-brand-400 bg-brand-25 text-brand-600"
+                      : "border-ink-200 bg-white text-ink-500"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
 
-            <div
-              className={classNames(
-                "mt-2.5 rounded-ds-md border-[1.5px] px-3.5 py-3",
-                o.bundleKey === "custom"
-                  ? "border-brand-400 bg-brand-25"
-                  : "border-ink-200 bg-white"
-              )}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex-1">
-                  <div className="mb-0.5 text-[12.5px] font-extraboldNunito text-navy-800">
-                    Custom amount
+            {prepay ? (
+              <>
+                <div className="mb-1 text-caption font-boldNunito text-navy-800">
+                  Pre-purchase a Session Bundle
+                </div>
+                <p className="mb-3.5 text-[11.5px] leading-[1.5] text-ink-400">
+                  Sessions are {naira(blockRate)} each, drawn down as they happen. Buy in
+                  blocks:
+                </p>
+
+                <div className="flex gap-2.5">
+                  {bundleOptions.map((opt) => {
+                    const active = o.bundleKey === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => o.set({ bundleKey: opt.key, customBundle: "" })}
+                        className={classNames(
+                          "relative flex-1 cursor-pointer rounded-ds-md border-[1.5px] px-2.5 py-3.5 text-center",
+                          active ? "border-brand-400 bg-brand-25" : "border-ink-200 bg-white"
+                        )}
+                      >
+                        {opt.tag ? (
+                          <span className="absolute -top-[9px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-400 px-[9px] py-[3px] text-[9px] font-extraboldNunito tracking-[0.04em] text-white">
+                            {opt.tag}
+                          </span>
+                        ) : null}
+                        <div className="text-h3 font-extraboldNunito text-navy-800">
+                          {opt.sessions}
+                        </div>
+                        <div className="mb-[5px] text-[10.5px] text-ink-400">sessions</div>
+                        <div className="text-caption font-extraboldNunito text-brand-400">
+                          {naira(opt.sessions * blockRate)}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div
+                  className={classNames(
+                    "mt-2.5 rounded-ds-md border-[1.5px] px-3.5 py-3",
+                    isCustom ? "border-brand-400 bg-brand-25" : "border-ink-200 bg-white"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="mb-0.5 text-[12.5px] font-extraboldNunito text-navy-800">
+                        Custom amount
+                      </div>
+                      <p className="text-[11px] text-ink-400">
+                        A specific number instead of a block — priced at {naira(customRate)}
+                        /session.
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="e.g. 18"
+                        aria-label="Custom session count"
+                        value={isCustom ? o.customBundle : ""}
+                        onChange={(e) =>
+                          o.set({ customBundle: e.target.value, bundleKey: "custom" })
+                        }
+                        className="h-10 w-[88px] rounded-[10px] border-[1.5px] border-ink-200 px-3 text-center text-body font-boldNunito text-navy-800"
+                      />
+                      <span className="text-[11px] text-ink-400">sessions</span>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-ink-400">
-                    Not one of the blocks above? Enter the exact number of sessions your
-                    team needs.
-                  </p>
+                  {isCustom ? (
+                    <div className="mt-3 flex items-center justify-between border-t border-[#C9E2F9] pt-3">
+                      <span className="text-[11.5px] text-ink-500">
+                        {bundleSessions} × {naira(customRate)}
+                      </span>
+                      <span className="text-body font-extraboldNunito text-brand-400">
+                        {naira(bundleSessions * customRate)}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="e.g. 18"
-                    aria-label="Custom session count"
-                    value={o.bundleKey === "custom" ? o.customBundle : ""}
-                    onChange={(e) =>
-                      o.set({ customBundle: e.target.value, bundleKey: "custom" })
-                    }
-                    className="h-10 w-[88px] rounded-[10px] border-[1.5px] border-ink-200 px-3 text-center text-body font-boldNunito text-navy-800"
-                  />
-                  <span className="text-[11px] text-ink-400">sessions</span>
+              </>
+            ) : (
+              <div className="rounded-ds-md border-[1.5px] border-ink-200 bg-ink-50 px-4 py-3.5">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="text-[12.5px] font-extraboldNunito text-navy-800">
+                    Pay as you go
+                  </span>
+                  <span className="rounded-full bg-brand-25 px-2 py-[2px] text-[9px] font-extraboldNunito tracking-[0.04em] text-brand-600">
+                    NO UPFRONT COST
+                  </span>
                 </div>
+                <p className="text-[11.5px] leading-[1.55] text-ink-500">
+                  No bundle to buy now. Sessions are billed at {naira(customRate)} each,
+                  totalled on your monthly invoice — you only pay for what your team
+                  actually uses.
+                </p>
               </div>
-              {o.bundleKey === "custom" ? (
-                <div className="mt-3 flex items-center justify-between border-t border-[#C9E2F9] pt-3">
-                  <span className="text-[11.5px] text-ink-500">
-                    {bundleSessions} × {naira(sessionRate)}
-                  </span>
-                  <span className="text-body font-extraboldNunito text-brand-400">
-                    {naira(bundleSessions * sessionRate)}
-                  </span>
-                </div>
-              ) : null}
-            </div>
+            )}
           </div>
         ) : null}
       </div>
 
-      {/* Monthly total */}
+      {/* Cost summary */}
       <div className="mb-5 rounded-ds-lg bg-navy-800 px-5 py-[18px]">
         <div className="mb-3 text-[11px] font-boldNunito tracking-[0.06em] text-white/50">
-          MONTHLY TOTAL
+          BILLED MONTHLY
         </div>
         <div className="flex flex-col gap-[9px]">
           <div className="flex justify-between gap-3">
             <span className="text-[12.5px] text-white/65">
-              Employee Seats · {seats} × {naira(empRate)}
+              Employee Seats · {seats} × {naira(seatRate)}
             </span>
             <span className="text-[13px] font-boldNunito text-white">
-              {naira(empSeatMonthly)}
+              {naira(seatsMonthly)}
             </span>
           </div>
-          {o.therapistAccessOn ? (
-            <>
-              <div className="flex justify-between gap-3">
-                <span className="text-[12.5px] text-white/65">
-                  Therapist Network Access · {seats} × {naira(therapistRate)}
-                </span>
-                <span className="text-[13px] font-boldNunito text-white">
-                  {naira(therapistMonthly)}
-                </span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-[12.5px] text-white/65">
-                  Session Bundle · {bundleSessions} × {naira(sessionRate)}
-                </span>
-                <span className="text-[13px] font-boldNunito text-white">
-                  {naira(bundleMonthly)}
-                </span>
-              </div>
-            </>
+          {usesNetwork && !prepay ? (
+            <div className="flex justify-between gap-3">
+              <span className="text-[12.5px] text-white/65">
+                Sessions · as used, {naira(customRate)} each
+              </span>
+              <span className="text-[13px] font-boldNunito text-white/80">metered</span>
+            </div>
           ) : null}
           <div className="flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
-            <span className="text-[13px] font-extraboldNunito text-white">Total / month</span>
+            <span className="text-[13px] font-extraboldNunito text-white">Seats / month</span>
             <span className="text-[22px] font-extraboldNunito text-white">
-              {naira(grandTotal)}
+              {naira(seatsMonthly)}
             </span>
           </div>
         </div>
+
+        {hasBundle ? (
+          <div className="mt-4 border-t border-white/[0.14] pt-3.5">
+            <div className="mb-2 text-[11px] font-boldNunito tracking-[0.06em] text-white/50">
+              DUE AT SIGNUP
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[12.5px] text-white/65">
+                Session Bundle · {bundleSessions} × {naira(sessionRate)}
+              </span>
+              <span className="text-[15px] font-extraboldNunito text-white">
+                {naira(bundleDueNow)}
+              </span>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <FormError>{error}</FormError>
@@ -595,9 +656,9 @@ export const PlanBilling = () => {
   const [error, setError] = useState(null);
   const [checkout, setCheckout] = useState(null);
 
-  // Flutterwave inline checkout for the "Pay by card" path. The hook is set up
-  // at the top level (rules of hooks); we trigger the modal from an effect once
-  // the backend hands back a checkout, mirroring the consumer flow.
+  // Flutterwave inline checkout for the prepay + "Pay by card" path. The hook is
+  // set up at the top level (rules of hooks); we trigger the modal from an effect
+  // once the backend hands back a checkout, mirroring the consumer flow.
   const flwConfig = {
     public_key: import.meta.env.VITE_FLUTTERWAVE_KEY,
     tx_ref: checkout?.reference ?? "",
@@ -634,14 +695,24 @@ export const PlanBilling = () => {
   }, [checkout]);
 
   const quote = org?.quote;
-  const blended = quote?.blended;
   const seats = quote?.seats ?? 0;
-  const tierPrice = quote?.tier?.price ?? 0;
-  const fairness = blended?.fairness_multiplier ?? 1;
-  const perSeat = blended?.per_seat ?? 0;
-  const planName = pricing?.plan?.name ?? "";
-  const planFeatures = pricing?.plan?.features ?? [];
+  const seatRate = quote?.rates?.seat ?? 0;
+  const perSeat = quote?.plan?.per_seat ?? seatRate;
+  const seatsMonthly = quote?.seats_monthly ?? 0;
+  const usesNetwork = quote?.uses_network ?? false;
+  const prepay = (quote?.payment_timing ?? "prepay") !== "postpay";
+  const bundleSessions = quote?.bundle_sessions ?? 0;
+  const bundleRate = quote?.rates?.session_applied ?? 0;
+  const bundleTotal = quote?.bundle_total ?? 0;
+  const meteredRate = quote?.rates?.metered_session ?? 0;
+  const meteredSessions = quote?.metered_sessions ?? false;
+  const planName = quote?.plan?.name ?? pricing?.plan?.name ?? "";
+  const planFeatures = quote?.plan?.features ?? pricing?.plan?.features ?? [];
   const bank = pricing?.bank_details ?? {};
+
+  // Only the prepay + card path charges anything now (the session bundle). Postpay
+  // has nothing to charge at signup, so it just saves and continues.
+  const cardChargesNow = o.payMethod === "card" && prepay && bundleTotal > 0;
 
   const proceed = async (persist) => {
     setError(null);
@@ -652,10 +723,10 @@ export const PlanBilling = () => {
     }
 
     try {
-      await savePlan({ pay_method: o.payMethod }).unwrap();
+      await savePlan({ pay_method: o.payMethod, payment_timing: o.paymentTiming }).unwrap();
 
-      // Card: charge the session bundle now via Flutterwave. Falls through to the
-      // next step when there is nothing to charge (no bundle) or card isn't set up.
+      // Card: charge the session bundle now via Flutterwave. Returns amount 0 (and
+      // falls through) when there is nothing to charge — postpay, or no bundle.
       if (o.payMethod === "card") {
         const result = await checkoutPlan().unwrap();
 
@@ -700,7 +771,7 @@ export const PlanBilling = () => {
           <span className="text-[13px] text-ink-400">/ employee / month</span>
         </div>
         <p className="mb-[18px] text-caption text-ink-400">
-          {naira(blended?.total_monthly)} total/month · billed monthly
+          {naira(seatsMonthly)} total/month · billed monthly
         </p>
 
         <div className="mb-[18px] flex flex-col gap-2.5">
@@ -716,35 +787,44 @@ export const PlanBilling = () => {
 
         <div className="flex flex-col gap-2 rounded-ds-md bg-ink-50 p-3.5">
           <div className="text-[11px] font-boldNunito tracking-[0.04em] text-navy-800">
-            HOW THIS PRICE IS CALCULATED
-          </div>
-          <div className="flex justify-between gap-3">
-            <span className="text-caption text-ink-500">Seat tier rate ({seats} seats)</span>
-            <span className="text-caption font-boldNunito text-navy-800">
-              {naira(tierPrice)}/seat
-            </span>
+            WHAT YOU&apos;RE SETTING UP
           </div>
           <div className="flex justify-between gap-3">
             <span className="text-caption text-ink-500">
-              Therapist rate fairness adjustment
+              Employee seats · {seats} × {naira(seatRate)}
             </span>
             <span className="text-caption font-boldNunito text-navy-800">
-              {Number(fairness).toFixed(2)}x (balanced)
+              {naira(seatsMonthly)}/mo
             </span>
           </div>
+          {usesNetwork && prepay && bundleSessions > 0 ? (
+            <div className="flex justify-between gap-3">
+              <span className="text-caption text-ink-500">
+                Session bundle · {bundleSessions} × {naira(bundleRate)}
+              </span>
+              <span className="text-caption font-boldNunito text-navy-800">
+                {naira(bundleTotal)} once
+              </span>
+            </div>
+          ) : null}
+          {usesNetwork && meteredSessions ? (
+            <div className="flex justify-between gap-3">
+              <span className="text-caption text-ink-500">Sessions · pay-as-you-go</span>
+              <span className="text-caption font-boldNunito text-navy-800">
+                {naira(meteredRate)}/session
+              </span>
+            </div>
+          ) : null}
           <div className="flex justify-between gap-3 border-t border-surface-line pt-2">
-            <span className="text-caption font-boldNunito text-navy-800">
-              Final rate per seat
-            </span>
+            <span className="text-caption font-boldNunito text-navy-800">Billed monthly</span>
             <span className="text-[13px] font-extraboldNunito text-brand-400">
-              {naira(perSeat)}
+              {naira(seatsMonthly)}
             </span>
           </div>
           <p className="text-[11px] leading-[1.6] text-ink-400">
-            We blend your seat-count tier with a network-wide average therapist session
-            rate, so pricing never overvalues cheap sessions or undervalues expensive
-            specialists — the same balance applies whichever therapists your employees
-            choose.
+            Your seat price is the {naira(seatRate)} volume-tier rate for {seats} seats —
+            the facilitation fee for connecting your team with therapists. No hidden
+            multipliers.
           </p>
         </div>
       </div>
@@ -755,7 +835,9 @@ export const PlanBilling = () => {
           How would you like to pay?
         </div>
         <p className="mb-3.5 text-caption text-ink-400">
-          Most teams pay by invoice. Smaller teams can pay by card for instant setup.
+          {prepay
+            ? "Most teams pay by invoice. Smaller teams can pay by card for instant setup."
+            : "Pay-as-you-go is settled each month — by net-terms invoice or auto-charged to a card."}
         </p>
 
         <div className="mb-4 flex gap-2.5">
@@ -790,10 +872,9 @@ export const PlanBilling = () => {
               Bank: {bank.bank} · Account No: {bank.account_number}
             </div>
             <p className="text-[11px] leading-[1.6] text-ink-400">
-              Seats are invoiced monthly once your first employee activates — not
-              before. Your Session Bundle is reserved now and added to that first
-              invoice; sessions are available immediately and drawn down as they
-              happen. Suits NGOs, schools, firms and enterprises paying on net terms.
+              {prepay
+                ? "Seats are invoiced monthly once your first employee activates — not before. Your Session Bundle is added to that first invoice; sessions are available immediately and drawn down as they happen. Suits NGOs, schools, firms and enterprises paying on net terms."
+                : "At month-end we send one invoice for your active seats plus the sessions your team used that month — settle it by bank transfer on net terms. Nothing is charged up front."}
             </p>
           </>
         ) : (
@@ -810,15 +891,15 @@ export const PlanBilling = () => {
                   Secured by Flutterwave
                 </div>
                 <p className="text-[11px] leading-[1.5] text-ink-500">
-                  You&apos;ll be taken to Flutterwave&apos;s secure checkout to enter
-                  your card — TalkAM never sees or stores your card details.
+                  You&apos;ll be taken to Flutterwave&apos;s secure checkout to enter your
+                  card — TalkAM never sees or stores your card details.
                 </p>
               </div>
             </div>
             <p className="text-[11px] leading-[1.6] text-ink-400">
-              Your Session Bundle is charged now via Flutterwave so sessions are
-              available immediately; seats are billed to the same card monthly. Best
-              for small teams who&apos;d rather not wait on an invoice.
+              {prepay
+                ? "Your Session Bundle is charged now via Flutterwave so sessions are available immediately; seats are billed to the same card monthly. Best for small teams who'd rather not wait on an invoice."
+                : "Seats and the sessions your team uses are auto-charged to your card at month-end — you only pay for what's used. Card setup completes right after onboarding."}
             </p>
           </>
         )}
@@ -836,7 +917,7 @@ export const PlanBilling = () => {
           ? "Opening checkout…"
           : isLoading
             ? "Saving…"
-            : o.payMethod === "card"
+            : cardChargesNow
               ? "Continue to Flutterwave →"
               : "Confirm Plan & Continue →"}
       </AuthButton>

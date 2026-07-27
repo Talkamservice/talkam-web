@@ -31,7 +31,7 @@ export const authBrandContent = {
   plan: {
     eyebrow: "FOR EMPLOYERS",
     title: "Fair pricing, explained plainly.",
-    body: "Your rate blends your seat-count tier with a network-wide average therapist session rate, so pricing stays balanced no matter which therapists your team books.",
+    body: "Your rate is the volume-tier price for your seat count — a flat facilitation fee, billed monthly. Turn on TalkAM's therapist network and you only pay for the sessions your team actually uses.",
     points: ["Unlimited community access", "Subsidised therapy sessions", "Monthly anonymised reporting"],
   },
   therapistBench: {

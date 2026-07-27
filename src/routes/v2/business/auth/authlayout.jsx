@@ -9,7 +9,6 @@ import {
 } from "react";
 import { Outlet, Link, useLocation, useSearchParams } from "react-router-dom";
 import classNames from "classnames";
-import TalkamIcon from "../../../../assets/svgs/talkam-icon.svg";
 import TalkamWordmark from "../../../../assets/svgs/talkam-logo.svg";
 import { V2_ROOT } from "../../../../constants/v2routes";
 import { authBrandContent, AUTH_SCREENS } from "../../../../constants/businessauth";
@@ -40,6 +39,7 @@ export const useOnboarding = () => {
 const INITIAL = {
   seatsCount: "250",
   therapistAccessOn: true,
+  paymentTiming: "prepay",
   bundleKey: "25",
   customBundle: "",
   payMethod: "invoice",
@@ -124,7 +124,7 @@ export const AuthLayout = () => {
 
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           {/* LEFT BRAND PANEL */}
-          <aside className="relative flex flex-shrink-0 flex-col overflow-hidden bg-[linear-gradient(160deg,#0A1220_0%,#141B34_55%,#0D2240_100%)] p-8 lg:w-[38%] lg:min-w-[360px] lg:p-11">
+          <aside className="relative flex flex-shrink-0 flex-col overflow-hidden bg-[linear-gradient(160deg,#0A1220_0%,#141B34_55%,#0D2240_100%)] p-8 lg:sticky lg:top-0 lg:h-dvh lg:w-[38%] lg:min-w-[360px] lg:self-start lg:p-11">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -right-20 -top-[60px] h-[340px] w-[340px] rounded-full bg-[radial-gradient(circle,rgba(1,127,200,0.16)_0%,transparent_65%)]"
@@ -136,14 +136,13 @@ export const AuthLayout = () => {
 
             <Link
               to={V2_ROOT}
-              className="relative z-[1] mb-8 flex items-center gap-2.5 lg:mb-14"
+              className="relative z-[1] mb-8 flex items-center lg:mb-14"
               aria-label="TalkAM home"
             >
-              <img src={TalkamIcon} alt="" className="h-[30px] w-[30px]" />
               <img
                 src={TalkamWordmark}
                 alt="TalkAM"
-                className="h-[17px] w-auto [filter:brightness(0)_invert(1)]"
+                className="h-[30px] w-auto [filter:brightness(0)_invert(1)]"
               />
             </Link>
 
@@ -379,6 +378,45 @@ const STRENGTH_TIERS = [
   { label: "Good", color: "#017FC8", bar: "bg-brand-400" },
   { label: "Strong", color: "#3BA88F", bar: "bg-wellness-400" },
 ];
+
+/**
+ * Password input with a show/hide toggle. Wraps the deck input style and adds
+ * a trailing eye button that swaps the field between `password` and `text`.
+ */
+export const PasswordInput = ({ focused, className, id, ...props }) => {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="relative">
+      <input
+        {...props}
+        id={id}
+        type={visible ? "text" : "password"}
+        className={classNames(authInputClass(focused), "pr-12", className)}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        aria-pressed={visible}
+        className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-ink-400 hover:text-ink-600"
+      >
+        {visible ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+            <path d="M1 1l22 22" />
+            <path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 8 10 8a9.74 9.74 0 0 0 5.39-1.61" />
+          </svg>
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+};
 
 export const PasswordStrength = ({ value = "" }) => {
   if (!value) return null;
