@@ -163,8 +163,6 @@ export const TherapistLayout = () => {
     <DashboardShell
       sections={navSections({ upcoming, unread, showEarnings })}
       width={224}
-      /* Deck: the therapist logo tile is a darker blue ramp than the other two. */
-      logoGradient="linear-gradient(135deg,#017FC8,#015C94)"
       portalLabel={therapistPortalLabel}
       topBlock={<VerificationStrips isVerified={!!me?.therapist?.is_verified} employer={employment.employer_name} />}
       user={user}

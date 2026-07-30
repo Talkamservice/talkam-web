@@ -44,6 +44,7 @@ export const apiSliceV2 = createApi({
     "AdminSafety",
     "AdminActivity",
     "AdminBilling",
+    "AdminNotificationPreferences",
     "TherapistHome",
     "TherapistAnalytics",
     "TherapistAvailability",

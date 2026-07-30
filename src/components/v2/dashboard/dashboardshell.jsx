@@ -3,7 +3,6 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import classNames from "classnames";
 import PropTypes from "prop-types";
 import * as Icon from "react-feather";
-import TalkamIcon from "../../../assets/svgs/talkam-icon.svg";
 import TalkamWordmark from "../../../assets/svgs/talkam-logo.svg";
 import { V2 } from "../../../constants/v2routes";
 
@@ -67,7 +66,6 @@ export const DashboardShell = ({
   user,
   userMenu,
   width = 232,
-  logoGradient = "linear-gradient(135deg,#017FC8,#02D8FD)",
   portalLabel,
   showSearch = false,
   signOutTo = V2.businessLogin,
@@ -111,19 +109,15 @@ export const DashboardShell = ({
           navOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Logo */}
+        {/* Logo — the wordmark asset is a full icon+text lockup, so it stands
+            alone; pairing it with the separate icon tile double-prints the
+            glyph. */}
         <div className="border-b border-white/[0.06] px-[18px] pb-3 pt-[18px]">
-          <Link to={V2.landing} className="mb-[3px] flex items-center gap-[9px]">
-            <span
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px]"
-              style={{ background: logoGradient }}
-            >
-              <img src={TalkamIcon} alt="" className="h-[17px] w-[17px]" />
-            </span>
+          <Link to={V2.landing} className="mb-[3px] flex items-center">
             <img
               src={TalkamWordmark}
               alt="TalkAM"
-              className="h-[15px] w-auto [filter:brightness(0)_invert(1)]"
+              className="h-6 w-auto [filter:brightness(0)_invert(1)]"
             />
           </Link>
           <div className="pl-0.5 text-[10px] tracking-[0.05em] text-white/25">
@@ -155,12 +149,20 @@ export const DashboardShell = ({
                 workspaceMenu && "cursor-pointer"
               )}
             >
-              <span
-                className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[7px] text-[11px] font-extraboldNunito text-white"
-                style={{ background: workspace.accent }}
-              >
-                {workspace.initial}
-              </span>
+              {workspace.logo ? (
+                <img
+                  src={workspace.logo}
+                  alt=""
+                  className="h-[26px] w-[26px] shrink-0 rounded-[7px] object-cover"
+                />
+              ) : (
+                <span
+                  className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[7px] text-[11px] font-extraboldNunito text-white"
+                  style={{ background: workspace.accent }}
+                >
+                  {workspace.initial}
+                </span>
+              )}
               <div className="min-w-0 flex-1">
                 <div className="truncate text-caption font-boldNunito text-white">
                   {workspace.name}
@@ -385,7 +387,6 @@ DashboardShell.propTypes = {
   user: PropTypes.object.isRequired,
   userMenu: PropTypes.oneOfType([PropTypes.bool, PropTypes.node]),
   width: PropTypes.number,
-  logoGradient: PropTypes.string,
   portalLabel: PropTypes.string,
   showSearch: PropTypes.bool,
   notifications: PropTypes.array,

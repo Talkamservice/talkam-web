@@ -62,15 +62,19 @@ const MenuRow = ({ to, icon, children, className, onClick }) => (
   </Link>
 );
 
-const WorkspaceMenu = ({ company }) => (
+const WorkspaceMenu = ({ company, logo }) => (
   <>
     <div className="border-b border-ink-100 px-3.5 py-2.5 text-[10px] font-extraboldNunito tracking-[0.06em] text-[#9299A8]">
       WORKSPACE
     </div>
     <div className="flex items-center gap-[9px] border-b border-ink-100 bg-[#F8F9FC] px-3.5 py-[11px]">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] bg-brand-400 text-[10px] font-extraboldNunito text-white">
-        {(company ?? "").charAt(0).toUpperCase()}
-      </span>
+      {logo ? (
+        <img src={logo} alt="" className="h-6 w-6 shrink-0 rounded-[7px] object-cover" />
+      ) : (
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] bg-brand-400 text-[10px] font-extraboldNunito text-white">
+          {(company ?? "").charAt(0).toUpperCase()}
+        </span>
+      )}
       <div className="flex-1">
         <div className="text-caption font-boldNunito text-navy-800">{company}</div>
         <div className="text-[10px] text-ink-400">Current workspace</div>
@@ -143,6 +147,7 @@ export const AdminLayout = () => {
       ? `${organization.seats_used ?? 0} of ${organization.seats_licensed} seats`
       : "",
     initial: company.charAt(0).toUpperCase(),
+    logo: organization?.logo,
     accent: "#017FC8",
     portalLabel: adminPortalLabel,
   };
@@ -178,7 +183,7 @@ export const AdminLayout = () => {
     <DashboardShell
       sections={navSections({ seats, bench, openReports })}
       workspace={workspace}
-      workspaceMenu={<WorkspaceMenu company={company} />}
+      workspaceMenu={<WorkspaceMenu company={company} logo={organization?.logo} />}
       user={user}
       userMenu={<ProfileMenu onSignOut={() => dispatch(logOut())} />}
       showSearch

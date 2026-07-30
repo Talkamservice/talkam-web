@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import * as Icon from "react-feather";
 import {
@@ -20,6 +20,9 @@ import {
   useGetSafetyReportsQuery,
   useGetAdminActivityQuery,
   useUpdateCompanyProfileMutation,
+  useUploadCompanyLogoMutation,
+  useGetAdminNotificationPreferencesQuery,
+  useSaveAdminNotificationPreferencesMutation,
 } from "../../../../../services/v2/adminApiSlice";
 import { useGetOrganizationQuery } from "../../../../../services/v2/businessApiSlice";
 import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
@@ -102,27 +105,75 @@ export const AdminTrust = () => {
 /* ── SETTINGS ─────────────────────────────────────────────────────────── */
 
 const NOTIFICATION_PREFS = [
-  { key: "digest", title: "Monthly usage digest", note: "Sent on the 1st of each month", on: true },
-  { key: "seats", title: "Seat limit alerts", note: "When <10% seats remain", on: true },
-  { key: "invoice", title: "Invoice notifications", note: "3 days before auto-debit", on: true },
-  { key: "therapists", title: "New therapist announcements", note: "When new therapists join the network", on: false },
+  { key: "digest_summary", title: "Monthly usage digest", note: "Sent on the 1st of each month", on: true },
+  { key: "seat_limit_alerts", title: "Seat limit alerts", note: "When <10% seats remain", on: true },
+  { key: "invoice_notifications", title: "Invoice notifications", note: "3 days before auto-debit", on: true },
+  { key: "new_therapist_announcements", title: "New therapist announcements", note: "When new therapists join the network", on: false },
 ];
 
 export const AdminSettings = () => {
   const { open, showToast } = useAdminModal();
-  const [prefs, setPrefs] = useState(
-    NOTIFICATION_PREFS.reduce((acc, p) => ({ ...acc, [p.key]: p.on }), {})
-  );
+  const { data: notificationPrefs } = useGetAdminNotificationPreferencesQuery();
+  const [saveNotificationPref, { isLoading: isSavingPrefs }] =
+    useSaveAdminNotificationPreferencesMutation();
   const [twoFa, setTwoFa] = useState(true);
   const [capOn, setCapOn] = useState(true);
   const [cap, setCap] = useState(6);
 
   const { data: org } = useGetOrganizationQuery();
   const { data: me } = useGetMeV2Query();
-  const [updateProfile, { isLoading: isSaving }] = useUpdateCompanyProfileMutation();
+  const [updateProfile, { isLoading: isSavingProfile }] = useUpdateCompanyProfileMutation();
+  const [uploadLogo, { isLoading: isUploadingLogo }] = useUploadCompanyLogoMutation();
+  const logoInputRef = useRef(null);
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
 
   const organization = org?.organization;
   const adminEmail = me?.email ?? "your work email";
+  const isSaving = isSavingProfile || isUploadingLogo;
+
+  const pickLogo = () => logoInputRef.current?.click();
+
+  // Selecting a file only stages it locally, with an instant preview — it isn't
+  // uploaded until "Save Changes", so a picked-then-regretted image never hits the API.
+  // Validated client-side against the same rules the backend enforces (5MB,
+  // PNG/JPG, at least 256×256px), so a bad pick is caught before any round-trip.
+  const onLogoChosen = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-choosing the same file next time
+    if (!file) return;
+
+    if (!["image/png", "image/jpeg"].includes(file.type)) {
+      showToast("Please choose a PNG or JPG image");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("That image is too large — please choose one under 5MB");
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth < 256 || img.naturalHeight < 256) {
+        showToast("That image is too small — please choose one at least 256×256px");
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
+      setLogoFile(file);
+      setLogoPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return objectUrl;
+      });
+    };
+    img.src = objectUrl;
+  };
+
+  useEffect(() => {
+    return () => {
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
+    };
+  }, [logoPreview]);
 
   const [form, setForm] = useState({ name: "", industry: "Banking & Finance", hr_contact_email: "" });
   useEffect(() => {
@@ -135,13 +186,40 @@ export const AdminSettings = () => {
     }
   }, [organization?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Pulls the specific server message out of an RTK Query error — a field
+  // error first (e.g. "The logo field must not be greater than 5120
+  // kilobytes."), falling back to the envelope message, then a generic string.
+  const apiErrorMessage = (err, fallback) => {
+    const body = err?.data;
+    const firstFieldError = Object.values(body?.errors ?? {}).flat()[0];
+    return firstFieldError ?? body?.message ?? fallback;
+  };
+
   const saveCompany = async () => {
     try {
       await updateProfile(form).unwrap();
-      showToast("Company information saved");
-    } catch {
-      showToast("Couldn't save that just now — please try again");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't save that just now — please try again"));
+      return;
     }
+
+    if (logoFile) {
+      try {
+        await uploadLogo(logoFile).unwrap();
+        setLogoFile(null);
+        setLogoPreview((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return null;
+        });
+      } catch (err) {
+        showToast(
+          `Company info saved, but the logo didn't upload: ${apiErrorMessage(err, "please try a different image")}`
+        );
+        return;
+      }
+    }
+
+    showToast("Company information saved");
   };
 
   return (
@@ -157,16 +235,32 @@ export const AdminSettings = () => {
               Business Profile Image
             </label>
             <div className="flex items-center gap-3.5">
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[14px] bg-brand-400 text-h3 font-extraboldNunito text-white">
-                {(form.name || "").charAt(0).toUpperCase()}
-              </span>
-              <SecondaryButton onClick={() => showToast("Image picker opens here")}>
-                Upload Image
+              {logoPreview || organization?.logo ? (
+                <img
+                  src={logoPreview || organization.logo}
+                  alt=""
+                  className="h-14 w-14 shrink-0 rounded-[14px] object-cover"
+                />
+              ) : (
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[14px] bg-brand-400 text-h3 font-extraboldNunito text-white">
+                  {(form.name || "").charAt(0).toUpperCase()}
+                </span>
+              )}
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/png, image/jpeg"
+                hidden
+                onChange={onLogoChosen}
+              />
+              <SecondaryButton onClick={pickLogo} disabled={isSaving}>
+                {logoPreview ? "Change Image" : "Upload Image"}
               </SecondaryButton>
             </div>
             <p className="mt-2 text-[10.5px] text-ink-400">
-              Shown in the sidebar and used to personalize your organization&apos;s
-              dashboard. PNG or JPG, at least 256×256px.
+              {logoFile
+                ? "New image selected — click Save Changes to apply it."
+                : "Shown in the sidebar and used to personalize your organization's dashboard. PNG or JPG, at least 256×256px."}
             </p>
           </div>
 
@@ -227,9 +321,17 @@ export const AdminSettings = () => {
                 <div className="text-[11px] text-ink-400">{p.note}</div>
               </div>
               <Toggle
-                on={prefs[p.key]}
+                on={notificationPrefs?.[p.key] ?? p.on}
                 label={p.title}
-                onClick={() => setPrefs((prev) => ({ ...prev, [p.key]: !prev[p.key] }))}
+                disabled={isSavingPrefs}
+                onClick={async () => {
+                  const next = !(notificationPrefs?.[p.key] ?? p.on);
+                  try {
+                    await saveNotificationPref({ [p.key]: next }).unwrap();
+                  } catch {
+                    showToast("Couldn't save that just now — please try again");
+                  }
+                }}
               />
             </div>
           ))}

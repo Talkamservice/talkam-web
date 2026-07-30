@@ -590,17 +590,27 @@ export const ChooseSeats = () => {
       {/* Cost summary */}
       <div className="mb-5 rounded-ds-lg bg-navy-800 px-5 py-[18px]">
         <div className="mb-3 text-[11px] font-boldNunito tracking-[0.06em] text-white/50">
-          BILLED MONTHLY
+          YOUR PLAN
         </div>
         <div className="flex flex-col gap-[9px]">
           <div className="flex justify-between gap-3">
             <span className="text-[12.5px] text-white/65">
-              Employee Seats · {seats} × {naira(seatRate)}
+              Employee seats · {seats} × {naira(seatRate)}
             </span>
             <span className="text-[13px] font-boldNunito text-white">
-              {naira(seatsMonthly)}
+              {naira(seatsMonthly)}/mo
             </span>
           </div>
+          {usesNetwork && prepay && hasBundle ? (
+            <div className="flex justify-between gap-3">
+              <span className="text-[12.5px] text-white/65">
+                Session bundle · {bundleSessions} × {naira(sessionRate)}
+              </span>
+              <span className="text-[13px] font-boldNunito text-white">
+                {naira(bundleDueNow)} once
+              </span>
+            </div>
+          ) : null}
           {usesNetwork && !prepay ? (
             <div className="flex justify-between gap-3">
               <span className="text-[12.5px] text-white/65">
@@ -609,29 +619,31 @@ export const ChooseSeats = () => {
               <span className="text-[13px] font-boldNunito text-white/80">metered</span>
             </div>
           ) : null}
-          <div className="flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
-            <span className="text-[13px] font-extraboldNunito text-white">Seats / month</span>
-            <span className="text-[22px] font-extraboldNunito text-white">
-              {naira(seatsMonthly)}
-            </span>
-          </div>
-        </div>
 
-        {hasBundle ? (
-          <div className="mt-4 border-t border-white/[0.14] pt-3.5">
-            <div className="mb-2 text-[11px] font-boldNunito tracking-[0.06em] text-white/50">
-              DUE AT SIGNUP
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[12.5px] text-white/65">
-                Session Bundle · {bundleSessions} × {naira(sessionRate)}
+          {prepay ? (
+            <>
+              <div className="flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
+                <span className="text-[13px] font-extraboldNunito text-white">Due at signup</span>
+                <span className="text-[22px] font-extraboldNunito text-white">
+                  {naira(seatsMonthly + bundleDueNow)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[12px] text-white/55">Then monthly · seats</span>
+                <span className="text-[13px] font-boldNunito text-white/80">
+                  {naira(seatsMonthly)}
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
+              <span className="text-[13px] font-extraboldNunito text-white">Seats / month</span>
+              <span className="text-[22px] font-extraboldNunito text-white">
+                {naira(seatsMonthly)}
               </span>
-              <span className="text-[15px] font-extraboldNunito text-white">
-                {naira(bundleDueNow)}
-              </span>
             </div>
-          </div>
-        ) : null}
+          )}
+        </div>
       </div>
 
       <FormError>{error}</FormError>
@@ -704,6 +716,7 @@ export const PlanBilling = () => {
   const bundleSessions = quote?.bundle_sessions ?? 0;
   const bundleRate = quote?.rates?.session_applied ?? 0;
   const bundleTotal = quote?.bundle_total ?? 0;
+  const dueAtSignup = prepay ? seatsMonthly + bundleTotal : 0; // first month (seats) + prepaid bundle
   const meteredRate = quote?.rates?.metered_session ?? 0;
   const meteredSessions = quote?.metered_sessions ?? false;
   const planName = quote?.plan?.name ?? pricing?.plan?.name ?? "";
@@ -712,7 +725,8 @@ export const PlanBilling = () => {
 
   // Only the prepay + card path charges anything now (the session bundle). Postpay
   // has nothing to charge at signup, so it just saves and continues.
-  const cardChargesNow = o.payMethod === "card" && prepay && bundleTotal > 0;
+  const cardChargesNow = o.payMethod === "card" && prepay && dueAtSignup > 0;
+  const cardUnavailable = cardChargesNow && !import.meta.env.VITE_FLUTTERWAVE_KEY;
 
   const proceed = async (persist) => {
     setError(null);
@@ -728,15 +742,18 @@ export const PlanBilling = () => {
       // Card: charge the session bundle now via Flutterwave. Returns amount 0 (and
       // falls through) when there is nothing to charge — postpay, or no bundle.
       if (o.payMethod === "card") {
+        // Bail before starting a checkout if we can't open Flutterwave — otherwise
+        // we'd leave an orphan pending payment behind.
+        if (!import.meta.env.VITE_FLUTTERWAVE_KEY) {
+          setError(
+            "Card payments aren't available yet. Choose Invoice / bank transfer, or skip and add billing later from the dashboard."
+          );
+          return;
+        }
+
         const result = await checkoutPlan().unwrap();
 
         if (result?.amount > 0 && result?.reference) {
-          if (!import.meta.env.VITE_FLUTTERWAVE_KEY) {
-            setError(
-              "Card payments aren't available yet. Choose Invoice / bank transfer, or skip and add billing later from the dashboard."
-            );
-            return;
-          }
           setCheckout(result); // the effect opens the Flutterwave modal
           return;
         }
@@ -815,11 +832,32 @@ export const PlanBilling = () => {
               </span>
             </div>
           ) : null}
-          <div className="flex justify-between gap-3 border-t border-surface-line pt-2">
-            <span className="text-caption font-boldNunito text-navy-800">Billed monthly</span>
-            <span className="text-[13px] font-extraboldNunito text-brand-400">
-              {naira(seatsMonthly)}
-            </span>
+          <div className="flex flex-col gap-1.5 border-t border-surface-line pt-2">
+            {prepay && dueAtSignup > 0 ? (
+              <>
+                <div className="flex justify-between gap-3">
+                  <span className="text-caption font-boldNunito text-navy-800">
+                    {o.payMethod === "card" ? "Due today" : "On your first invoice"}
+                  </span>
+                  <span className="text-[13px] font-extraboldNunito text-brand-400">
+                    {naira(dueAtSignup)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-caption text-ink-500">Then monthly (seats)</span>
+                  <span className="text-caption font-boldNunito text-navy-800">
+                    {naira(seatsMonthly)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between gap-3">
+                <span className="text-caption font-boldNunito text-navy-800">Billed monthly</span>
+                <span className="text-[13px] font-extraboldNunito text-brand-400">
+                  {naira(seatsMonthly)}
+                </span>
+              </div>
+            )}
           </div>
           <p className="text-[11px] leading-[1.6] text-ink-400">
             Your seat price is the {naira(seatRate)} volume-tier rate for {seats} seats —
@@ -873,7 +911,7 @@ export const PlanBilling = () => {
             </div>
             <p className="text-[11px] leading-[1.6] text-ink-400">
               {prepay
-                ? "Seats are invoiced monthly once your first employee activates — not before. Your Session Bundle is added to that first invoice; sessions are available immediately and drawn down as they happen. Suits NGOs, schools, firms and enterprises paying on net terms."
+                ? "Your first invoice covers your first month of seats plus the session bundle; from the next month, seats are invoiced monthly. Sessions are available immediately and drawn down as they happen. Suits NGOs, schools, firms and enterprises paying on net terms."
                 : "At month-end we send one invoice for your active seats plus the sessions your team used that month — settle it by bank transfer on net terms. Nothing is charged up front."}
             </p>
           </>
@@ -898,7 +936,7 @@ export const PlanBilling = () => {
             </div>
             <p className="text-[11px] leading-[1.6] text-ink-400">
               {prepay
-                ? "Your Session Bundle is charged now via Flutterwave so sessions are available immediately; seats are billed to the same card monthly. Best for small teams who'd rather not wait on an invoice."
+                ? "Your first month — seats plus the session bundle — is charged now via Flutterwave, so sessions are ready immediately. From next month, seats are billed to the same card. Best for smaller teams who'd rather not wait on an invoice."
                 : "Seats and the sessions your team uses are auto-charged to your card at month-end — you only pay for what's used. Card setup completes right after onboarding."}
             </p>
           </>
@@ -907,9 +945,16 @@ export const PlanBilling = () => {
 
       <FormError>{error}</FormError>
 
+      {cardUnavailable ? (
+        <p className="mb-2.5 rounded-ds-md bg-[#FEF2F2] px-3.5 py-2.5 text-[12px] leading-[1.5] text-[#B42318]">
+          Card payments aren&apos;t available yet — choose Invoice / bank transfer,
+          or skip and add billing later from the dashboard.
+        </p>
+      ) : null}
+
       <AuthButton
         tone="brand"
-        disabled={isLoading || isCheckingOut}
+        disabled={isLoading || isCheckingOut || cardUnavailable}
         className="mb-2.5"
         onClick={() => proceed(true)}
       >
@@ -918,7 +963,7 @@ export const PlanBilling = () => {
           : isLoading
             ? "Saving…"
             : cardChargesNow
-              ? "Continue to Flutterwave →"
+              ? `Pay ${naira(dueAtSignup)} with Flutterwave →`
               : "Confirm Plan & Continue →"}
       </AuthButton>
       <button

@@ -80,6 +80,32 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       invalidatesTags: ["Organization", "Me"],
     }),
 
+    uploadCompanyLogo: builder.mutation({
+      query: (file) => {
+        const form = new FormData();
+        form.append("logo", file);
+        return { url: `/business/organization/logo`, method: "POST", body: form };
+      },
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["Organization", "Me"],
+    }),
+
+    getAdminNotificationPreferences: builder.query({
+      query: () => `/business/notification-preferences`,
+      transformResponse: (response) => response?.data,
+      providesTags: ["AdminNotificationPreferences"],
+    }),
+
+    saveAdminNotificationPreferences: builder.mutation({
+      query: (body) => ({
+        url: `/business/notification-preferences`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["AdminNotificationPreferences"],
+    }),
+
     // Billing (web §07) — current plan, usage, current seats, plan catalogue.
     getBilling: builder.query({
       query: () => `/business/billing`,
@@ -128,6 +154,9 @@ export const {
   useGetSafetyReportsQuery,
   useGetAdminActivityQuery,
   useUpdateCompanyProfileMutation,
+  useUploadCompanyLogoMutation,
+  useGetAdminNotificationPreferencesQuery,
+  useSaveAdminNotificationPreferencesMutation,
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
 } = adminApiSlice;
