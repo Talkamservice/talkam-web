@@ -105,6 +105,10 @@ export const employeeApiSlice = apiSliceV2.injectEndpoints({
       invalidatesTags: ["Bookings"],
     }),
 
+    requestTopUp: builder.mutation({
+      query: () => ({ url: `/user/bookings/request-top-up`, method: "POST" }),
+    }),
+
     /* ── Community ───────────────────────────────────────────────────── */
 
     getCommunityTrending: builder.query({
@@ -209,6 +213,7 @@ export const {
   useGetTherapistsQuery,
   useGetTherapistSlotsQuery,
   useCreateBookingMutation,
+  useRequestTopUpMutation,
   useGetCommunityTrendingQuery,
   useGetConversationsQuery,
   useGetMessagesQuery,

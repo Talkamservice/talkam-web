@@ -19,6 +19,7 @@ import {
   useGetTherapistsQuery,
   useGetTherapistSlotsQuery,
   useCreateBookingMutation,
+  useRequestTopUpMutation,
   useGetCareTeamQuery,
   useReportUserMutation,
   useDeleteAccountMutation,
@@ -410,7 +411,7 @@ const PreSessionMoodModal = ({ close, open, session }) => {
 
 /* ── Booking ──────────────────────────────────────────────────────────────── */
 
-const BookingModal = ({ close, showToast, sessionType, setSessionType }) => {
+const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) => {
   const [type, setType] = useState(sessionType);
   const [slot, setSlot] = useState(null);
 
@@ -442,7 +443,14 @@ const BookingModal = ({ close, showToast, sessionType, setSessionType }) => {
       setSessionType(type);
       close();
       showToast(`Session booked for ${slotLabel(chosen)}`);
-    } catch {
+    } catch (err) {
+      // The only InvalidRequestException (400) SessionBookingService throws is
+      // the per-employee cap guard — every other rejection here is a 422 field
+      // error (slot taken, format unavailable, etc).
+      if (err?.status === 400) {
+        open("capReached");
+        return;
+      }
       showToast("Couldn't book that slot — it may have just been taken");
     }
   };
@@ -548,10 +556,21 @@ const CapReachedModal = ({ close, showToast }) => {
   const [requested, setRequested] = useState(false);
   const { data: bookings } = useGetBookingsQuery();
   const { data: me } = useGetMeV2Query();
+  const [requestTopUp, { isLoading }] = useRequestTopUpMutation();
 
-  const used = bookings?.summary?.sessions_used ?? 0;
-  const allowed = bookings?.summary?.sessions_allowed ?? used;
+  const used = bookings?.summary?.employee_cap_used ?? 0;
+  const cap = bookings?.summary?.employee_cap ?? used;
   const company = me?.business?.organization?.name ?? "your company";
+
+  const notify = async () => {
+    try {
+      await requestTopUp().unwrap();
+      setRequested(true);
+      showToast("Request sent to your admin · confirmation emailed");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't send that just now — please try again"));
+    }
+  };
 
   return (
     <Scrim onClose={close}>
@@ -568,9 +587,9 @@ const CapReachedModal = ({ close, showToast }) => {
             You&apos;ve reached your monthly session limit
           </div>
           <div className="text-[13px] leading-[1.6] text-[#6B7280]">
-            You&apos;ve used all <b className="text-navy-800">{used} of {allowed}</b> sessions
-            in your {company} plan for this billing month. To keep booking, ask your admin to
-            top up your organisation&apos;s session pool.
+            You&apos;ve used all <b className="text-navy-800">{used} of {cap}</b> sessions
+            allowed at {company} for this billing cycle. To keep booking, ask your admin to
+            raise the cap or top up the session pool.
           </div>
         </div>
 
@@ -611,13 +630,11 @@ const CapReachedModal = ({ close, showToast }) => {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setRequested(true);
-                  showToast("Request sent to your admin · confirmation emailed");
-                }}
-                className="h-12 flex-[1.4] cursor-pointer rounded-[12px] bg-navy-800 text-[13.5px] font-extraboldNunito text-white"
+                onClick={notify}
+                disabled={isLoading}
+                className="h-12 flex-[1.4] cursor-pointer rounded-[12px] bg-navy-800 text-[13.5px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:bg-[#C7CEDA]"
               >
-                Notify admin to top up
+                {isLoading ? "Sending…" : "Notify admin to top up"}
               </button>
             </div>
           </div>
@@ -1022,6 +1039,7 @@ export const EmployeeModals = ({
       return (
         <BookingModal
           close={close}
+          open={open}
           showToast={showToast}
           sessionType={sessionType}
           setSessionType={setSessionType}

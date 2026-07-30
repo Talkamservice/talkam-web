@@ -20,6 +20,7 @@ import {
   useGetSafetyReportsQuery,
   useGetAdminActivityQuery,
   useUpdateCompanyProfileMutation,
+  useSaveSessionPolicyMutation,
   useUploadCompanyLogoMutation,
   useGetAdminNotificationPreferencesQuery,
   useSaveAdminNotificationPreferencesMutation,
@@ -125,6 +126,7 @@ export const AdminSettings = () => {
   const twoFa = !!privacy?.two_factor_enabled;
   const [capOn, setCapOn] = useState(true);
   const [cap, setCap] = useState(6);
+  const [saveSessionPolicy, { isLoading: isSavingPolicy }] = useSaveSessionPolicyMutation();
 
   const { data: org } = useGetOrganizationQuery();
   const { data: me } = useGetMeV2Query();
@@ -192,6 +194,13 @@ export const AdminSettings = () => {
     }
   }, [organization?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (organization) {
+      setCapOn(organization.per_employee_session_quota !== null);
+      setCap(organization.per_employee_session_quota ?? 6);
+    }
+  }, [organization?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Pulls the specific server message out of an RTK Query error — a field
   // error first (e.g. "The logo field must not be greater than 5120
   // kilobytes."), falling back to the envelope message, then a generic string.
@@ -226,6 +235,18 @@ export const AdminSettings = () => {
     }
 
     showToast("Company information saved");
+  };
+
+  const savePolicy = async () => {
+    try {
+      await saveSessionPolicy({
+        cap_enabled: capOn,
+        per_employee_session_quota: capOn ? cap : null,
+      }).unwrap();
+      showToast("Session policy saved");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't save that just now — please try again"));
+    }
   };
 
   // Turning 2FA off never needs a code; turning it on does (the server
@@ -426,7 +447,12 @@ export const AdminSettings = () => {
               Stops a few heavy users from depleting the shared pool early
             </div>
           </div>
-          <Toggle on={capOn} label="Cap sessions per employee" onClick={() => setCapOn((v) => !v)} />
+          <Toggle
+            on={capOn}
+            label="Cap sessions per employee"
+            disabled={isSavingPolicy}
+            onClick={() => setCapOn((v) => !v)}
+          />
         </div>
 
         {capOn ? (
@@ -469,11 +495,8 @@ export const AdminSettings = () => {
           </div>
         )}
 
-        <PrimaryButton
-          className="mt-3.5 w-fit"
-          onClick={() => showToast("Session policy saved")}
-        >
-          Save session policy
+        <PrimaryButton className="mt-3.5 w-fit" onClick={savePolicy} disabled={isSavingPolicy}>
+          {isSavingPolicy ? "Saving…" : "Save session policy"}
         </PrimaryButton>
       </Card>
 

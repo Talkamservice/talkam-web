@@ -80,6 +80,15 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       invalidatesTags: ["Organization", "Me"],
     }),
 
+    saveSessionPolicy: builder.mutation({
+      query: (body) => ({
+        url: `/business/organization/session-policy`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Organization"],
+    }),
+
     uploadCompanyLogo: builder.mutation({
       query: (file) => {
         const form = new FormData();
@@ -154,6 +163,7 @@ export const {
   useGetSafetyReportsQuery,
   useGetAdminActivityQuery,
   useUpdateCompanyProfileMutation,
+  useSaveSessionPolicyMutation,
   useUploadCompanyLogoMutation,
   useGetAdminNotificationPreferencesQuery,
   useSaveAdminNotificationPreferencesMutation,
