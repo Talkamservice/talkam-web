@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import classNames from "classnames";
 import {
@@ -13,6 +13,8 @@ import {
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
 } from "../../../../services/v2/adminApiSlice";
+import { useRequestOtpV2Mutation } from "../../../../services/v2/authApiSliceV2";
+import { OtpBoxes, apiErrorMessage } from "../auth/authlayout";
 
 /**
  * Modal + toast host for the admin dashboard.
@@ -622,6 +624,83 @@ const PlanCheckoutModal = ({ open, close, showToast, context }) => (
   </Modal>
 );
 
+/**
+ * Enabling 2FA (off -> on) requires a fresh email OTP server-side
+ * (PrivacySettingService::update). Turning it off never does, so that path
+ * skips this modal entirely and saves straight away.
+ */
+const TwoFactorEnableModal = ({ open, close, showToast, context }) => {
+  const [requestOtp, { isLoading: isSending }] = useRequestOtpV2Mutation();
+  const [code, setCode] = useState("");
+  const [error, setError] = useState(null);
+  const [sent, setSent] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const email = context?.email;
+
+  useEffect(() => {
+    if (!open || !email) return;
+    setCode("");
+    setError(null);
+    setSent(false);
+    requestOtp({ type: "login", email }).then(() => setSent(true)).catch(() => {});
+  }, [open, email]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const resend = async () => {
+    setError(null);
+    try {
+      await requestOtp({ type: "login", email }).unwrap();
+      setSent(true);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
+
+  const confirm = async () => {
+    setConfirming(true);
+    setError(null);
+    try {
+      await context.onConfirm(code);
+      close();
+      showToast("Two-factor authentication enabled");
+    } catch (err) {
+      setError(apiErrorMessage(err, "That code didn't work. Request a new one."));
+      setCode("");
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={close}
+      title="Turn on two-factor authentication"
+      subtitle={email ? `Enter the 6-digit code emailed to ${email}` : undefined}
+      width="max-w-[440px]"
+    >
+      <OtpBoxes value={code} onChange={setCode} disabled={confirming} />
+      {error ? <p className="mb-4 text-caption text-signal-error">{error}</p> : null}
+      <p className="mb-4 text-caption text-ink-400">
+        {sent ? "A code is on its way. " : ""}
+        <button
+          type="button"
+          onClick={resend}
+          disabled={isSending}
+          className="cursor-pointer font-boldNunito text-brand-400"
+        >
+          Resend code
+        </button>
+      </p>
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={close}>Cancel</SecondaryButton>
+        <PrimaryButton disabled={code.length < 6 || confirming} onClick={confirm}>
+          {confirming ? "Confirming…" : "Confirm & enable"}
+        </PrimaryButton>
+      </div>
+    </Modal>
+  );
+};
+
 const AdminModals = ({ modal, context, close, showToast }) => (
   <>
     <InviteModal open={modal === "invite"} close={close} showToast={showToast} />
@@ -637,5 +716,6 @@ const AdminModals = ({ modal, context, close, showToast }) => (
     <TherapistModal open={modal === "therapist"} close={close} context={context} />
     <ReportModal open={modal === "report"} close={close} context={context} />
     <PlanCheckoutModal open={modal === "planCheckout"} close={close} showToast={showToast} context={context} />
+    <TwoFactorEnableModal open={modal === "twoFactorEnable"} close={close} showToast={showToast} context={context} />
   </>
 );

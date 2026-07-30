@@ -24,7 +24,8 @@ import {
   useDeleteAccountMutation,
   useGetBookingsQuery,
 } from "../../../../services/v2/employeeApiSlice";
-import { useGetMeV2Query } from "../../../../services/v2/authApiSliceV2";
+import { useGetMeV2Query, useRequestOtpV2Mutation } from "../../../../services/v2/authApiSliceV2";
+import { OtpBoxes, apiErrorMessage } from "../auth/authlayout";
 
 /** Slot label in the deck's "Thu Jul 9 · 10:00 AM" shape. */
 const slotLabel = (iso) => {
@@ -917,6 +918,86 @@ const SignOutModal = ({ close }) => {
   );
 };
 
+/* ── Two-factor enable ────────────────────────────────────────────────────── */
+
+/**
+ * Enabling 2FA (off -> on) requires a fresh email OTP server-side
+ * (PrivacySettingService::update). Turning it off never does, so that path
+ * skips this modal entirely and saves straight away.
+ */
+const TwoFactorEnableModal = ({ close, showToast, context }) => {
+  const [requestOtp, { isLoading: isSending }] = useRequestOtpV2Mutation();
+  const [code, setCode] = useState("");
+  const [error, setError] = useState(null);
+  const [sent, setSent] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const email = context?.email;
+
+  useEffect(() => {
+    if (!email) return;
+    requestOtp({ type: "login", email }).then(() => setSent(true)).catch(() => {});
+  }, [email]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const resend = async () => {
+    setError(null);
+    try {
+      await requestOtp({ type: "login", email }).unwrap();
+      setSent(true);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
+
+  const confirm = async () => {
+    setConfirming(true);
+    setError(null);
+    try {
+      await context.onConfirm(code);
+      close();
+      showToast("Two-factor authentication enabled");
+    } catch (err) {
+      setError(apiErrorMessage(err, "That code didn't work. Request a new one."));
+      setCode("");
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <Scrim onClose={close}>
+      <Sheet width={420} className="p-6">
+        <div className="mb-1 text-[16px] font-extraboldNunito text-navy-800">
+          Turn on two-factor authentication
+        </div>
+        <div className="mb-[18px] text-[12px] text-ink-400">
+          Enter the 6-digit code emailed to {email}
+        </div>
+        <OtpBoxes value={code} onChange={setCode} disabled={confirming} />
+        {error ? <div className="mb-3.5 text-[11.5px] text-[#AC4242]">{error}</div> : null}
+        <div className="mb-4 text-[11.5px] text-ink-400">
+          {sent ? "A code is on its way. " : ""}
+          <button
+            type="button"
+            onClick={resend}
+            disabled={isSending}
+            className="cursor-pointer font-boldNunito text-[#017FC8]"
+          >
+            Resend code
+          </button>
+        </div>
+        <div className="flex gap-2.5">
+          <GreyButton className="flex-1" onClick={close}>
+            Cancel
+          </GreyButton>
+          <NavyButton className="flex-1" onClick={confirm} disabled={code.length < 6 || confirming}>
+            {confirming ? "Confirming…" : "Confirm & enable"}
+          </NavyButton>
+        </div>
+      </Sheet>
+    </Scrim>
+  );
+};
+
 /* ── Router ───────────────────────────────────────────────────────────────── */
 
 export const EmployeeModals = ({
@@ -954,6 +1035,8 @@ export const EmployeeModals = ({
       return <ReportModal close={close} showToast={showToast} session={context} />;
     case "deleteAccount":
       return <DeleteAccountModal close={close} showToast={showToast} />;
+    case "twoFactorEnable":
+      return <TwoFactorEnableModal close={close} showToast={showToast} context={context} />;
     case "signout":
       return <SignOutModal close={close} />;
     default:

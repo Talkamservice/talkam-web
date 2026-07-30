@@ -26,7 +26,11 @@ import {
 } from "../../../../../services/v2/adminApiSlice";
 import { useGetOrganizationQuery } from "../../../../../services/v2/businessApiSlice";
 import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
-import { useGetFaqsQuery } from "../../../../../services/v2/employeeApiSlice";
+import {
+  useGetFaqsQuery,
+  useGetPrivacySettingsQuery,
+  useSavePrivacySettingsMutation,
+} from "../../../../../services/v2/employeeApiSlice";
 
 /** Admin › Trust & Safety, Settings, Activity Log, Help & Support. */
 
@@ -116,7 +120,9 @@ export const AdminSettings = () => {
   const { data: notificationPrefs } = useGetAdminNotificationPreferencesQuery();
   const [saveNotificationPref, { isLoading: isSavingPrefs }] =
     useSaveAdminNotificationPreferencesMutation();
-  const [twoFa, setTwoFa] = useState(true);
+  const { data: privacy } = useGetPrivacySettingsQuery();
+  const [savePrivacy] = useSavePrivacySettingsMutation();
+  const twoFa = !!privacy?.two_factor_enabled;
   const [capOn, setCapOn] = useState(true);
   const [cap, setCap] = useState(6);
 
@@ -220,6 +226,26 @@ export const AdminSettings = () => {
     }
 
     showToast("Company information saved");
+  };
+
+  // Turning 2FA off never needs a code; turning it on does (the server
+  // rejects enabling without a fresh OTP), so only the "on" path opens the
+  // confirm-with-code modal.
+  const toggleTwoFa = async () => {
+    if (twoFa) {
+      try {
+        await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
+        showToast("Two-factor authentication disabled");
+      } catch {
+        showToast("Couldn't update that just now — please try again");
+      }
+      return;
+    }
+
+    open("twoFactorEnable", {
+      email: adminEmail,
+      onConfirm: (otp) => savePrivacy({ ...privacy, two_factor_enabled: true, otp }).unwrap(),
+    });
   };
 
   return (
@@ -353,7 +379,7 @@ export const AdminSettings = () => {
               Email a one-time code to your registered work email at every sign-in
             </div>
           </div>
-          <Toggle on={twoFa} label="Two-factor authentication" onClick={() => setTwoFa((v) => !v)} />
+          <Toggle on={twoFa} label="Two-factor authentication" onClick={toggleTwoFa} />
         </div>
         <div
           className={classNames(

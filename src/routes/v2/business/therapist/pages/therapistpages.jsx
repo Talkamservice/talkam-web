@@ -1076,7 +1076,20 @@ export const TherapistProfile = () => {
               <div className="text-[10.5px] text-ink-400">Email a one-time code to your work email at every sign-in</div>
             </div>
             <Switch on={twoFa} label="Two-factor authentication" onClick={async () => {
-              try { await savePrivacy({ ...privacy, two_factor_enabled: !twoFa }).unwrap(); showToast(twoFa ? "2FA disabled" : "2FA enabled"); } catch { showToast("Couldn't update that"); }
+              if (twoFa) {
+                try {
+                  await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
+                  showToast("Two-factor authentication disabled");
+                } catch {
+                  showToast("Couldn't update that just now — please try again");
+                }
+                return;
+              }
+
+              open("twoFactorEnable", {
+                email: me?.email,
+                onConfirm: (otp) => savePrivacy({ ...privacy, two_factor_enabled: true, otp }).unwrap(),
+              });
             }} />
           </div>
         </div>

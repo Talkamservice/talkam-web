@@ -1450,14 +1450,20 @@ export const EmployeeProfile = () => {
   };
 
   const toggleTwoFa = async () => {
-    try {
-      await savePrivacy({ ...privacy, two_factor_enabled: !twoFa }).unwrap();
-      showToast(
-        twoFa ? "Two-factor authentication disabled" : "Two-factor authentication enabled"
-      );
-    } catch {
-      showToast("Couldn't update that just now — please try again");
+    if (twoFa) {
+      try {
+        await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
+        showToast("Two-factor authentication disabled");
+      } catch {
+        showToast("Couldn't update that just now — please try again");
+      }
+      return;
     }
+
+    open("twoFactorEnable", {
+      email: me?.email,
+      onConfirm: (otp) => savePrivacy({ ...privacy, two_factor_enabled: true, otp }).unwrap(),
+    });
   };
 
   const saveProfile = async () => {
