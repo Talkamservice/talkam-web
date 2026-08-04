@@ -21,11 +21,18 @@ import {
   useGetAdminActivityQuery,
   useUpdateCompanyProfileMutation,
   useSaveSessionPolicyMutation,
+  useToggleEmployeeAccessMutation,
+  useCancelSubscriptionMutation,
+  useResumeSubscriptionMutation,
+  useCancelOrgDeletionMutation,
   useUploadCompanyLogoMutation,
   useGetAdminNotificationPreferencesQuery,
   useSaveAdminNotificationPreferencesMutation,
 } from "../../../../../services/v2/adminApiSlice";
-import { useGetOrganizationQuery } from "../../../../../services/v2/businessApiSlice";
+import {
+  useGetOrganizationQuery,
+  useGetPricingConfigQuery,
+} from "../../../../../services/v2/businessApiSlice";
 import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
 import {
   useGetFaqsQuery,
@@ -34,6 +41,16 @@ import {
 } from "../../../../../services/v2/employeeApiSlice";
 
 /** Admin › Trust & Safety, Settings, Activity Log, Help & Support. */
+
+/** Danger Zone dates: "3 Aug 2026", from a "Y-m-d H:i:s" API timestamp. */
+const formatDangerZoneDate = (iso) => {
+  if (!iso) return null;
+  return new Date(iso.replace(" ", "T")).toLocaleDateString("en-NG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 /* ── TRUST & SAFETY ───────────────────────────────────────────────────── */
 
@@ -127,8 +144,13 @@ export const AdminSettings = () => {
   const [capOn, setCapOn] = useState(true);
   const [cap, setCap] = useState(6);
   const [saveSessionPolicy, { isLoading: isSavingPolicy }] = useSaveSessionPolicyMutation();
+  const [toggleEmployeeAccess, { isLoading: isTogglingAccess }] = useToggleEmployeeAccessMutation();
+  const [cancelSubscription, { isLoading: isCancelling }] = useCancelSubscriptionMutation();
+  const [resumeSubscription, { isLoading: isResuming }] = useResumeSubscriptionMutation();
+  const [cancelOrgDeletion, { isLoading: isCancellingDeletion }] = useCancelOrgDeletionMutation();
 
   const { data: org } = useGetOrganizationQuery();
+  const { data: pricing } = useGetPricingConfigQuery();
   const { data: me } = useGetMeV2Query();
   const [updateProfile, { isLoading: isSavingProfile }] = useUpdateCompanyProfileMutation();
   const [uploadLogo, { isLoading: isUploadingLogo }] = useUploadCompanyLogoMutation();
@@ -137,6 +159,11 @@ export const AdminSettings = () => {
   const [logoPreview, setLogoPreview] = useState(null);
 
   const organization = org?.organization;
+  const employeesSuspended = !!organization?.employees_suspended_at;
+  const cancelsAt = organization?.cancels_at;
+  const orgCancelled = organization?.status === "cancelled";
+  const deletionScheduled = organization?.scheduled_deletion_at;
+  const seatsUsed = organization?.seats_used ?? 0;
   const adminEmail = me?.email ?? "your work email";
   const isSaving = isSavingProfile || isUploadingLogo;
 
@@ -550,10 +577,11 @@ export const AdminSettings = () => {
               Minimum anonymisation threshold
             </div>
             <div className="text-[11px] text-ink-400">
-              Metrics with &lt;5 users show &quot;&lt;5&quot;, never a real number
+              Metrics with &lt;{pricing?.aggregate_minimum_cohort ?? 5} users show &quot;&lt;
+              {pricing?.aggregate_minimum_cohort ?? 5}&quot;, never a real number
             </div>
           </div>
-          <Badge tone="purple">Locked · 5</Badge>
+          <Badge tone="purple">Locked · {pricing?.aggregate_minimum_cohort ?? 5}</Badge>
         </div>
         <div className="flex items-center justify-between gap-4 border-b border-[#F5F5F5] py-3">
           <div>
@@ -562,7 +590,9 @@ export const AdminSettings = () => {
             </div>
             <div className="text-[11px] text-ink-400">Contact for NDPA requests</div>
           </div>
-          <span className="text-caption font-boldNunito text-navy-800">dpo@talkam.net</span>
+          <span className="text-caption font-boldNunito text-navy-800">
+            {pricing?.dpo_email ?? "privacy@talkam.net"}
+          </span>
         </div>
         <div className="flex items-center justify-between gap-4 py-3">
           <div>
@@ -582,42 +612,133 @@ export const AdminSettings = () => {
           These actions are permanent and cannot be undone
         </div>
         <div className="flex flex-col gap-2.5">
-          {[
-            { title: "Suspend all employee access", note: "Temporarily removes access for all 247 employees", label: "Suspend", solid: true },
-            { title: "Cancel subscription", note: "Access ends at the end of current billing period", label: "Cancel", solid: false },
-            { title: "Delete company account", note: "Removes all company data after a 30-day grace period", label: "Delete", solid: true },
-          ].map((row) => (
-            <div
-              key={row.title}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[#FFCDD2] bg-surface-errorField px-3.5 py-3"
-            >
-              <div>
-                <div className="text-[13px] font-boldNunito text-surface-errorInk">
-                  {row.title}
-                </div>
-                <div className="text-[11px] text-signal-error">{row.note}</div>
+          {/* Suspend / resume employee access */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[#FFCDD2] bg-surface-errorField px-3.5 py-3">
+            <div>
+              <div className="text-[13px] font-boldNunito text-surface-errorInk">
+                {employeesSuspended ? "Resume employee access" : "Suspend all employee access"}
               </div>
+              <div className="text-[11px] text-signal-error">
+                {employeesSuspended
+                  ? "Employee access is currently suspended"
+                  : `Temporarily removes access for all ${seatsUsed} employees`}
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={isTogglingAccess}
+              onClick={() =>
+                open("confirm", {
+                  title: employeesSuspended ? "Resume employee access?" : "Suspend all employee access?",
+                  body: employeesSuspended
+                    ? "Employees will be able to sign in and book sessions again immediately."
+                    : `This immediately blocks all ${seatsUsed} employees from signing in or booking sessions. Your own admin access is unaffected, and you can resume it any time.`,
+                  confirmLabel: employeesSuspended ? "Resume access" : "Suspend access",
+                  toast: employeesSuspended ? "Employee access resumed" : "Employee access suspended",
+                  onConfirm: () => toggleEmployeeAccess({ suspended: !employeesSuspended }).unwrap(),
+                })
+              }
+              className={classNames(
+                "shrink-0 cursor-pointer rounded-ds-sm px-3.5 py-[7px] text-[12px] font-boldNunito",
+                employeesSuspended
+                  ? "border border-signal-error bg-transparent text-signal-error"
+                  : "bg-signal-error text-white"
+              )}
+            >
+              {employeesSuspended ? "Resume" : "Suspend"}
+            </button>
+          </div>
+
+          {/* Cancel / resume subscription */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[#FFCDD2] bg-surface-errorField px-3.5 py-3">
+            <div>
+              <div className="text-[13px] font-boldNunito text-surface-errorInk">
+                {orgCancelled ? "Subscription cancelled" : cancelsAt ? "Cancellation scheduled" : "Cancel subscription"}
+              </div>
+              <div className="text-[11px] text-signal-error">
+                {orgCancelled
+                  ? "This company's subscription has ended"
+                  : cancelsAt
+                  ? `Access ends ${formatDangerZoneDate(cancelsAt)} — you can still reverse this`
+                  : "Access ends at the end of the current billing period"}
+              </div>
+            </div>
+            {orgCancelled ? null : cancelsAt ? (
               <button
                 type="button"
+                disabled={isResuming}
                 onClick={() =>
                   open("confirm", {
-                    title: `${row.label} — are you sure?`,
-                    body: row.note,
-                    confirmLabel: row.label,
-                    toast: `${row.title} requested`,
+                    title: "Resume subscription?",
+                    body: "This cancels the scheduled cancellation — billing and access continue as normal.",
+                    confirmLabel: "Resume subscription",
+                    toast: "Subscription cancellation reversed",
+                    onConfirm: () => resumeSubscription().unwrap(),
                   })
                 }
-                className={classNames(
-                  "shrink-0 cursor-pointer rounded-ds-sm px-3.5 py-[7px] text-[12px] font-boldNunito",
-                  row.solid
-                    ? "bg-signal-error text-white"
-                    : "border border-signal-error bg-transparent text-signal-error"
-                )}
+                className="shrink-0 cursor-pointer rounded-ds-sm border border-signal-error bg-transparent px-3.5 py-[7px] text-[12px] font-boldNunito text-signal-error"
               >
-                {row.label}
+                Resume
               </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isCancelling}
+                onClick={() =>
+                  open("confirm", {
+                    title: "Cancel subscription?",
+                    body: "Access continues until the end of the current billing period, then stops automatically. You can reverse this any time before then.",
+                    confirmLabel: "Cancel subscription",
+                    toast: "Subscription cancellation scheduled",
+                    onConfirm: () => cancelSubscription().unwrap(),
+                  })
+                }
+                className="shrink-0 cursor-pointer rounded-ds-sm border border-signal-error bg-transparent px-3.5 py-[7px] text-[12px] font-boldNunito text-signal-error"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+
+          {/* Delete / cancel deletion */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[#FFCDD2] bg-surface-errorField px-3.5 py-3">
+            <div>
+              <div className="text-[13px] font-boldNunito text-surface-errorInk">
+                {deletionScheduled ? "Deletion scheduled" : "Delete company account"}
+              </div>
+              <div className="text-[11px] text-signal-error">
+                {deletionScheduled
+                  ? `Company data will be permanently removed on ${formatDangerZoneDate(deletionScheduled)}`
+                  : "Removes all company data after a 30-day grace period"}
+              </div>
             </div>
-          ))}
+            {deletionScheduled ? (
+              <button
+                type="button"
+                disabled={isCancellingDeletion}
+                onClick={() =>
+                  open("confirm", {
+                    title: "Cancel deletion?",
+                    body: "The company account will no longer be scheduled for deletion.",
+                    confirmLabel: "Cancel deletion",
+                    toast: "Company account deletion cancelled",
+                    onConfirm: () => cancelOrgDeletion().unwrap(),
+                  })
+                }
+                className="shrink-0 cursor-pointer rounded-ds-sm border border-signal-error bg-transparent px-3.5 py-[7px] text-[12px] font-boldNunito text-signal-error"
+              >
+                Cancel deletion
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => open("deleteCompany", { name: organization?.name })}
+                className="shrink-0 cursor-pointer rounded-ds-sm bg-signal-error px-3.5 py-[7px] text-[12px] font-boldNunito text-white"
+              >
+                Delete
+              </button>
+            )}
+          </div>
         </div>
       </Card>
     </div>

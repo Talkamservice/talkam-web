@@ -12,6 +12,7 @@ import { naira, tierForSeats } from "../../../../constants/admindashboard";
 import {
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
+  useRequestOrgDeletionMutation,
 } from "../../../../services/v2/adminApiSlice";
 import { useRequestOtpV2Mutation } from "../../../../services/v2/authApiSliceV2";
 import { OtpBoxes, apiErrorMessage } from "../auth/authlayout";
@@ -701,6 +702,66 @@ const TwoFactorEnableModal = ({ open, close, showToast, context }) => {
   );
 };
 
+/* ── Delete company account (Danger Zone) ─────────────────────────────── */
+
+const DeleteCompanyModal = ({ open, close, showToast, context }) => {
+  const [requestDeletion, { isLoading }] = useRequestOrgDeletionMutation();
+  const [confirmName, setConfirmName] = useState("");
+  const [error, setError] = useState(null);
+  const companyName = context?.name ?? "";
+
+  useEffect(() => {
+    if (!open) {
+      setConfirmName("");
+      setError(null);
+    }
+  }, [open]);
+
+  const confirm = async () => {
+    setError(null);
+    try {
+      await requestDeletion({ confirm_name: confirmName }).unwrap();
+      close();
+      showToast("Company account scheduled for deletion in 30 days");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Couldn't schedule that just now — please try again"));
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={close} title="Delete company account" width="max-w-[460px]">
+      <p className="mb-4 text-[13px] leading-[1.7] text-ink-500">
+        This schedules <strong className="font-boldNunito text-navy-800">{companyName}</strong>{" "}
+        for deletion. Employees keep normal access during a 30-day grace period — after that,
+        every membership is deactivated and the account is permanently removed. You can cancel
+        this any time before then.
+      </p>
+      <label className="mb-4 flex flex-col gap-1.5">
+        <span className="text-[11px] font-boldNunito text-ink-400">
+          Type <strong className="font-boldNunito text-ink-800">{companyName}</strong> to confirm
+        </span>
+        <input
+          value={confirmName}
+          onChange={(e) => setConfirmName(e.target.value)}
+          className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+        />
+      </label>
+      {error ? <p className="mb-4 text-caption text-signal-error">{error}</p> : null}
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={close}>Cancel</SecondaryButton>
+        <button
+          type="button"
+          onClick={confirm}
+          disabled={confirmName !== companyName || isLoading}
+          className="cursor-pointer rounded-[10px] bg-signal-error px-4 py-[9px] text-[13px] font-boldNunito text-white disabled:cursor-not-allowed disabled:bg-[#C7CEDA]"
+        >
+          {isLoading ? "Scheduling…" : "Delete company account"}
+        </button>
+      </div>
+    </Modal>
+  );
+};
+
 const AdminModals = ({ modal, context, close, showToast }) => (
   <>
     <InviteModal open={modal === "invite"} close={close} showToast={showToast} />
@@ -717,5 +778,6 @@ const AdminModals = ({ modal, context, close, showToast }) => (
     <ReportModal open={modal === "report"} close={close} context={context} />
     <PlanCheckoutModal open={modal === "planCheckout"} close={close} showToast={showToast} context={context} />
     <TwoFactorEnableModal open={modal === "twoFactorEnable"} close={close} showToast={showToast} context={context} />
+    <DeleteCompanyModal open={modal === "deleteCompany"} close={close} showToast={showToast} context={context} />
   </>
 );

@@ -25,6 +25,7 @@ import {
   useSaveOnboardingTopicsMutation,
   useGetSelfCheckQuery,
   useSaveSelfCheckMutation,
+  useGetPricingConfigQuery,
 } from "../../../../../services/v2/businessApiSlice";
 
 /** Screens 8–11: consent, topics, self-check assessment, complete. */
@@ -66,6 +67,7 @@ export const Consent = () => {
 
   const { data: state, isLoading } = useGetConsentsQuery();
   const [saveConsents, { isLoading: isSaving }] = useSaveConsentsMutation();
+  const { data: pricing } = useGetPricingConfigQuery();
 
   const [choices, setChoices] = useState({});
   const [error, setError] = useState(null);
@@ -170,7 +172,9 @@ export const Consent = () => {
           Terms of Service
         </Link>
         . Data Protection Officer:{" "}
-        <span className="font-boldNunito text-navy-800">dpo@talkam.net</span>
+        <span className="font-boldNunito text-navy-800">
+          {pricing?.dpo_email ?? "privacy@talkam.net"}
+        </span>
       </p>
 
       <FormError>{error}</FormError>

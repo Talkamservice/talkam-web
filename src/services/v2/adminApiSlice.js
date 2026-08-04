@@ -89,6 +89,32 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       invalidatesTags: ["Organization"],
     }),
 
+    // Danger Zone (web §03 Settings).
+    toggleEmployeeAccess: builder.mutation({
+      query: (body) => ({ url: `/business/organization/employee-access`, method: "POST", body }),
+      invalidatesTags: ["Organization"],
+    }),
+
+    cancelSubscription: builder.mutation({
+      query: () => ({ url: `/business/organization/cancel-subscription`, method: "POST" }),
+      invalidatesTags: ["Organization"],
+    }),
+
+    resumeSubscription: builder.mutation({
+      query: () => ({ url: `/business/organization/resume-subscription`, method: "POST" }),
+      invalidatesTags: ["Organization"],
+    }),
+
+    requestOrgDeletion: builder.mutation({
+      query: (body) => ({ url: `/business/organization/request-deletion`, method: "POST", body }),
+      invalidatesTags: ["Organization"],
+    }),
+
+    cancelOrgDeletion: builder.mutation({
+      query: () => ({ url: `/business/organization/cancel-deletion`, method: "POST" }),
+      invalidatesTags: ["Organization"],
+    }),
+
     uploadCompanyLogo: builder.mutation({
       query: (file) => {
         const form = new FormData();
@@ -164,6 +190,11 @@ export const {
   useGetAdminActivityQuery,
   useUpdateCompanyProfileMutation,
   useSaveSessionPolicyMutation,
+  useToggleEmployeeAccessMutation,
+  useCancelSubscriptionMutation,
+  useResumeSubscriptionMutation,
+  useRequestOrgDeletionMutation,
+  useCancelOrgDeletionMutation,
   useUploadCompanyLogoMutation,
   useGetAdminNotificationPreferencesQuery,
   useSaveAdminNotificationPreferencesMutation,
