@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { logOut } from "../../services/authSlice";
 
 /**
  * v2 API slice — the parallel lane for everything the v2 web surfaces talk to
@@ -10,7 +11,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
  * covers both lanes.
  */
 
-const baseQuery = fetchBaseQuery({
+const rawBaseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_BASE_API_V2_URL,
   prepareHeaders: (headers, { getState }) => {
     const token = getState()?.auth?.token;
@@ -22,6 +23,29 @@ const baseQuery = fetchBaseQuery({
     return headers;
   },
 });
+
+/**
+ * On a 401 the token is expired or revoked — clear the session and bounce to the
+ * right login, instead of leaving the user on a dead, half-loaded page.
+ */
+const baseQuery = async (args, api, extraOptions) => {
+  const result = await rawBaseQuery(args, api, extraOptions);
+
+  if (result?.error?.status === 401) {
+    api.dispatch(logOut());
+
+    if (typeof window !== "undefined") {
+      const { pathname } = window.location;
+      const loginPath = pathname.startsWith("/business") ? "/business/login" : "/login";
+      // Don't fight a login attempt's own 401, or loop while already on login.
+      if (pathname !== loginPath) {
+        window.location.replace(loginPath);
+      }
+    }
+  }
+
+  return result;
+};
 
 export const apiSliceV2 = createApi({
   reducerPath: "apiV2",
@@ -55,5 +79,5 @@ export const apiSliceV2 = createApi({
     "Journal",
     "Legal",
   ],
-  endpoints: (builder) => ({}),
+  endpoints: () => ({}),
 });
