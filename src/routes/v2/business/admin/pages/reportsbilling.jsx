@@ -485,11 +485,15 @@ export const AdminBilling = () => {
 
   const sessionsBundle = usage.sessionsBundle ?? 0;
   const sessionsUsed = usage.sessionsUsed ?? 0;
-  const sessionsRemaining = Math.max(0, sessionsBundle - sessionsUsed);
+  // A purchased-but-unpaid bundle isn't usable yet — prepay activates on payment (§11).
+  const bundleFunded = usage.sessionsFunded ?? false;
+  const sessionsRemaining = bundleFunded
+    ? usage.sessionsRemaining ?? Math.max(0, sessionsBundle - sessionsUsed)
+    : 0;
   const sessionPct = sessionsBundle
     ? Math.round((sessionsRemaining / sessionsBundle) * 100)
     : 100;
-  const sessionsLow = sessionsBundle > 0 && sessionsRemaining <= 5;
+  const sessionsLow = bundleFunded && sessionsBundle > 0 && sessionsRemaining <= 5;
 
   // Manage calculator — seats drive the rate (one global ladder); the plan follows size.
   const seatNum = parseInt(seats ?? currentSeats, 10) || 0;
@@ -767,10 +771,21 @@ export const AdminBilling = () => {
             <div className="mt-2.5 text-[13px] text-white/60">
               {currentPlan.seats} employee seats × {currentPlan.perSeat} · {currentPlan.renews}
             </div>
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#3BA88F]/40 bg-[#3BA88F]/[0.16] px-3 py-1.5 text-[12px] font-boldNunito text-[#CDE6D9]">
-              <span className="h-1.5 w-1.5 rounded-full bg-wellness-400" />
-              Billed monthly · bank transfer
-            </div>
+            {currentPlan.payMethodLabel ? (
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#3BA88F]/40 bg-[#3BA88F]/[0.16] px-3 py-1.5 text-[12px] font-boldNunito text-[#CDE6D9]">
+                <span className="h-1.5 w-1.5 rounded-full bg-wellness-400" />
+                Billed monthly · {currentPlan.payMethodLabel}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setView("manage")}
+                className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/[0.16] px-3 py-1.5 text-[12px] font-boldNunito text-[#E8D3A3]"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-gold-400" />
+                Billing not set up yet — finish setup →
+              </button>
+            )}
           </div>
           <button
             type="button"
@@ -820,23 +835,32 @@ export const AdminBilling = () => {
             </SecondaryButton>
           </div>
           <div className="mb-1 text-[30px] font-extraboldNunito text-navy-800">
-            {sessionsRemaining}{" "}
-            <span className="text-[15px] font-boldNunito text-ink-400">sessions left</span>
+            {bundleFunded ? sessionsRemaining : sessionsBundle}{" "}
+            <span className="text-[15px] font-boldNunito text-ink-400">
+              {bundleFunded ? "sessions left" : "sessions · pending"}
+            </span>
           </div>
           <div className="mb-2.5 h-2 rounded-[4px] bg-ink-100">
             <div
               className={classNames(
                 "h-2 rounded-[4px]",
-                sessionsLow ? "bg-gold-600" : "bg-wellness-400"
+                !bundleFunded ? "bg-gold-400/40" : sessionsLow ? "bg-gold-600" : "bg-wellness-400"
               )}
-              style={{ width: `${sessionPct}%` }}
+              style={{ width: `${bundleFunded ? sessionPct : 100}%` }}
             />
           </div>
           <p className="text-caption text-ink-500">{sessionsUsed} used · ₦8,000 per session</p>
-          <div className="mt-3 rounded-[11px] border border-[#CDE9DF] bg-[#E7F4EF] px-3.5 py-3 text-[12.5px] font-semiboldNunito text-[#1F6B55]">
-            <strong className="font-extraboldNunito">Sessions never expire.</strong> They’re drawn
-            down as your team books — refill whenever you run low.
-          </div>
+          {bundleFunded ? (
+            <div className="mt-3 rounded-[11px] border border-[#CDE9DF] bg-[#E7F4EF] px-3.5 py-3 text-[12.5px] font-semiboldNunito text-[#1F6B55]">
+              <strong className="font-extraboldNunito">Sessions never expire.</strong> They’re drawn
+              down as your team books — refill whenever you run low.
+            </div>
+          ) : (
+            <div className="mt-3 rounded-[11px] border border-gold-400/40 bg-gold-50 px-3.5 py-3 text-[12.5px] font-semiboldNunito text-gold-600">
+              <strong className="font-extraboldNunito">Pending payment.</strong> Your{" "}
+              {sessionsBundle}-session bundle activates once your first bill is paid.
+            </div>
+          )}
         </Card>
       </div>
 
