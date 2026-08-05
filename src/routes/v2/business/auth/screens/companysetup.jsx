@@ -624,7 +624,7 @@ export const ChooseSeats = () => {
           {prepay ? (
             <>
               <div className="flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
-                <span className="text-[13px] font-extraboldNunito text-white">Due at signup</span>
+                <span className="text-[13px] font-extraboldNunito text-white">Your first bill</span>
                 <span className="text-[22px] font-extraboldNunito text-white">
                   {naira(seatsMonthly + bundleDueNow)}
                 </span>
@@ -635,6 +635,10 @@ export const ChooseSeats = () => {
                   {naira(seatsMonthly)}
                 </span>
               </div>
+              <p className="pt-0.5 text-[10.5px] leading-[1.45] text-white/40">
+                Seats + bundle. Charged now if you pay by card, or on your first invoice
+                (net terms) if you pay by transfer — you choose on the next step.
+              </p>
             </>
           ) : (
             <div className="flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
@@ -736,6 +740,20 @@ export const PlanBilling = () => {
   const cardChargesNow = o.payMethod === "card" && prepay && dueAtSignup > 0;
   const cardSavesNow = o.payMethod === "card" && !prepay;
   const cardUnavailable = (cardChargesNow || cardSavesNow) && !import.meta.env.VITE_FLUTTERWAVE_KEY;
+
+  // Bank-transfer copy for the confirmed model (web §11): prepay activates on
+  // payment, never on trust. When dedicated accounts are live, a no-card org sets
+  // one up (reconciles automatically); until then, prepay routes through card.
+  let transferNote;
+  if (vaEnabled) {
+    transferNote = prepay
+      ? "No card? Set up your company's own dedicated account (a quick verification) from your billing dashboard, then transfer your first bill there — your session bundle activates automatically once it lands. Nothing is charged today."
+      : "No card? Set up your company's own dedicated account from your billing dashboard; your monthly invoices reconcile against it automatically. Nothing is charged today.";
+  } else {
+    transferNote = prepay
+      ? "Bank transfer is coming soon. Pay by card now to activate your bundle instantly — or skip and add bank-transfer billing from your dashboard later."
+      : "Bank transfer is coming soon. We'll email your monthly invoice with payment instructions — nothing is charged today; you can add card billing from your dashboard.";
+  }
 
   const proceed = async (persist) => {
     setError(null);
@@ -913,18 +931,9 @@ export const PlanBilling = () => {
         </div>
 
         {o.payMethod === "invoice" ? (
-          <>
-            <div className="mb-3.5 rounded-ds-md bg-ink-50 p-3.5 text-caption leading-[1.7] text-ink-600">
-              {vaEnabled
-                ? "No payment needed to finish setup. Right after this, you'll set up your company's own dedicated bank-transfer account from your billing dashboard — transfers to it are matched to your invoices and settle automatically. We'll email each invoice too."
-                : "No payment needed to finish setup. We'll email your first invoice with payment instructions when it's issued."}
-            </div>
-            <p className="text-[11px] leading-[1.6] text-ink-400">
-              {prepay
-                ? "Your first invoice covers your first month of seats plus the session bundle; from the next month, seats are invoiced monthly. Sessions are available immediately and drawn down as they happen. Suits NGOs, schools, firms and enterprises paying on net terms."
-                : "Your seats are invoiced monthly in advance — a fixed charge for the capacity you've licensed. At each month-end we add only the sessions your team actually used. Settle both by bank transfer on net terms; nothing extra is charged up front."}
-            </p>
-          </>
+          <div className="rounded-ds-md bg-ink-50 p-3.5 text-caption leading-[1.7] text-ink-600">
+            {transferNote}
+          </div>
         ) : (
           <>
             <div className="mb-3 flex items-center gap-2.5 rounded-ds-md border border-[#EEF0F4] bg-ink-50 px-4 py-3">

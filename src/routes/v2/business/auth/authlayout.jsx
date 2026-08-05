@@ -42,7 +42,9 @@ const INITIAL = {
   paymentTiming: "prepay",
   bundleKey: "25",
   customBundle: "",
-  payMethod: "invoice",
+  // Card is the default rail (web §11): prepay activates instantly on a card charge;
+  // bank transfer goes through a dedicated auto-reconciling account.
+  payMethod: "card",
   benchTopics: [],
   csvErrored: false,
   csvErrorName: "",
