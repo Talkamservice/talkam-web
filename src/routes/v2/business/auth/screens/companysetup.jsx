@@ -741,19 +741,18 @@ export const PlanBilling = () => {
   const cardSavesNow = o.payMethod === "card" && !prepay;
   const cardUnavailable = (cardChargesNow || cardSavesNow) && !import.meta.env.VITE_FLUTTERWAVE_KEY;
 
-  // Bank-transfer copy for the confirmed model (web §11): prepay activates on
-  // payment, never on trust. When dedicated accounts are live, a no-card org sets
-  // one up (reconciles automatically); until then, prepay routes through card.
-  let transferNote;
-  if (vaEnabled) {
-    transferNote = prepay
-      ? "No card? Set up your company's own dedicated account (a quick verification) from your billing dashboard, then transfer your first bill there — your session bundle activates automatically once it lands. Nothing is charged today."
-      : "No card? Set up your company's own dedicated account from your billing dashboard; your monthly invoices reconcile against it automatically. Nothing is charged today.";
-  } else {
-    transferNote = prepay
-      ? "Bank transfer is coming soon. Pay by card now to activate your bundle instantly — or skip and add bank-transfer billing from your dashboard later."
-      : "Bank transfer is coming soon. We'll email your monthly invoice with payment instructions — nothing is charged today; you can add card billing from your dashboard.";
-  }
+  // Bank-transfer copy (web §11) — only shown when dedicated accounts are live.
+  // Prepay activates on payment (never on trust).
+  const transferNote = prepay
+    ? "No card? Set up your company's own dedicated account (a quick verification) from your billing dashboard, then transfer your first bill there — your session bundle activates automatically once it lands. Nothing is charged today."
+    : "No card? Set up your company's own dedicated account from your billing dashboard; your monthly invoices reconcile against it automatically. Nothing is charged today.";
+
+  // Card is the only rail until dedicated bank transfer (§11) is enabled — never
+  // leave the picker on a bank-transfer choice that isn't shown.
+  useEffect(() => {
+    if (!vaEnabled && o.payMethod !== "card") o.set({ payMethod: "card" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vaEnabled]);
 
   const proceed = async (persist) => {
     setError(null);
@@ -903,34 +902,40 @@ export const PlanBilling = () => {
           How would you like to pay?
         </div>
         <p className="mb-3.5 text-caption text-ink-400">
-          {prepay
-            ? "Most teams pay by invoice. Smaller teams can pay by card for instant setup."
-            : "Your seats are billed monthly; pay-as-you-go sessions are settled each month-end — by net-terms invoice or auto-charged to a card."}
+          {!vaEnabled
+            ? "Pay by card to set up instantly — or skip below and add billing later."
+            : prepay
+              ? "Most teams pay by invoice. Smaller teams can pay by card for instant setup."
+              : "Your seats are billed monthly; pay-as-you-go sessions are settled each month-end — by net-terms invoice or auto-charged to a card."}
         </p>
 
-        <div className="mb-4 flex gap-2.5">
-          {[
-            { key: "invoice", label: "Invoice / bank transfer" },
-            { key: "card", label: "Pay by card" },
-          ].map((method) => (
-            <button
-              key={method.key}
-              type="button"
-              onClick={() => o.set({ payMethod: method.key })}
-              aria-pressed={o.payMethod === method.key}
-              className={classNames(
-                "flex-1 cursor-pointer rounded-[10px] border-[1.5px] p-[11px] text-center text-[12.5px] font-boldNunito",
-                o.payMethod === method.key
-                  ? "border-brand-400 bg-brand-25 text-brand-600"
-                  : "border-ink-200 bg-white text-ink-500"
-              )}
-            >
-              {method.label}
-            </button>
-          ))}
-        </div>
+        {/* Bank transfer (dedicated account) is only offered when §11 is enabled;
+            until then card is the only rail and the toggle is hidden entirely. */}
+        {vaEnabled ? (
+          <div className="mb-4 flex gap-2.5">
+            {[
+              { key: "invoice", label: "Invoice / bank transfer" },
+              { key: "card", label: "Pay by card" },
+            ].map((method) => (
+              <button
+                key={method.key}
+                type="button"
+                onClick={() => o.set({ payMethod: method.key })}
+                aria-pressed={o.payMethod === method.key}
+                className={classNames(
+                  "flex-1 cursor-pointer rounded-[10px] border-[1.5px] p-[11px] text-center text-[12.5px] font-boldNunito",
+                  o.payMethod === method.key
+                    ? "border-brand-400 bg-brand-25 text-brand-600"
+                    : "border-ink-200 bg-white text-ink-500"
+                )}
+              >
+                {method.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
-        {o.payMethod === "invoice" ? (
+        {vaEnabled && o.payMethod === "invoice" ? (
           <div className="rounded-ds-md bg-ink-50 p-3.5 text-caption leading-[1.7] text-ink-600">
             {transferNote}
           </div>
