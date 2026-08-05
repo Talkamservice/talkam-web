@@ -10,7 +10,6 @@ import {
   Td,
   Tr,
   InfoStrip,
-  PrimaryButton,
   SecondaryButton,
 } from "../../../../../components/v2/dashboard/chrome";
 import { Withheld, AdminSkeleton } from "../../../../../components/v2/dashboard/chrome";
@@ -215,34 +214,284 @@ export const AdminReports = () => {
   );
 };
 
+/* ── Billing ─────────────────────────────────────────────────────────────── */
+
+/** The plan whose seat band contains n (falls back to the current plan). */
+const planForSeats = (plans, n) =>
+  Object.values(plans).find(
+    (p) => n >= p.minSeats && (p.maxSeats === null || n <= p.maxSeats)
+  ) ?? Object.values(plans).find((p) => p.isCurrent);
+
+/** A band label: "1–100 seats" or "501+ seats" (max: null = and above). */
+const bandLabel = (t) => (t.max === null ? `${t.min}+ seats` : `${t.min}–${t.max} seats`);
+
+const BACK_BTN =
+  "mb-5 inline-flex items-center gap-2 text-[13.5px] font-boldNunito text-ink-500 hover:text-navy-800";
+
 export const AdminBilling = () => {
   const { open, showToast } = useAdminModal();
-  const [planKey, setPlanKey] = useState("lite");
-  const [seats, setSeats] = useState("250");
-  const [quoteSent, setQuoteSent] = useState(false);
+  const [view, setView] = useState("billing"); // billing | manage | compare
+  const [seats, setSeats] = useState(null); // null → mirrors the org's current seats
 
   const { data: billing } = useGetBillingQuery();
   const { data: invoices = [] } = useGetBillingInvoicesQuery();
 
   const PLANS = billing?.catalogue?.plans;
+  const seatTiers = billing?.catalogue?.seatTiers ?? [];
   const currentPlan = billing?.current_plan;
-  const networkStats = billing?.usage;
+  const usage = billing?.usage;
+  const currentSeats = billing?.current_seats ?? 0;
 
-  const plan = PLANS?.[planKey];
-  const seatNum = parseInt(seats, 10) || 0;
-  const outOfRange =
-    plan && !plan.custom && (seatNum < plan.minSeats || seatNum > plan.maxSeats);
-  const perSeat = !plan || plan.custom ? 0 : tierForSeats(plan.tiers, seatNum).price;
+  // Hold until the summary resolves — plan / usage drive the whole page.
+  if (!billing || !currentPlan || !PLANS || !usage) return <AdminSkeleton />;
 
-  const sessionsRemaining = (networkStats?.sessionsBundle ?? 0) - (networkStats?.sessionsUsed ?? 0);
-  const sessionPct = networkStats?.sessionsBundle
-    ? Math.round((networkStats.sessionsUsed / networkStats.sessionsBundle) * 100)
-    : 0;
-  const sessionsLow = sessionsRemaining <= 5;
+  const perSeatNow = tierForSeats(seatTiers, currentSeats)?.price ?? 0;
 
-  // Hold until the billing summary resolves — plan / usage drive the whole page.
-  if (!billing || !currentPlan || !PLANS) return <AdminSkeleton />;
+  const seatsUsed = usage.seatsUsed ?? 0;
+  const seatsTotal = usage.seatsTotal ?? currentSeats;
+  const seatPct = seatsTotal ? Math.min(100, Math.round((seatsUsed / seatsTotal) * 100)) : 0;
 
+  const sessionsBundle = usage.sessionsBundle ?? 0;
+  const sessionsUsed = usage.sessionsUsed ?? 0;
+  const sessionsRemaining = Math.max(0, sessionsBundle - sessionsUsed);
+  const sessionPct = sessionsBundle
+    ? Math.round((sessionsRemaining / sessionsBundle) * 100)
+    : 100;
+  const sessionsLow = sessionsBundle > 0 && sessionsRemaining <= 5;
+
+  // Manage calculator — seats drive the rate (one global ladder); the plan follows size.
+  const seatNum = parseInt(seats ?? currentSeats, 10) || 0;
+  const seatTier = tierForSeats(seatTiers, seatNum);
+  const perSeat = seatTier?.price ?? 0;
+  const derivedPlan = planForSeats(PLANS, seatNum);
+  const isCustom = !!derivedPlan?.custom;
+  const tierIdx = seatTiers.findIndex(
+    (t) => seatNum >= t.min && (t.max === null || seatNum <= t.max)
+  );
+  const nextTier = tierIdx >= 0 ? seatTiers[tierIdx + 1] : null;
+
+  /* ── Manage plan & seats ─────────────────────────────────────────────── */
+  if (view === "manage") {
+    return (
+      <Card>
+        <button type="button" onClick={() => setView("billing")} className={BACK_BTN}>
+          <Icon.ArrowLeft size={15} />
+          Billing
+        </button>
+
+        {/* 1 · seats → live cost */}
+        <div className="mb-1 text-body font-extraboldNunito text-navy-800">
+          Set your seats — see what it costs
+        </div>
+        <p className="mb-4 text-[12.5px] text-ink-400">
+          Everything here follows one number: how many employee seats you pay for.
+        </p>
+        <div className="mb-8 grid overflow-hidden rounded-ds-lg border border-surface-line lg:grid-cols-2">
+          <div className="p-5 lg:p-6">
+            <div className="mb-3 text-[11px] font-boldNunito tracking-[0.06em] text-ink-400">
+              EMPLOYEE SEATS
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                aria-label="Decrease seats"
+                onClick={() => setSeats(String(Math.max(1, seatNum - 1)))}
+                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border-[1.5px] border-ink-200 bg-white text-[20px] font-boldNunito text-ink-600"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                value={seats ?? String(currentSeats)}
+                onChange={(e) => setSeats(e.target.value)}
+                aria-label="Seats to pay for"
+                className="h-[50px] w-[110px] rounded-[10px] border-[1.5px] border-brand-400 px-3 text-center text-h3 font-extraboldNunito text-navy-800 shadow-focus-brand"
+              />
+              <button
+                type="button"
+                aria-label="Increase seats"
+                onClick={() => setSeats(String(seatNum + 1))}
+                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border-[1.5px] border-ink-200 bg-white text-[20px] font-boldNunito text-ink-600"
+              >
+                +
+              </button>
+            </div>
+            <p className="mt-3.5 text-caption text-ink-500">
+              Only active seats are billed — unused seats aren’t charged.
+            </p>
+          </div>
+          <div className="flex flex-col justify-center bg-[linear-gradient(135deg,#141B34,#1A2E5A)] p-5 text-white lg:p-6">
+            <div className="text-[11px] font-boldNunito tracking-[0.06em] text-white/50">
+              {seatNum} seats · {seatTier ? bandLabel(seatTier) : "—"}
+            </div>
+            {isCustom ? (
+              <>
+                <div className="mt-2 text-h3 font-extraboldNunito">Custom pricing</div>
+                <p className="mt-1 text-[12.5px] text-white/60">
+                  2,000+ seats — our enterprise team builds a plan around you.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setView("compare")}
+                  className="mt-3 w-fit cursor-pointer rounded-[9px] bg-white/[0.12] px-3.5 py-2 text-[12.5px] font-boldNunito"
+                >
+                  See plans →
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="mt-1.5 text-[15px] font-boldNunito text-[#CFE6F6]">
+                  {naira(perSeat)}{" "}
+                  <span className="text-[12.5px] font-regularNunito text-white/60">
+                    per seat / month
+                  </span>
+                </div>
+                <div className="mt-0.5 text-[34px] font-extraboldNunito leading-none tracking-[-0.02em]">
+                  {naira(perSeat * seatNum)}{" "}
+                  <span className="text-[15px] font-boldNunito text-white/60">/ month</span>
+                </div>
+                {nextTier ? (
+                  <span className="mt-3 w-fit rounded-full border border-[#3BA88F]/40 bg-[#3BA88F]/[0.16] px-3 py-1.5 text-[12px] font-boldNunito text-[#B7DFCB]">
+                    ↓ Cross {seatTier.max} seats → {naira(nextTier.price)}/seat
+                  </span>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() =>
+                    open("planCheckout", {
+                      planName: derivedPlan?.name,
+                      seats: seatNum,
+                      perSeat: `${naira(perSeat)}/seat`,
+                      monthly: naira(perSeat * seatNum),
+                    })
+                  }
+                  className="mt-4 w-fit cursor-pointer rounded-[10px] bg-gold-400 px-[18px] py-[10px] text-[13px] font-extraboldNunito text-navy-800"
+                >
+                  Update seats →
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* 2 · rate ladder */}
+        <div className="mb-1 text-body font-extraboldNunito text-navy-800">
+          Per-seat rate by team size
+        </div>
+        <p className="mb-3.5 text-[12.5px] text-ink-400">
+          Your rate drops automatically the moment you cross a band — nothing to switch.
+        </p>
+        <div className="mb-8 flex flex-col gap-1.5">
+          {seatTiers.map((t) => {
+            const here = seatNum >= t.min && (t.max === null || seatNum <= t.max);
+            return (
+              <div
+                key={t.min}
+                className={classNames(
+                  "flex items-center rounded-[9px] border px-3.5 py-3",
+                  here ? "border-[#C9E2F9] bg-brand-25" : "border-ink-100 bg-[#FAFAFA]"
+                )}
+              >
+                <span className="flex-1 text-[12.5px] font-semiboldNunito text-ink-800">
+                  {bandLabel(t)}
+                </span>
+                <span className="text-[12.5px] font-boldNunito text-navy-800">
+                  {naira(t.price)}/seat
+                </span>
+                {here ? (
+                  <span className="ml-2.5 rounded-full bg-brand-400 px-2 py-[3px] text-[9px] font-extraboldNunito text-white">
+                    YOU
+                  </span>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 3 · plan = features */}
+        <div className="mb-1 text-body font-extraboldNunito text-navy-800">
+          What your plan includes
+        </div>
+        <p className="mb-3.5 text-[12.5px] text-ink-400">
+          Your plan follows your size — it isn’t a separate price. Bigger teams unlock more.
+        </p>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-ds-md border border-surface-line p-5">
+          <div className="mr-2">
+            <div className="text-[11px] font-extraboldNunito tracking-[0.06em] text-brand-400">
+              YOUR PLAN
+            </div>
+            <div className="text-[17px] font-extraboldNunito text-navy-800">
+              {derivedPlan?.name ?? currentPlan.label}
+            </div>
+          </div>
+          <div className="flex flex-1 flex-wrap gap-x-5 gap-y-2">
+            {(derivedPlan?.features ?? []).map((f) => (
+              <span key={f} className="flex items-center gap-1.5 text-[12.5px] text-ink-500">
+                <Icon.Check size={14} className="text-wellness-400" />
+                {f}
+              </span>
+            ))}
+          </div>
+          <SecondaryButton onClick={() => setView("compare")}>Compare plans →</SecondaryButton>
+        </div>
+      </Card>
+    );
+  }
+
+  /* ── Compare plans (read-only) ───────────────────────────────────────── */
+  if (view === "compare") {
+    return (
+      <Card>
+        <button type="button" onClick={() => setView("manage")} className={BACK_BTN}>
+          <Icon.ArrowLeft size={15} />
+          Manage plan &amp; seats
+        </button>
+        <div className="mb-1 text-body font-extraboldNunito text-navy-800">
+          What you unlock as you grow
+        </div>
+        <p className="mb-5 text-[12.5px] text-ink-400">
+          Every plan bills at your seat-band rate — plans differ only by features, and follow
+          your team size. Nothing to buy here.
+        </p>
+        <div className="grid gap-3.5 lg:grid-cols-3">
+          {Object.values(PLANS).map((p) => (
+            <div
+              key={p.key}
+              className={classNames(
+                "rounded-ds-md border-[1.5px] p-4",
+                p.isCurrent ? "border-brand-400 bg-brand-25" : "border-ink-200 bg-white"
+              )}
+            >
+              <div
+                className={classNames(
+                  "text-[10px] font-extraboldNunito tracking-[0.08em]",
+                  p.isCurrent ? "text-brand-400" : "text-ink-400"
+                )}
+              >
+                {p.isCurrent ? "YOUR PLAN" : `AT ${p.minSeats.toLocaleString("en-NG")}+ SEATS`}
+              </div>
+              <div className="mb-1 mt-1.5 text-[15px] font-extraboldNunito text-navy-800">
+                {p.name}
+              </div>
+              <span className="mb-3 inline-block rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-boldNunito text-ink-500">
+                {p.seatRange}
+              </span>
+              <ul className="flex flex-col gap-1.5">
+                {p.features.map((f) => (
+                  <li key={f} className="flex gap-2 text-[12px] text-ink-500">
+                    <Icon.Check size={13} className="mt-0.5 shrink-0 text-wellness-400" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
+  /* ── Billing landing ─────────────────────────────────────────────────── */
   return (
     <>
       {sessionsLow ? (
@@ -260,11 +509,11 @@ export const AdminBilling = () => {
           }
         >
           <strong className="font-boldNunito">Session bundle running low</strong> —{" "}
-          {sessionsRemaining} sessions remaining. Top up to avoid disruption.
+          {sessionsRemaining} sessions left. Top up to avoid disruption.
         </InfoStrip>
       ) : null}
 
-      {/* Current plan */}
+      {/* Plan */}
       <div className="relative overflow-hidden rounded-ds-lg bg-[linear-gradient(135deg,#141B34,#1A2E5A)] p-6 shadow-[0_4px_20px_rgba(20,27,52,0.18)] lg:px-7">
         <div
           aria-hidden="true"
@@ -278,389 +527,142 @@ export const AdminBilling = () => {
                 {currentPlan.label}
               </span>
             </div>
-            <div className="flex max-w-[440px] flex-col gap-[9px]">
-              {currentPlan.lines.map((line) => (
-                <div key={line.label} className="flex items-center justify-between gap-3">
-                  <span className="text-[12.5px] text-white/60">{line.label}</span>
-                  <span className="text-[13px] font-boldNunito text-white">{line.value}</span>
-                </div>
-              ))}
-              <div className="mt-0.5 flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
-                <span className="text-body font-extraboldNunito text-white">Total / month</span>
-                <span className="text-h2 font-extraboldNunito text-white">
-                  {currentPlan.total}
-                </span>
-              </div>
+            <div className="text-[38px] font-extraboldNunito leading-none tracking-[-0.02em] text-white">
+              {currentPlan.total}{" "}
+              <span className="text-[16px] font-boldNunito text-white/60">/ month</span>
             </div>
-            <div className="mt-3 text-[11.5px] text-white/40">{currentPlan.renews}</div>
+            <div className="mt-2.5 text-[13px] text-white/60">
+              {currentSeats} employee seats × {naira(perSeatNow)} · {currentPlan.renews}
+            </div>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#3BA88F]/40 bg-[#3BA88F]/[0.16] px-3 py-1.5 text-[12px] font-boldNunito text-[#CDE6D9]">
+              <span className="h-1.5 w-1.5 rounded-full bg-wellness-400" />
+              Billed monthly · bank transfer
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => showToast("Upgrade flow coming from the plan picker below")}
-              className="cursor-pointer rounded-[10px] bg-gold-400 px-[18px] py-[9px] text-[13px] font-extraboldNunito text-navy-800"
-            >
-              Upgrade Plan
-            </button>
-            <button
-              type="button"
-              onClick={() => open("addSeats")}
-              className="cursor-pointer rounded-[10px] border border-white/[0.12] bg-white/[0.08] px-[18px] py-[9px] text-[13px] font-semiboldNunito text-white/60"
-            >
-              Manage Seats
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setView("manage")}
+            className="cursor-pointer rounded-[10px] bg-gold-400 px-[18px] py-[10px] text-[13px] font-extraboldNunito text-navy-800"
+          >
+            Manage plan &amp; seats
+          </button>
         </div>
       </div>
 
-      {/* Session bundle usage */}
-      <Card>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-body font-extraboldNunito text-navy-800">
-              Session Bundle Usage
-            </div>
-            <div className="text-[11px] text-ink-400">
-              Resets {networkStats.nextReset} · unused sessions do not roll over
-            </div>
-          </div>
-          <PrimaryButton onClick={() => open("topUp")}>Top Up Sessions</PrimaryButton>
-        </div>
-        <div className="mb-2 flex items-baseline gap-2">
-          <span className="text-[26px] font-extraboldNunito text-navy-800">
-            {networkStats.sessionsUsed} / {networkStats.sessionsBundle}
-          </span>
-          <span className="text-caption text-ink-500">sessions used this month</span>
-        </div>
-        <div className="mb-2 h-2 rounded-[4px] bg-ink-100">
-          <div
-            className={classNames(
-              "h-2 rounded-[4px]",
-              sessionsLow ? "bg-gold-600" : "bg-brand-400"
-            )}
-            style={{ width: `${sessionPct}%` }}
-          />
-        </div>
-        <p className="text-caption text-ink-500">
-          {sessionsRemaining} sessions remaining · ₦8,000 per session, reserved on your
-          invoice and drawn down as sessions happen
-        </p>
-      </Card>
-
-      {/* Usage cards */}
-      <div className="grid gap-3.5 lg:grid-cols-3">
+      {/* Seats + Sessions */}
+      <div className="grid gap-3.5 lg:grid-cols-2">
         <Card>
-          <div className="mb-2.5 text-[11px] font-boldNunito tracking-[0.06em] text-ink-400">
-            SEAT USAGE
-          </div>
-          <div className="mb-1 text-[26px] font-extraboldNunito text-navy-800">247 / 250</div>
-          <div className="mb-2 h-[5px] rounded-[3px] bg-ink-100">
-            <div className="h-[5px] rounded-[3px] bg-brand-400" style={{ width: "98.8%" }} />
-          </div>
-          <div className="text-caption text-ink-500">
-            3 seats remaining ·{" "}
+          <div className="mb-2.5 flex items-start justify-between gap-3">
+            <div className="text-[11px] font-boldNunito tracking-[0.06em] text-ink-400">
+              EMPLOYEE SEATS
+            </div>
             <button
               type="button"
-              onClick={() => open("addSeats")}
-              className="cursor-pointer font-boldNunito text-brand-400"
+              onClick={() => setView("manage")}
+              className="shrink-0 cursor-pointer text-[13px] font-boldNunito text-brand-400"
             >
-              Add more
+              Manage seats →
             </button>
           </div>
+          <div className="mb-1 text-[30px] font-extraboldNunito text-navy-800">
+            {seatsUsed}{" "}
+            <span className="text-[15px] font-boldNunito text-ink-400">of {seatsTotal} used</span>
+          </div>
+          <div className="mb-2.5 h-2 rounded-[4px] bg-ink-100">
+            <div className="h-2 rounded-[4px] bg-brand-400" style={{ width: `${seatPct}%` }} />
+          </div>
+          <p className="text-caption text-ink-500">
+            {Math.max(0, seatsTotal - seatsUsed)} seats available · {naira(perSeatNow)} each, billed
+            monthly
+          </p>
         </Card>
+
         <Card>
-          <div className="mb-2.5 text-[11px] font-boldNunito tracking-[0.06em] text-ink-400">
-            THERAPIST ACCESS SEATS
+          <div className="mb-2.5 flex items-start justify-between gap-3">
+            <div className="text-[11px] font-boldNunito tracking-[0.06em] text-ink-400">
+              SESSION BUNDLE
+            </div>
+            <SecondaryButton className="!px-3 !py-1.5 !text-[12px]" onClick={() => open("topUp")}>
+              Top up
+            </SecondaryButton>
           </div>
-          <div className="mb-1 text-[26px] font-extraboldNunito text-navy-800">50 / 50</div>
-          <div className="mb-2 h-[5px] rounded-[3px] bg-ink-100">
-            <div className="h-[5px] w-full rounded-[3px] bg-wellness-400" />
+          <div className="mb-1 text-[30px] font-extraboldNunito text-navy-800">
+            {sessionsRemaining}{" "}
+            <span className="text-[15px] font-boldNunito text-ink-400">sessions left</span>
           </div>
-          <div className="text-caption text-ink-500">Flat ₦3,500 per employee seat</div>
-        </Card>
-        <Card>
-          <div className="mb-2.5 text-[11px] font-boldNunito tracking-[0.06em] text-ink-400">
-            NEXT INVOICE
+          <div className="mb-2.5 h-2 rounded-[4px] bg-ink-100">
+            <div
+              className={classNames(
+                "h-2 rounded-[4px]",
+                sessionsLow ? "bg-gold-600" : "bg-wellness-400"
+              )}
+              style={{ width: `${sessionPct}%` }}
+            />
           </div>
-          <div className="mb-1 text-[26px] font-extraboldNunito text-navy-800">₦475,000</div>
-          <div className="mb-2.5 text-caption text-ink-500">Due Aug 1, 2026</div>
-          <span className="text-[11px] font-semiboldNunito text-wellness-400">
-            Auto-pay enabled
-          </span>
+          <p className="text-caption text-ink-500">{sessionsUsed} used · ₦8,000 per session</p>
+          <div className="mt-3 rounded-[11px] border border-[#CDE9DF] bg-[#E7F4EF] px-3.5 py-3 text-[12.5px] font-semiboldNunito text-[#1F6B55]">
+            <strong className="font-extraboldNunito">Sessions never expire.</strong> They’re drawn
+            down as your team books — refill whenever you run low.
+          </div>
         </Card>
       </div>
 
       {/* Invoices */}
       <PanelCard
-        title="Invoice History"
-        subtitle="Last 12 months · manual bank transfer"
-        action={<SecondaryButton>Download All</SecondaryButton>}
+        title="Invoices"
+        subtitle="Settled by bank transfer"
+        action={<SecondaryButton>Download all</SecondaryButton>}
       >
-        <Table head={["INVOICE", "PERIOD", "SEATS", "AMOUNT", "STATUS", "ACTION"]}>
-          {invoices.map((inv) => (
-            <Tr key={inv.id}>
-              <Td first>{inv.id}</Td>
-              <Td className="text-ink-500">{inv.period}</Td>
-              <Td>{inv.seats}</Td>
-              <Td className="font-boldNunito text-ink-800">{inv.amount}</Td>
-              <Td>
-                <Badge tone={inv.tone} dot={inv.tone === "green"}>
-                  {inv.status}
-                </Badge>
-              </Td>
-              <Td>
-                <div className="flex gap-1.5">
-                  <SecondaryButton
-                    onClick={() => open("invoice", inv.id)}
-                    className="!px-2.5 !py-1.5 !text-[11px]"
-                  >
-                    View
-                  </SecondaryButton>
-                  {inv.tone === "gold" ? (
-                    <button
-                      type="button"
-                      onClick={() => showToast(`${inv.id} marked paid`)}
-                      className="cursor-pointer rounded-[7px] bg-brand-400 px-2.5 py-1.5 text-[11px] font-boldNunito text-white"
+        {invoices.length === 0 ? (
+          <div className="py-8 text-center text-caption text-ink-400">
+            No invoices yet — your first one is issued once your first employee activates.
+          </div>
+        ) : (
+          <Table head={["INVOICE", "PERIOD", "SEATS", "AMOUNT", "STATUS", ""]}>
+            {invoices.map((inv) => (
+              <Tr key={inv.id}>
+                <Td first>{inv.id}</Td>
+                <Td className="text-ink-500">{inv.period}</Td>
+                <Td>{inv.seats}</Td>
+                <Td className="font-boldNunito text-ink-800">{inv.amount}</Td>
+                <Td>
+                  <Badge tone={inv.tone} dot={inv.tone === "green"}>
+                    {inv.status}
+                  </Badge>
+                </Td>
+                <Td>
+                  <div className="flex justify-end gap-1.5">
+                    <SecondaryButton
+                      onClick={() => open("invoice", inv.id)}
+                      className="!px-2.5 !py-1.5 !text-[11px]"
                     >
-                      Mark Paid
-                    </button>
-                  ) : null}
-                </div>
-              </Td>
-            </Tr>
-          ))}
-        </Table>
+                      View
+                    </SecondaryButton>
+                    {inv.tone !== "green" ? (
+                      <button
+                        type="button"
+                        onClick={() => showToast(`${inv.id} marked paid`)}
+                        className="cursor-pointer rounded-[7px] bg-brand-400 px-2.5 py-1.5 text-[11px] font-boldNunito text-white"
+                      >
+                        Mark paid
+                      </button>
+                    ) : null}
+                  </div>
+                </Td>
+              </Tr>
+            ))}
+          </Table>
+        )}
       </PanelCard>
 
-      {/* Plans */}
-      <Card>
-        <div className="text-body font-extraboldNunito text-navy-800">Plans</div>
-        <div className="mb-4 text-[11px] text-ink-400">
-          Wellbeing Lite is your active plan today — select any plan below to see its
-          per-seat pricing
-        </div>
-
-        <div className="mb-5 grid gap-3 lg:grid-cols-3">
-          {Object.values(PLANS).map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => {
-                setPlanKey(p.key);
-                setSeats(p.custom ? "" : String(p.defaultSeats));
-                setQuoteSent(false);
-              }}
-              className={classNames(
-                "relative cursor-pointer rounded-ds-md border-[1.5px] p-4 text-left transition-colors",
-                planKey === p.key ? "border-brand-400 bg-brand-25" : "border-ink-200 bg-white"
-              )}
-            >
-              {p.isCurrent ? (
-                <span className="absolute -top-[9px] left-3.5 rounded-full bg-brand-400 px-[9px] py-[3px] text-[9px] font-extraboldNunito tracking-[0.04em] text-white">
-                  CURRENT
-                </span>
-              ) : null}
-              <div className="mb-1 mt-1 text-[13px] font-extraboldNunito text-navy-800">
-                {p.name}
-              </div>
-              <span className="mb-2 inline-block rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-boldNunito text-ink-500">
-                {p.seatRange}
-              </span>
-              <div className="mb-2 text-h3 font-extraboldNunito text-navy-800">
-                {p.custom ? (
-                  "Custom"
-                ) : (
-                  <>
-                    {naira(p.tiers[p.tiers.length - 1].price)}
-                    <span className="text-[11px] font-regularNunito text-ink-400">
-                      {" "}
-                      /seat from
-                    </span>
-                  </>
-                )}
-              </div>
-              <ul className="text-[11px] leading-[1.7] text-ink-500">
-                {p.features.map((f) => (
-                  <li key={f}>· {f}</li>
-                ))}
-              </ul>
-            </button>
-          ))}
-        </div>
-
-        <div className="border-t border-ink-100 pt-4">
-          {plan.custom ? (
-            quoteSent ? (
-              <div className="flex flex-col items-start gap-3 py-2">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-25">
-                  <Icon.Check size={22} className="text-brand-400" />
-                </span>
-                <div className="text-[15px] font-extraboldNunito text-navy-800">
-                  Quote request sent
-                </div>
-                <p className="max-w-[440px] text-[12.5px] leading-[1.7] text-ink-500">
-                  Our enterprise team will reach out to adaeze.okonkwo@zenithbank.com
-                  within 1 business day with a custom Wellbeing Plus proposal.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setQuoteSent(false)}
-                  className="cursor-pointer text-caption font-boldNunito text-brand-400"
-                >
-                  Submit another request
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="mb-0.5 text-caption font-boldNunito text-navy-800">
-                  Request custom pricing for Wellbeing Plus
-                </div>
-                <p className="mb-4 text-[11px] text-ink-400">
-                  For 2,000+ seats, multi-country rollouts, or a dedicated account
-                  manager — our enterprise team builds a plan around your organisation
-                </p>
-                <div className="mb-3 grid gap-3 sm:grid-cols-2">
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-[11px] font-boldNunito text-ink-600">
-                      Estimated team size
-                    </span>
-                    <input
-                      type="number"
-                      placeholder="e.g. 2500"
-                      className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-[11px] font-boldNunito text-ink-600">
-                      Best contact email
-                    </span>
-                    <input
-                      defaultValue="adaeze.okonkwo@zenithbank.com"
-                      className="h-[42px] rounded-[10px] border-[1.5px] border-brand-400 px-3.5 text-[13px] text-ink-800 shadow-focus-brand"
-                    />
-                  </label>
-                </div>
-                <label className="mb-4 flex flex-col gap-1.5">
-                  <span className="text-[11px] font-boldNunito text-ink-600">
-                    Anything specific you need?
-                  </span>
-                  <textarea
-                    rows={3}
-                    placeholder="e.g. rollout across 3 subsidiaries, custom EAP reporting cadence…"
-                    className="resize-none rounded-ds-md border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setQuoteSent(true)}
-                  className="h-12 w-full cursor-pointer rounded-ds-md bg-navy-800 text-body font-extraboldNunito text-white hover:bg-navy-900"
-                >
-                  Request Custom Quote →
-                </button>
-              </>
-            )
-          ) : (
-            <>
-              <div className="mb-0.5 text-caption font-boldNunito text-navy-800">
-                {plan.name} volume pricing
-              </div>
-              <p className="mb-3.5 text-[11px] text-ink-400">
-                Your per-seat rate is based on total licensed seats — it applies
-                automatically the moment you cross a tier
-              </p>
-              <div className="mb-5 flex flex-col gap-1.5">
-                {plan.tiers.map((t) => {
-                  const isCurrent = seatNum >= t.min && seatNum <= t.max;
-                  return (
-                    <div
-                      key={t.min}
-                      className={classNames(
-                        "flex items-center rounded-[9px] border px-3 py-[9px]",
-                        isCurrent ? "border-[#C9E2F9] bg-brand-25" : "border-ink-100 bg-[#FAFAFA]"
-                      )}
-                    >
-                      <span className="flex-1 text-[12.5px] font-semiboldNunito text-ink-800">
-                        {t.min}–{t.max} seats
-                      </span>
-                      <span className="text-[12.5px] font-boldNunito text-navy-800">
-                        {naira(t.price)}/seat
-                      </span>
-                      {isCurrent ? (
-                        <span className="ml-2.5 rounded-full bg-brand-400 px-2 py-[3px] text-[9px] font-extraboldNunito text-white">
-                          YOUR TIER
-                        </span>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="flex flex-col gap-3.5 rounded-[14px] bg-ink-50 p-4">
-                <div className="text-[13px] font-extraboldNunito text-navy-800">
-                  Choose how many seats to pay for
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    aria-label="Decrease seats"
-                    onClick={() => setSeats(String(Math.max(1, seatNum - 1)))}
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[9px] border-[1.5px] border-ink-200 bg-white text-[18px] font-boldNunito text-ink-600"
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    value={seats}
-                    onChange={(e) => setSeats(e.target.value)}
-                    aria-label="Seats to pay for"
-                    className="h-9 w-[100px] rounded-[9px] border-[1.5px] border-ink-200 px-3 text-center text-body font-boldNunito text-ink-800"
-                  />
-                  <button
-                    type="button"
-                    aria-label="Increase seats"
-                    onClick={() => setSeats(String(seatNum + 1))}
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[9px] border-[1.5px] border-ink-200 bg-white text-[18px] font-boldNunito text-ink-600"
-                  >
-                    +
-                  </button>
-                  <span className="text-caption text-ink-400">seats</span>
-                  {outOfRange ? (
-                    <span className="text-[11px] font-boldNunito text-surface-errorInk">
-                      {plan.name} covers {plan.minSeats}–{plan.maxSeats} seats
-                    </span>
-                  ) : null}
-                </div>
-                <div className="flex justify-between gap-3 border-t border-surface-line pt-3">
-                  <span className="text-caption text-ink-500">Rate per seat</span>
-                  <span className="text-[13px] font-boldNunito text-navy-800">
-                    {outOfRange ? "—" : `${naira(perSeat)}/seat`}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <span className="text-caption text-ink-500">Monthly total</span>
-                  <span className="text-[15px] font-extraboldNunito text-navy-800">
-                    {outOfRange ? "—" : naira(perSeat * seatNum)}
-                  </span>
-                </div>
-                <PrimaryButton
-                  disabled={outOfRange}
-                  className="justify-center"
-                  onClick={() =>
-                    open("planCheckout", {
-                      planName: plan.name,
-                      seats: seatNum,
-                      perSeat: `${naira(perSeat)}/seat`,
-                      monthly: naira(perSeat * seatNum),
-                    })
-                  }
-                >
-                  Continue to Payment →
-                </PrimaryButton>
-              </div>
-            </>
-          )}
-        </div>
-      </Card>
+      {/* Manage entry */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-ds-lg border border-dashed border-ink-200 bg-white px-5 py-4">
+        <p className="text-[13.5px] text-ink-500">
+          Want a different plan or to see{" "}
+          <strong className="font-boldNunito text-ink-800">volume pricing</strong> for more seats?
+        </p>
+        <SecondaryButton onClick={() => setView("manage")}>Manage plan &amp; seats →</SecondaryButton>
+      </div>
     </>
   );
 };
