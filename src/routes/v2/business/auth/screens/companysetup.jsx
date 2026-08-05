@@ -31,6 +31,7 @@ import {
   useSaveSeatsMutation,
   useSavePlanMutation,
   useCheckoutPlanMutation,
+  useCardSetupMutation,
 } from "../../../../../services/v2/businessApiSlice";
 import { useRequestOtpV2Mutation } from "../../../../../services/v2/authApiSliceV2";
 
@@ -665,25 +666,29 @@ export const PlanBilling = () => {
   const { data: org } = useGetOrganizationQuery();
   const [savePlan, { isLoading }] = useSavePlanMutation();
   const [checkoutPlan, { isLoading: isCheckingOut }] = useCheckoutPlanMutation();
+  const [cardSetup, { isLoading: isSavingCard }] = useCardSetupMutation();
   const [error, setError] = useState(null);
   const [checkout, setCheckout] = useState(null);
 
   // Flutterwave inline checkout for the prepay + "Pay by card" path. The hook is
   // set up at the top level (rules of hooks); we trigger the modal from an effect
   // once the backend hands back a checkout, mirroring the consumer flow.
+  const savingCard = checkout?.mode === "card"; // postpay card-on-file, not a bundle charge
   const flwConfig = {
     public_key: import.meta.env.VITE_FLUTTERWAVE_KEY,
     tx_ref: checkout?.reference ?? "",
     amount: checkout?.amount ?? 0,
     currency: checkout?.currency ?? "NGN",
-    payment_options: "card,mobilemoney,ussd",
+    payment_options: savingCard ? "card" : "card,mobilemoney,ussd",
     customer: {
       email: checkout?.customer?.email ?? "",
       name: checkout?.customer?.name ?? "",
     },
     customizations: {
       title: "TalkAM for Business",
-      description: "Session bundle — charged now so sessions are ready immediately",
+      description: savingCard
+        ? "Save your card — a small refundable hold verifies it (not charged)"
+        : "Session bundle — charged now so sessions are ready immediately",
     },
     meta: { ...(checkout?.meta ?? {}) },
   };
@@ -723,10 +728,11 @@ export const PlanBilling = () => {
   const planFeatures = quote?.plan?.features ?? pricing?.plan?.features ?? [];
   const bank = pricing?.bank_details ?? {};
 
-  // Only the prepay + card path charges anything now (the session bundle). Postpay
-  // has nothing to charge at signup, so it just saves and continues.
+  // Prepay + card charges the session bundle now; postpay + card saves the card
+  // for month-end (a small refundable hold, nothing charged). Both need Flutterwave.
   const cardChargesNow = o.payMethod === "card" && prepay && dueAtSignup > 0;
-  const cardUnavailable = cardChargesNow && !import.meta.env.VITE_FLUTTERWAVE_KEY;
+  const cardSavesNow = o.payMethod === "card" && !prepay;
+  const cardUnavailable = (cardChargesNow || cardSavesNow) && !import.meta.env.VITE_FLUTTERWAVE_KEY;
 
   const proceed = async (persist) => {
     setError(null);
@@ -739,8 +745,9 @@ export const PlanBilling = () => {
     try {
       await savePlan({ pay_method: o.payMethod, payment_timing: o.paymentTiming }).unwrap();
 
-      // Card: charge the session bundle now via Flutterwave. Returns amount 0 (and
-      // falls through) when there is nothing to charge — postpay, or no bundle.
+      // Card: prepay charges the session bundle now; postpay saves the card for
+      // month-end (a small refundable hold). Either way the effect opens the
+      // Flutterwave modal; amount 0 falls through (e.g. prepay with no bundle).
       if (o.payMethod === "card") {
         // Bail before starting a checkout if we can't open Flutterwave — otherwise
         // we'd leave an orphan pending payment behind.
@@ -751,10 +758,12 @@ export const PlanBilling = () => {
           return;
         }
 
-        const result = await checkoutPlan().unwrap();
+        const result = prepay
+          ? await checkoutPlan().unwrap()
+          : await cardSetup().unwrap();
 
         if (result?.amount > 0 && result?.reference) {
-          setCheckout(result); // the effect opens the Flutterwave modal
+          setCheckout({ ...result, mode: prepay ? "bundle" : "card" });
           return;
         }
       }
@@ -937,7 +946,7 @@ export const PlanBilling = () => {
             <p className="text-[11px] leading-[1.6] text-ink-400">
               {prepay
                 ? "Your first month — seats plus the session bundle — is charged now via Flutterwave, so sessions are ready immediately. From next month, seats are billed to the same card. Best for smaller teams who'd rather not wait on an invoice."
-                : "Seats and the sessions your team uses are auto-charged to your card at month-end — you only pay for what's used. Card setup completes right after onboarding."}
+                : "Seats and the sessions your team uses are auto-charged to your card at month-end — you only pay for what's used. We just verify your card now with a small refundable hold; nothing is charged until then."}
             </p>
           </>
         )}
@@ -954,17 +963,19 @@ export const PlanBilling = () => {
 
       <AuthButton
         tone="brand"
-        disabled={isLoading || isCheckingOut || cardUnavailable}
+        disabled={isLoading || isCheckingOut || isSavingCard || cardUnavailable}
         className="mb-2.5"
         onClick={() => proceed(true)}
       >
-        {isCheckingOut
+        {isCheckingOut || isSavingCard
           ? "Opening checkout…"
           : isLoading
             ? "Saving…"
             : cardChargesNow
               ? `Pay ${naira(dueAtSignup)} with Flutterwave →`
-              : "Confirm Plan & Continue →"}
+              : cardSavesNow
+                ? "Save card & Continue →"
+                : "Confirm Plan & Continue →"}
       </AuthButton>
       <button
         type="button"
