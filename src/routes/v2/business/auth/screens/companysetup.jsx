@@ -726,7 +726,10 @@ export const PlanBilling = () => {
   const meteredSessions = quote?.metered_sessions ?? false;
   const planName = quote?.plan?.name ?? pricing?.plan?.name ?? "";
   const planFeatures = quote?.plan?.features ?? pricing?.plan?.features ?? [];
-  const bank = pricing?.bank_details ?? {};
+  // §11: when dedicated virtual accounts are live, bank-transfer orgs get their own
+  // auto-reconciling account from the billing dashboard — so we no longer show a
+  // shared account to pay into here at signup.
+  const vaEnabled = pricing?.virtual_accounts_enabled ?? false;
 
   // Prepay + card charges the session bundle now; postpay + card saves the card
   // for month-end (a small refundable hold, nothing charged). Both need Flutterwave.
@@ -911,12 +914,10 @@ export const PlanBilling = () => {
 
         {o.payMethod === "invoice" ? (
           <>
-            <div className="mb-3.5 rounded-ds-md bg-ink-50 p-3.5 text-caption leading-[1.8] text-ink-600">
-              <strong className="font-boldNunito">{bank.company}</strong> · Bank Transfer
-              <br />
-              Account Name: {bank.account_name}
-              <br />
-              Bank: {bank.bank} · Account No: {bank.account_number}
+            <div className="mb-3.5 rounded-ds-md bg-ink-50 p-3.5 text-caption leading-[1.7] text-ink-600">
+              {vaEnabled
+                ? "No payment needed to finish setup. Right after this, you'll set up your company's own dedicated bank-transfer account from your billing dashboard — transfers to it are matched to your invoices and settle automatically. We'll email each invoice too."
+                : "No payment needed to finish setup. We'll email your first invoice with payment instructions when it's issued."}
             </div>
             <p className="text-[11px] leading-[1.6] text-ink-400">
               {prepay
