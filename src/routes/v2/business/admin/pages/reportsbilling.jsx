@@ -317,7 +317,8 @@ export const AdminBilling = () => {
               </button>
             </div>
             <p className="mt-3.5 text-caption text-ink-500">
-              Only active seats are billed — unused seats aren’t charged.
+              You pay for the seats you license — billed monthly in advance. Raise
+              capacity any time and you’re charged for the increase.
             </p>
           </div>
           <div className="flex flex-col justify-center bg-[linear-gradient(135deg,#141B34,#1A2E5A)] p-5 text-white lg:p-6">

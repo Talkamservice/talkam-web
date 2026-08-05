@@ -884,7 +884,7 @@ export const PlanBilling = () => {
         <p className="mb-3.5 text-caption text-ink-400">
           {prepay
             ? "Most teams pay by invoice. Smaller teams can pay by card for instant setup."
-            : "Pay-as-you-go is settled each month — by net-terms invoice or auto-charged to a card."}
+            : "Your seats are billed monthly; pay-as-you-go sessions are settled each month-end — by net-terms invoice or auto-charged to a card."}
         </p>
 
         <div className="mb-4 flex gap-2.5">
@@ -921,7 +921,7 @@ export const PlanBilling = () => {
             <p className="text-[11px] leading-[1.6] text-ink-400">
               {prepay
                 ? "Your first invoice covers your first month of seats plus the session bundle; from the next month, seats are invoiced monthly. Sessions are available immediately and drawn down as they happen. Suits NGOs, schools, firms and enterprises paying on net terms."
-                : "At month-end we send one invoice for your active seats plus the sessions your team used that month — settle it by bank transfer on net terms. Nothing is charged up front."}
+                : "Your seats are invoiced monthly in advance — a fixed charge for the capacity you've licensed. At each month-end we add only the sessions your team actually used. Settle both by bank transfer on net terms; nothing extra is charged up front."}
             </p>
           </>
         ) : (
@@ -946,7 +946,7 @@ export const PlanBilling = () => {
             <p className="text-[11px] leading-[1.6] text-ink-400">
               {prepay
                 ? "Your first month — seats plus the session bundle — is charged now via Flutterwave, so sessions are ready immediately. From next month, seats are billed to the same card. Best for smaller teams who'd rather not wait on an invoice."
-                : "Seats and the sessions your team uses are auto-charged to your card at month-end — you only pay for what's used. We just verify your card now with a small refundable hold; nothing is charged until then."}
+                : "Your seats are billed monthly to this card — a fixed charge for your licensed capacity — and the sessions your team uses are added at each month-end. You only pay for the sessions actually used. We verify your card now with a small refundable hold; nothing is charged today."}
             </p>
           </>
         )}
