@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 import classNames from "classnames";
 import * as Icon from "react-feather";
 import {
@@ -20,6 +21,7 @@ import {
   useGetAdminOverviewQuery,
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
+  useCreateVirtualAccountMutation,
   downloadCsv,
 } from "../../../../../services/v2/adminApiSlice";
 import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
@@ -227,6 +229,236 @@ const bandLabel = (t) => (t.max === null ? `${t.min}+ seats` : `${t.min}–${t.m
 
 const BACK_BTN =
   "mb-5 inline-flex items-center gap-2 text-[13.5px] font-boldNunito text-ink-500 hover:text-navy-800";
+
+const KYC_TYPES = [
+  { key: "bvn", label: "BVN", sub: "Bank Verification No." },
+  { key: "nin", label: "NIN", sub: "National ID No." },
+];
+
+/** Small copy-to-clipboard control for the account number. */
+function CopyButton({ value }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard?.writeText(String(value));
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      className="cursor-pointer rounded-[7px] bg-white/[0.14] px-2.5 py-1.5 text-[11px] font-boldNunito text-white hover:bg-white/25"
+    >
+      {copied ? "Copied ✓" : "Copy"}
+    </button>
+  );
+}
+
+CopyButton.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
+
+/**
+ * Bank-transfer reconciliation (web §11). Three states: prompt → KYC form → the
+ * org's own dedicated account. The raw BVN/NIN is posted to the API (which passes
+ * it to Flutterwave) and is never rendered back — only the last 4 return.
+ */
+function BankTransferCard({ va }) {
+  const [expanded, setExpanded] = useState(false);
+  const [idType, setIdType] = useState("bvn");
+  const [idNumber, setIdNumber] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [error, setError] = useState(null);
+  const [createVirtualAccount, { isLoading }] = useCreateVirtualAccountMutation();
+
+  const digits = idNumber.replace(/\D/g, "");
+  const valid = digits.length === 11 && consent;
+
+  const submit = async () => {
+    setError(null);
+    try {
+      // On success the AdminBilling tag invalidates → the summary refetches with
+      // the new account, and this card flips to the account view.
+      await createVirtualAccount({ id_type: idType, id_number: digits, consent }).unwrap();
+    } catch (e) {
+      setError(e?.data?.message || "We couldn’t set up your account. Please try again.");
+    }
+  };
+
+  // State 3 — the account exists.
+  if (va) {
+    return (
+      <PanelCard title="Bank transfer" subtitle="Payments match your invoices automatically">
+        <div className="rounded-ds-lg bg-navy-800 p-5 text-white">
+          <div className="text-[10.5px] font-boldNunito tracking-[0.08em] text-white/55">
+            YOUR DEDICATED ACCOUNT
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-3">
+            <span className="text-h3 font-extraboldNunito tracking-[0.06em]">
+              {va.account_number}
+            </span>
+            <CopyButton value={va.account_number} />
+          </div>
+          <div className="text-caption text-white/75">{va.bank_name}</div>
+          <div className="my-4 h-px bg-white/[0.14]" />
+          <div className="flex items-start gap-2.5 text-[12.5px] leading-[1.55] text-white/80">
+            <Icon.Check size={15} className="mt-0.5 shrink-0 text-wellness-400" />
+            <span>
+              Transfer your invoice total here from any bank — it’s matched to your open
+              invoices and settled automatically, usually within minutes.
+            </span>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <Badge tone="green" dot>
+            Verified · {va.id_type?.toUpperCase()} ••{va.id_last4}
+          </Badge>
+          {Number(va.credit_balance) > 0 ? (
+            <span className="text-caption text-ink-500">
+              Unapplied credit{" "}
+              <strong className="font-boldNunito text-ink-800">{naira(va.credit_balance)}</strong>{" "}
+              · applied to your next invoice
+            </span>
+          ) : null}
+        </div>
+      </PanelCard>
+    );
+  }
+
+  // States 1 & 2 — no account yet.
+  return (
+    <PanelCard title="Bank transfer" subtitle="Get an account that reconciles itself">
+      {!expanded ? (
+        <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-xl text-[13.5px] leading-[1.6] text-ink-500">
+            Get your company’s own dedicated account number so every transfer is matched to
+            your invoices and settled automatically — no reference to quote, no “mark as paid”.
+          </p>
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="shrink-0 cursor-pointer rounded-[10px] bg-brand-400 px-4 py-3 text-[13px] font-boldNunito text-white hover:bg-brand-600"
+          >
+            Set up bank transfer →
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <p className="text-[13px] leading-[1.6] text-ink-500">
+            Nigerian banks require an identity check to open a permanent account. Enter a
+            director or authorized signatory’s BVN or NIN.
+          </p>
+
+          <div className="flex gap-2.5">
+            {KYC_TYPES.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setIdType(t.key)}
+                aria-pressed={idType === t.key}
+                className={classNames(
+                  "flex-1 cursor-pointer rounded-[10px] border-[1.5px] p-3 text-center",
+                  idType === t.key ? "border-brand-400 bg-brand-25" : "border-ink-200 bg-white"
+                )}
+              >
+                <div
+                  className={classNames(
+                    "text-[13px] font-extraboldNunito",
+                    idType === t.key ? "text-brand-600" : "text-ink-600"
+                  )}
+                >
+                  {t.label}
+                </div>
+                <div className="text-[10.5px] text-ink-400">{t.sub}</div>
+              </button>
+            ))}
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-caption font-boldNunito text-ink-700">
+              {idType.toUpperCase()} (11 digits)
+            </label>
+            <input
+              inputMode="numeric"
+              value={idNumber}
+              onChange={(e) => setIdNumber(e.target.value)}
+              maxLength={14}
+              placeholder="e.g. 22233344455"
+              aria-label={`${idType} number`}
+              className="h-12 w-full rounded-ds-md border-[1.5px] border-brand-400 px-4 text-body font-boldNunito tracking-[0.1em] text-navy-800 shadow-focus-brand"
+            />
+            <p className="mt-1.5 text-[11px] text-ink-400">
+              Belongs to a director / authorized signatory — a company itself has no BVN.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setConsent(!consent)}
+            aria-pressed={consent}
+            className="flex items-start gap-3 rounded-[11px] border-[1.5px] border-ink-200 bg-ink-50 px-3.5 py-3 text-left"
+          >
+            <span
+              className={classNames(
+                "mt-0.5 flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-[5px] border-[1.5px]",
+                consent ? "border-brand-400 bg-brand-400" : "border-ink-300 bg-white"
+              )}
+            >
+              {consent ? <Icon.Check size={12} className="text-white" strokeWidth={3.5} /> : null}
+            </span>
+            <span className="text-[12px] leading-[1.55] text-ink-500">
+              I confirm I’m authorized to provide this ID and consent to it being used to open
+              a bank-transfer account for my company.
+            </span>
+          </button>
+
+          <div className="flex items-start gap-2 text-[11.5px] leading-[1.55] text-ink-400">
+            <Icon.Lock size={14} className="mt-0.5 shrink-0" />
+            <span>
+              Sent to our payment provider (Flutterwave) to open the account.{" "}
+              <strong className="font-boldNunito text-ink-500">
+                TalkAM never stores your BVN/NIN
+              </strong>{" "}
+              — we keep only the last 4 digits and your consent date.
+            </span>
+          </div>
+
+          {error ? (
+            <p className="rounded-ds-md bg-[#FEF2F2] px-3.5 py-2.5 text-[12px] text-[#B42318]">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={!valid || isLoading}
+              onClick={submit}
+              className={classNames(
+                "rounded-[10px] px-4 py-3 text-[13px] font-boldNunito text-white",
+                valid && !isLoading
+                  ? "cursor-pointer bg-brand-400 hover:bg-brand-600"
+                  : "cursor-not-allowed bg-ink-300"
+              )}
+            >
+              {isLoading ? "Creating…" : "Create my account →"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              className="cursor-pointer text-caption text-ink-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </PanelCard>
+  );
+}
+
+BankTransferCard.propTypes = {
+  va: PropTypes.object,
+};
 
 export const AdminBilling = () => {
   const { open, showToast } = useAdminModal();
@@ -608,6 +840,11 @@ export const AdminBilling = () => {
         </Card>
       </div>
 
+      {/* Bank transfer — dedicated virtual account (web §11), when enabled */}
+      {billing?.virtual_accounts_enabled ? (
+        <BankTransferCard va={billing?.virtual_account} />
+      ) : null}
+
       {/* Invoices */}
       <PanelCard
         title="Invoices"
@@ -639,7 +876,9 @@ export const AdminBilling = () => {
                     >
                       View
                     </SecondaryButton>
-                    {inv.tone !== "green" ? (
+                    {/* With a dedicated account, transfers auto-reconcile — the
+                        customer self-mark-paid is retired (web §11). */}
+                    {inv.tone !== "green" && !billing?.virtual_account ? (
                       <button
                         type="button"
                         onClick={() => showToast(`${inv.id} marked paid`)}
