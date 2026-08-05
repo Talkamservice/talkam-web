@@ -532,7 +532,7 @@ export const AdminBilling = () => {
               <span className="text-[16px] font-boldNunito text-white/60">/ month</span>
             </div>
             <div className="mt-2.5 text-[13px] text-white/60">
-              {currentSeats} employee seats × {naira(perSeatNow)} · {currentPlan.renews}
+              {currentPlan.seats} employee seats × {currentPlan.perSeat} · {currentPlan.renews}
             </div>
             <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#3BA88F]/40 bg-[#3BA88F]/[0.16] px-3 py-1.5 text-[12px] font-boldNunito text-[#CDE6D9]">
               <span className="h-1.5 w-1.5 rounded-full bg-wellness-400" />
