@@ -761,7 +761,9 @@ export const AdminBilling = () => {
             <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/[0.15] px-3 py-1">
               <span className="text-[11px] text-gold-400">✦</span>
               <span className="text-[10px] font-boldNunito tracking-[0.06em] text-gold-400">
-                {currentPlan.label}
+                {currentPlan.billingReady === false
+                  ? `${currentPlan.planName ?? "PLAN"} · SETUP INCOMPLETE`
+                  : currentPlan.label}
               </span>
             </div>
             <div className="text-[38px] font-extraboldNunito leading-none tracking-[-0.02em] text-white">

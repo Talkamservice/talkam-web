@@ -21,7 +21,12 @@ import {
   useDeactivateEmployeeMutation,
   useReactivateEmployeeMutation,
 } from "../../../../../services/v2/adminApiSlice";
-import { useResendInvitationMutation } from "../../../../../services/v2/businessApiSlice";
+import {
+  useResendInvitationMutation,
+  useGetOrganizationQuery,
+} from "../../../../../services/v2/businessApiSlice";
+import { useNavigate } from "react-router-dom";
+import { V2 } from "../../../../../constants/v2routes";
 
 /**
  * Admin › Employees. Spec: "TalkAM B2B Dashboard.dc.html" § EMPLOYEES.
@@ -481,9 +486,32 @@ const Reminders = () => {
 
 export const AdminEmployees = () => {
   const [tab, setTab] = useState("directory");
+  const navigate = useNavigate();
+  const { data: org } = useGetOrganizationQuery();
+  // Default true so the banner never flashes before the org loads.
+  const billingReady = org?.billing_ready ?? true;
 
   return (
     <>
+      {!billingReady ? (
+        <InfoStrip
+          tone="gold"
+          className="mb-3.5"
+          action={
+            <button
+              type="button"
+              onClick={() => navigate(`${V2.admin}/billing`)}
+              className="shrink-0 cursor-pointer rounded-[8px] bg-gold-600 px-3 py-1.5 text-[12px] font-boldNunito text-white"
+            >
+              Set up billing →
+            </button>
+          }
+        >
+          <strong className="font-boldNunito">Billing isn’t set up yet.</strong> You can invite
+          your team now, but therapy sessions won’t be available until your first payment is made.
+        </InfoStrip>
+      ) : null}
+
       <div className="flex w-fit max-w-full gap-1.5 overflow-x-auto rounded-[11px] border border-surface-line bg-white p-1">
         {[
           { key: "directory", label: "Directory" },
