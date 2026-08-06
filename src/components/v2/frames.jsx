@@ -6,29 +6,6 @@ import PropTypes from "prop-types";
  * pages. Spec: "TalkAM Landing Page.dc.html" § Option 1C.
  */
 
-/** Phone bezel. `hero` is the larger 290×600 hero device; default is 250×520. */
-export const PhoneFrame = ({ hero, className, screenClassName, children }) => (
-  <div
-    className={classNames(
-      "v2-phone-shot relative shrink-0 border border-white/10 bg-[#0B0F17]",
-      hero
-        ? "w-[290px] h-[600px] rounded-[42px] p-[9px] shadow-[0_40px_90px_rgba(0,0,0,0.55)]"
-        : "w-[250px] h-[520px] rounded-[38px] p-2 shadow-[0_30px_60px_rgba(20,27,52,0.22)]",
-      className
-    )}
-  >
-    <div
-      className={classNames(
-        "flex h-full w-full flex-col overflow-hidden bg-[#F4F6FA]",
-        hero ? "rounded-[34px]" : "rounded-[31px]",
-        screenClassName
-      )}
-    >
-      {children}
-    </div>
-  </div>
-);
-
 /** macOS-style browser chrome wrapping a dashboard screenshot. */
 export const BrowserFrame = ({ url, className, children }) => (
   <div
@@ -49,5 +26,8 @@ export const BrowserFrame = ({ url, className, children }) => (
   </div>
 );
 
-PhoneFrame.propTypes = { hero: PropTypes.bool, children: PropTypes.node };
-BrowserFrame.propTypes = { url: PropTypes.string, children: PropTypes.node };
+BrowserFrame.propTypes = {
+  url: PropTypes.string,
+  className: PropTypes.string,
+  children: PropTypes.node,
+};
