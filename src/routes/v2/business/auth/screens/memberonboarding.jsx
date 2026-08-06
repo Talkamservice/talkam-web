@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import classNames from "classnames";
 import {
@@ -193,8 +193,11 @@ export const TopicsOfInterest = () => {
   usePageMeta("What's on your mind lately? — TalkAM");
 
   const { data: topics = [], isLoading } = useGetOnboardingTopicsQuery();
+  const { data: me } = useGetMeV2Query();
   const [saveTopics, { isLoading: isSaving }] = useSaveOnboardingTopicsMutation();
   const [error, setError] = useState(null);
+
+  const isTherapist = (me?.business?.role ?? o.landingRole) === "therapist";
 
   const submit = async () => {
     setError(null);
@@ -205,7 +208,9 @@ export const TopicsOfInterest = () => {
 
     try {
       await saveTopics({ interests: ids }).unwrap();
-      navigate(V2.businessSelfCheck);
+      // Therapists are providers, not clients — the employee self check-in is
+      // org.role:employee only, so skip it and go straight to the finish.
+      navigate(isTherapist ? V2.businessWelcome : V2.businessSelfCheck);
     } catch (err) {
       setError(apiErrorMessage(err));
     }
@@ -254,10 +259,23 @@ export const SelfCheck = () => {
   const o = useOnboarding();
   usePageMeta("A quick self check-in — TalkAM");
 
-  const { data: selfCheck, isLoading } = useGetSelfCheckQuery();
   const { data: me } = useGetMeV2Query();
+  const role = me?.business?.role ?? o.landingRole;
+  const isTherapist = role === "therapist";
+
+  // Only employees have a self check-in; skip the org.role:employee endpoint for
+  // anyone else so it never 403s.
+  const { data: selfCheck, isLoading } = useGetSelfCheckQuery(undefined, {
+    skip: role !== "employee",
+  });
   const [saveSelfCheck, { isLoading: isSaving }] = useSaveSelfCheckMutation();
   const [error, setError] = useState(null);
+
+  // Defensive: a therapist reaching this screen (back button / direct link) is
+  // moved straight to the finish rather than shown an employee-only step.
+  useEffect(() => {
+    if (isTherapist) navigate(V2.businessWelcome, { replace: true });
+  }, [isTherapist, navigate]);
 
   const questions = selfCheck?.questions ?? [];
   const options = selfCheck?.options ?? [];

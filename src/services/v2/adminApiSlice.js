@@ -59,6 +59,12 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       providesTags: ["AdminTherapists"],
     }),
 
+    getAdminTherapistDetail: builder.query({
+      query: (id) => ({ url: `/business/therapists/${id}` }),
+      transformResponse: (response) => response?.data,
+      providesTags: ["AdminTherapists"],
+    }),
+
     getSafetyReports: builder.query({
       query: () => `/business/safety-reports`,
       transformResponse: (response) => response?.data?.reports ?? [],
@@ -199,6 +205,7 @@ export const {
   useDeactivateEmployeeMutation,
   useReactivateEmployeeMutation,
   useGetAdminTherapistsQuery,
+  useGetAdminTherapistDetailQuery,
   useGetSafetyReportsQuery,
   useGetAdminActivityQuery,
   useUpdateCompanyProfileMutation,

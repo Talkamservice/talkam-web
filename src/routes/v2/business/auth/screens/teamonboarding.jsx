@@ -34,6 +34,11 @@ const avatarColour = (email = "") => {
   return AVATAR_COLOURS[sum % AVATAR_COLOURS.length];
 };
 
+/** Compact input for the inline "add one" form — 44px, matching its buttons
+ *  (the shared authInputClass is 48px, which reads too tall in this dense card). */
+const INVITE_INPUT =
+  "h-11 w-full rounded-ds-md border-[1.5px] border-ink-200 bg-white px-3.5 text-[13px] text-navy-800 placeholder:text-ink-400 focus:border-brand-400 focus:shadow-focus-brand";
+
 /* ── 4b. THERAPIST BENCH ───────────────────────────────────────────────── */
 export const TherapistBench = () => {
   const navigate = useNavigate();
@@ -132,6 +137,47 @@ export const TeamInvite = () => {
   const [error, setError] = useState(null);
 
   const rows = o.inviteRows;
+
+  // Manual "add one" form — the counterpart to CSV upload for small teams.
+  const [showForm, setShowForm] = useState(false);
+  const [draft, setDraft] = useState({ email: "", department: "", role: "employee" });
+  const [formError, setFormError] = useState(null);
+
+  const draftField = (key) => (event) =>
+    setDraft((prev) => ({ ...prev, [key]: event.target.value }));
+
+  const closeForm = () => {
+    setShowForm(false);
+    setDraft({ email: "", department: "", role: "employee" });
+    setFormError(null);
+  };
+
+  const addRow = () => {
+    const email = draft.email.trim().toLowerCase();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFormError("Enter a valid email address.");
+      return;
+    }
+    if (rows.some((row) => row.email.toLowerCase() === email)) {
+      setFormError("That email is already on the list.");
+      return;
+    }
+
+    o.set({
+      inviteRows: [
+        ...rows,
+        { email, role: draft.role, department: draft.department.trim() || null },
+      ],
+    });
+    // Keep the form open and cleared so several people can be added in a row.
+    setDraft({ email: "", department: "", role: "employee" });
+    setFormError(null);
+  };
+
+  const removeRow = (email) => {
+    o.set({ inviteRows: rows.filter((row) => row.email !== email) });
+  };
 
   const onFile = async (event) => {
     const file = event.target.files?.[0];
@@ -290,7 +336,7 @@ export const TeamInvite = () => {
         </button>
       )}
 
-      <div className="-mt-2.5 mb-4 flex items-center gap-1.5 text-[11px] text-ink-400">
+      <div className="-mt-2.5 mb-3 flex items-center gap-1.5 text-[11px] text-ink-400">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
           <polyline points="7 10 12 15 17 10" />
@@ -336,13 +382,84 @@ export const TeamInvite = () => {
             >
               {row.role === "therapist" ? "THERAPIST" : "EMPLOYEE"}
             </span>
+            <button
+              type="button"
+              onClick={() => removeRow(row.email)}
+              aria-label={`Remove ${row.email}`}
+              className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-ink-400 hover:bg-ink-100 hover:text-ink-600"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
           </div>
         ))}
       </div>
 
+      {showForm ? (
+        <div className="mb-3 flex flex-col gap-2.5 rounded-[14px] border border-ink-200 bg-white p-3.5">
+          <input
+            type="email"
+            value={draft.email}
+            onChange={draftField("email")}
+            onKeyDown={(e) => e.key === "Enter" && addRow()}
+            placeholder="name@company.com"
+            className={INVITE_INPUT}
+            aria-label="Invite email"
+          />
+          <input
+            type="text"
+            value={draft.department}
+            onChange={draftField("department")}
+            onKeyDown={(e) => e.key === "Enter" && addRow()}
+            placeholder="Department"
+            className={INVITE_INPUT}
+            aria-label="Department (optional)"
+          />
+          <div className="grid grid-cols-2 gap-2.5">
+            {["employee", "therapist"].map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setDraft((prev) => ({ ...prev, role: r }))}
+                aria-pressed={draft.role === r}
+                className={classNames(
+                  "h-11 rounded-ds-md text-[13px] font-boldNunito capitalize transition-colors",
+                  draft.role === r
+                    ? "bg-navy-800 text-white"
+                    : "bg-ink-50 text-ink-600 hover:bg-ink-100"
+                )}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          {formError ? (
+            <div className="text-[11.5px] font-boldNunito text-signal-error">{formError}</div>
+          ) : null}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              onClick={closeForm}
+              className="h-11 cursor-pointer rounded-ds-md bg-ink-50 text-[13px] font-boldNunito text-ink-600 transition-colors hover:bg-ink-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={addRow}
+              className="h-11 cursor-pointer rounded-ds-md bg-brand-400 text-[13px] font-boldNunito text-white transition-colors hover:bg-brand-600"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <button
         type="button"
-        onClick={() => fileInput.current?.click()}
+        onClick={() => setShowForm(true)}
         className="mb-4 flex cursor-pointer items-center gap-2 text-[13px] font-boldNunito text-brand-400"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#017FC8" strokeWidth="2.5" strokeLinecap="round">

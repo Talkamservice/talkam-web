@@ -12,6 +12,7 @@ import { naira, tierForSeats } from "../../../../constants/admindashboard";
 import {
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
+  useGetAdminTherapistDetailQuery,
   useRequestOrgDeletionMutation,
 } from "../../../../services/v2/adminApiSlice";
 import { useRequestOtpV2Mutation } from "../../../../services/v2/authApiSliceV2";
@@ -546,28 +547,317 @@ const AddOwnTherapistModal = ({ open, close, showToast }) => (
   </Modal>
 );
 
-const TherapistModal = ({ open, close, context }) => (
-  <Modal open={open} onClose={close} title={context?.name ?? "Therapist"} subtitle={context?.specialty}>
-    <div className="mb-4 flex gap-4">
-      {[
-        ["Sessions", context?.sessions],
-        ["Avg rating", context?.rating],
-        ["Next slot", context?.availability],
-      ].map(([label, value]) => (
-        <div key={label} className="flex-1 rounded-ds-md bg-ink-50 p-3">
-          <div className="text-h3 font-extraboldNunito text-navy-800">{value}</div>
-          <div className="text-[10px] text-ink-400">{label}</div>
-        </div>
-      ))}
+/** "★★★☆☆" for a numeric rating (rounded, clamped 0–5). */
+const starsFor = (r) => {
+  const n = Math.max(0, Math.min(5, Math.round(Number(r) || 0)));
+  return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n);
+};
+
+/** Fallback focus-areas when the API has no explicit list: split "Anxiety · CBT". */
+const splitSpecialty = (s) =>
+  (s ?? "")
+    .split(/[·,]/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+
+/** One PRACTICE DETAILS line: icon + value + caption. */
+const PracticeDetail = ({ icon, value, label, tone }) => (
+  <div className="flex items-center gap-2.5">
+    <span className="shrink-0">{icon}</span>
+    <div>
+      <div
+        className={classNames(
+          "text-[12.5px] font-boldNunito",
+          tone === "verified" ? "text-wellness-600" : tone === "warn" ? "text-gold-600" : "text-ink-800"
+        )}
+      >
+        {value}
+      </div>
+      <div className="text-[10.5px] text-ink-400">{label}</div>
     </div>
-    <InfoStrip className="mb-4">
-      Every B2B session with this therapist draws ₦8,000 from your session bundle.
-    </InfoStrip>
-    <div className="flex justify-end">
-      <SecondaryButton onClick={close}>Close</SecondaryButton>
-    </div>
-  </Modal>
+  </div>
 );
+
+/**
+ * Therapist detail — spec: "TalkAM B2B Dashboard.dc.html" § THERAPIST VIEW MODAL.
+ *
+ * Bespoke overlay (not the shared Modal) because the deck needs a custom header
+ * with avatar/provider badge/stars, a scrollable body and sticky header+footer.
+ * Every field is bound from the roster row; fields the roster does not yet carry
+ * (bio, focus areas, formats, languages, response time, next slot, review
+ * breakdown) degrade gracefully — they light up once a detail endpoint supplies
+ * them. Reviews and the credentialing line are NEVER fabricated: the reviews
+ * section only renders with real review rows, and "Verified by TalkAM" only
+ * shows for a genuinely verified therapist.
+ */
+const TherapistModal = ({ open, close, context }) => {
+  const { open: openModal } = useAdminModal();
+  // The list row seeds the header instantly; the detail endpoint fills the rich
+  // fields (focus areas, formats, next slot, reviews) when it lands.
+  const { data: detail } = useGetAdminTherapistDetailQuery(context?.id, {
+    skip: !open || !context?.id,
+  });
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => e.key === "Escape" && close();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, close]);
+
+  if (!open) return null;
+
+  const t = { ...(context ?? {}), ...(detail ?? {}) };
+  const isOwn = !!t.is_own;
+  const verified = !!t.is_verified;
+  const rating = t.rating ?? null;
+  const ratingText = rating != null ? rating : "—";
+  const stars = starsFor(rating);
+  const teamSessions = t.team_sessions ?? null;
+  const focusAreas = t.focus_areas?.length ? t.focus_areas : splitSpecialty(t.specialty);
+  const reviews = t.reviews_list ?? [];
+  const hasReviews = reviews.length > 0;
+  const breakdown = t.rating_breakdown ?? null;
+  const nextSlot = t.next_slot ?? "—";
+  const responseTime = t.response_time ?? "—";
+  const formats = t.formats ?? "—";
+  const languages = t.languages ?? "—";
+  const years = t.years_experience ?? null;
+  const bio =
+    t.bio ??
+    (verified
+      ? "Verified through TalkAM's credentialing process. Full clinical credentials and indemnity status are held on TalkAM's internal review tool — not shown here, to protect therapist privacy."
+      : "Brought into your network by your organisation. Not yet verified through TalkAM's own credentialing process.");
+  const billLabel = t.bill_label ?? (isOwn ? "Billed to your organisation" : "TalkAM-billed");
+  const providerBadge = isOwn ? "bg-wellness-50 text-wellness-600" : "bg-brand-25 text-brand-600";
+  const providerLabel = isOwn ? "Your own provider" : "TalkAM network";
+
+  const kpis = [
+    ["avg rating", ratingText, "text-navy-800"],
+    ["team sessions", teamSessions ?? "—", "text-navy-800"],
+    ["next slot", nextSlot, "text-brand-400"],
+    ["avg response", responseTime, "text-navy-800"],
+  ];
+
+  return (
+    <div
+      className="fixed inset-0 z-[300] flex items-start justify-center overflow-y-auto bg-navy-900/50 p-4 backdrop-blur-sm sm:p-8"
+      onClick={close}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.name ?? "Therapist"}
+        onClick={(e) => e.stopPropagation()}
+        className="my-auto max-h-[90vh] w-full max-w-[680px] overflow-y-auto rounded-ds-xl bg-white shadow-e4"
+      >
+        {/* header */}
+        <div className="sticky top-0 z-[2] flex items-start gap-4 border-b border-ink-100 bg-white px-7 py-5">
+          {t.avatar ? (
+            <img src={t.avatar} alt="" className="h-16 w-16 shrink-0 rounded-2xl object-cover" />
+          ) : (
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-400 text-[22px] font-extraboldNunito text-white">
+              {t.initials}
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <span className="text-[19px] font-extraboldNunito text-navy-800">{t.name}</span>
+              <span className="text-[13px] text-gold-600">✦</span>
+              <span className={classNames("rounded-full px-2.5 py-[3px] text-[10px] font-extraboldNunito", providerBadge)}>
+                {providerLabel}
+              </span>
+            </div>
+            <div className="mb-2 text-[12.5px] text-ink-400">
+              {t.specialty}
+              {years ? ` · ${years} yrs experience` : ""}
+            </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="text-[14px] tracking-[1px] text-gold-400">{stars}</span>
+              <span className="text-[12.5px] font-extraboldNunito text-navy-800">{ratingText}</span>
+              {teamSessions != null ? (
+                <span className="text-[11.5px] text-ink-400">· {teamSessions} sessions with your team</span>
+              ) : null}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close"
+            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-ds-sm bg-surface-page text-ink-600 hover:text-navy-800"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-5 px-7 py-5">
+          {/* key stats */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {kpis.map(([label, value, color]) => (
+              <div key={label} className="rounded-ds-md bg-ink-50 p-3.5">
+                <div className={classNames("text-[18px] font-extraboldNunito", color)}>{value}</div>
+                <div className="text-[10.5px] text-ink-400">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* about */}
+          <div>
+            <div className="mb-2 text-[12px] font-extraboldNunito tracking-[0.04em] text-navy-800">ABOUT</div>
+            <div className="text-[13px] leading-[1.7] text-ink-600">{bio}</div>
+          </div>
+
+          {/* focus areas */}
+          {focusAreas.length ? (
+            <div>
+              <div className="mb-2.5 text-[12px] font-extraboldNunito tracking-[0.04em] text-navy-800">FOCUS AREAS</div>
+              <div className="flex flex-wrap gap-2">
+                {focusAreas.map((tag) => (
+                  <span key={tag} className="rounded-full bg-brand-25 px-3 py-1.5 text-[11.5px] font-boldNunito text-brand-600">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* practice details */}
+          <div>
+            <div className="mb-2.5 text-[12px] font-extraboldNunito tracking-[0.04em] text-navy-800">PRACTICE DETAILS</div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <PracticeDetail
+                label="Session formats"
+                value={formats}
+                icon={
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#858585" strokeWidth="2">
+                    <path d="M12 2v20M2 12h20" />
+                  </svg>
+                }
+              />
+              <PracticeDetail
+                label="Languages"
+                value={languages}
+                icon={
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#858585" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20" />
+                  </svg>
+                }
+              />
+              <PracticeDetail
+                label="Billing"
+                value={billLabel}
+                icon={
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#858585" strokeWidth="2">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                }
+              />
+              {verified ? (
+                <PracticeDetail
+                  tone="verified"
+                  label="Credentials & indemnity"
+                  value="Verified by TalkAM"
+                  icon={
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1F6B59" strokeWidth="2">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+                      <path d="M9 12l2 2 4-4" />
+                    </svg>
+                  }
+                />
+              ) : (
+                <PracticeDetail
+                  tone="warn"
+                  label="Not TalkAM-verified"
+                  value="Employer-provided"
+                  icon={
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9A6E0A" strokeWidth="2">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+                    </svg>
+                  }
+                />
+              )}
+            </div>
+          </div>
+
+          {/* ratings & reviews — only with real review rows (never fabricated) */}
+          {hasReviews ? (
+            <div>
+              <div className="mb-3 text-[12px] font-extraboldNunito tracking-[0.04em] text-navy-800">
+                RATINGS &amp; REVIEWS
+              </div>
+              <div className="mb-3.5 flex items-center gap-5 rounded-ds-md bg-ink-50 p-4">
+                <div className="shrink-0 text-center">
+                  <div className="text-[32px] font-extraboldNunito leading-none text-navy-800">{ratingText}</div>
+                  <div className="my-1 text-[12px] tracking-[1px] text-gold-400">{stars}</div>
+                  <div className="text-[10.5px] text-ink-400">avg rating</div>
+                </div>
+                {breakdown ? (
+                  <div className="flex flex-1 flex-col gap-1.5">
+                    {breakdown.map((r) => (
+                      <div key={r.stars} className="flex items-center gap-2.5">
+                        <span className="w-2 text-[10.5px] text-ink-400">{r.stars}</span>
+                        <div className="h-1.5 flex-1 rounded-[3px] bg-ink-100">
+                          <div className="h-1.5 rounded-[3px] bg-gold-400" style={{ width: `${r.pct}%` }} />
+                        </div>
+                        <span className="w-7 text-right text-[10.5px] text-ink-400">{r.pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {reviews.map((rv, i) => (
+                  <div key={i} className="rounded-ds-md border border-ink-100 p-3.5">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <span className="text-[12px] tracking-[1px] text-gold-400">{starsFor(rv.rating)}</span>
+                      <span className="text-[10.5px] text-ink-400">{rv.when ?? rv.created_at ?? ""}</span>
+                    </div>
+                    <div className="mb-1.5 text-[12.5px] leading-[1.6] text-ink-600">
+                      &ldquo;{rv.comment ?? rv.text}&rdquo;
+                    </div>
+                    <div className="text-[10.5px] font-boldNunito text-ink-400">Employee · anonymised</div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2.5 text-[10.5px] leading-[1.6] text-ink-400">
+                Reviews are submitted by employees and shown anonymised. Session content is never included.
+              </div>
+            </div>
+          ) : null}
+
+          {/* footer actions */}
+          <div className="sticky bottom-0 flex gap-2 bg-white pt-1">
+            <button
+              type="button"
+              onClick={close}
+              className="h-[46px] flex-1 rounded-[10px] border border-ink-200 bg-surface-page text-[13px] font-boldNunito text-navy-800 hover:bg-ink-100"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                openModal("confirm", {
+                  title: `Remove ${t.name}?`,
+                  body: "They stop taking new bookings from your team. Sessions already scheduled still go ahead.",
+                  confirmLabel: "Remove",
+                  toast: `${t.name} removed from your network`,
+                })
+              }
+              className="h-[46px] flex-1 rounded-[10px] border border-[#FFCDD2] bg-surface-errorTint text-[13px] font-boldNunito text-surface-errorInk hover:bg-[#FFE4E4]"
+            >
+              Remove from network
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ReportModal = ({ open, close, context }) => (
   <Modal open={open} onClose={close} title="RPT-0231" subtitle="Under review by TalkAM Trust & Safety">

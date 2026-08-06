@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import classNames from "classnames";
@@ -673,6 +673,14 @@ export const PlanBilling = () => {
   const [cardSetup, { isLoading: isSavingCard }] = useCardSetupMutation();
   const [error, setError] = useState(null);
   const [checkout, setCheckout] = useState(null);
+  // Payment outcome shown as a result screen before we move on: null while the
+  // form is up, then { status: "success" | "error", mode: "bundle" | "card" }
+  // once the Flutterwave modal closes.
+  const [result, setResult] = useState(null);
+  // Flutterwave calls onClose both after a completed payment (once we close the
+  // modal) and when the user dismisses it. This flag lets onClose tell the two
+  // apart so a cancelled checkout never advances the flow like a paid one.
+  const paidRef = useRef(false);
 
   // Flutterwave inline checkout for the prepay + "Pay by card" path. The hook is
   // set up at the top level (rules of hooks); we trigger the modal from an effect
@@ -700,15 +708,26 @@ export const PlanBilling = () => {
 
   useEffect(() => {
     if (!checkout) return;
+    const mode = checkout.mode === "card" ? "card" : "bundle";
+    paidRef.current = false;
     handleFlutterPayment({
-      callback: () => {
+      callback: (response) => {
+        // Only count a genuinely successful charge/hold — a failed or cancelled
+        // attempt can land here too. The webhook reconciles the payment
+        // server-side; we just show the result and let them continue.
+        const ok = ["successful", "completed"].includes(response?.status);
+        if (ok) {
+          paidRef.current = true;
+          setResult({ status: "success", mode });
+        }
         closePaymentModal();
-        navigate(V2.businessTherapistBench, { replace: true });
+        // Not ok: onClose runs next and records the error result.
       },
       onClose: () => {
-        // The card window was dismissed — let them continue; the bundle can be
-        // paid later from the dashboard.
-        navigate(V2.businessTherapistBench, { replace: true });
+        // Fires after a successful payment too (we close the modal above), so
+        // only treat it as a cancellation when nothing was paid.
+        if (paidRef.current) return;
+        setResult({ status: "error", mode });
       },
     });
     setCheckout(null);
@@ -778,12 +797,12 @@ export const PlanBilling = () => {
           return;
         }
 
-        const result = prepay
+        const checkoutResult = prepay
           ? await checkoutPlan().unwrap()
           : await cardSetup().unwrap();
 
-        if (result?.amount > 0 && result?.reference) {
-          setCheckout({ ...result, mode: prepay ? "bundle" : "card" });
+        if (checkoutResult?.amount > 0 && checkoutResult?.reference) {
+          setCheckout({ ...checkoutResult, mode: prepay ? "bundle" : "card" });
           return;
         }
       }
@@ -793,6 +812,108 @@ export const PlanBilling = () => {
       setError(apiErrorMessage(err));
     }
   };
+
+  // Retry from the result screen: clear the outcome and re-run the checkout.
+  const retry = () => {
+    setResult(null);
+    proceed(true);
+  };
+
+  // Payment result screen — shown after the Flutterwave modal closes, before the
+  // flow moves on. Success gates the next step behind an explicit Continue;
+  // error keeps them here with a Retry.
+  if (result) {
+    const success = result.status === "success";
+    const savedCard = result.mode === "card";
+    return (
+      <>
+        <StepEyebrow>STEP 4 OF 4 · PLAN &amp; BILLING</StepEyebrow>
+        <div className="flex flex-col items-center py-2 text-center">
+          <div
+            className={classNames(
+              "mb-5 flex h-16 w-16 items-center justify-center rounded-full",
+              success ? "bg-wellness-50" : "bg-surface-errorTint"
+            )}
+          >
+            <svg
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={success ? "text-wellness-600" : "text-surface-errorInk"}
+              aria-hidden="true"
+            >
+              {success ? (
+                <path d="M20 6 9 17l-5-5" />
+              ) : (
+                <>
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 8v4M12 16h.01" />
+                </>
+              )}
+            </svg>
+          </div>
+
+          <ScreenTitle>
+            {success
+              ? savedCard
+                ? "Card saved"
+                : "Payment received"
+              : savedCard
+                ? "Card setup wasn't completed"
+                : "Payment wasn't completed"}
+          </ScreenTitle>
+          <ScreenLead className="mb-6 max-w-[400px]">
+            {success
+              ? savedCard
+                ? "Your card is verified and saved. Your seats bill to it at each month-end — nothing was charged today."
+                : "Your first month is paid and your session bundle is active, so your team can start booking right away."
+              : savedCard
+                ? "Your card wasn't saved, so billing isn't set up yet. Try again, or skip and add it later from your dashboard."
+                : "No payment was taken, so your plan isn't active yet. Try again, or skip and pay later from your dashboard."}
+          </ScreenLead>
+
+          {success ? (
+            <AuthButton
+              tone="brand"
+              onClick={() => navigate(V2.businessTherapistBench, { replace: true })}
+            >
+              Continue to Team invites →
+            </AuthButton>
+          ) : (
+            <>
+              <AuthButton
+                tone="brand"
+                className="mb-2.5"
+                disabled={isLoading || isCheckingOut || isSavingCard}
+                onClick={retry}
+              >
+                {isCheckingOut || isSavingCard ? "Opening checkout…" : "Try again"}
+              </AuthButton>
+              <button
+                type="button"
+                onClick={() => setResult(null)}
+                className="mb-4 w-full cursor-pointer text-center text-caption font-boldNunito text-brand-400"
+              >
+                Choose another payment method
+              </button>
+              <button
+                type="button"
+                onClick={() => proceed(false)}
+                className="w-full cursor-pointer text-center text-caption text-ink-400"
+              >
+                Skip billing setup for now — I&apos;ll add this later from the dashboard
+              </button>
+            </>
+          )}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
