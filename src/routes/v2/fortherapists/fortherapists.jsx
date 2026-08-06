@@ -38,15 +38,11 @@ export const V2ForTherapists = () => {
       <MarketingHero
         className="bg-[linear-gradient(165deg,#0D1523_0%,#12241E_55%,#124034_100%)]"
         navCta={{
-          ctaLabel: "Apply as a therapist →",
-          ctaTo: V2.businessTherapistApply,
-          ctaVariant: "therapy",
-        }}
-        navCta={{
           links: PRODUCT_NAV,
           active: "For Therapists",
           activeRule: "#3BA88F",
           ctaLabel: "Apply as a therapist →",
+          ctaTo: V2.businessTherapistApply,
           ctaVariant: "therapy",
           ctaClassName:
             "!px-[22px] !py-[11px] font-extraboldNunito shadow-[0_8px_20px_rgba(59,168,143,0.35)]",
