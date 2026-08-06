@@ -1,13 +1,11 @@
 import { useState } from "react";
 import classNames from "classnames";
 import { MarketingHero } from "../../../../components/layout/v2/marketinglayout";
-import { PhoneFrame } from "../../../../components/v2/frames";
-import { heroFeedPosts } from "../../../../constants/marketing/landing";
-import TalkamWordmark from "../../../../assets/svgs/talkam-logo.svg";
+import HeroAppShot from "../../../../assets/images/hero-img.png";
 
 /**
  * Landing hero — spec: "TalkAM Landing Page.dc.html" § 1C › HERO.
- * Copy + waitlist form on the left, floating community-feed phone on the right.
+ * Copy + waitlist form on the left, floating app screenshot on the right.
  */
 
 const AUDIENCES = [
@@ -118,34 +116,6 @@ const WaitlistForm = () => {
   );
 };
 
-const FeedPost = ({ post }) => (
-  <div className="rounded-[14px] bg-white p-[13px] shadow-[0_1px_3px_rgba(20,27,52,0.05)]">
-    <div className="mb-2 flex items-center gap-2">
-      <span className={classNames("h-[30px] w-[30px] shrink-0 rounded-full", post.avatar)} />
-      <div>
-        <div className="text-caption font-extraboldNunito text-navy-800">
-          {post.author} ·{" "}
-          <span
-            className={classNames(
-              "font-boldNunito",
-              post.topicTone === "teal" ? "text-wellness-400" : "text-brand-400"
-            )}
-          >
-            {post.topic}
-          </span>
-        </div>
-        <div className="text-[10px] text-[#9299A8]">{post.timeAgo}</div>
-      </div>
-    </div>
-    <p className="mb-2.5 text-caption leading-[1.55] text-[#3E4A52]">{post.body}</p>
-    <div className="flex gap-4 text-[11px] font-boldNunito text-[#9299A8]">
-      <span>♥ {post.likes}</span>
-      <span>💬 {post.comments}</span>
-      <span>↗ Share</span>
-    </div>
-  </div>
-);
-
 export const LandingHero = () => (
   <MarketingHero
     className="bg-ds-hero"
@@ -182,65 +152,27 @@ export const LandingHero = () => (
       <WaitlistForm />
     </div>
 
-    {/* Hero phone — community feed */}
+    {/* Hero phone — app screenshot */}
     <div className="v2-float relative shrink-0">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -inset-10 rounded-full bg-[radial-gradient(circle,rgba(1,127,200,0.32)_0%,transparent_70%)] blur-[14px]"
       />
-      <PhoneFrame hero className="relative">
-        {/* status + header */}
-        <div className="bg-brand-400 px-[18px] pb-3 pt-3.5 text-white">
-          <div className="mb-3 flex items-center justify-between text-[11px] font-boldNunito">
-            <span>9:41</span>
-            <span>●●● ▪</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <img
-              src={TalkamWordmark}
-              alt="TalkAM"
-              className="h-[18px] w-auto [filter:brightness(0)_invert(1)]"
-            />
-            <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/25 text-[13px] font-extraboldNunito">
-              A
-            </span>
-          </div>
-        </div>
-
-        {/* tabs */}
-        <div className="flex gap-[18px] border-b border-[#EDEFF3] bg-white px-[18px] pb-2 pt-3">
-          <span className="border-b-[2.5px] border-brand-400 pb-2 text-[13px] font-extraboldNunito text-navy-800">
-            For You
-          </span>
-          <span className="pb-2 text-[13px] font-semiboldNunito text-[#9299A8]">Following</span>
-          <span className="pb-2 text-[13px] font-semiboldNunito text-[#9299A8]">Communities</span>
-        </div>
-
-        {/* feed */}
-        <div className="flex flex-1 flex-col gap-2.5 overflow-hidden p-3">
-          {heroFeedPosts.map((post) => (
-            <FeedPost key={post.id} post={post} />
-          ))}
-        </div>
-
-        {/* bottom nav */}
-        <div className="flex justify-around border-t border-[#EDEFF3] bg-white pb-3.5 pt-2.5">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#017FC8" strokeWidth="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          </svg>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C4C8D4" strokeWidth="2">
-            <circle cx="11" cy="11" r="7" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C4C8D4" strokeWidth="2">
-            <rect x="3" y="4.5" width="18" height="16" rx="2.5" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C4C8D4" strokeWidth="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-        </div>
-      </PhoneFrame>
+      {/* Pre-rendered device shot: the PNG carries its own bezel, so it needs a
+          drop-shadow (alpha-aware) rather than the frame's box-shadow. */}
+      <img
+        src={HeroAppShot}
+        alt="The TalkAM app showing a community feed with a daily mood check-in"
+        width={1312}
+        height={2656}
+        /* Intrinsic 1312×2656 (≈1:2.02) — height follows so it never distorts. */
+        className={classNames(
+          "relative h-auto w-[240px] select-none sm:w-[270px] lg:w-[290px] xl:w-[320px]",
+          "[filter:drop-shadow(0_40px_90px_rgba(0,0,0,0.55))]",
+          "transition-transform duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)]",
+          "motion-safe:lg:hover:[transform:perspective(1200px)_rotateY(-7deg)_translateY(-12px)]"
+        )}
+      />
     </div>
   </MarketingHero>
 );

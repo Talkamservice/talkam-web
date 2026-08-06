@@ -10,98 +10,61 @@
  * Copy + figures are transcribed from "TalkAM Landing Page.dc.html" § 1C.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-/** Hero phone — community feed preview. */
-export const heroFeedPosts = [
+/**
+ * "Inside the app" showcase — the three pre-rendered card artworks.
+ *
+ * The artwork carries its own headline and sub-copy as PIXELS, so `title` and
+ * `body` here are transcriptions of what is baked into each PNG. They are
+ * rendered as visually-hidden text: without them the section contributes three
+ * images and no heading to the document outline, and a screen reader gets
+ * nothing but the alt text.
+ *
+ * `aspect` comes from the pixels. All three files are 804×1748 and share a
+ * pixel-identical type grid (headline y88–271, sub-copy y311–401, plus a third
+ * sub-copy line at y419–455 on the therapists card), after which the phone runs
+ * to y1747 and bleeds off an unauthored bottom edge — so a top-anchored crop
+ * loses nothing. How much can be cut differs per card, though: 1 and 2 hold a
+ * straight-on phone spanning x48–754 that reads at any height, while 3's phone
+ * enters narrow at y640 and its hand only reaches the frame edge at y1141. Crop
+ * 3 to the others' height and you get a small phone adrift in empty black.
+ *
+ * So card 3's 1500 is a floor, not a preference. The 1150/1300 on the other two
+ * are a choice: both clear their own content comfortably, and stepping the three
+ * heights up in gentle increments turns that constraint into a deliberate
+ * rhythm — which is also what opens the space each card's emoji chip sits in.
+ * Because the type grid is shared, flush tops put all three baked headlines on
+ * one baseline, so the differing heights read as designed rather than as drift.
+ *
+ * That staircase only earns its keep when the three cards are seen TOGETHER, so
+ * it starts at `lg`. Below that the row is a filmstrip showing one card at a
+ * time, where unequal heights stop reading as rhythm and just leave a few
+ * hundred pixels of blank under the shorter cards — hence the uniform 1500 crop
+ * on mobile, which also lets cards 1 and 2 show nearly their whole phone.
+ */
+export const appShowcaseCards = [
   {
-    id: "p1",
-    author: "QuietStorm",
-    topic: "Anxiety",
-    topicTone: "teal",
-    avatar: "bg-gradient-to-br from-brand-200 to-wellness-400",
-    timeAgo: "2h ago",
-    body: "First therapy session tomorrow and I'm actually excited instead of scared. This community got me here 💙",
-    likes: 128,
-    comments: 24,
+    key: "community",
+    title: "Talk freely. Be heard.",
+    body: "Join thousands of Nigerians sharing journeys anonymously with support.",
+    alt: "The TalkAM community feed on a phone, showing an anonymous post in the Anxiety topic with replies.",
+    aspect: "aspect-[804/1500] lg:aspect-[804/1150]",
+    chip: { emoji: "🙂", label: "How are you feeling?" },
   },
   {
-    id: "p2",
-    author: "GentleTide",
-    topic: "Work Stress",
-    topicTone: "brand",
-    avatar: "bg-gradient-to-br from-[#C79A3B] to-gold-400",
-    timeAgo: "5h ago",
-    body: "Small win: I set a boundary at work today and the world didn't end. Progress 🌱",
-    likes: 89,
-    comments: 12,
-  },
-];
-
-/** App showcase phone 1 — find a therapist. */
-export const therapistPreview = {
-  filters: [
-    { label: "Anxiety", active: true },
-    { label: "Trauma", active: false },
-    { label: "Family", active: false },
-  ],
-  therapists: [
-    {
-      id: "t1",
-      name: "Dr. Adewale O.",
-      title: "Clinical Psychologist",
-      rating: "4.9",
-      sessions: "120+ sessions",
-      avatar: "bg-gradient-to-br from-brand-400 to-navy-700",
-      primary: true,
-    },
-    {
-      id: "t2",
-      name: "Dr. Ngozi E.",
-      title: "Therapist, CBT",
-      rating: "4.8",
-      sessions: "90+ sessions",
-      avatar: "bg-gradient-to-br from-wellness-400 to-wellness-600",
-      primary: false,
-    },
-  ],
-};
-
-/** App showcase phone 2 — live session. */
-export const sessionPreview = {
-  therapistName: "Dr. Adewale Okafor",
-  initial: "A",
-  elapsed: "Session · 24:16",
-};
-
-/** App showcase phone 3 — mood check-in. */
-export const moodPreview = {
-  moods: ["😔", "😐", "🙂", "😄"],
-  selectedIndex: 2,
-  // Height % + bar colour for the "This week" mini chart.
-  week: [
-    { height: 40, color: "bg-[#D1EAF8]" },
-    { height: 60, color: "bg-[#D1EAF8]" },
-    { height: 50, color: "bg-[#8FC9EC]" },
-    { height: 75, color: "bg-[#8FC9EC]" },
-    { height: 65, color: "bg-brand-400" },
-    { height: 88, color: "bg-brand-400" },
-    { height: 80, color: "bg-wellness-400" },
-  ],
-  streakNote: "You've logged 7 days in a row 🌱 Keep it going.",
-};
-
-/** Captions under each showcase phone. */
-export const appShowcaseCaptions = [
-  {
-    title: "Book real support",
-    body: "Browse verified therapists by specialty and book in seconds.",
+    key: "safety",
+    title: "Share safely, no judgement",
+    body: "Join a community that understands. Post anonymously and find support.",
+    alt: "A TalkAM community page on a phone, showing the Anxiety group with 46K members and a subscribe button.",
+    aspect: "aspect-[804/1500] lg:aspect-[804/1300]",
+    chip: { emoji: "💙", label: "You're not alone" },
   },
   {
-    title: "Meet on your terms",
-    body: "Video, voice, or chat sessions — private and secure.",
-  },
-  {
-    title: "Track how you feel",
-    body: "Private daily check-ins reveal patterns over time.",
+    key: "therapists",
+    title: "Access licensed therapists",
+    body: "Find a trusted therapist, start a video or voice call, and track your progress in one place.",
+    alt: "A hand holding a phone showing a TalkAM therapist profile with specialties, session formats and reviews.",
+    aspect: "aspect-[804/1500]",
+    chip: { emoji: "🌱", label: "7 days in a row" },
   },
 ];
 
