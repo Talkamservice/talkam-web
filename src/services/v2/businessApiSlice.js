@@ -32,6 +32,17 @@ export const businessApiSlice = apiSliceV2.injectEndpoints({
       transformResponse: (response) => response?.data,
     }),
 
+    // Start the postpay card-on-file capture — returns the Flutterwave inline
+    // config for a small refundable verification hold; the webhook saves the card
+    // token and refunds the hold, so nothing is really charged.
+    cardSetup: builder.mutation({
+      query: () => ({
+        url: `/business/organization/card/setup`,
+        method: "POST",
+      }),
+      transformResponse: (response) => response?.data,
+    }),
+
     registerCompany: builder.mutation({
       query: (body) => ({
         url: `/business/register`,
@@ -173,6 +184,7 @@ export const {
   useGetPricingConfigQuery,
   useGetIndustriesQuery,
   useCheckoutPlanMutation,
+  useCardSetupMutation,
   useRegisterCompanyMutation,
   useGetInvitationQuery,
   useAcceptInvitationMutation,

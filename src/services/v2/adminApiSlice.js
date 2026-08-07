@@ -59,6 +59,12 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       providesTags: ["AdminTherapists"],
     }),
 
+    getAdminTherapistDetail: builder.query({
+      query: (id) => ({ url: `/business/therapists/${id}` }),
+      transformResponse: (response) => response?.data,
+      providesTags: ["AdminTherapists"],
+    }),
+
     getSafetyReports: builder.query({
       query: () => `/business/safety-reports`,
       transformResponse: (response) => response?.data?.reports ?? [],
@@ -153,6 +159,19 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       transformResponse: (response) => response?.data ?? [],
       providesTags: ["AdminBilling"],
     }),
+
+    // Bank-transfer reconciliation (web §11) — mint the org's dedicated virtual
+    // account from a director's BVN/NIN + consent. The raw id goes to the gateway
+    // only; the billing summary refetches to show the new account.
+    createVirtualAccount: builder.mutation({
+      query: (body) => ({
+        url: `/business/organization/virtual-account`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["AdminBilling"],
+    }),
   }),
 });
 
@@ -186,6 +205,7 @@ export const {
   useDeactivateEmployeeMutation,
   useReactivateEmployeeMutation,
   useGetAdminTherapistsQuery,
+  useGetAdminTherapistDetailQuery,
   useGetSafetyReportsQuery,
   useGetAdminActivityQuery,
   useUpdateCompanyProfileMutation,
@@ -200,4 +220,5 @@ export const {
   useSaveAdminNotificationPreferencesMutation,
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
+  useCreateVirtualAccountMutation,
 } = adminApiSlice;

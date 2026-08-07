@@ -320,8 +320,8 @@ export const AdminMyTherapists = () => {
                 </div>
               </Td>
               <Td>
-                <Badge tone={t.is_verified ? "blue" : "purple"}>
-                  {t.is_verified ? "TalkAM network" : "Pending review"}
+                <Badge tone={t.is_own ? "purple" : "blue"}>
+                  {t.is_own ? "Your own provider" : "TalkAM network"}
                 </Badge>
               </Td>
               <Td>{t.specialty}</Td>

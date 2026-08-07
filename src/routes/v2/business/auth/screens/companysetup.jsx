@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import classNames from "classnames";
@@ -31,6 +31,7 @@ import {
   useSaveSeatsMutation,
   useSavePlanMutation,
   useCheckoutPlanMutation,
+  useCardSetupMutation,
 } from "../../../../../services/v2/businessApiSlice";
 import { useRequestOtpV2Mutation } from "../../../../../services/v2/authApiSliceV2";
 
@@ -623,7 +624,7 @@ export const ChooseSeats = () => {
           {prepay ? (
             <>
               <div className="flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
-                <span className="text-[13px] font-extraboldNunito text-white">Due at signup</span>
+                <span className="text-[13px] font-extraboldNunito text-white">Your first bill</span>
                 <span className="text-[22px] font-extraboldNunito text-white">
                   {naira(seatsMonthly + bundleDueNow)}
                 </span>
@@ -634,6 +635,10 @@ export const ChooseSeats = () => {
                   {naira(seatsMonthly)}
                 </span>
               </div>
+              <p className="pt-0.5 text-[10.5px] leading-[1.45] text-white/40">
+                Seats + bundle. Charged now if you pay by card, or on your first invoice
+                (net terms) if you pay by transfer — you choose on the next step.
+              </p>
             </>
           ) : (
             <div className="flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
@@ -665,25 +670,37 @@ export const PlanBilling = () => {
   const { data: org } = useGetOrganizationQuery();
   const [savePlan, { isLoading }] = useSavePlanMutation();
   const [checkoutPlan, { isLoading: isCheckingOut }] = useCheckoutPlanMutation();
+  const [cardSetup, { isLoading: isSavingCard }] = useCardSetupMutation();
   const [error, setError] = useState(null);
   const [checkout, setCheckout] = useState(null);
+  // Payment outcome shown as a result screen before we move on: null while the
+  // form is up, then { status: "success" | "error", mode: "bundle" | "card" }
+  // once the Flutterwave modal closes.
+  const [result, setResult] = useState(null);
+  // Flutterwave calls onClose both after a completed payment (once we close the
+  // modal) and when the user dismisses it. This flag lets onClose tell the two
+  // apart so a cancelled checkout never advances the flow like a paid one.
+  const paidRef = useRef(false);
 
   // Flutterwave inline checkout for the prepay + "Pay by card" path. The hook is
   // set up at the top level (rules of hooks); we trigger the modal from an effect
   // once the backend hands back a checkout, mirroring the consumer flow.
+  const savingCard = checkout?.mode === "card"; // postpay card-on-file, not a bundle charge
   const flwConfig = {
     public_key: import.meta.env.VITE_FLUTTERWAVE_KEY,
     tx_ref: checkout?.reference ?? "",
     amount: checkout?.amount ?? 0,
     currency: checkout?.currency ?? "NGN",
-    payment_options: "card,mobilemoney,ussd",
+    payment_options: savingCard ? "card" : "card,mobilemoney,ussd",
     customer: {
       email: checkout?.customer?.email ?? "",
       name: checkout?.customer?.name ?? "",
     },
     customizations: {
       title: "TalkAM for Business",
-      description: "Session bundle — charged now so sessions are ready immediately",
+      description: savingCard
+        ? "Save your card — a small refundable hold verifies it (not charged)"
+        : "Session bundle — charged now so sessions are ready immediately",
     },
     meta: { ...(checkout?.meta ?? {}) },
   };
@@ -691,15 +708,26 @@ export const PlanBilling = () => {
 
   useEffect(() => {
     if (!checkout) return;
+    const mode = checkout.mode === "card" ? "card" : "bundle";
+    paidRef.current = false;
     handleFlutterPayment({
-      callback: () => {
+      callback: (response) => {
+        // Only count a genuinely successful charge/hold — a failed or cancelled
+        // attempt can land here too. The webhook reconciles the payment
+        // server-side; we just show the result and let them continue.
+        const ok = ["successful", "completed"].includes(response?.status);
+        if (ok) {
+          paidRef.current = true;
+          setResult({ status: "success", mode });
+        }
         closePaymentModal();
-        navigate(V2.businessTherapistBench, { replace: true });
+        // Not ok: onClose runs next and records the error result.
       },
       onClose: () => {
-        // The card window was dismissed — let them continue; the bundle can be
-        // paid later from the dashboard.
-        navigate(V2.businessTherapistBench, { replace: true });
+        // Fires after a successful payment too (we close the modal above), so
+        // only treat it as a cancellation when nothing was paid.
+        if (paidRef.current) return;
+        setResult({ status: "error", mode });
       },
     });
     setCheckout(null);
@@ -721,12 +749,29 @@ export const PlanBilling = () => {
   const meteredSessions = quote?.metered_sessions ?? false;
   const planName = quote?.plan?.name ?? pricing?.plan?.name ?? "";
   const planFeatures = quote?.plan?.features ?? pricing?.plan?.features ?? [];
-  const bank = pricing?.bank_details ?? {};
+  // §11: when dedicated virtual accounts are live, bank-transfer orgs get their own
+  // auto-reconciling account from the billing dashboard — so we no longer show a
+  // shared account to pay into here at signup.
+  const vaEnabled = pricing?.virtual_accounts_enabled ?? false;
 
-  // Only the prepay + card path charges anything now (the session bundle). Postpay
-  // has nothing to charge at signup, so it just saves and continues.
+  // Prepay + card charges the session bundle now; postpay + card saves the card
+  // for month-end (a small refundable hold, nothing charged). Both need Flutterwave.
   const cardChargesNow = o.payMethod === "card" && prepay && dueAtSignup > 0;
-  const cardUnavailable = cardChargesNow && !import.meta.env.VITE_FLUTTERWAVE_KEY;
+  const cardSavesNow = o.payMethod === "card" && !prepay;
+  const cardUnavailable = (cardChargesNow || cardSavesNow) && !import.meta.env.VITE_FLUTTERWAVE_KEY;
+
+  // Bank-transfer copy (web §11) — only shown when dedicated accounts are live.
+  // Prepay activates on payment (never on trust).
+  const transferNote = prepay
+    ? "No card? Set up your company's own dedicated account (a quick verification) from your billing dashboard, then transfer your first bill there — your session bundle activates automatically once it lands. Nothing is charged today."
+    : "No card? Set up your company's own dedicated account from your billing dashboard; your monthly invoices reconcile against it automatically. Nothing is charged today.";
+
+  // Card is the only rail until dedicated bank transfer (§11) is enabled — never
+  // leave the picker on a bank-transfer choice that isn't shown.
+  useEffect(() => {
+    if (!vaEnabled && o.payMethod !== "card") o.set({ payMethod: "card" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vaEnabled]);
 
   const proceed = async (persist) => {
     setError(null);
@@ -739,8 +784,9 @@ export const PlanBilling = () => {
     try {
       await savePlan({ pay_method: o.payMethod, payment_timing: o.paymentTiming }).unwrap();
 
-      // Card: charge the session bundle now via Flutterwave. Returns amount 0 (and
-      // falls through) when there is nothing to charge — postpay, or no bundle.
+      // Card: prepay charges the session bundle now; postpay saves the card for
+      // month-end (a small refundable hold). Either way the effect opens the
+      // Flutterwave modal; amount 0 falls through (e.g. prepay with no bundle).
       if (o.payMethod === "card") {
         // Bail before starting a checkout if we can't open Flutterwave — otherwise
         // we'd leave an orphan pending payment behind.
@@ -751,10 +797,12 @@ export const PlanBilling = () => {
           return;
         }
 
-        const result = await checkoutPlan().unwrap();
+        const checkoutResult = prepay
+          ? await checkoutPlan().unwrap()
+          : await cardSetup().unwrap();
 
-        if (result?.amount > 0 && result?.reference) {
-          setCheckout(result); // the effect opens the Flutterwave modal
+        if (checkoutResult?.amount > 0 && checkoutResult?.reference) {
+          setCheckout({ ...checkoutResult, mode: prepay ? "bundle" : "card" });
           return;
         }
       }
@@ -764,6 +812,108 @@ export const PlanBilling = () => {
       setError(apiErrorMessage(err));
     }
   };
+
+  // Retry from the result screen: clear the outcome and re-run the checkout.
+  const retry = () => {
+    setResult(null);
+    proceed(true);
+  };
+
+  // Payment result screen — shown after the Flutterwave modal closes, before the
+  // flow moves on. Success gates the next step behind an explicit Continue;
+  // error keeps them here with a Retry.
+  if (result) {
+    const success = result.status === "success";
+    const savedCard = result.mode === "card";
+    return (
+      <>
+        <StepEyebrow>STEP 4 OF 4 · PLAN &amp; BILLING</StepEyebrow>
+        <div className="flex flex-col items-center py-2 text-center">
+          <div
+            className={classNames(
+              "mb-5 flex h-16 w-16 items-center justify-center rounded-full",
+              success ? "bg-wellness-50" : "bg-surface-errorTint"
+            )}
+          >
+            <svg
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={success ? "text-wellness-600" : "text-surface-errorInk"}
+              aria-hidden="true"
+            >
+              {success ? (
+                <path d="M20 6 9 17l-5-5" />
+              ) : (
+                <>
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 8v4M12 16h.01" />
+                </>
+              )}
+            </svg>
+          </div>
+
+          <ScreenTitle>
+            {success
+              ? savedCard
+                ? "Card saved"
+                : "Payment received"
+              : savedCard
+                ? "Card setup wasn't completed"
+                : "Payment wasn't completed"}
+          </ScreenTitle>
+          <ScreenLead className="mb-6 max-w-[400px]">
+            {success
+              ? savedCard
+                ? "Your card is verified and saved. Your seats bill to it at each month-end — nothing was charged today."
+                : "Your first month is paid and your session bundle is active, so your team can start booking right away."
+              : savedCard
+                ? "Your card wasn't saved, so billing isn't set up yet. Try again, or skip and add it later from your dashboard."
+                : "No payment was taken, so your plan isn't active yet. Try again, or skip and pay later from your dashboard."}
+          </ScreenLead>
+
+          {success ? (
+            <AuthButton
+              tone="brand"
+              onClick={() => navigate(V2.businessTherapistBench, { replace: true })}
+            >
+              Continue to Team invites →
+            </AuthButton>
+          ) : (
+            <>
+              <AuthButton
+                tone="brand"
+                className="mb-2.5"
+                disabled={isLoading || isCheckingOut || isSavingCard}
+                onClick={retry}
+              >
+                {isCheckingOut || isSavingCard ? "Opening checkout…" : "Try again"}
+              </AuthButton>
+              <button
+                type="button"
+                onClick={() => setResult(null)}
+                className="mb-4 w-full cursor-pointer text-center text-caption font-boldNunito text-brand-400"
+              >
+                Choose another payment method
+              </button>
+              <button
+                type="button"
+                onClick={() => proceed(false)}
+                className="w-full cursor-pointer text-center text-caption text-ink-400"
+              >
+                Skip billing setup for now — I&apos;ll add this later from the dashboard
+              </button>
+            </>
+          )}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -873,48 +1023,43 @@ export const PlanBilling = () => {
           How would you like to pay?
         </div>
         <p className="mb-3.5 text-caption text-ink-400">
-          {prepay
-            ? "Most teams pay by invoice. Smaller teams can pay by card for instant setup."
-            : "Pay-as-you-go is settled each month — by net-terms invoice or auto-charged to a card."}
+          {!vaEnabled
+            ? "Pay by card to set up instantly — or skip below and add billing later."
+            : prepay
+              ? "Most teams pay by invoice. Smaller teams can pay by card for instant setup."
+              : "Your seats are billed monthly; pay-as-you-go sessions are settled each month-end — by net-terms invoice or auto-charged to a card."}
         </p>
 
-        <div className="mb-4 flex gap-2.5">
-          {[
-            { key: "invoice", label: "Invoice / bank transfer" },
-            { key: "card", label: "Pay by card" },
-          ].map((method) => (
-            <button
-              key={method.key}
-              type="button"
-              onClick={() => o.set({ payMethod: method.key })}
-              aria-pressed={o.payMethod === method.key}
-              className={classNames(
-                "flex-1 cursor-pointer rounded-[10px] border-[1.5px] p-[11px] text-center text-[12.5px] font-boldNunito",
-                o.payMethod === method.key
-                  ? "border-brand-400 bg-brand-25 text-brand-600"
-                  : "border-ink-200 bg-white text-ink-500"
-              )}
-            >
-              {method.label}
-            </button>
-          ))}
-        </div>
+        {/* Bank transfer (dedicated account) is only offered when §11 is enabled;
+            until then card is the only rail and the toggle is hidden entirely. */}
+        {vaEnabled ? (
+          <div className="mb-4 flex gap-2.5">
+            {[
+              { key: "invoice", label: "Invoice / bank transfer" },
+              { key: "card", label: "Pay by card" },
+            ].map((method) => (
+              <button
+                key={method.key}
+                type="button"
+                onClick={() => o.set({ payMethod: method.key })}
+                aria-pressed={o.payMethod === method.key}
+                className={classNames(
+                  "flex-1 cursor-pointer rounded-[10px] border-[1.5px] p-[11px] text-center text-[12.5px] font-boldNunito",
+                  o.payMethod === method.key
+                    ? "border-brand-400 bg-brand-25 text-brand-600"
+                    : "border-ink-200 bg-white text-ink-500"
+                )}
+              >
+                {method.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
-        {o.payMethod === "invoice" ? (
-          <>
-            <div className="mb-3.5 rounded-ds-md bg-ink-50 p-3.5 text-caption leading-[1.8] text-ink-600">
-              <strong className="font-boldNunito">{bank.company}</strong> · Bank Transfer
-              <br />
-              Account Name: {bank.account_name}
-              <br />
-              Bank: {bank.bank} · Account No: {bank.account_number}
-            </div>
-            <p className="text-[11px] leading-[1.6] text-ink-400">
-              {prepay
-                ? "Your first invoice covers your first month of seats plus the session bundle; from the next month, seats are invoiced monthly. Sessions are available immediately and drawn down as they happen. Suits NGOs, schools, firms and enterprises paying on net terms."
-                : "At month-end we send one invoice for your active seats plus the sessions your team used that month — settle it by bank transfer on net terms. Nothing is charged up front."}
-            </p>
-          </>
+        {vaEnabled && o.payMethod === "invoice" ? (
+          <div className="rounded-ds-md bg-ink-50 p-3.5 text-caption leading-[1.7] text-ink-600">
+            {transferNote}
+          </div>
         ) : (
           <>
             <div className="mb-3 flex items-center gap-2.5 rounded-ds-md border border-[#EEF0F4] bg-ink-50 px-4 py-3">
@@ -937,7 +1082,7 @@ export const PlanBilling = () => {
             <p className="text-[11px] leading-[1.6] text-ink-400">
               {prepay
                 ? "Your first month — seats plus the session bundle — is charged now via Flutterwave, so sessions are ready immediately. From next month, seats are billed to the same card. Best for smaller teams who'd rather not wait on an invoice."
-                : "Seats and the sessions your team uses are auto-charged to your card at month-end — you only pay for what's used. Card setup completes right after onboarding."}
+                : "Your seats are billed monthly to this card — a fixed charge for your licensed capacity — and the sessions your team uses are added at each month-end. You only pay for the sessions actually used. We verify your card now with a small refundable hold; nothing is charged today."}
             </p>
           </>
         )}
@@ -954,17 +1099,19 @@ export const PlanBilling = () => {
 
       <AuthButton
         tone="brand"
-        disabled={isLoading || isCheckingOut || cardUnavailable}
+        disabled={isLoading || isCheckingOut || isSavingCard || cardUnavailable}
         className="mb-2.5"
         onClick={() => proceed(true)}
       >
-        {isCheckingOut
+        {isCheckingOut || isSavingCard
           ? "Opening checkout…"
           : isLoading
             ? "Saving…"
             : cardChargesNow
               ? `Pay ${naira(dueAtSignup)} with Flutterwave →`
-              : "Confirm Plan & Continue →"}
+              : cardSavesNow
+                ? "Save card & Continue →"
+                : "Confirm Plan & Continue →"}
       </AuthButton>
       <button
         type="button"

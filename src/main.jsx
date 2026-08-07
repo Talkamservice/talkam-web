@@ -443,6 +443,11 @@ const router = createBrowserRouter([
 
         //used the direct component and not the dynamic import cause it delays the users input on search cause the module is not downloaded yet...
         element: <Search />,
+        // Search renders its own tabs internally (no <Outlet />), so these children
+        // never actually render — "posts" is kept only so /search/posts still
+        // matches (see posttags.jsx / navsearchbar.jsx). "groups"/"media" aren't
+        // linked from anywhere, so their lazy loads are commented out rather than
+        // deleted in case Search is ever switched to route-driven tabs.
         children: [
           {
             index: true,
@@ -450,31 +455,31 @@ const router = createBrowserRouter([
           },
           {
             path: "posts",
-            lazy: async () => {
-              let { SearchPosts } = await import(
-                "./routes/dashboard/search/searchposts"
-              );
-              return { Component: SearchPosts };
-            },
+            // lazy: async () => {
+            //   let { SearchPosts } = await import(
+            //     "./routes/dashboard/search/searchposts"
+            //   );
+            //   return { Component: SearchPosts };
+            // },
           },
-          {
-            path: "groups",
-            lazy: async () => {
-              let { SearchGroup } = await import(
-                "./routes/dashboard/search/searchgroups"
-              );
-              return { Component: SearchGroup };
-            },
-          },
-          {
-            path: "media",
-            lazy: async () => {
-              let { SearchMedia } = await import(
-                "./routes/dashboard/search/searchmedia"
-              );
-              return { Component: SearchMedia };
-            },
-          },
+          // {
+          //   path: "groups",
+          //   lazy: async () => {
+          //     let { SearchGroup } = await import(
+          //       "./routes/dashboard/search/searchgroups"
+          //     );
+          //     return { Component: SearchGroup };
+          //   },
+          // },
+          // {
+          //   path: "media",
+          //   lazy: async () => {
+          //     let { SearchMedia } = await import(
+          //       "./routes/dashboard/search/searchmedia"
+          //     );
+          //     return { Component: SearchMedia };
+          //   },
+          // },
         ],
       },
     ],

@@ -32,13 +32,44 @@ const KPI_ICONS = {
   calendar: (c) => <Icon.Calendar size={17} color={c} />,
 };
 
-/** Twelve evenly-spaced days across the month, matching the deck's bar count. */
-const sampleDays = (series, count = 12) => {
+/**
+ * Collapse the month's days into `count` bars (matching the deck's bar count).
+ * The days are BUCKETED into contiguous groups and each group's sessions are
+ * SUMMED — never sampled — so a session on any day is always counted. (Sampling
+ * every ~Nth day silently dropped sessions on the skipped days.) Each bar takes
+ * its date label from the first day in its bucket.
+ */
+const bucketDays = (series, count = 12) => {
   if (!series?.length) return [];
   if (series.length <= count) return series;
 
-  const step = (series.length - 1) / (count - 1);
-  return Array.from({ length: count }, (_, i) => series[Math.round(i * step)]);
+  const size = series.length / count;
+  return Array.from({ length: count }, (_, i) => {
+    const group = series.slice(Math.round(i * size), Math.round((i + 1) * size));
+    return {
+      date: group[0]?.date,
+      sessions: group.reduce((sum, d) => sum + (d.sessions ?? 0), 0),
+    };
+  });
+};
+
+/**
+ * Zeroed day buckets across the current month, so a new or suppressed org still
+ * sees the chart's frame (axis + flat baseline) rather than a blank box. Carries
+ * no real data — every bucket is 0.
+ */
+const emptyMonthSeries = (count = 12) => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const step = (daysInMonth - 1) / (count - 1);
+
+  return Array.from({ length: count }, (_, i) => {
+    const day = Math.round(i * step) + 1;
+    const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return { date, sessions: 0 };
+  });
 };
 
 export const AdminOverview = () => {
@@ -61,7 +92,10 @@ export const AdminOverview = () => {
   const roi = data?.roi;
   const floor = data?.cohort_floor ?? 5;
 
-  const bars = sampleDays(activity?.value ?? []);
+  // Real data when we have it; otherwise a zeroed month so the chart still
+  // renders empty instead of blank (covers both a brand-new and a suppressed org).
+  const rawBars = bucketDays(activity?.value ?? []);
+  const bars = rawBars.length ? rawBars : emptyMonthSeries();
   const peak = Math.max(...bars.map((b) => b.sessions), 1);
   const peakIndex = bars.findIndex((b) => b.sessions === peak);
 
@@ -115,12 +149,12 @@ export const AdminOverview = () => {
             icon={KPI_ICONS[kpi.icon](kpi.iconColor)}
             iconBg={kpi.iconBg}
             badge={kpi.badge ? <Badge tone={kpi.tone}>{kpi.badge}</Badge> : null}
-            value={kpi.suppressed ? "—" : String(kpi.value ?? 0)}
+            value={String(kpi.value ?? 0)}
             label={kpi.label}
           >
             {kpi.suppressed ? (
               <span className="text-[10.5px] text-ink-400">
-                Hidden until {floor} employees have joined
+                Unlocks at {floor} employees
               </span>
             ) : null}
           </KpiCard>
@@ -133,7 +167,7 @@ export const AdminOverview = () => {
               Est. ROI
             </span>
           }
-          value={roi?.suppressed ? "—" : compactNaira(roi?.value?.gross_value)}
+          value={compactNaira(roi?.value?.gross_value ?? 0)}
           label="Productivity Saved"
         >
           <button
@@ -170,8 +204,6 @@ export const AdminOverview = () => {
 
           {isLoading ? (
             <AdminSkeleton className="h-[100px]" />
-          ) : activity?.suppressed ? (
-            <Withheld cohort={activity.cohort} floor={floor} />
           ) : (
             <>
               <div className="mb-2 flex h-[100px] items-end gap-[5px] px-0.5">

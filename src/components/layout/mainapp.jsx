@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import {
@@ -32,7 +32,11 @@ import { Modal } from "../global/modal";
 import { useResendOtpMutation } from "../../services/authApiSlice";
 import { toast } from "sonner";
 import { handleError } from "../../utils/handleError";
-import { Messages } from "../../routes/dashboard/messages/messages";
+const Messages = lazy(() =>
+  import("../../routes/dashboard/messages/messages").then((m) => ({
+    default: m.Messages,
+  }))
+);
 import { DrawerModal } from "../global/drawer";
 import { useGetNotificationStatsQuery } from "../../services/notificationsApiSlice";
 import { useIsAuth } from "../../hooks/useIsAuth";
@@ -608,7 +612,9 @@ export const MainAppLayout = ({ children }) => {
         onClose={() => navigate(-1)}
         contentWidth="w-full lg:w-9/12"
       >
-        <Messages />
+        <Suspense fallback={<ColoredLoader />}>
+          <Messages />
+        </Suspense>
       </DrawerModal>
     </section>
   );

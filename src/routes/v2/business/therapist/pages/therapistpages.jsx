@@ -111,6 +111,7 @@ export const TherapistHome = () => {
   const { open } = useTherapist();
   const [slide, setSlide] = useState(0);
   const [checklistOpen, setChecklistOpen] = useState(true);
+  const [paused, setPaused] = useState(false);
 
   const { data: me } = useGetMeV2Query();
   const { data: home, isLoading } = useGetTherapistHomeQuery();
@@ -126,9 +127,25 @@ export const TherapistHome = () => {
   const review = home?.latest_review;
   const isBusinessEmployed = home?.employment?.is_business_employed;
 
-  const item = onboardingChecklist.items[slide];
-  const tone = CHECKLIST_TONE[item.tone];
-  const last = slide === onboardingChecklist.items.length - 1;
+  const checklistItems = onboardingChecklist.items;
+  const last = slide === checklistItems.length - 1;
+
+  // Auto-advance the getting-started carousel — each slide slides left after a
+  // beat and loops at the end. Pauses on hover and for reduced-motion users.
+  const reduceMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  useEffect(() => {
+    if (!isBusinessEmployed || !checklistOpen || paused || reduceMotion) {
+      return undefined;
+    }
+    const id = setTimeout(
+      () => setSlide((i) => (i + 1) % checklistItems.length),
+      5000
+    );
+    return () => clearTimeout(id);
+  }, [slide, isBusinessEmployed, checklistOpen, paused, reduceMotion, checklistItems.length]);
 
   /* Deck's "needs your attention" strip, built from the live counts. */
   const followups = [
@@ -170,7 +187,11 @@ export const TherapistHome = () => {
 
       {/* getting-started carousel — only for business-employed therapists */}
       {isBusinessEmployed && checklistOpen ? (
-        <div className="relative overflow-hidden rounded-[18px] border border-[#E0D3F5] bg-[linear-gradient(135deg,#F3EEFB,#EEF4FC)] px-[22px] py-5">
+        <div
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          className="relative overflow-hidden rounded-[18px] border border-[#E0D3F5] bg-[linear-gradient(135deg,#F3EEFB,#EEF4FC)] px-[22px] py-5"
+        >
           <div aria-hidden="true" className="pointer-events-none absolute -right-5 -top-[30px] h-[150px] w-[150px] rounded-full bg-[radial-gradient(circle,rgba(107,68,168,0.12)_0%,transparent_68%)]" />
           <div className="relative z-[1]">
             <div className="mb-4 flex items-start justify-between gap-3.5">
@@ -199,19 +220,32 @@ export const TherapistHome = () => {
             </div>
 
             <div className="p-0.5">
-              <div className="relative flex min-h-[150px] flex-col overflow-hidden rounded-[14px] border border-[#EBE3F7] bg-white px-6 py-[22px] shadow-[0_8px_22px_rgba(107,68,168,0.10)]">
-                <span className="absolute right-5 top-3.5 text-[34px] font-blackNunito leading-none tracking-[-0.02em] text-[rgba(107,68,168,0.09)]">
-                  {`0${slide + 1}`}
-                </span>
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="rounded-full px-[9px] py-[3px] text-[9.5px] font-extraboldNunito tracking-[0.05em]" style={{ background: tone.bg, color: tone.fg }}>
-                    {tone.label}
-                  </span>
+              {/* Viewport frame; the track slides horizontally beneath it. */}
+              <div className="relative min-h-[150px] overflow-hidden rounded-[14px] border border-[#EBE3F7] bg-white shadow-[0_8px_22px_rgba(107,68,168,0.10)]">
+                <div
+                  className="flex transition-transform duration-500 ease-out motion-reduce:transition-none"
+                  style={{ transform: `translateX(-${slide * 100}%)` }}
+                >
+                  {checklistItems.map((it, i) => {
+                    const itemTone = CHECKLIST_TONE[it.tone];
+                    return (
+                      <div key={i} className="relative flex min-h-[150px] w-full shrink-0 flex-col px-6 py-[22px]">
+                        <span className="absolute right-5 top-3.5 text-[34px] font-blackNunito leading-none tracking-[-0.02em] text-[rgba(107,68,168,0.09)]">
+                          {`0${i + 1}`}
+                        </span>
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="rounded-full px-[9px] py-[3px] text-[9.5px] font-extraboldNunito tracking-[0.05em]" style={{ background: itemTone.bg, color: itemTone.fg }}>
+                            {itemTone.label}
+                          </span>
+                        </div>
+                        <div className="mb-[9px] max-w-[90%] text-[18px] font-blackNunito leading-[1.3] tracking-[-0.01em] text-navy-800">
+                          {it.title}
+                        </div>
+                        <div className="max-w-[94%] text-[13px] leading-[1.62] text-[#5B5B6B]">{it.sub}</div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="mb-[9px] max-w-[90%] text-[18px] font-blackNunito leading-[1.3] tracking-[-0.01em] text-navy-800">
-                  {item.title}
-                </div>
-                <div className="max-w-[94%] text-[13px] leading-[1.62] text-[#5B5B6B]">{item.sub}</div>
               </div>
             </div>
 
@@ -907,8 +941,9 @@ export const TherapistMessages = () => {
   };
 
   return (
-    <div className="grid gap-3.5 lg:grid-cols-[280px_1fr]">
-      <PanelCard title="Clients">
+    <div className="grid gap-3.5 lg:h-[50dvh] lg:grid-cols-[280px_1fr]">
+      <PanelCard title="Clients" className="flex min-h-0 flex-col">
+        <div className="min-h-0 flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="flex flex-col gap-2 p-3.5"><Skeleton className="h-12" /><Skeleton className="h-12" /></div>
         ) : threads.length === 0 ? (
@@ -931,10 +966,11 @@ export const TherapistMessages = () => {
             </button>
           ))
         )}
+        </div>
       </PanelCard>
 
-      <PanelCard title={active ? clientRef(active) : "Messages"} subtitle="Encrypted · sessions and chats are never recorded">
-        <div className="flex flex-col gap-3 p-5">
+      <PanelCard title={active ? clientRef(active) : "Messages"} subtitle="Encrypted · sessions and chats are never recorded" className="flex min-h-0 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-5">
           {messages.length === 0 ? (
             <EmptyNote>{active ? "No messages in this conversation yet." : "Pick a conversation to read it."}</EmptyNote>
           ) : (
@@ -947,7 +983,7 @@ export const TherapistMessages = () => {
             ))
           )}
         </div>
-        <form className="flex items-center gap-2 border-t border-ink-100 p-4" onSubmit={send}>
+        <form className="flex shrink-0 items-center gap-2 border-t border-ink-100 p-4" onSubmit={send}>
           <input placeholder="Write a message…" aria-label="Write a message" value={draft} onChange={(e) => setDraft(e.target.value)} disabled={!currentId} className="h-10 flex-1 rounded-ds-md border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800" />
           <TealButton type="submit" disabled={!currentId || isSending || !draft.trim()}>
             <Icon.Send size={14} />
