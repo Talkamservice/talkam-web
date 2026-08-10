@@ -18,7 +18,11 @@ import { Withheld } from "../../../../../components/v2/dashboard/chrome";
 import {
   useGetAdminTherapistsQuery,
   useGetTeamNeedsQuery,
+  useAddTherapistToNetworkMutation,
+  useRemoveTherapistFromNetworkMutation,
+  useDeactivateEmployeeMutation,
 } from "../../../../../services/v2/adminApiSlice";
+import { apiErrorMessage } from "../../auth/authlayout";
 
 /** Admin › Therapist Network and My Therapists. */
 
@@ -28,10 +32,10 @@ export const AdminTherapistNetwork = () => {
   const { open, showToast } = useAdminModal();
   const [search, setSearch] = useState("");
   const [specialty, setSpecialty] = useState("All Specialties");
-  const [added, setAdded] = useState([]);
 
   const { data, isLoading } = useGetAdminTherapistsQuery();
   const { data: teamNeeds } = useGetTeamNeedsQuery();
+  const [addToNetwork, { isLoading: isAdding }] = useAddTherapistToNetworkMutation();
 
   const therapists = data?.therapists ?? [];
   const specialtyOptions = ["All Specialties", ...(data?.specialties ?? [])];
@@ -133,8 +137,11 @@ export const AdminTherapistNetwork = () => {
         {[
           {
             label: "THERAPIST ACCESS SEATS",
-            value: `${networkStats.seats_used ?? 0} / ${networkStats.seats_total ?? 0}`,
-            note: `${seatsAvailable} available`,
+            value:
+              networkStats.seats_total == null
+                ? String(networkStats.seats_used ?? 0)
+                : `${networkStats.seats_used ?? 0} / ${networkStats.seats_total}`,
+            note: networkStats.seats_total == null ? "No capacity limit set" : `${seatsAvailable} available`,
           },
           {
             label: "SESSIONS REMAINING",
@@ -157,7 +164,7 @@ export const AdminTherapistNetwork = () => {
       {visible.length ? (
         <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((t) => {
-            const inNetwork = t.in_network || added.includes(t.id);
+            const inNetwork = t.in_network;
             return (
               <Card key={t.id}>
                 <div className="mb-3 flex items-center gap-[11px]">
@@ -228,11 +235,16 @@ export const AdminTherapistNetwork = () => {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => {
-                        setAdded((p) => [...p, t.id]);
-                        showToast(`${t.name} added to your network`);
+                      disabled={isAdding}
+                      onClick={async () => {
+                        try {
+                          await addToNetwork(t.id).unwrap();
+                          showToast(`${t.name} added to your network`);
+                        } catch (err) {
+                          showToast(apiErrorMessage(err, "Couldn't add that therapist — please try again"));
+                        }
                       }}
-                      className="flex-1 cursor-pointer rounded-[9px] bg-brand-400 py-2 text-center text-caption font-boldNunito text-white hover:bg-brand-600"
+                      className="flex-1 cursor-pointer rounded-[9px] bg-brand-400 py-2 text-center text-caption font-boldNunito text-white hover:bg-brand-600 disabled:opacity-60"
                     >
                       Add to network
                     </button>
@@ -256,11 +268,25 @@ export const AdminTherapistNetwork = () => {
   );
 };
 
+/** "Remove from network" means different things depending on the row: an
+ *  own/employer-vouched provider is a seat-holding OrganizationMember,
+ *  removed the same way an employee is; a TalkAM-network therapist is an
+ *  explicit membership row, removed via its own endpoint. One button, two
+ *  underlying actions. */
+const useRemoveTherapistAction = () => {
+  const [deactivateEmployee] = useDeactivateEmployeeMutation();
+  const [removeFromNetwork] = useRemoveTherapistFromNetworkMutation();
+
+  return (t) =>
+    t.is_own ? deactivateEmployee(t.member_id).unwrap() : removeFromNetwork(t.id).unwrap();
+};
+
 export const AdminMyTherapists = () => {
   const { open } = useAdminModal();
   const { data } = useGetAdminTherapistsQuery();
   const therapists = data?.therapists ?? [];
   const networkStats = data?.stats ?? {};
+  const removeTherapist = useRemoveTherapistAction();
 
   const mine = therapists.filter((t) => t.in_network);
   const seatsAvailable = (networkStats.seats_total ?? 0) - (networkStats.seats_used ?? 0);
@@ -355,6 +381,7 @@ export const AdminMyTherapists = () => {
                         body: "They stop taking new bookings from your team. Sessions already scheduled still go ahead.",
                         confirmLabel: "Remove",
                         toast: `${t.name} removed from your network`,
+                        onConfirm: () => removeTherapist(t),
                       })
                     }
                     className="cursor-pointer rounded-[7px] border border-[#FFCDD2] bg-surface-errorTint px-2.5 py-1.5 text-[11px] font-boldNunito text-surface-errorInk"

@@ -60,6 +60,21 @@ export const therapistApiSlice = apiSliceV2.injectEndpoints({
       invalidatesTags: ["TherapistSessions", "TherapistHome"],
     }),
 
+    /* Same endpoints as employeeApiSlice's rescheduleBooking/respondToReschedule
+     * (role-agnostic backend) — redefined here so a therapist-side action
+     * invalidates THIS slice's cache. RTK Query tags only match within the
+     * same createApi instance, so the employee-slice hooks are a no-op for
+     * therapist-side queries. */
+    requestBookingReschedule: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/user/bookings/${id}/reschedule`, method: "POST", body }),
+      invalidatesTags: ["TherapistSessions", "TherapistHome"],
+    }),
+
+    respondToBookingReschedule: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/user/reschedules/${id}/respond`, method: "POST", body }),
+      invalidatesTags: ["TherapistSessions", "TherapistHome"],
+    }),
+
     getSessionNotes: builder.query({
       query: (id) => `/therapist/sessions/${id}/notes`,
       transformResponse: (response) => response?.data,
@@ -73,6 +88,24 @@ export const therapistApiSlice = apiSliceV2.injectEndpoints({
         body,
       }),
       invalidatesTags: ["TherapistNotes", "TherapistSessions", "TherapistHome"],
+    }),
+
+    /* ── Inbound session requests (no committed slot yet) ────────────── */
+
+    getTherapistSessionRequests: builder.query({
+      query: () => `/therapist/session-requests`,
+      transformResponse: (response) => response?.data?.requests ?? [],
+      providesTags: ["TherapistSessionRequests"],
+    }),
+
+    proposeSessionRequest: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/therapist/session-requests/${id}/propose`, method: "POST", body }),
+      invalidatesTags: ["TherapistSessionRequests", "TherapistSessions", "TherapistHome"],
+    }),
+
+    declineSessionRequest: builder.mutation({
+      query: (id) => ({ url: `/therapist/session-requests/${id}/decline`, method: "POST" }),
+      invalidatesTags: ["TherapistSessionRequests", "TherapistHome"],
     }),
 
     /* ── Earnings (reuse of §13; 403 for business-employed) ──────────── */
@@ -112,8 +145,13 @@ export const {
   useGetSessionRequestQuery,
   useAcknowledgeSessionMutation,
   useDeclineSessionMutation,
+  useRequestBookingRescheduleMutation,
+  useRespondToBookingRescheduleMutation,
   useGetSessionNotesQuery,
   useSaveSessionNotesMutation,
+  useGetTherapistSessionRequestsQuery,
+  useProposeSessionRequestMutation,
+  useDeclineSessionRequestMutation,
   useGetEarningsQuery,
   useGetEarningsTransactionsQuery,
   useGetTherapistProfileQuery,

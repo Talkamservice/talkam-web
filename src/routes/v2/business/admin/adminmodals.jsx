@@ -14,8 +14,17 @@ import {
   useGetBillingInvoicesQuery,
   useGetAdminTherapistDetailQuery,
   useRequestOrgDeletionMutation,
+  useDeactivateEmployeeMutation,
+  useRemoveTherapistFromNetworkMutation,
+  useAddOwnTherapistMutation,
+  useRequestTherapistCapacityMutation,
 } from "../../../../services/v2/adminApiSlice";
 import { useRequestOtpV2Mutation } from "../../../../services/v2/authApiSliceV2";
+import {
+  useSendInvitationsMutation,
+  useImportRosterMutation,
+  useGetOnboardingTopicsQuery,
+} from "../../../../services/v2/businessApiSlice";
 import { OtpBoxes, apiErrorMessage } from "../auth/authlayout";
 
 /**
@@ -73,11 +82,71 @@ export const AdminModalProvider = () => {
 
 /* ── Individual modals ────────────────────────────────────────────────── */
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const InviteModal = ({ open, close, showToast }) => {
   const [role, setRole] = useState("employee");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState(null);
+  const [sendInvitations, { isLoading }] = useSendInvitationsMutation();
+
+  const reset = () => {
+    setRole("employee");
+    setEmail("");
+    setError(null);
+  };
+
+  const handleClose = () => {
+    reset();
+    close();
+  };
+
+  const submit = async () => {
+    const trimmed = email.trim().toLowerCase();
+
+    if (!trimmed) {
+      setError("Enter an email address.");
+      return;
+    }
+    if (!EMAIL_RE.test(trimmed)) {
+      setError("Enter a valid work email address.");
+      return;
+    }
+
+    setError(null);
+
+    try {
+      await sendInvitations({
+        invites: [{ email: trimmed, role, department: null }],
+      }).unwrap();
+      showToast(`Invite sent to ${trimmed}`);
+      reset();
+      close();
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
 
   return (
-    <Modal open={open} onClose={close} title="Invite people" subtitle="Assign a role to each invite">
+    <Modal
+      open={open}
+      onClose={handleClose}
+      title="Invite people"
+      subtitle="Enter an email, then choose a role"
+    >
+      <div className="mb-4 flex flex-col gap-1.5">
+        <span className="text-[11px] font-boldNunito text-ink-400">Work email</span>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          placeholder="name@zenithbank.com"
+          className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800 focus:border-brand-400"
+        />
+      </div>
+
+      <div className="mb-1.5 text-[11px] font-boldNunito text-ink-400">Role</div>
       <div className="mb-4 flex gap-2">
         {[
           { key: "employee", label: "Employee" },
@@ -102,42 +171,19 @@ const InviteModal = ({ open, close, showToast }) => {
         ))}
       </div>
 
-      <div className="mb-4 flex flex-col gap-3">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-boldNunito text-ink-400">Work email</span>
-          <input
-            type="email"
-            placeholder="name@zenithbank.com"
-            className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-boldNunito text-ink-400">Department</span>
-          <select className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800">
-            <option>Technology</option>
-            <option>Finance</option>
-            <option>Operations</option>
-            <option>HR</option>
-            <option>Legal</option>
-          </select>
-        </label>
-      </div>
-
       <InfoStrip tone="purple" className="mb-4">
-        {role === "therapist"
-          ? "Therapists are routed into credential verification before they can accept sessions."
-          : "Employees go straight into onboarding. No seat is charged until they activate."}
+        Invite email states: &quot;Your employer has given you access to TalkAM. Everything
+        you do is private — your employer cannot see your activity.&quot;
       </InfoStrip>
 
+      {error ? (
+        <div className="mb-4 text-[12px] font-boldNunito text-signal-error">{error}</div>
+      ) : null}
+
       <div className="flex justify-end gap-2">
-        <SecondaryButton onClick={close}>Cancel</SecondaryButton>
-        <PrimaryButton
-          onClick={() => {
-            close();
-            showToast("Invite sent");
-          }}
-        >
-          Send invite
+        <SecondaryButton onClick={handleClose}>Cancel</SecondaryButton>
+        <PrimaryButton disabled={isLoading} onClick={submit}>
+          {isLoading ? "Sending…" : "Send invite"}
         </PrimaryButton>
       </div>
     </Modal>
@@ -145,29 +191,122 @@ const InviteModal = ({ open, close, showToast }) => {
 };
 
 const CsvUploadModal = ({ open, close, showToast }) => {
+  const fileInput = useRef(null);
   const [errored, setErrored] = useState(false);
+  const [fileName, setFileName] = useState("");
+  const [rows, setRows] = useState([]);
+  const [invalidCount, setInvalidCount] = useState(0);
+  const [error, setError] = useState(null);
+  const [importRoster, { isLoading: isImporting }] = useImportRosterMutation();
+  const [sendInvitations, { isLoading: isSending }] = useSendInvitationsMutation();
+
+  const reset = () => {
+    setErrored(false);
+    setFileName("");
+    setRows([]);
+    setInvalidCount(0);
+    setError(null);
+  };
+
+  const handleClose = () => {
+    reset();
+    close();
+  };
+
+  const onFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setError(null);
+
+    try {
+      const parsed = await importRoster(file).unwrap();
+      setErrored(false);
+      setFileName(file.name);
+      setRows(parsed?.rows ?? []);
+      setInvalidCount(parsed?.invalid_count ?? 0);
+    } catch {
+      setErrored(true);
+      setFileName(file.name);
+      setRows([]);
+      setInvalidCount(0);
+    }
+  };
+
+  const submit = async () => {
+    if (!rows.length) return;
+    setError(null);
+
+    try {
+      const result = await sendInvitations({
+        invites: rows.map((row) => ({
+          email: row.email,
+          role: row.role,
+          department: row.department || null,
+        })),
+      }).unwrap();
+      showToast(`${result?.data?.sent ?? rows.length} invites queued from ${fileName}`);
+      reset();
+      close();
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
 
   return (
-    <Modal open={open} onClose={close} title="Bulk invite via CSV" subtitle="columns: employee_id, email, department">
+    <Modal open={open} onClose={handleClose} title="Bulk invite via CSV" subtitle="columns: email, role, department">
+      <input
+        ref={fileInput}
+        type="file"
+        accept=".csv,text/csv"
+        onChange={onFile}
+        className="hidden"
+      />
+
       {errored ? (
         <>
           <div className="mb-2.5 flex items-center gap-3 rounded-[14px] border-2 border-dashed border-[#E8A3A3] bg-surface-errorField p-4">
             <div className="flex-1">
               <div className="text-[13px] font-boldNunito text-surface-errorInk">
-                roster.pdf couldn&apos;t be used
+                {fileName || "That file"} couldn&apos;t be used
               </div>
               <div className="text-[11px] text-signal-error">Only .csv files are supported</div>
             </div>
-            <SecondaryButton onClick={() => setErrored(false)}>Try again</SecondaryButton>
+            <SecondaryButton onClick={() => fileInput.current?.click()}>Try again</SecondaryButton>
           </div>
           <InfoStrip tone="red" className="mb-4">
-            File must be a .csv with columns: employee_id, email, department. Max size 5MB.
+            File must be a .csv with columns: email, role, department. Max size 5MB.
           </InfoStrip>
+        </>
+      ) : rows.length ? (
+        <>
+          <div className="mb-2.5 flex items-center gap-3 rounded-[14px] border-2 border-dashed border-brand-200 bg-[linear-gradient(135deg,#EEF4FC,#D1EEFE)] p-4">
+            <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-ds-md bg-white shadow-[0_2px_8px_rgba(1,127,200,0.12)]">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#3BA88F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+            <div className="flex-1">
+              <div className="text-[13px] font-boldNunito text-navy-800">{fileName}</div>
+              <div className="text-[11px] text-brand-600">
+                {rows.length} invite{rows.length === 1 ? "" : "s"} ready to send
+              </div>
+            </div>
+            <SecondaryButton onClick={() => fileInput.current?.click()}>Replace</SecondaryButton>
+          </div>
+          {invalidCount ? (
+            <InfoStrip tone="gold" className="mb-4">
+              {invalidCount} row{invalidCount > 1 ? "s were" : " was"} skipped — check the email
+              and role columns.
+            </InfoStrip>
+          ) : null}
         </>
       ) : (
         <button
           type="button"
-          onClick={() => setErrored(true)}
+          onClick={() => fileInput.current?.click()}
+          disabled={isImporting}
           className="mb-4 flex w-full cursor-pointer items-center gap-3.5 rounded-[14px] border-2 border-dashed border-brand-200 bg-[linear-gradient(135deg,#EEF4FC,#D1EEFE)] p-4 text-left"
         >
           <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-ds-md bg-white shadow-[0_2px_8px_rgba(1,127,200,0.12)]">
@@ -179,25 +318,21 @@ const CsvUploadModal = ({ open, close, showToast }) => {
           </span>
           <span className="flex-1">
             <span className="block text-body font-boldNunito text-navy-800">
-              Drop a .csv here or click to browse
+              {isImporting ? "Reading roster…" : "Drop a .csv here or click to browse"}
             </span>
-            <span className="block text-caption text-brand-600">
-              employee_id, email, department
-            </span>
+            <span className="block text-caption text-brand-600">email, role, department</span>
           </span>
         </button>
       )}
 
+      {error ? (
+        <div className="mb-4 text-[12px] font-boldNunito text-signal-error">{error}</div>
+      ) : null}
+
       <div className="flex justify-end gap-2">
-        <SecondaryButton onClick={close}>Cancel</SecondaryButton>
-        <PrimaryButton
-          disabled={errored}
-          onClick={() => {
-            close();
-            showToast("12 invites queued from roster.csv");
-          }}
-        >
-          Upload &amp; invite
+        <SecondaryButton onClick={handleClose}>Cancel</SecondaryButton>
+        <PrimaryButton disabled={errored || !rows.length || isSending} onClick={submit}>
+          {isSending ? "Sending…" : "Upload & invite"}
         </PrimaryButton>
       </div>
     </Modal>
@@ -477,75 +612,167 @@ const ConfirmModal = ({ open, close, showToast, context }) => (
   </Modal>
 );
 
-const CapacityModal = ({ open, close, showToast }) => (
-  <Modal open={open} onClose={close} title="Request more capacity" subtitle="Tell us which specialty to prioritise">
-    <div className="mb-4 flex flex-col gap-3">
-      <label className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-boldNunito text-ink-400">Specialty</span>
-        <select className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800">
-          <option>Anxiety</option>
-          <option>Depression</option>
-          <option>Work Stress</option>
-          <option>Relationships</option>
-          <option>Grief</option>
-          <option>PTSD / Trauma</option>
-        </select>
-      </label>
-      <label className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-boldNunito text-ink-400">Anything else?</span>
-        <textarea
-          rows={3}
-          placeholder="e.g. we need evening slots for our operations team"
-          className="resize-none rounded-ds-md border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
-        />
-      </label>
-    </div>
-    <div className="flex justify-end gap-2">
-      <SecondaryButton onClick={close}>Cancel</SecondaryButton>
-      <PrimaryButton
-        onClick={() => {
-          close();
-          showToast("Capacity request sent to TalkAM");
-        }}
-      >
-        Send request
-      </PrimaryButton>
-    </div>
-  </Modal>
-);
+const CapacityModal = ({ open, close, showToast }) => {
+  const [specialtyId, setSpecialtyId] = useState("");
+  const [note, setNote] = useState("");
+  const [error, setError] = useState(null);
+  const { data: topics } = useGetOnboardingTopicsQuery();
+  const [requestCapacity, { isLoading }] = useRequestTherapistCapacityMutation();
 
-const AddOwnTherapistModal = ({ open, close, showToast }) => (
-  <Modal open={open} onClose={close} title="Add your own therapist" subtitle="They complete the same verification">
-    <div className="mb-4 flex flex-col gap-3">
-      <label className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-boldNunito text-ink-400">Full name</span>
-        <input className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800" />
-      </label>
-      <label className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-boldNunito text-ink-400">Email</span>
-        <input type="email" className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800" />
-      </label>
-      <label className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-boldNunito text-ink-400">Billing</span>
-        <select className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800">
-          <option>Billed through TalkAM (draws from your bundle)</option>
-          <option>Settled directly with you</option>
-        </select>
-      </label>
-    </div>
-    <div className="flex justify-end gap-2">
-      <SecondaryButton onClick={close}>Cancel</SecondaryButton>
-      <PrimaryButton
-        onClick={() => {
-          close();
-          showToast("Therapist invite sent for verification");
-        }}
-      >
-        Send invite
-      </PrimaryButton>
-    </div>
-  </Modal>
-);
+  const reset = () => {
+    setSpecialtyId("");
+    setNote("");
+    setError(null);
+  };
+
+  const handleClose = () => {
+    reset();
+    close();
+  };
+
+  const submit = async () => {
+    setError(null);
+
+    try {
+      await requestCapacity({
+        specialty_category_id: specialtyId || null,
+        note: note.trim() || null,
+      }).unwrap();
+      showToast("Capacity request sent to TalkAM");
+      reset();
+      close();
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={handleClose} title="Request more capacity" subtitle="Tell us which specialty to prioritise">
+      <div className="mb-4 flex flex-col gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-boldNunito text-ink-400">Specialty</span>
+          <select
+            value={specialtyId}
+            onChange={(e) => setSpecialtyId(e.target.value)}
+            className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+          >
+            <option value="">Not sure / general capacity</option>
+            {(topics ?? []).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-boldNunito text-ink-400">Anything else?</span>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={3}
+            placeholder="e.g. we need evening slots for our operations team"
+            className="resize-none rounded-ds-md border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
+          />
+        </label>
+      </div>
+
+      {error ? (
+        <div className="mb-4 text-[12px] font-boldNunito text-signal-error">{error}</div>
+      ) : null}
+
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={handleClose}>Cancel</SecondaryButton>
+        <PrimaryButton disabled={isLoading} onClick={submit}>
+          {isLoading ? "Sending…" : "Send request"}
+        </PrimaryButton>
+      </div>
+    </Modal>
+  );
+};
+
+const OWN_THERAPIST_BILLING_OPTIONS = [
+  { value: "talkam_billed", label: "Billed through TalkAM (draws from your bundle)" },
+  { value: "self_billed", label: "Settled directly with you" },
+];
+
+const AddOwnTherapistModal = ({ open, close, showToast }) => {
+  const [email, setEmail] = useState("");
+  const [billingType, setBillingType] = useState(OWN_THERAPIST_BILLING_OPTIONS[0].value);
+  const [error, setError] = useState(null);
+  const [addOwnTherapist, { isLoading }] = useAddOwnTherapistMutation();
+
+  const reset = () => {
+    setEmail("");
+    setBillingType(OWN_THERAPIST_BILLING_OPTIONS[0].value);
+    setError(null);
+  };
+
+  const handleClose = () => {
+    reset();
+    close();
+  };
+
+  const submit = async () => {
+    const trimmed = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(trimmed)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+
+    setError(null);
+
+    try {
+      await addOwnTherapist({ email: trimmed, billing_type: billingType }).unwrap();
+      showToast("Therapist invite sent for verification");
+      reset();
+      close();
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={handleClose} title="Add your own therapist" subtitle="They complete the same verification">
+      <div className="mb-4 flex flex-col gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-boldNunito text-ink-400">Email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+            className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-boldNunito text-ink-400">Billing</span>
+          <select
+            value={billingType}
+            onChange={(e) => setBillingType(e.target.value)}
+            className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+          >
+            {OWN_THERAPIST_BILLING_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {error ? (
+        <div className="mb-4 text-[12px] font-boldNunito text-signal-error">{error}</div>
+      ) : null}
+
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={handleClose}>Cancel</SecondaryButton>
+        <PrimaryButton disabled={isLoading} onClick={submit}>
+          {isLoading ? "Sending…" : "Send invite"}
+        </PrimaryButton>
+      </div>
+    </Modal>
+  );
+};
 
 /** "★★★☆☆" for a numeric rating (rounded, clamped 0–5). */
 const starsFor = (r) => {
@@ -597,6 +824,12 @@ const TherapistModal = ({ open, close, context }) => {
   const { data: detail } = useGetAdminTherapistDetailQuery(context?.id, {
     skip: !open || !context?.id,
   });
+  // "Remove from network" means different things per row: an own/employer-
+  // vouched provider is a seat-holding OrganizationMember (deactivated the
+  // same way an employee is); a TalkAM-network therapist is an explicit
+  // membership row (its own endpoint). See therapists.jsx's identical split.
+  const [deactivateEmployee] = useDeactivateEmployeeMutation();
+  const [removeFromNetwork] = useRemoveTherapistFromNetworkMutation();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -846,6 +1079,8 @@ const TherapistModal = ({ open, close, context }) => {
                   body: "They stop taking new bookings from your team. Sessions already scheduled still go ahead.",
                   confirmLabel: "Remove",
                   toast: `${t.name} removed from your network`,
+                  onConfirm: () =>
+                    t.is_own ? deactivateEmployee(t.member_id).unwrap() : removeFromNetwork(t.id).unwrap(),
                 })
               }
               className="h-[46px] flex-1 rounded-[10px] border border-[#FFCDD2] bg-surface-errorTint text-[13px] font-boldNunito text-surface-errorInk hover:bg-[#FFE4E4]"

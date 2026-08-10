@@ -34,12 +34,15 @@ import {
   useGetTherapistSessionsQuery,
   useAcknowledgeSessionMutation,
   useDeclineSessionMutation,
+  useGetTherapistSessionRequestsQuery,
+  useDeclineSessionRequestMutation,
   useGetAvailabilityQuery,
   useUpdateAvailabilityMutation,
   useGetTherapistAnalyticsQuery,
   useGetEarningsQuery,
   useGetTherapistProfileQuery,
   useUpdateTherapistProfileMutation,
+  useRespondToBookingRescheduleMutation,
 } from "../../../../../services/v2/therapistApiSlice";
 import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
 import {
@@ -50,6 +53,7 @@ import {
   useGetMessagesQuery,
   useSendMessageMutation,
 } from "../../../../../services/v2/employeeApiSlice";
+import { apiErrorMessage } from "../../auth/authlayout";
 
 /**
  * All eight therapist dashboard pages, wired to api/v2/therapist.
@@ -105,10 +109,79 @@ const StatIcon = ({ name, stroke }) => {
   );
 };
 
+/** A pending reschedule on a session — the requester waits, the counterpart
+ *  gets an inline accept/decline. Renders nothing without one. Mirrors the
+ *  employee dashboard's own PendingRescheduleBanner. */
+const PendingRescheduleBanner = ({ session, showToast, dark = true }) => {
+  const { data: me } = useGetMeV2Query();
+  const [respond, { isLoading }] = useRespondToBookingRescheduleMutation();
+  const pr = session?.pending_reschedule;
+
+  if (!pr) return null;
+
+  const isMine = pr.requested_by === me?.id;
+
+  if (isMine) {
+    return (
+      <div
+        className={classNames(
+          "relative z-[1] mb-4 w-full rounded-[10px] border px-3.5 py-3 text-[12px]",
+          dark ? "border-white/[0.16] bg-white/10 text-white/70" : "border-ink-200 bg-ink-50 text-ink-500"
+        )}
+      >
+        Reschedule requested — waiting on them to confirm {sessionWhen(pr.new_starts_at)}.
+      </div>
+    );
+  }
+
+  const act = async (action) => {
+    try {
+      await respond({ id: pr.id, action }).unwrap();
+      showToast(action === "accept" ? "Reschedule confirmed" : "Reschedule declined");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't respond to that — please try again"));
+    }
+  };
+
+  return (
+    <div
+      className={classNames(
+        "relative z-[1] mb-4 w-full rounded-[10px] border px-3.5 py-3",
+        dark ? "border-white/[0.16] bg-white/10" : "border-ink-200 bg-ink-50"
+      )}
+    >
+      <div className={classNames("mb-2 text-[12px]", dark ? "text-white/80" : "text-ink-600")}>
+        New time proposed: {sessionWhen(pr.new_starts_at)}
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => act("decline")}
+          disabled={isLoading}
+          className={classNames(
+            "flex-1 cursor-pointer rounded-[8px] border px-3 py-2 text-[11.5px] font-boldNunito",
+            dark ? "border-white/[0.18] bg-transparent text-white" : "border-ink-200 bg-white text-ink-600"
+          )}
+        >
+          Decline
+        </button>
+        <button
+          type="button"
+          onClick={() => act("accept")}
+          disabled={isLoading}
+          className="flex-1 cursor-pointer rounded-[8px] bg-wellness-400 px-3 py-2 text-[11.5px] font-extraboldNunito text-white"
+        >
+          Accept
+        </button>
+      </div>
+    </div>
+  );
+};
+
 /* ── HOME ─────────────────────────────────────────────────────────────── */
 
 export const TherapistHome = () => {
-  const { open } = useTherapist();
+  const { open, showToast } = useTherapist();
   const [slide, setSlide] = useState(0);
   const [checklistOpen, setChecklistOpen] = useState(true);
   const [paused, setPaused] = useState(false);
@@ -310,6 +383,7 @@ export const TherapistHome = () => {
                   <div className="text-[12.5px] leading-[1.55] text-white/80">{next.last_note}</div>
                 </div>
               ) : null}
+              <PendingRescheduleBanner session={next} showToast={showToast} />
               <div className="relative z-[1] mt-auto flex gap-2.5">
                 <button type="button" onClick={() => open("joinConfirm", next)} className="flex-1 cursor-pointer rounded-[11px] bg-brand-400 p-3 text-center text-[13px] font-extraboldNunito text-white shadow-[0_6px_16px_rgba(1,127,200,0.35)]">
                   Join Session →
@@ -452,33 +526,54 @@ export const TherapistSessions = () => {
   const [tab, setTab] = useState("upcoming");
 
   const { data, isLoading } = useGetTherapistSessionsQuery();
+  const { data: leadsData, isLoading: isLoadingLeads } = useGetTherapistSessionRequestsQuery();
   const [acknowledge] = useAcknowledgeSessionMutation();
   const [decline, { isLoading: isDeclining }] = useDeclineSessionMutation();
+  const [declineLead, { isLoading: isDecliningLead }] = useDeclineSessionRequestMutation();
 
   const upcoming = (data?.upcoming ?? []).filter((s) => s.status === "confirmed");
-  const requests = (data?.upcoming ?? []).filter((s) => s.status === "pending_payment");
+  // Acknowledging a request is the therapist's own "dealt with" signal — the
+  // session itself stays pending_payment until the client actually pays, but
+  // it should still drop out of the action queue once reviewed.
+  const paymentPending = (data?.upcoming ?? []).filter((s) => s.status === "pending_payment" && !s.acknowledged_at);
+  const leads = leadsData ?? [];
   const past = data?.past ?? [];
+  const requestCount = paymentPending.length + leads.length;
 
   const clientRef = (session) => "Anonymous · #" + (4000 + ((session.user_id ?? session.id) % 6000));
+  const leadRef = (lead) => "Anonymous · #" + (4000 + (lead.id % 6000));
 
   const tabs = [
     { key: "upcoming", label: "Upcoming", count: upcoming.length },
     { key: "past", label: "Past", count: past.length },
-    { key: "requests", label: "Requests", count: requests.length },
+    { key: "requests", label: "Requests", count: requestCount },
   ];
 
-  const accept = async (id) => {
+  const acknowledgePending = async (s) => {
     try {
-      await acknowledge(id).unwrap();
-      showToast("Session accepted");
+      await acknowledge(s.id).unwrap();
+      showToast(
+        s.coverage === "consumer"
+          ? "Acknowledged — it'll move to Upcoming once payment is confirmed"
+          : "Session confirmed"
+      );
     } catch {
       showToast("Couldn't accept that — please try again");
     }
   };
 
-  const declineRequest = async (id) => {
+  const declinePending = async (id) => {
     try {
       await decline(id).unwrap();
+      showToast("Request declined");
+    } catch {
+      showToast("Couldn't decline that — please try again");
+    }
+  };
+
+  const declineNewClientLead = async (id) => {
+    try {
+      await declineLead(id).unwrap();
       showToast("Request declined");
     } catch {
       showToast("Couldn't decline that — please try again");
@@ -491,8 +586,8 @@ export const TherapistSessions = () => {
         {[
           { label: "Upcoming", value: String(upcoming.length) },
           { label: "Completed", value: String(past.filter((s) => s.status === "completed").length) },
-          { label: "Notes due", value: String(past.filter((s) => s.status === "completed" && !s.notes).length), tone: "text-signal-error" },
-          { label: "Requests", value: String(requests.length) },
+          { label: "Notes due", value: String(past.filter((s) => s.status === "completed" && !s.has_note).length), tone: "text-signal-error" },
+          { label: "Requests", value: String(requestCount) },
         ].map((s) => (
           <Card key={s.label}>
             <div className={classNames("text-h2 font-extraboldNunito", s.tone || "text-navy-800")}>{s.value}</div>
@@ -510,29 +605,32 @@ export const TherapistSessions = () => {
       </div>
 
       <PanelCard>
-        {isLoading ? (
+        {(isLoading || isLoadingLeads) ? (
           <div className="flex flex-col gap-2 p-5"><Skeleton className="h-12" /><Skeleton className="h-12" /></div>
         ) : null}
 
         {!isLoading && tab === "upcoming" && (upcoming.length ? upcoming.map((s) => (
-          <div key={s.id} className="flex flex-wrap items-center gap-3 border-b border-[#F5F5F5] px-5 py-4 last:border-b-0">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-extraboldNunito text-white" style={{ background: avatarColour(clientRef(s)) }}>
-              {String(s.user_id ?? s.id).slice(-1)}
-            </span>
-            <div className="min-w-[180px] flex-1">
-              <div className="text-[13px] font-boldNunito text-navy-800">{clientRef(s)}</div>
-              <div className="text-[11px] text-ink-400">{sessionWhen(s.starts_at)}</div>
+          <div key={s.id} className="border-b border-[#F5F5F5] px-5 py-4 last:border-b-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-extraboldNunito text-white" style={{ background: avatarColour(clientRef(s)) }}>
+                {String(s.user_id ?? s.id).slice(-1)}
+              </span>
+              <div className="min-w-[180px] flex-1">
+                <div className="text-[13px] font-boldNunito text-navy-800">{clientRef(s)}</div>
+                <div className="text-[11px] text-ink-400">{sessionWhen(s.starts_at)}</div>
+              </div>
+              <Badge tone="blue">{SESSION_FORMAT_LABEL[s.format] ?? s.format}</Badge>
+              <div className="flex gap-2">
+                <SecondaryButton onClick={() => open("rescheduleReq", s)}>Reschedule</SecondaryButton>
+                <TealButton onClick={() => open("joinConfirm", s)}>Join</TealButton>
+              </div>
             </div>
-            <Badge tone="blue">{SESSION_FORMAT_LABEL[s.format] ?? s.format}</Badge>
-            <div className="flex gap-2">
-              <SecondaryButton onClick={() => open("rescheduleReq", s)}>Reschedule</SecondaryButton>
-              <TealButton onClick={() => open("joinConfirm", s)}>Join</TealButton>
-            </div>
+            <PendingRescheduleBanner session={s} showToast={showToast} dark={false} />
           </div>
         )) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No upcoming sessions</div><p className="text-caption text-ink-400">Confirmed sessions will appear here.</p></div>)}
 
         {!isLoading && tab === "past" && (past.length ? past.map((s) => {
-          const done = !!s.notes;
+          const done = !!s.has_note;
           return (
             <div key={s.id} className="flex flex-wrap items-center gap-3 border-b border-[#F5F5F5] px-5 py-4 last:border-b-0">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-extraboldNunito text-white" style={{ background: avatarColour(clientRef(s)) }}>
@@ -551,24 +649,55 @@ export const TherapistSessions = () => {
           );
         }) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No past sessions</div></div>)}
 
-        {!isLoading && tab === "requests" && (requests.length ? requests.map((r) => (
-          <div key={r.id} className="border-b border-[#F5F5F5] px-5 py-4 last:border-b-0">
-            <div className="mb-3 flex flex-wrap items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-extraboldNunito text-white" style={{ background: avatarColour(clientRef(r)) }}>
-                {String(r.user_id ?? r.id).slice(-1)}
-              </span>
-              <div className="min-w-[180px] flex-1">
-                <div className="text-[13px] font-boldNunito text-navy-800">{clientRef(r)}</div>
-                <div className="text-[11px] text-ink-400">Requested {sessionWhen(r.starts_at)}</div>
+        {!isLoading && tab === "requests" && (requestCount ? (
+          <>
+            {leads.map((r) => (
+              <div key={`lead-${r.id}`} className="border-b border-[#F5F5F5] px-5 py-4 last:border-b-0">
+                <div className="mb-3 flex flex-wrap items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-extraboldNunito text-white" style={{ background: avatarColour(leadRef(r)) }}>
+                    {String(r.id).slice(-1)}
+                  </span>
+                  <div className="min-w-[180px] flex-1">
+                    <div className="flex items-center gap-2 text-[13px] font-boldNunito text-navy-800">
+                      {leadRef(r)}
+                      {r.focus ? <Badge tone="purple">{r.focus}</Badge> : null}
+                    </div>
+                    <div className="text-[11px] text-ink-400">Requested {sessionWhen(r.preferred_at)}</div>
+                  </div>
+                  <Badge tone="blue">{SESSION_FORMAT_LABEL[r.format] ?? r.format}</Badge>
+                </div>
+                {r.note ? <p className="mb-3 text-[12px] leading-[1.6] text-ink-500">{r.note}</p> : null}
+                <div className="flex gap-2">
+                  <TealButton onClick={() => open("proposeTime", r)}>Accept &amp; schedule</TealButton>
+                  <SecondaryButton onClick={() => declineNewClientLead(r.id)} disabled={isDecliningLead}>Decline</SecondaryButton>
+                </div>
               </div>
-              <Badge tone="blue">{SESSION_FORMAT_LABEL[r.format] ?? r.format}</Badge>
-            </div>
-            <div className="flex gap-2">
-              <TealButton onClick={() => accept(r.id)}>Accept &amp; schedule</TealButton>
-              <SecondaryButton onClick={() => declineRequest(r.id)} disabled={isDeclining}>Decline</SecondaryButton>
-            </div>
-          </div>
-        )) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No requests</div><p className="text-caption text-ink-400">New client requests will appear here.</p></div>)}
+            ))}
+            {paymentPending.map((r) => (
+              <div key={`pending-${r.id}`} className="border-b border-[#F5F5F5] px-5 py-4 last:border-b-0">
+                <div className="mb-3 flex flex-wrap items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-extraboldNunito text-white" style={{ background: avatarColour(clientRef(r)) }}>
+                    {String(r.user_id ?? r.id).slice(-1)}
+                  </span>
+                  <div className="min-w-[180px] flex-1">
+                    <div className="text-[13px] font-boldNunito text-navy-800">{clientRef(r)}</div>
+                    <div className="text-[11px] text-ink-400">
+                      Booked {sessionWhen(r.starts_at)}
+                      {r.coverage === "consumer" ? " · awaiting their payment" : ""}
+                    </div>
+                  </div>
+                  <Badge tone="blue">{SESSION_FORMAT_LABEL[r.format] ?? r.format}</Badge>
+                </div>
+                <div className="flex gap-2">
+                  <TealButton onClick={() => acknowledgePending(r)}>
+                    {r.coverage === "consumer" ? "Acknowledge" : "Accept & schedule"}
+                  </TealButton>
+                  <SecondaryButton onClick={() => declinePending(r.id)} disabled={isDeclining}>Decline</SecondaryButton>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No requests</div><p className="text-caption text-ink-400">New client requests will appear here.</p></div>)}
       </PanelCard>
     </>
   );

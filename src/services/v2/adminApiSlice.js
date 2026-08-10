@@ -65,6 +65,26 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       providesTags: ["AdminTherapists"],
     }),
 
+    addTherapistToNetwork: builder.mutation({
+      query: (therapistId) => ({ url: `/business/therapists/${therapistId}/add`, method: "POST" }),
+      invalidatesTags: ["AdminTherapists"],
+    }),
+
+    removeTherapistFromNetwork: builder.mutation({
+      query: (therapistId) => ({ url: `/business/therapists/${therapistId}/remove`, method: "POST" }),
+      invalidatesTags: ["AdminTherapists"],
+    }),
+
+    addOwnTherapist: builder.mutation({
+      query: (body) => ({ url: `/business/therapists/own`, method: "POST", body }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["AdminTherapists", "AdminEmployees", "Organization"],
+    }),
+
+    requestTherapistCapacity: builder.mutation({
+      query: (body) => ({ url: `/business/therapists/capacity-requests`, method: "POST", body }),
+    }),
+
     getSafetyReports: builder.query({
       query: () => `/business/safety-reports`,
       transformResponse: (response) => response?.data?.reports ?? [],
@@ -206,6 +226,10 @@ export const {
   useReactivateEmployeeMutation,
   useGetAdminTherapistsQuery,
   useGetAdminTherapistDetailQuery,
+  useAddTherapistToNetworkMutation,
+  useRemoveTherapistFromNetworkMutation,
+  useAddOwnTherapistMutation,
+  useRequestTherapistCapacityMutation,
   useGetSafetyReportsQuery,
   useGetAdminActivityQuery,
   useUpdateCompanyProfileMutation,

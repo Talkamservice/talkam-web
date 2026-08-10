@@ -36,12 +36,15 @@ import {
   useSavePrivacySettingsMutation,
   useUpdateProfileMutation,
   useGetFaqsQuery,
+  useGetMySessionRequestsQuery,
+  useRespondToRescheduleMutation,
 } from "../../../../../services/v2/employeeApiSlice";
 import {
   useGetMeV2Query,
   useGetConsentsQuery,
   useSaveConsentsMutation,
 } from "../../../../../services/v2/authApiSliceV2";
+import { apiErrorMessage } from "../../auth/authlayout";
 
 /**
  * The seven employee dashboard screens.
@@ -218,6 +221,125 @@ const checkinDayLabel = (date) => {
   });
 };
 
+/** A pending reschedule on an upcoming session — the requester waits, the
+ *  counterpart gets an inline accept/decline. Dark-on-dark styling matches
+ *  the "next session" hero it's meant to sit inside. Renders nothing when
+ *  there's no pending reschedule on the session. */
+const PendingRescheduleBanner = ({ session, showToast }) => {
+  const { data: me } = useGetMeV2Query();
+  const [respond, { isLoading }] = useRespondToRescheduleMutation();
+  const pr = session?.pending_reschedule;
+
+  if (!pr) return null;
+
+  const isMine = pr.requested_by === me?.id;
+
+  if (isMine) {
+    return (
+      <div className="relative z-[1] mb-4 rounded-[10px] border border-white/[0.16] bg-white/10 px-3.5 py-3 text-[12px] text-white/70">
+        Reschedule requested — waiting on them to confirm {sessionDayLabel(pr.new_starts_at)}.
+      </div>
+    );
+  }
+
+  const act = async (action) => {
+    try {
+      await respond({ id: pr.id, action }).unwrap();
+      showToast(action === "accept" ? "Reschedule confirmed" : "Reschedule declined");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't respond to that — please try again"));
+    }
+  };
+
+  return (
+    <div className="relative z-[1] mb-4 rounded-[10px] border border-white/[0.16] bg-white/10 px-3.5 py-3">
+      <div className="mb-2 text-[12px] text-white/80">
+        New time proposed: {sessionDayLabel(pr.new_starts_at)}
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => act("decline")}
+          disabled={isLoading}
+          className="flex-1 cursor-pointer rounded-[8px] border border-white/[0.18] bg-transparent px-3 py-2 text-[11.5px] font-boldNunito text-white"
+        >
+          Decline
+        </button>
+        <button
+          type="button"
+          onClick={() => act("accept")}
+          disabled={isLoading}
+          className="flex-1 cursor-pointer rounded-[8px] bg-[#3BA88F] px-3 py-2 text-[11.5px] font-extraboldNunito text-white"
+        >
+          Accept
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/** The most urgent of the member's own inbound session requests — a
+ *  therapist's proposed time to confirm/decline, or a pending one still
+ *  awaiting review. Renders nothing when there's neither. */
+const SessionRequestStatusCard = ({ open }) => {
+  const { data: requests } = useGetMySessionRequestsQuery();
+  const proposed = (requests ?? []).find((r) => r.status === "proposed");
+  const pending = (requests ?? []).find((r) => r.status === "pending");
+  const request = proposed ?? pending;
+
+  if (!request) return null;
+
+  // Business-employed members book through their employer's therapist
+  // network — the session confirms the moment the therapist proposes it, no
+  // card payment. A non-covered session (rare — outside this org's network)
+  // still needs one, so that path is kept as a fallback.
+  const needsPayment = request.session_status === "pending_payment";
+
+  return (
+    <Card className="border-[1.5px] border-[#C9E4D8] bg-wellness-25">
+      {proposed ? (
+        <>
+          <div className="mb-1 text-body font-extraboldNunito text-navy-800">
+            {request.therapist_name ?? "Your therapist"} proposed a time
+          </div>
+          <div className="mb-3.5 text-[12px] text-ink-500">
+            {sessionDayLabel(request.proposed_starts_at)} · {SESSION_TYPE_META[request.format]?.label ?? request.format}
+            {needsPayment ? null : " · Confirmed"}
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => open("declineSessionRequest", request)}
+              className="flex-1 cursor-pointer rounded-[10px] border border-ink-200 bg-white p-2.5 text-center text-[12px] font-boldNunito text-ink-600"
+            >
+              Decline
+            </button>
+            {needsPayment ? (
+              <button
+                type="button"
+                onClick={() => open("paySessionRequest", request)}
+                className="flex-1 cursor-pointer rounded-[10px] bg-wellness-400 p-2.5 text-center text-[12px] font-extraboldNunito text-white"
+              >
+                Confirm &amp; Pay
+              </button>
+            ) : null}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="mb-1 text-body font-extraboldNunito text-navy-800">
+            Request sent
+          </div>
+          <div className="text-[12px] leading-[1.6] text-ink-500">
+            Waiting on {request.therapist_name ?? "your therapist"} to propose a time for{" "}
+            {sessionDayLabel(request.preferred_at)}.
+          </div>
+        </>
+      )}
+    </Card>
+  );
+};
+
 /* ── HOME ─────────────────────────────────────────────────────────────────── */
 
 export const EmployeeHome = () => {
@@ -356,6 +478,7 @@ export const EmployeeHome = () => {
                   </div>
                 </div>
               </div>
+              <PendingRescheduleBanner session={next} showToast={showToast} />
               <div className="relative z-[1] mt-5 flex gap-2">
                 <button
                   type="button"
@@ -457,6 +580,8 @@ export const EmployeeHome = () => {
           </div>
         </Card>
       </div>
+
+      <SessionRequestStatusCard open={open} />
 
       {/* quick links */}
       <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
@@ -639,7 +764,7 @@ const QuickLink = ({ tint, stroke, path, title, note }) => (
 /* ── MY SESSIONS ──────────────────────────────────────────────────────────── */
 
 export const EmployeeSessions = () => {
-  const { open } = useEmployee();
+  const { open, showToast } = useEmployee();
 
   const { data: bookings, isLoading } = useGetBookingsQuery();
   const { data: careTeam } = useGetCareTeamQuery();
@@ -713,6 +838,7 @@ export const EmployeeSessions = () => {
                   </div>
                 </div>
               </div>
+              <PendingRescheduleBanner session={next} showToast={showToast} />
               <div className="relative z-[1] mt-auto flex gap-2.5">
                 <button
                   type="button"

@@ -124,7 +124,7 @@ export const businessApiSlice = apiSliceV2.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Invitations", "Organization"],
+      invalidatesTags: ["Invitations", "Organization", "AdminEmployees"],
     }),
 
     importRoster: builder.mutation({
@@ -143,7 +143,7 @@ export const businessApiSlice = apiSliceV2.injectEndpoints({
 
     revokeInvitation: builder.mutation({
       query: (id) => ({ url: `/business/invitations/${id}/revoke`, method: "POST" }),
-      invalidatesTags: ["Invitations", "Organization"],
+      invalidatesTags: ["Invitations", "Organization", "AdminEmployees"],
     }),
 
     /* ── Invited-member onboarding ───────────────────────────────────── */

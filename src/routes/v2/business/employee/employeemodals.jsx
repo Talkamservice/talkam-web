@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import classNames from "classnames";
+import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
+import { CallScreen } from "../../../../components/v2/callroom";
 import { V2 } from "../../../../constants/v2routes";
 import {
   MOODS,
@@ -19,6 +21,9 @@ import {
   useGetTherapistsQuery,
   useGetTherapistSlotsQuery,
   useCreateBookingMutation,
+  useInitiatePaymentMutation,
+  useSubmitSessionRequestMutation,
+  useDeclineMySessionRequestMutation,
   useRequestTopUpMutation,
   useGetCareTeamQuery,
   useReportUserMutation,
@@ -37,6 +42,11 @@ const slotLabel = (iso) => {
 /** Hours until a session — drives the refund copy the deck spells out. */
 const hoursUntil = (iso) =>
   (new Date(String(iso).replace(" ", "T")).getTime() - Date.now()) / 3600000;
+
+/** A therapist's specialty line — the care-team card's own `focus` string,
+ *  or the directory card's `specialties` array joined the same way. */
+const therapistFocus = (t) =>
+  t?.focus ?? ((t?.specialties ?? []).map((s) => s.name).filter(Boolean).join(" · ") || t?.credential_type || "");
 
 /**
  * Employee dashboard modals.
@@ -172,11 +182,11 @@ const RescheduleModal = ({ close, showToast, session }) => {
     if (!slot) return;
 
     try {
-      await reschedule({ id: session.id, starts_at: slot }).unwrap();
+      await reschedule({ id: session.id, new_starts_at: slot, reason: "client_request" }).unwrap();
       close();
-      showToast("Session rescheduled");
-    } catch {
-      showToast("Couldn't reschedule just now — please try again");
+      showToast(`Reschedule requested — ${session?.therapist_name ?? "your therapist"} needs to confirm it`);
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't reschedule just now — please try again"));
     }
   };
 
@@ -187,7 +197,7 @@ const RescheduleModal = ({ close, showToast, session }) => {
         <div className="flex flex-col gap-3.5 px-6 py-[22px]">
           <div className="text-[12px] leading-[1.6] text-ink-500">
             Currently: {slotLabel(session?.starts_at)} with {session?.therapist_name}. Pick a
-            new available slot below.
+            new slot to propose below — your session stays as-is until they confirm it.
           </div>
           <div className="grid grid-cols-2 gap-2">
             {slots.length === 0 ? (
@@ -217,10 +227,11 @@ const RescheduleModal = ({ close, showToast, session }) => {
             )}
           </div>
           <div className="rounded-[10px] bg-[#FBF5E8] px-3 py-2.5 text-[11.5px] leading-[1.6] text-[#9A6E0A]">
-            Rescheduling more than 24h before your session is free and instant.
+            Rescheduling more than 24h before your session is free — it just needs your
+            therapist to confirm the new time.
           </div>
           <NavyButton onClick={confirm} disabled={!slot || isLoading}>
-            {isLoading ? "Rescheduling…" : "Confirm New Time"}
+            {isLoading ? "Sending…" : "Request New Time"}
           </NavyButton>
         </div>
       </Sheet>
@@ -239,8 +250,9 @@ const CancelModal = ({ close, showToast, session }) => {
       await cancelBooking({ id: session.id }).unwrap();
       close();
       showToast("Session cancelled");
-    } catch {
-      showToast("Couldn't cancel just now — please try again");
+    } catch (err) {
+      close();
+      showToast(apiErrorMessage(err, "Couldn't cancel just now — please try again"));
     }
   };
 
@@ -279,6 +291,171 @@ const CancelModal = ({ close, showToast, session }) => {
   );
 };
 
+/* ── Session request (proposed time) ─────────────────────────────────────── */
+
+/** Confirming a therapist's proposed time is just paying for the session
+ *  they already created on hold — reuses the same real Flutterwave flow as
+ *  BookingModal, scoped to an existing session id instead of a new one. */
+const PaySessionRequestModal = ({ close, showToast, context: request }) => {
+  const [checkout, setCheckout] = useState(null);
+  const [result, setResult] = useState(null);
+  const paidRef = useRef(false);
+  const [initiatePayment, { isLoading }] = useInitiatePaymentMutation();
+
+  const flwConfig = {
+    public_key: import.meta.env.VITE_FLUTTERWAVE_KEY,
+    tx_ref: checkout?.reference ?? "",
+    amount: checkout?.amount ?? 0,
+    currency: checkout?.currency ?? "NGN",
+    payment_options: "card,mobilemoney,ussd",
+    customer: {
+      email: checkout?.customer?.email ?? "",
+      name: checkout?.customer?.name ?? "",
+    },
+    customizations: {
+      title: "TalkAM session",
+      description: `Session with ${request?.therapist_name ?? "your therapist"}`,
+    },
+    meta: { ...(checkout?.meta ?? {}) },
+  };
+  const handleFlutterPayment = useFlutterwave(flwConfig);
+
+  useEffect(() => {
+    if (!checkout) return;
+    paidRef.current = false;
+    handleFlutterPayment({
+      callback: (response) => {
+        const ok = ["successful", "completed"].includes(response?.status);
+        if (ok) {
+          paidRef.current = true;
+          setResult({ status: "success" });
+        }
+        closePaymentModal();
+      },
+      onClose: () => {
+        if (paidRef.current) return;
+        setResult({ status: "error" });
+      },
+    });
+    setCheckout(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkout]);
+
+  const pay = async () => {
+    try {
+      const payload = await initiatePayment({ id: request.session_id }).unwrap();
+      setCheckout(payload);
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't start payment — please try again"));
+    }
+  };
+
+  useEffect(() => {
+    if (request?.session_id) pay();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request?.session_id]);
+
+  if (result?.status === "success") {
+    return (
+      <Scrim onClose={close}>
+        <Sheet width={400} className="p-6 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-wellness-50">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1F8A5B" strokeWidth="2.5" strokeLinecap="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div className="mb-2 text-[17px] font-extraboldNunito text-navy-800">Payment received</div>
+          <div className="mb-5 text-[13px] leading-[1.7] text-ink-500">
+            Your session with {request?.therapist_name ?? "your therapist"} is confirmed.
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              close();
+              showToast("Session confirmed");
+            }}
+            className="h-12 w-full cursor-pointer rounded-[12px] bg-navy-800 text-[14px] font-extraboldNunito text-white"
+          >
+            Done
+          </button>
+        </Sheet>
+      </Scrim>
+    );
+  }
+
+  if (result?.status === "error") {
+    return (
+      <Scrim onClose={close}>
+        <Sheet width={400} className="p-6 text-center">
+          <div className="mb-2 text-[17px] font-extraboldNunito text-navy-800">Payment didn&apos;t go through</div>
+          <div className="mb-5 text-[13px] leading-[1.7] text-ink-500">
+            You can try again now, or come back to this from your Sessions page.
+          </div>
+          <div className="flex gap-2.5">
+            <button
+              type="button"
+              onClick={close}
+              className="h-12 flex-1 cursor-pointer rounded-[12px] border border-ink-200 bg-surface-page text-[13.5px] font-boldNunito text-ink-600"
+            >
+              Later
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setResult(null);
+                pay();
+              }}
+              disabled={isLoading}
+              className="h-12 flex-[1.4] cursor-pointer rounded-[12px] bg-navy-800 text-[13.5px] font-extraboldNunito text-white"
+            >
+              {isLoading ? "Starting…" : "Try again"}
+            </button>
+          </div>
+        </Sheet>
+      </Scrim>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[600] flex flex-col items-center justify-center gap-3 bg-black/40">
+      <span className="h-8 w-8 animate-spin rounded-full border-2 border-navy-200 border-t-navy-800" />
+      <div className="text-[13px] text-white">Starting payment…</div>
+    </div>
+  );
+};
+
+const DeclineSessionRequestModal = ({ close, showToast, context: request }) => {
+  const [decline, { isLoading }] = useDeclineMySessionRequestMutation();
+
+  const confirm = async () => {
+    try {
+      await decline(request.id).unwrap();
+      close();
+      showToast("Request declined");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't decline that — please try again"));
+    }
+  };
+
+  return (
+    <Scrim onClose={close}>
+      <Sheet width={400} className="p-6 text-center">
+        <div className="mb-2 text-[17px] font-extraboldNunito text-navy-800">Decline this time?</div>
+        <div className="mb-5 text-[13px] leading-[1.7] text-ink-500">
+          {request?.therapist_name ?? "Your therapist"} will be notified. You can send a new
+          request any time.
+        </div>
+        <div className="flex gap-2.5">
+          <GreyButton className="flex-1" onClick={close}>Keep looking</GreyButton>
+          <RedButton className="flex-1" onClick={confirm} disabled={isLoading}>
+            {isLoading ? "Declining…" : "Decline"}
+          </RedButton>
+        </div>
+      </Sheet>
+    </Scrim>
+  );
+};
+
 /* ── Feedback ─────────────────────────────────────────────────────────────── */
 
 const FeedbackModal = ({ close, showToast, session }) => {
@@ -313,10 +490,9 @@ const FeedbackModal = ({ close, showToast, session }) => {
 
   return (
     <Scrim onClose={close}>
-      <Sheet width={440} className="p-6">
-        <div className="mb-1 text-[16px] font-extraboldNunito text-navy-800">
-          How was your session?
-        </div>
+      <Sheet width={440}>
+        <SheetHeader title="How was your session?" onClose={close} />
+        <div className="p-6">
         <div className="mb-[18px] text-[12px] text-ink-400">
           {session?.therapist_name ? `With ${session.therapist_name} · ` : ""}
           {session?.starts_at ? `${slotLabel(session.starts_at).split(" · ")[0]} — ` : ""}
@@ -356,6 +532,14 @@ const FeedbackModal = ({ close, showToast, session }) => {
         <NavyButton className="w-full" onClick={submit} disabled={isLoading}>
           {isLoading ? "Submitting…" : "Submit Feedback"}
         </NavyButton>
+        <button
+          type="button"
+          onClick={close}
+          className="mt-3 w-full cursor-pointer text-center text-[12.5px] font-boldNunito text-ink-500"
+        >
+          Skip for now
+        </button>
+        </div>
       </Sheet>
     </Scrim>
   );
@@ -414,14 +598,31 @@ const PreSessionMoodModal = ({ close, open, session }) => {
 const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) => {
   const [type, setType] = useState(sessionType);
   const [slot, setSlot] = useState(null);
+  const [error, setError] = useState(null);
+  const [requestMode, setRequestMode] = useState(false);
+  const [preferredAt, setPreferredAt] = useState("");
+  const [note, setNote] = useState("");
+  const [submitRequest, { isLoading: isSendingRequest }] = useSubmitSessionRequestMutation();
 
+  const [selectedTherapistId, setSelectedTherapistId] = useState(null);
   const { data: careTeam } = useGetCareTeamQuery();
-  const { data: directory } = useGetTherapistsQuery({ per_page: 1 });
-  const [createBooking, { isLoading }] = useCreateBookingMutation();
+  const { data: directory } = useGetTherapistsQuery({ per_page: 20 });
+  const [createBooking, { isLoading: isBooking }] = useCreateBookingMutation();
 
-  /* Prefer the member's existing therapist — continuity of care is the point
-     of the card. Fall back to the first of the directory for a new member. */
-  const suggested = careTeam?.therapist ?? directory?.data?.[0] ?? null;
+  /* Whoever this member can actually book: their existing care-team
+     therapist first (continuity of care), then everyone else the directory
+     returns them — for a business-employed member that is scoped server-side
+     to their own org's therapists, not the whole public marketplace. */
+  const candidates = useMemo(() => {
+    const list = [];
+    if (careTeam?.therapist) list.push(careTeam.therapist);
+    (directory?.data ?? []).forEach((t) => {
+      if (!list.some((c) => c.id === t.id)) list.push(t);
+    });
+    return list;
+  }, [careTeam, directory]);
+
+  const suggested = candidates.find((c) => c.id === selectedTherapistId) ?? candidates[0] ?? null;
   const therapistId = suggested?.id;
 
   const { data: slotData } = useGetTherapistSlotsQuery(
@@ -431,8 +632,13 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
   const slots = useMemo(() => (slotData?.slots ?? slotData ?? []).slice(0, 6), [slotData]);
   const chosen = slot ?? slots[0]?.starts_at ?? slots[0] ?? null;
 
+  // Business-employed members book through their employer's therapist
+  // network (§09 coverage: org_bundle/org_external) — no card payment on
+  // this model, but the therapist still reviews every new session before
+  // it's real (same as the request/propose flow — see "Requests" tab).
   const confirm = async () => {
     if (!therapistId || !chosen) return;
+    setError(null);
 
     try {
       await createBooking({
@@ -442,16 +648,35 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
       }).unwrap();
       setSessionType(type);
       close();
-      showToast(`Session booked for ${slotLabel(chosen)}`);
+      showToast(`Booked for ${slotLabel(chosen)} — ${suggested?.name ?? "your therapist"} will confirm shortly`);
     } catch (err) {
-      // The only InvalidRequestException (400) SessionBookingService throws is
-      // the per-employee cap guard — every other rejection here is a 422 field
-      // error (slot taken, format unavailable, etc).
-      if (err?.status === 400) {
+      // 400 covers two distinct backend failures the controller maps to the
+      // same status: the per-employee cap guard, and "therapist not found"
+      // (e.g. a stale id). Only the former should open the cap-reached
+      // dialog — checking the message keeps a "not found" from silently
+      // being misread as "you're capped".
+      if (err?.status === 400 && /sessions allowed this billing cycle/i.test(err?.data?.message ?? "")) {
         open("capReached");
         return;
       }
-      showToast("Couldn't book that slot — it may have just been taken");
+      setError(apiErrorMessage(err, "Couldn't book that slot — it may have just been taken"));
+    }
+  };
+
+  const sendRequest = async () => {
+    if (!therapistId || !preferredAt) return;
+    setError(null);
+    try {
+      await submitRequest({
+        therapist_id: therapistId,
+        format: type,
+        preferred_at: preferredAt.replace("T", " ") + ":00",
+        note: note || undefined,
+      }).unwrap();
+      close();
+      showToast(`Request sent — ${suggested?.name ?? "your therapist"} will get back to you soon`);
+    } catch (err) {
+      setError(apiErrorMessage(err, "Couldn't send that request — please try again"));
     }
   };
 
@@ -461,6 +686,90 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
       active ? "border-navy-800 bg-navy-800 text-white" : "border-ink-200 bg-surface-page text-ink-600"
     );
 
+  if (requestMode) {
+    return (
+      <Scrim onClose={close}>
+        <Sheet width={440}>
+          <SheetHeader title="Request a session" onClose={close} />
+          <div className="flex flex-col gap-4 px-6 py-[22px]">
+            <div className="flex items-center gap-3 rounded-[12px] bg-[#F8F9FC] px-3.5 py-3">
+              <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[#017FC8] text-[13px] font-extraboldNunito text-white">
+                {initialsOf(suggested?.name ?? "")}
+              </span>
+              <div>
+                <div className="text-[13px] font-boldNunito text-navy-800">
+                  {suggested?.name ?? "Your therapist"}
+                </div>
+                <div className="text-[11px] text-ink-400">
+                  No open slot works? Tell them your preferred time instead.
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-[12px] font-boldNunito text-ink-600">
+                Preferred day &amp; time
+              </label>
+              <input
+                type="datetime-local"
+                value={preferredAt}
+                onChange={(e) => setPreferredAt(e.target.value)}
+                className="w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 py-[11px] text-[13px] font-semiboldNunito text-ink-800"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-[12px] font-boldNunito text-ink-600">
+                How would you like to connect?
+              </label>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setType("video")} className={chip(type === "video")}>
+                  Video call
+                </button>
+                <button type="button" onClick={() => setType("voice")} className={chip(type === "voice")}>
+                  Voice call
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-[12px] font-boldNunito text-ink-600">
+                Note (optional)
+              </label>
+              <textarea
+                rows={3}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Anything that helps them plan for the session…"
+                className="w-full resize-none rounded-[10px] border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] leading-[1.6] text-ink-800"
+              />
+            </div>
+
+            {error ? <p className="text-caption text-signal-error">{error}</p> : null}
+
+            <button
+              type="button"
+              onClick={sendRequest}
+              disabled={!therapistId || !preferredAt || isSendingRequest}
+              className="h-12 cursor-pointer rounded-[12px] bg-navy-800 text-[14px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:bg-[#C7CEDA]"
+            >
+              {isSendingRequest ? "Sending…" : "Send Request"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setRequestMode(false)}
+              className="cursor-pointer text-center text-[12.5px] font-boldNunito text-ink-500"
+            >
+              ← Back to available times
+            </button>
+          </div>
+        </Sheet>
+      </Scrim>
+    );
+  }
+
+  // Payment outcome screen — shown once the Flutterwave modal closes, in
+  // place of the booking form (the booking itself already exists by then).
   return (
     <Scrim onClose={close}>
       <Sheet width={440}>
@@ -475,11 +784,48 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
                 {suggested?.name ?? "Finding you a therapist…"}
               </div>
               <div className="text-[11px] text-ink-400">
-                {[suggested?.focus, chosen ? slotLabel(chosen) : null].filter(Boolean).join(" · ") ||
+                {[therapistFocus(suggested), chosen ? slotLabel(chosen) : null].filter(Boolean).join(" · ") ||
                   "Checking availability"}
               </div>
             </div>
           </div>
+
+          {candidates.length > 1 ? (
+            <div>
+              <span className="mb-2 block text-[12px] font-boldNunito text-ink-600">
+                Choose a therapist
+              </span>
+              <div className="flex flex-col gap-2">
+                {candidates.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTherapistId(c.id);
+                      setSlot(null);
+                    }}
+                    aria-pressed={therapistId === c.id}
+                    className={classNames(
+                      "flex cursor-pointer items-center gap-3 rounded-[10px] border-[1.5px] px-3 py-2.5 text-left",
+                      therapistId === c.id
+                        ? "border-navy-800 bg-[#F8F9FC]"
+                        : "border-ink-200 bg-white"
+                    )}
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#017FC8] text-[12px] font-extraboldNunito text-white">
+                      {initialsOf(c.name ?? "")}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[12.5px] font-boldNunito text-navy-800">{c.name}</div>
+                      <div className="truncate text-[11px] text-ink-400">
+                        {therapistFocus(c) || "Therapist"}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {slots.length > 1 ? (
             <div>
@@ -536,13 +882,23 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
             {suggested?.name ?? "your therapist"} will see this on their schedule right away.
           </div>
 
+          {error ? <p className="text-caption text-signal-error">{error}</p> : null}
+
           <button
             type="button"
             onClick={confirm}
-            disabled={!therapistId || !chosen || isLoading}
+            disabled={!therapistId || !chosen || isBooking}
             className="h-12 cursor-pointer rounded-[12px] bg-navy-800 text-[14px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:bg-[#C7CEDA]"
           >
-            {isLoading ? "Booking…" : "Confirm Session →"}
+            {isBooking ? "Booking…" : "Confirm Session →"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setRequestMode(true)}
+            disabled={!therapistId}
+            className="cursor-pointer text-center text-[12.5px] font-boldNunito text-ink-500 disabled:opacity-50"
+          >
+            Can&apos;t find a good time? Send a request instead
           </button>
         </div>
       </Sheet>
@@ -559,7 +915,10 @@ const CapReachedModal = ({ close, showToast }) => {
   const [requestTopUp, { isLoading }] = useRequestTopUpMutation();
 
   const used = bookings?.summary?.employee_cap_used ?? 0;
-  const cap = bookings?.summary?.employee_cap ?? used;
+  // null means uncapped (§ SessionCapService) — never collapse that into a
+  // fake "N of N" by falling back to `used`, which would fabricate a limit
+  // that was never actually hit.
+  const cap = bookings?.summary?.employee_cap ?? null;
   const company = me?.business?.organization?.name ?? "your company";
 
   const notify = async () => {
@@ -587,9 +946,15 @@ const CapReachedModal = ({ close, showToast }) => {
             You&apos;ve reached your monthly session limit
           </div>
           <div className="text-[13px] leading-[1.6] text-[#6B7280]">
-            You&apos;ve used all <b className="text-navy-800">{used} of {cap}</b> sessions
-            allowed at {company} for this billing cycle. To keep booking, ask your admin to
-            raise the cap or top up the session pool.
+            {cap !== null ? (
+              <>
+                You&apos;ve used all <b className="text-navy-800">{used} of {cap}</b> sessions
+                allowed at {company} for this billing cycle.
+              </>
+            ) : (
+              <>You&apos;ve reached your session limit at {company} for this billing cycle.</>
+            )}{" "}
+            To keep booking, ask your admin to raise the cap or top up the session pool.
           </div>
         </div>
 
@@ -646,129 +1011,14 @@ const CapReachedModal = ({ close, showToast }) => {
 
 /* ── In-call screen ───────────────────────────────────────────────────────── */
 
-const InCallScreen = ({ open, sessionType, session }) => {
-  const [seconds, setSeconds] = useState(0);
-  const [muted, setMuted] = useState(false);
-  const [cameraOn, setCameraOn] = useState(true);
-  const { data: me } = useGetMeV2Query();
-
-  const isVideo = (session?.format ?? sessionType) === "video";
-  const therapistName = session?.therapist_name ?? "";
-  const therapistInitials = initialsOf(therapistName);
-  const myInitial = (me?.name ?? me?.username ?? "").charAt(0).toUpperCase();
-
-  useEffect(() => {
-    const id = setInterval(() => setSeconds((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const label = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-
-  return (
-    <div className="fixed inset-0 z-[600] flex flex-col bg-[#0A1220]">
-      <div className="flex items-center justify-between px-[26px] py-5">
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-[#AC4242]" />
-          <span className="text-[13px] font-boldNunito text-white">{label}</span>
-        </div>
-        <span className="text-[12px] text-white/40">Encrypted · not recorded</span>
-      </div>
-
-      <div className="relative flex flex-1 items-center justify-center">
-        {isVideo ? (
-          <>
-            <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(160deg,#141B34,#0D2240)]">
-              <span className="flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#017FC8] text-[40px] font-extraboldNunito text-white">
-                {therapistInitials}
-              </span>
-            </div>
-            <div className="absolute bottom-6 right-6 flex h-[100px] w-[140px] items-center justify-center overflow-hidden rounded-[14px] border-2 border-white/[0.15] bg-[#1A2E5A]">
-              {cameraOn ? (
-                <span className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#3BA88F] text-[18px] font-extraboldNunito text-white">
-                  {myInitial}
-                </span>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2">
-                  <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </svg>
-              )}
-              <span className="absolute bottom-1.5 left-2 text-[9px] font-boldNunito text-white/60">
-                YOU
-              </span>
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center gap-[18px]">
-            <div className="relative flex h-[140px] w-[140px] items-center justify-center rounded-full bg-[rgba(1,127,200,0.15)]">
-              <span className="absolute -inset-3.5 rounded-full border-2 border-[rgba(1,127,200,0.25)]" />
-              <span className="flex h-[100px] w-[100px] items-center justify-center rounded-full bg-[#017FC8] text-[32px] font-extraboldNunito text-white">
-                {therapistInitials}
-              </span>
-            </div>
-            <div className="text-[16px] font-extraboldNunito text-white">{therapistName}</div>
-            <div className="text-[12px] text-white/40">Voice call · {label}</div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-center justify-center gap-4 p-7">
-        <button
-          type="button"
-          onClick={() => setMuted((v) => !v)}
-          aria-label={muted ? "Unmute" : "Mute"}
-          className={classNames(
-            "flex h-[52px] w-[52px] cursor-pointer items-center justify-center rounded-full",
-            muted ? "bg-[#AC4242]" : "bg-white/[0.12]"
-          )}
-        >
-          {muted ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
-              <line x1="1" y1="1" x2="23" y2="23" />
-              <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
-              <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
-              <line x1="12" y1="19" x2="12" y2="23" />
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="23" />
-            </svg>
-          )}
-        </button>
-
-        {isVideo ? (
-          <button
-            type="button"
-            onClick={() => setCameraOn((v) => !v)}
-            aria-label={cameraOn ? "Turn camera off" : "Turn camera on"}
-            className={classNames(
-              "flex h-[52px] w-[52px] cursor-pointer items-center justify-center rounded-full",
-              cameraOn ? "bg-white/[0.12]" : "bg-[#AC4242]"
-            )}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
-              <polygon points="23 7 16 12 23 17 23 7" />
-              <rect x="1" y="5" width="15" height="14" rx="2" />
-            </svg>
-          </button>
-        ) : null}
-
-        <button
-          type="button"
-          onClick={() => open("feedback", session)}
-          aria-label="End call"
-          className="flex h-[52px] w-[60px] cursor-pointer items-center justify-center rounded-[26px] bg-[#AC4242]"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" stroke="none">
-            <path d="M21.5 15.9l-3.8-1.1c-.5-.1-1 0-1.3.4l-1.7 1.7c-2.5-1.3-4.6-3.4-5.9-5.9l1.7-1.7c.4-.4.5-.9.4-1.3L9.8 4.2c-.2-.6-.8-1-1.4-.9L4.7 4C4 4.1 3.5 4.7 3.5 5.4 3.9 14 10.2 20.1 18.6 20.5c.7 0 1.3-.5 1.4-1.2l.7-3.7c.1-.6-.3-1.2-.9-1.4z" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  );
-};
+const InCallScreen = ({ open, sessionType, session }) => (
+  <CallScreen
+    bookingId={session?.id}
+    format={session?.format ?? sessionType}
+    counterpartName={session?.therapist_name ?? ""}
+    onExit={() => open("feedback", session)}
+  />
+);
 
 /* ── Report ───────────────────────────────────────────────────────────────── */
 
@@ -1047,6 +1297,10 @@ export const EmployeeModals = ({
       );
     case "capReached":
       return <CapReachedModal close={close} showToast={showToast} />;
+    case "paySessionRequest":
+      return <PaySessionRequestModal close={close} showToast={showToast} context={context} />;
+    case "declineSessionRequest":
+      return <DeclineSessionRequestModal close={close} showToast={showToast} context={context} />;
     case "inCall":
       return <InCallScreen open={open} sessionType={sessionType} session={context} />;
     case "report":

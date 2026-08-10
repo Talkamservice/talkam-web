@@ -63,6 +63,11 @@ export const employeeApiSlice = apiSliceV2.injectEndpoints({
       invalidatesTags: ["Bookings"],
     }),
 
+    respondToReschedule: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/user/reschedules/${id}/respond`, method: "POST", body }),
+      invalidatesTags: ["Bookings"],
+    }),
+
     joinBooking: builder.query({
       query: (id) => `/user/bookings/${id}/join`,
       transformResponse: (response) => response?.data,
@@ -102,6 +107,30 @@ export const employeeApiSlice = apiSliceV2.injectEndpoints({
 
     createBooking: builder.mutation({
       query: (body) => ({ url: `/user/bookings`, method: "POST", body }),
+      invalidatesTags: ["Bookings"],
+    }),
+
+    initiatePayment: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/user/bookings/${id}/initiate-payment`, method: "POST", body }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["Bookings"],
+    }),
+
+    /* ── Inbound session requests (no real-time slot fit yet) ─────────── */
+
+    getMySessionRequests: builder.query({
+      query: () => `/user/session-requests`,
+      transformResponse: (response) => response?.data?.requests ?? [],
+      providesTags: ["Bookings"],
+    }),
+
+    submitSessionRequest: builder.mutation({
+      query: (body) => ({ url: `/user/session-requests`, method: "POST", body }),
+      invalidatesTags: ["Bookings"],
+    }),
+
+    declineMySessionRequest: builder.mutation({
+      query: (id) => ({ url: `/user/session-requests/${id}/decline`, method: "POST" }),
       invalidatesTags: ["Bookings"],
     }),
 
@@ -206,6 +235,7 @@ export const {
   useGetBookingQuery,
   useCancelBookingMutation,
   useRescheduleBookingMutation,
+  useRespondToRescheduleMutation,
   useLazyJoinBookingQuery,
   useReviewBookingMutation,
   useSaveSessionMoodMutation,
@@ -213,6 +243,10 @@ export const {
   useGetTherapistsQuery,
   useGetTherapistSlotsQuery,
   useCreateBookingMutation,
+  useInitiatePaymentMutation,
+  useGetMySessionRequestsQuery,
+  useSubmitSessionRequestMutation,
+  useDeclineMySessionRequestMutation,
   useRequestTopUpMutation,
   useGetCommunityTrendingQuery,
   useGetConversationsQuery,

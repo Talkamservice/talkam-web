@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import classNames from "classnames";
 import * as Icon from "react-feather";
+import { useSelector } from "react-redux";
 import {
   Card,
   PanelCard,
@@ -20,13 +21,16 @@ import {
   useGetAdminOverviewQuery,
   useDeactivateEmployeeMutation,
   useReactivateEmployeeMutation,
+  downloadCsv,
 } from "../../../../../services/v2/adminApiSlice";
 import {
   useResendInvitationMutation,
+  useRevokeInvitationMutation,
   useGetOrganizationQuery,
 } from "../../../../../services/v2/businessApiSlice";
 import { useNavigate } from "react-router-dom";
 import { V2 } from "../../../../../constants/v2routes";
+import { selectCurrentToken } from "../../../../../services/authSlice";
 
 /**
  * Admin › Employees. Spec: "TalkAM B2B Dashboard.dc.html" § EMPLOYEES.
@@ -50,10 +54,13 @@ const Directory = () => {
   const [resent, setResent] = useState([]);
   const [nudged, setNudged] = useState([]);
 
+  const token = useSelector(selectCurrentToken);
   const { data, isLoading } = useGetAdminEmployeesQuery();
   const [deactivate] = useDeactivateEmployeeMutation();
   const [reactivate] = useReactivateEmployeeMutation();
   const [resendInvitation] = useResendInvitationMutation();
+  const [revokeInvitation] = useRevokeInvitationMutation();
+  const [revoked, setRevoked] = useState([]);
 
   const employees = data?.employees ?? [];
   const employeeDepartments = ["All Departments", ...(data?.departments ?? [])];
@@ -88,6 +95,28 @@ const Directory = () => {
   const reset = (fn) => (value) => {
     fn(value);
     setPage(1);
+  };
+
+  const exportPath = () => {
+    const params = new URLSearchParams();
+    if (dept !== "All Departments") params.set("department", dept);
+    if (status !== "All Status") params.set("status", status.toLowerCase());
+    if (search.trim()) params.set("search", search.trim());
+    const qs = params.toString();
+    return `/business/employees/export${qs ? `?${qs}` : ""}`;
+  };
+
+  const runExport = async () => {
+    try {
+      await downloadCsv(
+        exportPath(),
+        token,
+        `talkam-employees-${new Date().toISOString().slice(0, 10)}.csv`
+      );
+      showToast("Export downloaded");
+    } catch {
+      showToast("Couldn't export — please try again");
+    }
   };
 
   return (
@@ -149,7 +178,7 @@ const Directory = () => {
           </select>
         </div>
         <div className="flex gap-2">
-          <SecondaryButton onClick={() => showToast("Export started — check your email")}>
+          <SecondaryButton onClick={runExport}>
             <Icon.Download size={13} />
             Export
           </SecondaryButton>
@@ -168,21 +197,33 @@ const Directory = () => {
           </span>
           <button
             type="button"
-            onClick={() => showToast(`${selected.length} employees exported`)}
+            onClick={runExport}
             className="cursor-pointer text-[12.5px] font-boldNunito text-brand-200"
           >
             Export selected
           </button>
           <button
             type="button"
-            onClick={() =>
+            onClick={() => {
+              const eligible = employees.filter(
+                (e) => selected.includes(e.id) && e.status === "active" && e.member_id
+              );
               open("confirm", {
-                title: `Deactivate ${selected.length} employees?`,
+                title: `Deactivate ${eligible.length} employee${eligible.length === 1 ? "" : "s"}?`,
                 body: "They lose access at the end of the current billing period. Their individual TalkAM account and history stay with them.",
                 confirmLabel: "Deactivate",
-                toast: `${selected.length} employees deactivated`,
-              })
-            }
+                toast: `${eligible.length} employee${eligible.length === 1 ? "" : "s"} deactivated`,
+                onConfirm: async () => {
+                  const results = await Promise.allSettled(
+                    eligible.map((e) => deactivate(e.member_id).unwrap())
+                  );
+                  setSelected([]);
+                  if (results.some((r) => r.status === "rejected")) {
+                    throw new Error("Some employees could not be deactivated");
+                  }
+                },
+              });
+            }}
             className="cursor-pointer text-[12.5px] font-boldNunito text-[#FF9B9B]"
           >
             Deactivate selected
@@ -257,27 +298,49 @@ const Directory = () => {
                 <Td className="text-caption text-ink-500">{e.activated_at ?? "—"}</Td>
                 <Td>
                   {e.status === "invited" ? (
-                    <button
-                      type="button"
-                      disabled={resent.includes(e.id)}
-                      onClick={async () => {
-                        try {
-                          await resendInvitation(e.invitation_id).unwrap();
-                          setResent((p) => [...p, e.id]);
-                          showToast(`Invite resent to ${e.email}`);
-                        } catch {
-                          showToast("Couldn't resend that invite — please try again");
+                    <div className="flex gap-1.5">
+                      <button
+                        type="button"
+                        disabled={resent.includes(e.id) || revoked.includes(e.id)}
+                        onClick={async () => {
+                          try {
+                            await resendInvitation(e.invitation_id).unwrap();
+                            setResent((p) => [...p, e.id]);
+                            showToast(`Invite resent to ${e.email}`);
+                          } catch {
+                            showToast("Couldn't resend that invite — please try again");
+                          }
+                        }}
+                        className={classNames(
+                          "rounded-[7px] px-2.5 py-1.5 text-[11px] font-boldNunito",
+                          resent.includes(e.id)
+                            ? "cursor-default bg-wellness-50 text-wellness-600"
+                            : "cursor-pointer bg-brand-25 text-brand-600 hover:bg-brand-50"
+                        )}
+                      >
+                        {resent.includes(e.id) ? "Invite sent ✓" : "Resend invite"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={revoked.includes(e.id)}
+                        onClick={() =>
+                          open("confirm", {
+                            title: `Revoke invite to ${e.email}?`,
+                            body: "They won't be able to use this invite link to join anymore.",
+                            confirmLabel: "Revoke",
+                            toast: "Invite revoked",
+                            onConfirm: async () => {
+                              await revokeInvitation(e.invitation_id).unwrap();
+                              setRevoked((p) => [...p, e.id]);
+                            },
+                          })
                         }
-                      }}
-                      className={classNames(
-                        "rounded-[7px] px-2.5 py-1.5 text-[11px] font-boldNunito",
-                        resent.includes(e.id)
-                          ? "cursor-default bg-wellness-50 text-wellness-600"
-                          : "cursor-pointer bg-brand-25 text-brand-600 hover:bg-brand-50"
-                      )}
-                    >
-                      {resent.includes(e.id) ? "Invite sent ✓" : "Resend invite"}
-                    </button>
+                        aria-label={`Revoke invite to ${e.email}`}
+                        className="flex h-[27px] w-[27px] cursor-pointer items-center justify-center rounded-[7px] bg-surface-errorTint hover:bg-[#FFE0E0] disabled:cursor-default disabled:opacity-40"
+                      >
+                        <Icon.X size={12} className="text-signal-error" />
+                      </button>
+                    </div>
                   ) : e.status === "inactive" ? (
                     <button
                       type="button"
