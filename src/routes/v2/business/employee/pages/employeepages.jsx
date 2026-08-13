@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import classNames from "classnames";
 import { Card } from "../../../../../components/v2/dashboard/chrome";
 import { useEmployee } from "../employeelayout";
@@ -32,6 +33,7 @@ import {
   useGetConversationsQuery,
   useGetMessagesQuery,
   useSendMessageMutation,
+  useStartConversationMutation,
   useGetPrivacySettingsQuery,
   useSavePrivacySettingsMutation,
   useUpdateProfileMutation,
@@ -45,6 +47,8 @@ import {
   useSaveConsentsMutation,
 } from "../../../../../services/v2/authApiSliceV2";
 import { apiErrorMessage } from "../../auth/authlayout";
+import { selectCurrentToken } from "../../../../../services/authSlice";
+import { useConversationChannel } from "../../../../../hooks/useConversationChannel";
 
 /**
  * The seven employee dashboard screens.
@@ -765,16 +769,28 @@ const QuickLink = ({ tint, stroke, path, title, note }) => (
 
 export const EmployeeSessions = () => {
   const { open, showToast } = useEmployee();
+  const navigate = useNavigate();
 
   const { data: bookings, isLoading } = useGetBookingsQuery();
   const { data: careTeam } = useGetCareTeamQuery();
   const { data: summaryData } = useGetMoodSummaryQuery(14);
+  const [startConversation, { isLoading: isOpeningChat }] = useStartConversationMutation();
 
   const next = bookings?.upcoming?.[0] ?? null;
   const past = bookings?.past ?? [];
   const s = bookings?.summary;
   const typeShort = SESSION_TYPE_META[next?.format]?.short ?? SESSION_TYPE_META.video.short;
   const therapist = careTeam?.therapist;
+
+  const messageTherapist = async () => {
+    if (!careTeam?.session_id) return;
+    try {
+      const conversation = await startConversation(careTeam.session_id).unwrap();
+      navigate(`${V2.employee}/messages`, { state: { conversationId: conversation.id } });
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't open that conversation — please try again"));
+    }
+  };
 
   const summary = [
     { value: String(s?.upcoming ?? 0), label: "Upcoming", accent: "#017FC8" },
@@ -954,12 +970,14 @@ export const EmployeeSessions = () => {
               </div>
             </div>
             <div className="flex shrink-0 flex-col gap-2">
-              <Link
-                to={`${V2.employee}/messages`}
-                className="rounded-[9px] bg-[#017FC8] px-4 py-[9px] text-center text-[12px] font-extraboldNunito text-white"
+              <button
+                type="button"
+                onClick={messageTherapist}
+                disabled={isOpeningChat}
+                className="cursor-pointer rounded-[9px] bg-[#017FC8] px-4 py-[9px] text-center text-[12px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Message
-              </Link>
+                {isOpeningChat ? "Opening…" : "Message"}
+              </button>
               <button
                 type="button"
                 onClick={() => open("booking")}
@@ -1398,9 +1416,19 @@ export const EmployeeCommunity = () => {
 /* ── MESSAGES ─────────────────────────────────────────────────────────────── */
 
 export const EmployeeMessages = () => {
+  const location = useLocation();
+  const token = useSelector(selectCurrentToken);
   const { data: me } = useGetMeV2Query();
-  const { data: conversationPage, isLoading } = useGetConversationsQuery();
-  const [active, setActive] = useState(null);
+  // Polling is the baseline that always works; the Pusher subscription below
+  // makes new messages land instantly when real credentials are configured
+  // (VITE_PUSHER_KEY) — until then it's a no-op and polling alone covers it.
+  const { data: conversationPage, isLoading, refetch: refetchConversations } = useGetConversationsQuery(undefined, {
+    pollingInterval: 8000,
+  });
+  /* Arriving from a "Message" CTA elsewhere hands us the conversation id
+   * it just opened via navigation state — open straight to it instead of
+   * defaulting to the first thread. */
+  const [active, setActive] = useState(() => location.state?.conversationId ?? null);
   const [draft, setDraft] = useState("");
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
 
@@ -1409,8 +1437,24 @@ export const EmployeeMessages = () => {
   const activeId = active ?? threads[0]?.id ?? null;
   const activeThread = threads.find((t) => t.id === activeId) ?? null;
 
-  const { data: messagePage } = useGetMessagesQuery(activeId, { skip: !activeId });
-  const messages = messagePage?.data ?? [];
+  const { data: messagePage, isFetching: isLoadingMessages, refetch: refetchMessages } = useGetMessagesQuery(activeId, {
+    skip: !activeId,
+    pollingInterval: 4000,
+  });
+  // The API returns newest-first (built for "load older on scroll-up"
+  // pagination) — flip it so the thread reads oldest-to-newest, top to
+  // bottom, like every other chat UI.
+  const messages = useMemo(() => (messagePage?.data ?? []).slice().reverse(), [messagePage]);
+
+  useConversationChannel(activeId, me?.id, token, () => {
+    refetchMessages();
+    refetchConversations();
+  });
+
+  const messagesEndRef = useRef(null);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [activeId, messages.length]);
 
   const send = async (e) => {
     e.preventDefault();
@@ -1496,26 +1540,34 @@ export const EmployeeMessages = () => {
           </div>
 
           <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto p-[18px]">
-            {messages.length === 0 ? (
+            {activeThread && isLoadingMessages && messages.length === 0 ? (
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-10 w-2/3" />
+                <Skeleton className="h-10 w-1/2 self-end" />
+              </div>
+            ) : messages.length === 0 ? (
               <EmptyNote>
                 {activeThread
                   ? "No messages in this conversation yet."
                   : "Pick a conversation to read it."}
               </EmptyNote>
             ) : (
-              messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={classNames(
-                    "max-w-[70%] px-3.5 py-2.5 text-[13px]",
-                    m.sender_id === me?.id
-                      ? "self-end rounded-[14px_14px_3px_14px] bg-[#017FC8] text-white"
-                      : "self-start rounded-[14px_14px_14px_3px] bg-[#F0F0F2] text-ink-800"
-                  )}
-                >
-                  {m.message}
-                </div>
-              ))
+              <>
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={classNames(
+                      "max-w-[70%] px-3.5 py-2.5 text-[13px]",
+                      m.sender_id === me?.id
+                        ? "self-end rounded-[14px_14px_3px_14px] bg-[#017FC8] text-white"
+                        : "self-start rounded-[14px_14px_14px_3px] bg-[#F0F0F2] text-ink-800"
+                    )}
+                  >
+                    {m.message}
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </>
             )}
           </div>
 

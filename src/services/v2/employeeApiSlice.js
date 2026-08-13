@@ -167,6 +167,14 @@ export const employeeApiSlice = apiSliceV2.injectEndpoints({
       invalidatesTags: ["Messages", "Conversations"],
     }),
 
+    /* Opens (or reuses) the conversation tied to a booking — the backend
+     * resolves the other party server-side, so the caller never has to know
+     * a receiver's user id (the therapist app never does). */
+    startConversation: builder.mutation({
+      query: (bookingId) => ({ url: `/user/bookings/${bookingId}/message`, method: "POST" }),
+      invalidatesTags: ["Conversations"],
+    }),
+
     /* ── Profile & privacy (reuse of §09) ────────────────────────────── */
 
     getPrivacySettings: builder.query({
@@ -252,6 +260,7 @@ export const {
   useGetConversationsQuery,
   useGetMessagesQuery,
   useSendMessageMutation,
+  useStartConversationMutation,
   useGetPrivacySettingsQuery,
   useSavePrivacySettingsMutation,
   useGetNotificationPreferencesQuery,
