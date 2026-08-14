@@ -19,6 +19,14 @@ import { CardVariants } from '../../../helpers/cardanimation';
 import { handleError } from '../../../utils/handleError';
 import FacebookLogin from '@greatsumini/react-facebook-login';
 import * as Icon from 'react-feather'
+import { V2 } from '../../../constants/v2routes';
+
+/**
+ * A therapist (network or org-employed) belongs on the Professional Portal,
+ * not the generic consumer home — `business` comes back on every login
+ * response now (v1 and v2 both), clients that don't care just ignore it.
+ */
+const postLoginDestination = (business) => business?.is_therapist ? V2.therapist : "/";
 
 export const Login = () => {
 
@@ -65,7 +73,7 @@ export const Login = () => {
             resetEmail();
             resetPassword();
             toast.success("Logged in successfully!");
-            navigate("/", { replace: true })
+            navigate(postLoginDestination(userData?.data?.business), { replace: true })
         } catch (error) {
             const errorMessage = handleError(error)
             toast.error(errorMessage);
@@ -90,7 +98,7 @@ export const Login = () => {
                     navigate("/get-started/interests", { replace: true })
                 } else {
                     toast.success("Logged in successfully!");
-                    navigate("/", { replace: true })
+                    navigate(postLoginDestination(loginData?.data?.business), { replace: true })
                 }
             } catch (error) {
                 const errorMessage = handleError(error)
@@ -115,7 +123,7 @@ export const Login = () => {
                 navigate("/get-started/interests", { replace: true })
             } else {
                 toast.success("Logged in successfully!");
-                navigate("/", { replace: true })
+                navigate(postLoginDestination(loginData?.data?.business), { replace: true })
             }
         } catch (error) {
             const errorMessage = handleError(error)
