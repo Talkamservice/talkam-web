@@ -77,6 +77,7 @@ export const apiSliceV2 = createApi({
     "TherapistNotes",
     "TherapistEarnings",
     "TherapistProfile",
+    "TherapistClients",
     "Journal",
     "Legal",
   ],

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import * as Icon from "react-feather";
 import classNames from "classnames";
 import { DashboardShell } from "../../../../components/v2/dashboard/dashboardshell";
@@ -16,15 +16,23 @@ import { useDispatch } from "react-redux";
 import {
   therapistPortalLabel,
   therapistPageMeta,
+  therapistReportReasons,
   initialsOf,
   sessionWhen,
   SESSION_FORMAT_LABEL,
 } from "../../../../constants/therapistdashboard";
+import { NOTIF_KIND_COLOR } from "../../../../constants/employeedashboard";
 import { logOut } from "../../../../services/authSlice";
 import { useGetMeV2Query, useRequestOtpV2Mutation } from "../../../../services/v2/authApiSliceV2";
 import { OtpBoxes, apiErrorMessage } from "../auth/authlayout";
 import { CallScreen } from "../../../../components/v2/callroom";
-import { useGetTherapistSlotsQuery } from "../../../../services/v2/employeeApiSlice";
+import {
+  useGetTherapistSlotsQuery,
+  useGetNotificationsQuery,
+  useMarkAllNotificationsMutation,
+  useReportUserMutation,
+  useDeleteAccountMutation,
+} from "../../../../services/v2/employeeApiSlice";
 import {
   useGetTherapistHomeQuery,
   useGetTherapistSessionsQuery,
@@ -33,6 +41,7 @@ import {
   useProposeSessionRequestMutation,
   useGetTherapistProfileQuery,
   useRequestBookingRescheduleMutation,
+  useGetClientsQuery,
 } from "../../../../services/v2/therapistApiSlice";
 
 /** Stable pseudonymous client ref, matching the backend's own "#4021" scheme
@@ -82,6 +91,20 @@ const navSections = ({ upcoming, unread, showEarnings }) => [
     ],
   },
 ];
+
+/**
+ * Maps a notification's type onto the deck's four dot colours. The API's
+ * notification `type` vocabulary is broader than the deck's four, so anything
+ * unrecognised falls back to the reminder blue rather than rendering colourless.
+ */
+const notificationKind = (notification) => {
+  const type = String(notification?.type ?? "").toLowerCase();
+
+  if (type.includes("message")) return "message";
+  if (type.includes("checkin") || type.includes("mood") || type.includes("wellness")) return "checkin";
+  if (type.includes("review") || type.includes("feedback") || type.includes("rate")) return "feedback";
+  return "reminder";
+};
 
 /** Deck: the two verification strips directly under the logo block. */
 const VerificationStrips = ({ isVerified, employer }) => (
@@ -157,11 +180,22 @@ export const TherapistLayout = () => {
   const { data: me } = useGetMeV2Query();
   const { data: home } = useGetTherapistHomeQuery();
   const { data: sessions } = useGetTherapistSessionsQuery();
+  const { data: notificationPage } = useGetNotificationsQuery();
+  const [markAllNotifications] = useMarkAllNotificationsMutation();
 
   const employment = home?.employment ?? {};
   const showEarnings = !employment.is_business_employed;
   const upcoming = sessions?.upcoming?.length ?? 0;
   const unread = home?.attention?.unread_messages ?? 0;
+
+  const rawNotifications = notificationPage?.data ?? notificationPage ?? [];
+  const notifications = (Array.isArray(rawNotifications) ? rawNotifications : []).map((n) => ({
+    id: n.id,
+    text: n.message ?? n.title ?? "",
+    time: n.created_at_human ?? n.created_at ?? "",
+    read: !!n.read_at,
+    kind: notificationKind(n),
+  }));
 
   const fullName = me?.name ?? "";
   const user = {
@@ -192,6 +226,9 @@ export const TherapistLayout = () => {
       topBlock={<VerificationStrips isVerified={!!me?.therapist?.is_verified} employer={employment.employer_name} />}
       user={user}
       bellDot={(home?.attention?.pending_notes ?? 0) + unread > 0}
+      notifications={notifications}
+      notifKindColor={NOTIF_KIND_COLOR}
+      onMarkAllRead={() => markAllNotifications()}
       title={meta.title}
       subtitle={subtitle}
       topbarAction={
@@ -519,7 +556,10 @@ const TwoFactorEnableModal = ({ open, close, showToast, context }) => {
     setCode("");
     setError(null);
     setSent(false);
-    requestOtp({ type: "login", email }).then(() => setSent(true)).catch(() => {});
+    requestOtp({ type: "login", email })
+      .unwrap()
+      .then(() => setSent(true))
+      .catch((err) => setError(apiErrorMessage(err, "Couldn't send a code — try Resend")));
   }, [open, email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resend = async () => {
@@ -579,6 +619,140 @@ const TwoFactorEnableModal = ({ open, close, showToast, context }) => {
 };
 
 /**
+ * A client isn't picked ahead of time (Profile's "Report a client" card has
+ * no session context), so the modal loads the therapist's own roster and
+ * asks. Field names match UserReportService::create exactly —
+ * reported_user_id/reason/context, not the employee lane's user_id/description.
+ */
+const ReportClientModal = ({ close, showToast }) => {
+  const { data: clients, isFetching: isLoadingClients } = useGetClientsQuery();
+  const [clientId, setClientId] = useState("");
+  const [reason, setReason] = useState(therapistReportReasons[0].key);
+  const [detail, setDetail] = useState("");
+  const [reportUser, { isLoading }] = useReportUserMutation();
+
+  const submit = async () => {
+    if (!clientId) return;
+    const label = therapistReportReasons.find((r) => r.key === reason)?.label ?? reason;
+
+    try {
+      await reportUser({
+        reported_user_id: clientId,
+        reason: label,
+        context: detail || undefined,
+      }).unwrap();
+      close();
+      showToast("Report submitted — Trust & Safety will follow up");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't submit that report — please try again"));
+    }
+  };
+
+  return (
+    <Modal open onClose={close} title="Report a client" subtitle="Goes directly to TalkAM's Trust & Safety team">
+      <div className="mb-3.5">
+        <label className="mb-[5px] block text-[11px] font-boldNunito text-ink-400" htmlFor="report-client">Client</label>
+        <select
+          id="report-client"
+          value={clientId}
+          onChange={(e) => setClientId(e.target.value)}
+          disabled={isLoadingClients}
+          className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
+        >
+          <option value="">{isLoadingClients ? "Loading clients…" : "Select a client"}</option>
+          {(clients ?? []).map((c) => (
+            <option key={c.id} value={c.id}>{c.name || c.username}</option>
+          ))}
+        </select>
+        {!isLoadingClients && (clients ?? []).length === 0 ? (
+          <p className="mt-1.5 text-[11px] text-ink-400">You don&apos;t have any clients yet.</p>
+        ) : null}
+      </div>
+      <div className="mb-3.5 flex flex-col gap-2">
+        {therapistReportReasons.map((r) => (
+          <button
+            key={r.key}
+            type="button"
+            onClick={() => setReason(r.key)}
+            aria-pressed={reason === r.key}
+            className={classNames(
+              "cursor-pointer rounded-[10px] border-[1.5px] px-3.5 py-[11px] text-left text-[13px] font-semiboldNunito",
+              reason === r.key ? "border-[#FFCDD2] bg-[#FFF0F0] text-[#8B2E2E]" : "border-ink-200 bg-surface-page text-ink-600"
+            )}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+      <textarea
+        placeholder="Add any detail that might help (optional)"
+        value={detail}
+        onChange={(e) => setDetail(e.target.value)}
+        className="mb-4 h-[70px] w-full resize-none rounded-[10px] border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
+      />
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={close}>Cancel</SecondaryButton>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!clientId || isLoading}
+          className="cursor-pointer rounded-[10px] bg-[#AC4242] px-4 py-[9px] text-[13px] font-boldNunito text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isLoading ? "Submitting…" : "Submit Report"}
+        </button>
+      </div>
+    </Modal>
+  );
+};
+
+const DeleteAccountModal = ({ close, showToast }) => {
+  const [confirmation, setConfirmation] = useState("");
+  const [deleteAccount, { isLoading }] = useDeleteAccountMutation();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const confirmed = confirmation.trim().toUpperCase() === "DELETE";
+
+  const submit = async () => {
+    if (!confirmed) return;
+    try {
+      await deleteAccount({}).unwrap();
+      dispatch(logOut());
+      navigate(V2.businessLogin, { replace: true });
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't delete your account just now — please contact support"));
+    }
+  };
+
+  return (
+    <Modal open onClose={close} title="Delete your TalkAM account?" width="max-w-[440px]">
+      <p className="mb-4 text-[13px] leading-[1.7] text-ink-500">
+        Your session notes are permanently erased within 30 days and you are removed from
+        client search immediately. This cannot be undone.
+      </p>
+      <input
+        placeholder="Type DELETE to confirm"
+        aria-label="Type DELETE to confirm"
+        value={confirmation}
+        onChange={(e) => setConfirmation(e.target.value)}
+        className="mb-3.5 h-[46px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-center text-[13px] text-ink-800"
+      />
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={close}>Keep Account</SecondaryButton>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!confirmed || isLoading}
+          className="cursor-pointer rounded-[10px] bg-[#AC4242] px-4 py-[9px] text-[13px] font-boldNunito text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isLoading ? "Deleting…" : "Delete Forever"}
+        </button>
+      </div>
+    </Modal>
+  );
+};
+
+/**
  * Only the active modal is mounted. Rendering all of them meant each one's
  * children were evaluated on every state change — a modal that reads its
  * `context` (e.g. AllPayouts mapping over a payout array) would then crash
@@ -609,6 +783,10 @@ const TherapistModals = ({ modal, context, open, close, showToast }) => {
       );
     case "twoFactorEnable":
       return <TwoFactorEnableModal open close={close} showToast={showToast} context={context} />;
+    case "report":
+      return <ReportClientModal close={close} showToast={showToast} />;
+    case "deleteAccount":
+      return <DeleteAccountModal close={close} showToast={showToast} />;
     default:
       return null;
   }

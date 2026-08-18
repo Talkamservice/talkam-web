@@ -14,7 +14,9 @@ import {
 import { useGetMeV2Query } from "../../../../services/v2/authApiSliceV2";
 import {
   useGetBookingsQuery,
+  useGetConversationsQuery,
   useGetNotificationsQuery,
+  useMarkAllNotificationsMutation,
 } from "../../../../services/v2/employeeApiSlice";
 import { EmployeeModals } from "./employeemodals";
 
@@ -120,7 +122,9 @@ export const EmployeeLayout = () => {
 
   const { data: me } = useGetMeV2Query();
   const { data: bookings } = useGetBookingsQuery();
+  const { data: conversationPage } = useGetConversationsQuery();
   const { data: notificationPage } = useGetNotificationsQuery();
+  const [markAllNotifications] = useMarkAllNotificationsMutation();
 
   const company = me?.business?.organization?.name ?? "Your employer";
   // v1 UserResource exposes one `name` (full name) — there is no first_name.
@@ -136,6 +140,12 @@ export const EmployeeLayout = () => {
 
   const upcomingCount = bookings?.summary?.upcoming ?? 0;
   const pastCount = bookings?.past?.length ?? 0;
+
+  // Calculate total unread messages from conversations
+  const conversations = conversationPage?.data ?? [];
+  const unreadMessagesCount = Array.isArray(conversations)
+    ? conversations.reduce((total, conv) => total + (conv.unread_count ?? 0), 0)
+    : 0;
 
   const rawNotifications = notificationPage?.data ?? notificationPage ?? [];
   const notifications = (Array.isArray(rawNotifications) ? rawNotifications : []).map((n) => ({
@@ -166,7 +176,7 @@ export const EmployeeLayout = () => {
           to: at("/messages"),
           label: "Messages",
           icon: <Icon.MessageCircle size={16} />,
-          count: unread ? String(unread) : undefined,
+          count: unreadMessagesCount ? String(unreadMessagesCount) : undefined,
           countTone: "blue",
         },
       ],
@@ -203,6 +213,7 @@ export const EmployeeLayout = () => {
       onSignOut={() => open("signout")}
       notifications={notifications}
       notifKindColor={NOTIF_KIND_COLOR}
+      onMarkAllRead={() => markAllNotifications()}
       title={meta.title}
       subtitle={subtitle}
       topbarAction={

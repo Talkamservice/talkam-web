@@ -59,7 +59,7 @@ export const authApiSliceV2 = apiSliceV2.injectEndpoints({
     getConsents: builder.query({
       query: () => `/user/consents`,
       transformResponse: (response) => response?.data,
-      providesTags: ["Me"],
+      providesTags: ["Consents"],
     }),
 
     saveConsents: builder.mutation({
@@ -68,7 +68,7 @@ export const authApiSliceV2 = apiSliceV2.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Me"],
+      invalidatesTags: ["Consents", "Me"],
     }),
   }),
 });

@@ -133,6 +133,24 @@ export const therapistApiSlice = apiSliceV2.injectEndpoints({
       query: (body) => ({ url: `/therapist/profile/update`, method: "POST", body }),
       invalidatesTags: ["TherapistProfile"],
     }),
+
+    deactivateTherapistProfile: builder.mutation({
+      query: () => ({ url: `/therapist/profile/deactivate`, method: "POST" }),
+      invalidatesTags: ["TherapistProfile"],
+    }),
+
+    reactivateTherapistProfile: builder.mutation({
+      query: () => ({ url: `/therapist/profile/reactivate`, method: "POST" }),
+      invalidatesTags: ["TherapistProfile"],
+    }),
+
+    /* ── Clients (reuse of §14 roster) ───────────────────────────────── */
+
+    getClients: builder.query({
+      query: () => `/therapist/clients`,
+      transformResponse: (response) => response?.data,
+      providesTags: ["TherapistClients"],
+    }),
   }),
 });
 
@@ -156,4 +174,7 @@ export const {
   useGetEarningsTransactionsQuery,
   useGetTherapistProfileQuery,
   useUpdateTherapistProfileMutation,
+  useDeactivateTherapistProfileMutation,
+  useReactivateTherapistProfileMutation,
+  useGetClientsQuery,
 } = therapistApiSlice;

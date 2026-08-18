@@ -43,6 +43,8 @@ import {
   useGetEarningsQuery,
   useGetTherapistProfileQuery,
   useUpdateTherapistProfileMutation,
+  useDeactivateTherapistProfileMutation,
+  useReactivateTherapistProfileMutation,
   useRespondToBookingRescheduleMutation,
 } from "../../../../../services/v2/therapistApiSlice";
 import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
@@ -50,6 +52,8 @@ import {
   useGetFaqsQuery,
   useGetPrivacySettingsQuery,
   useSavePrivacySettingsMutation,
+  useGetNotificationPreferencesQuery,
+  useSaveNotificationPreferencesMutation,
   useGetConversationsQuery,
   useGetMessagesQuery,
   useSendMessageMutation,
@@ -578,8 +582,8 @@ export const TherapistSessions = () => {
           ? "Acknowledged — it'll move to Upcoming once payment is confirmed"
           : "Session confirmed"
       );
-    } catch {
-      showToast("Couldn't accept that — please try again");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't accept that — please try again"));
     }
   };
 
@@ -587,8 +591,8 @@ export const TherapistSessions = () => {
     try {
       await decline(id).unwrap();
       showToast("Request declined");
-    } catch {
-      showToast("Couldn't decline that — please try again");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't decline that — please try again"));
     }
   };
 
@@ -596,8 +600,8 @@ export const TherapistSessions = () => {
     try {
       await declineLead(id).unwrap();
       showToast("Request declined");
-    } catch {
-      showToast("Couldn't decline that — please try again");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't decline that — please try again"));
     }
   };
 
@@ -763,8 +767,8 @@ export const TherapistAvailability = () => {
     try {
       await saveAvailability(payload).unwrap();
       showToast("Availability saved");
-    } catch {
-      showToast("Couldn't save your availability — check the times and try again");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't save your availability — check the times and try again"));
     }
   };
 
@@ -1184,12 +1188,16 @@ export const TherapistProfile = () => {
   const { data: me } = useGetMeV2Query();
   const { data: serverProfile } = useGetTherapistProfileQuery();
   const { data: privacy } = useGetPrivacySettingsQuery();
+  const { data: notifPrefs } = useGetNotificationPreferencesQuery();
   const [updateProfile, { isLoading: isSaving }] = useUpdateTherapistProfileMutation();
   const [savePrivacy] = useSavePrivacySettingsMutation();
+  const [saveNotifPrefs] = useSaveNotificationPreferencesMutation();
+  const [deactivateProfile, { isLoading: isDeactivating }] = useDeactivateTherapistProfileMutation();
+  const [reactivateProfile, { isLoading: isReactivating }] = useReactivateTherapistProfileMutation();
 
   const [profile, setProfile] = useState({ bio: "", years: "", rate: "" });
-  const [notifs, setNotifs] = useState({});
   const twoFa = !!privacy?.two_factor_enabled;
+  const isDeactivated = serverProfile?.status === "Inactive";
 
   useEffect(() => {
     if (serverProfile) {
@@ -1205,8 +1213,8 @@ export const TherapistProfile = () => {
   const input = "h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800";
   const label = "mb-[5px] block text-[11px] font-boldNunito text-ink-400";
 
-  const Switch = ({ on, onClick, label: aria }) => (
-    <button type="button" role="switch" aria-checked={on} aria-label={aria} onClick={onClick} className={classNames("relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-colors", on ? "bg-[#3BA88F]" : "bg-ink-200")}>
+  const Switch = ({ on, onClick, label: aria, className }) => (
+    <button type="button" role="switch" aria-checked={on} aria-label={aria} onClick={onClick} disabled={!onClick} className={classNames("relative h-[22px] w-10 shrink-0 rounded-full transition-colors", onClick ? "cursor-pointer" : "cursor-not-allowed", on ? "bg-[#3BA88F]" : "bg-ink-200", className)}>
       <span className={classNames("absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-all", on ? "left-5" : "left-0.5")} />
     </button>
   );
@@ -1215,8 +1223,8 @@ export const TherapistProfile = () => {
     try {
       await updateProfile({ bio: profile.bio, years_experience: Number(profile.years) || undefined, session_rate: Number(profile.rate) || undefined }).unwrap();
       showToast("Profile saved");
-    } catch {
-      showToast("Couldn't save your profile — please try again");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't save your profile — please try again"));
     }
   };
 
@@ -1299,8 +1307,8 @@ export const TherapistProfile = () => {
                 try {
                   await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
                   showToast("Two-factor authentication disabled");
-                } catch {
-                  showToast("Couldn't update that just now — please try again");
+                } catch (err) {
+                  showToast(apiErrorMessage(err, "Couldn't update that just now — please try again"));
                 }
                 return;
               }
@@ -1318,15 +1326,32 @@ export const TherapistProfile = () => {
         <div className="mb-1 text-body font-extraboldNunito text-navy-800">Notification Preferences</div>
         <div className="mb-3.5 text-[11px] text-ink-400">Choose what TalkAM emails and alerts you about</div>
         <div className="flex flex-col">
-          {therapistNotifRows.map((n, i) => (
-            <div key={n.key} className={classNames("flex items-center justify-between gap-4 py-[11px]", i < therapistNotifRows.length - 1 && "border-b border-[#F5F5F5]")}>
-              <div className="max-w-[250px]">
-                <div className="text-[13px] font-semiboldNunito text-ink-800">{n.title}</div>
-                <div className="text-[10.5px] text-ink-400">{n.sub}</div>
+          {therapistNotifRows.map((n, i) => {
+            const supported = !!n.prefKey;
+            const on = supported ? (notifPrefs?.[n.prefKey] ?? true) : false;
+            return (
+              <div key={n.key} className={classNames("flex items-center justify-between gap-4 py-[11px]", i < therapistNotifRows.length - 1 && "border-b border-[#F5F5F5]")}>
+                <div className="max-w-[250px]">
+                  <div className="text-[13px] font-semiboldNunito text-ink-800">{n.title}</div>
+                  <div className="text-[10.5px] text-ink-400">
+                    {supported ? n.sub : `${n.sub} · Not available yet`}
+                  </div>
+                </div>
+                <Switch
+                  on={on}
+                  label={n.title}
+                  onClick={supported ? async () => {
+                    try {
+                      await saveNotifPrefs({ [n.prefKey]: !on }).unwrap();
+                    } catch (err) {
+                      showToast(apiErrorMessage(err, "Couldn't update that just now — please try again"));
+                    }
+                  } : undefined}
+                  className={!supported ? "cursor-not-allowed opacity-40" : undefined}
+                />
               </div>
-              <Switch on={notifs[n.key] ?? true} label={n.title} onClick={() => setNotifs((p) => ({ ...p, [n.key]: !(p[n.key] ?? true) }))} />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
 
@@ -1340,10 +1365,29 @@ export const TherapistProfile = () => {
 
       <Card className="!border-[#FFCDD2]">
         <div className="mb-1 text-body font-extraboldNunito text-[#8B2E2E]">Danger Zone</div>
-        <div className="mb-3.5 text-[11px] text-ink-400">Deactivating removes you from client search immediately</div>
+        <div className="mb-3.5 text-[11px] text-ink-400">
+          {isDeactivated ? "Your profile is hidden from client search right now" : "Deactivating removes you from client search immediately"}
+        </div>
         <div className="flex flex-col gap-2">
-          <button type="button" onClick={() => showToast("Profile deactivated")} className="cursor-pointer rounded-[10px] border border-[#FFCDD2] bg-surface-page p-[11px] text-[13px] font-boldNunito text-[#8B2E2E]">
-            Deactivate profile temporarily
+          <button
+            type="button"
+            disabled={isDeactivating || isReactivating}
+            onClick={async () => {
+              try {
+                if (isDeactivated) {
+                  await reactivateProfile().unwrap();
+                  showToast("Profile reactivated — you're visible in client search again");
+                } else {
+                  await deactivateProfile().unwrap();
+                  showToast("Profile deactivated — you're hidden from client search");
+                }
+              } catch (err) {
+                showToast(apiErrorMessage(err, "Couldn't update your profile just now — please try again"));
+              }
+            }}
+            className="cursor-pointer rounded-[10px] border border-[#FFCDD2] bg-surface-page p-[11px] text-[13px] font-boldNunito text-[#8B2E2E] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isDeactivating || isReactivating ? "Updating…" : isDeactivated ? "Reactivate profile" : "Deactivate profile temporarily"}
           </button>
           <button type="button" onClick={() => open("deleteAccount")} className="w-full cursor-pointer rounded-[10px] bg-[#AC4242] p-3 text-center text-[13px] font-boldNunito text-white">
             Delete my account

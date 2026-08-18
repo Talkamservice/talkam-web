@@ -131,12 +131,26 @@ export const CHECKLIST_TONE = {
   action: { label: "ACTION NEEDED", bg: "#FBF5E8", fg: "#9A6E0A" },
 };
 
-/** Notification-preference rows (labels only; state comes from §09). */
+/**
+ * Notification-preference rows. `prefKey` is the matching field on
+ * `/user/notification-preferences` (§09) — the shared endpoint's key
+ * vocabulary doesn't cover every row a therapist cares about, so rows
+ * without a `prefKey` render disabled with a "not available yet" note
+ * rather than faking persistence.
+ */
 export const therapistNotifRows = [
-  { key: "booking", title: "New bookings", sub: "When a client books a session with you" },
-  { key: "reminder", title: "Session reminders", sub: "24 hours and 1 hour before each session" },
-  { key: "message", title: "Client messages", sub: "When a client sends you a message" },
-  { key: "cancel", title: "Cancellations & reschedules", sub: "When a client changes or cancels a session" },
-  { key: "payout", title: "Weekly payout summary", sub: "Every Friday when your earnings are processed" },
-  { key: "review", title: "New reviews", sub: "When a client leaves a rating or review" },
+  { key: "booking", title: "New bookings", sub: "When a client books a session with you", prefKey: "session_confirmation" },
+  { key: "reminder", title: "Session reminders", sub: "24 hours and 1 hour before each session", prefKey: "session_reminders" },
+  { key: "message", title: "Client messages", sub: "When a client sends you a message", prefKey: null },
+  { key: "cancel", title: "Cancellations & reschedules", sub: "When a client changes or cancels a session", prefKey: null },
+  { key: "payout", title: "Weekly payout summary", sub: "Every Friday when your earnings are processed", prefKey: "payment_confirmations" },
+  { key: "review", title: "New reviews", sub: "When a client leaves a rating or review", prefKey: null },
+];
+
+/** Reasons a therapist can cite when reporting a client (§10, Trust & Safety). */
+export const therapistReportReasons = [
+  { key: "abusive", label: "Abusive or threatening behaviour" },
+  { key: "noshow", label: "Repeated no-shows without notice" },
+  { key: "chat", label: "Inappropriate message in chat" },
+  { key: "other", label: "Something else" },
 ];

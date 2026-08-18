@@ -72,6 +72,7 @@ export const DashboardShell = ({
   onSignOut,
   notifications = [],
   notifKindColor = {},
+  onMarkAllRead,
   /** Decks without a notification panel still draw the unread dot. */
   bellDot = false,
   topbarAction,
@@ -311,7 +312,10 @@ export const DashboardShell = ({
                       </span>
                       <button
                         type="button"
-                        onClick={() => setReadAll(true)}
+                        onClick={() => {
+                          setReadAll(true);
+                          onMarkAllRead?.();
+                        }}
                         className="cursor-pointer text-[11.5px] font-boldNunito text-brand-400"
                       >
                         Mark all read
@@ -391,6 +395,7 @@ DashboardShell.propTypes = {
   showSearch: PropTypes.bool,
   notifications: PropTypes.array,
   notifKindColor: PropTypes.object,
+  onMarkAllRead: PropTypes.func,
   title: PropTypes.string,
   subtitle: PropTypes.string,
 };

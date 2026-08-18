@@ -33,6 +33,7 @@ import {
   useGetConversationsQuery,
   useGetMessagesQuery,
   useSendMessageMutation,
+  useMarkConversationSeenMutation,
   useStartConversationMutation,
   useGetPrivacySettingsQuery,
   useSavePrivacySettingsMutation,
@@ -1075,6 +1076,9 @@ export const EmployeeSessions = () => {
 
 /* ── CHECK-INS & MOOD ─────────────────────────────────────────────────────── */
 
+// Matches config('v2.checkins.note_max_length') on the backend.
+const CHECKIN_NOTE_MAX_LENGTH = 280;
+
 export const EmployeeCheckins = () => {
   const { showToast } = useEmployee();
 
@@ -1085,6 +1089,7 @@ export const EmployeeCheckins = () => {
 
   const [mood, setMood] = useState(null);
   const [factors, setFactors] = useState([]);
+  const [note, setNote] = useState("");
 
   const factorOptions = today?.factors ?? [];
   const recent = historyPage?.data ?? [];
@@ -1097,6 +1102,7 @@ export const EmployeeCheckins = () => {
     if (today?.checkin) {
       setMood(MOOD_BY_VALUE[today.checkin.mood]?.key ?? null);
       setFactors(today.checkin.factors ?? []);
+      setNote(today.checkin.note ?? "");
     }
   }, [today?.checkin?.date]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1127,10 +1133,10 @@ export const EmployeeCheckins = () => {
     const value = MOODS.find((m) => m.key === mood)?.value;
 
     try {
-      await saveCheckin({ mood: value, factors }).unwrap();
+      await saveCheckin({ mood: value, factors, note: note.trim() || undefined }).unwrap();
       showToast("Check-in saved — private to you");
-    } catch {
-      showToast("Couldn't save that just now — please try again");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't save that just now — please try again"));
     }
   };
 
@@ -1188,11 +1194,29 @@ export const EmployeeCheckins = () => {
           })}
         </div>
 
-        <div className="rounded-[10px] bg-[#F8F9FC] px-3.5 py-[11px] text-[12px] leading-[1.6] text-ink-600">
-          {mood
-            ? MOOD_MESSAGES[mood]
-            : "Pick a mood above and we’ll check in with a short note."}
-        </div>
+        {mood ? (
+          <div className="flex flex-col gap-2.5">
+            <div className="rounded-[10px] bg-[#F8F9FC] px-3.5 py-[11px] text-[12px] leading-[1.6] text-ink-600">
+              {MOOD_MESSAGES[mood]}
+            </div>
+            <div>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value.slice(0, CHECKIN_NOTE_MAX_LENGTH))}
+                placeholder="Add a short note (optional) — seen only by you"
+                rows={3}
+                className="w-full resize-none rounded-[10px] border-[1.5px] border-surface-line px-3.5 py-2.5 text-[12.5px] leading-[1.6] text-ink-800 placeholder:text-ink-400"
+              />
+              <div className="mt-1 text-right text-[10.5px] text-ink-400">
+                {note.length}/{CHECKIN_NOTE_MAX_LENGTH}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-[10px] bg-[#F8F9FC] px-3.5 py-[11px] text-[12px] leading-[1.6] text-ink-600">
+            Pick a mood above and we’ll check in with a short note.
+          </div>
+        )}
 
         <div className="mt-4 flex justify-end">
           <button
@@ -1431,6 +1455,7 @@ export const EmployeeMessages = () => {
   const [active, setActive] = useState(() => location.state?.conversationId ?? null);
   const [draft, setDraft] = useState("");
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+  const [markConversationSeen] = useMarkConversationSeenMutation();
 
   const company = me?.business?.organization?.name ?? "Your employer";
   const threads = conversationPage?.data ?? [];
@@ -1455,6 +1480,13 @@ export const EmployeeMessages = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
   }, [activeId, messages.length]);
+
+  // Mark conversation as seen when opened
+  useEffect(() => {
+    if (activeId) {
+      markConversationSeen(activeId);
+    }
+  }, [activeId, markConversationSeen]);
 
   const send = async (e) => {
     e.preventDefault();
@@ -1511,8 +1543,15 @@ export const EmployeeMessages = () => {
                   {initialsOf(t.other_member?.name ?? "")}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-boldNunito text-ink-800">
-                    {t.other_member?.name ?? "TalkAM"}
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="block truncate text-[13px] font-boldNunito text-ink-800">
+                      {t.other_member?.name ?? "TalkAM"}
+                    </span>
+                    {t.unread_count > 0 && (
+                      <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-[#017FC8] px-1.5 text-[10px] font-extraboldNunito text-white">
+                        {t.unread_count > 99 ? "99+" : t.unread_count}
+                      </span>
+                    )}
                   </span>
                   <span className="block truncate text-[11px] text-ink-400">
                     {t.last_message?.message ?? "No messages yet"}
@@ -1599,30 +1638,48 @@ export const EmployeeMessages = () => {
 export const EmployeeProfile = () => {
   const { open, showToast } = useEmployee();
 
-  const { data: me } = useGetMeV2Query();
+  const { data: me, refetch: refetchMe } = useGetMeV2Query();
   const { data: consentState } = useGetConsentsQuery();
   const { data: privacy } = useGetPrivacySettingsQuery();
-  const [saveConsents] = useSaveConsentsMutation();
-  const [savePrivacy] = useSavePrivacySettingsMutation();
+  const [saveConsents, { isLoading: isSavingConsent }] = useSaveConsentsMutation();
+  const [savePrivacy, { isLoading: isSavingPrivacy }] = useSavePrivacySettingsMutation();
   const [updateProfile, { isLoading: isSavingProfile }] = useUpdateProfileMutation();
 
   const [fullName, setFullName] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
 
   const serverName = me?.name ?? "";
-  useEffect(() => setFullName(serverName), [serverName]);
+  
+  // Initialize and update from server
+  useEffect(() => {
+    console.log('Server name changed:', serverName);
+    if (serverName) {
+      setFullName(serverName);
+    }
+  }, [serverName]);
+
+  // Track changes
+  useEffect(() => {
+    const changed = fullName.trim() !== "" && fullName.trim() !== serverName.trim();
+    setHasChanges(changed);
+  }, [fullName, serverName]);
 
   const twoFa = !!privacy?.two_factor_enabled;
 
   const toggleConsent = async (key, next) => {
     try {
-      await saveConsents({
+      const payload = {
         consents: CONSENT_ORDER.reduce(
           (acc, k) => ({ ...acc, [k]: k === key ? next : !!consentState?.[k]?.granted }),
           {}
         ),
-      }).unwrap();
+      };
+      console.log('Saving consents:', payload);
+      const result = await saveConsents(payload).unwrap();
+      console.log('Consent save result:', result);
       showToast("Privacy settings updated");
-    } catch {
+    } catch (error) {
+      console.error('Error saving consents:', error);
       showToast("Couldn't update that just now — please try again");
     }
   };
@@ -1630,9 +1687,12 @@ export const EmployeeProfile = () => {
   const toggleTwoFa = async () => {
     if (twoFa) {
       try {
-        await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
+        console.log('Disabling 2FA...');
+        const result = await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
+        console.log('2FA disable result:', result);
         showToast("Two-factor authentication disabled");
-      } catch {
+      } catch (error) {
+        console.error('Error disabling 2FA:', error);
         showToast("Couldn't update that just now — please try again");
       }
       return;
@@ -1640,15 +1700,33 @@ export const EmployeeProfile = () => {
 
     open("twoFactorEnable", {
       email: me?.email,
-      onConfirm: (otp) => savePrivacy({ ...privacy, two_factor_enabled: true, otp }).unwrap(),
+      onConfirm: async (otp) => {
+        try {
+          console.log('Enabling 2FA with OTP...');
+          const result = await savePrivacy({ ...privacy, two_factor_enabled: true, otp }).unwrap();
+          console.log('2FA enable result:', result);
+          return result;
+        } catch (error) {
+          console.error('Error enabling 2FA:', error);
+          throw error;
+        }
+      },
     });
   };
 
   const saveProfile = async () => {
     try {
-      await updateProfile({ full_name: fullName }).unwrap();
+      console.log('Saving profile:', { full_name: fullName });
+      const result = await updateProfile({ full_name: fullName }).unwrap();
+      console.log('Profile save result:', result);
+      
+      // Force refetch to ensure UI updates
+      const refetchResult = await refetchMe();
+      console.log('Refetch result:', refetchResult.data);
+      
       showToast("Profile saved");
-    } catch {
+    } catch (error) {
+      console.error('Error saving profile:', error);
       showToast("Couldn't save your profile just now — please try again");
     }
   };
@@ -1669,7 +1747,10 @@ export const EmployeeProfile = () => {
             <input
               id="employee-full-name"
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              onChange={(e) => {
+                console.log('Input changed to:', e.target.value);
+                setFullName(e.target.value);
+              }}
               className="flex h-[42px] w-full items-center rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
             />
           </div>
@@ -1701,8 +1782,8 @@ export const EmployeeProfile = () => {
           <button
             type="button"
             onClick={saveProfile}
-            disabled={isSavingProfile}
-            className="h-[46px] cursor-pointer rounded-[12px] bg-navy-800 text-[13px] font-extraboldNunito text-white"
+            disabled={isSavingProfile || !hasChanges}
+            className="h-[46px] cursor-pointer rounded-[12px] bg-navy-800 text-[13px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSavingProfile ? "Saving…" : "Save Changes"}
           </button>
@@ -1751,8 +1832,10 @@ export const EmployeeProfile = () => {
                     aria-checked={on}
                     aria-label={CONSENT_COPY[key].title}
                     onClick={() => toggleConsent(key, !on)}
+                    disabled={isSavingConsent}
                     className={classNames(
-                      "relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-colors",
+                      "relative h-[22px] w-10 shrink-0 rounded-full transition-colors",
+                      isSavingConsent ? "cursor-wait opacity-50" : "cursor-pointer",
                       on ? "bg-[#3BA88F]" : "bg-ink-200"
                     )}
                   >
@@ -1789,8 +1872,10 @@ export const EmployeeProfile = () => {
             aria-checked={twoFa}
             aria-label="Two-factor authentication"
             onClick={toggleTwoFa}
+            disabled={isSavingPrivacy}
             className={classNames(
-              "relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-colors",
+              "relative h-[22px] w-10 shrink-0 rounded-full transition-colors",
+              isSavingPrivacy ? "cursor-wait opacity-50" : "cursor-pointer",
               twoFa ? "bg-[#3BA88F]" : "bg-ink-200"
             )}
           >
