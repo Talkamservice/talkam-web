@@ -2,7 +2,10 @@ import classNames from "classnames";
 import { MarketingFooter } from "../../../components/layout/v2/marketingfooter";
 import { MarketingHero } from "../../../components/layout/v2/marketinglayout";
 import { BrowserFrame } from "../../../components/v2/frames";
-import { ShowcaseBand, ShowcasePoints } from "../../../components/v2/showcaseband";
+import {
+  ShowcaseBand,
+  ShowcasePoints,
+} from "../../../components/v2/showcaseband";
 import {
   OverviewPreview,
   EmployeesPreview,
@@ -28,7 +31,7 @@ import {
 export const V2ForBusiness = () => {
   usePageMeta(
     "For Business — TalkAM",
-    "Give employees private access to therapy, community and self-care tools — and see anonymised wellbeing trends from one clean dashboard."
+    "Give employees private access to therapy, community and self-care tools — and see anonymised wellbeing trends from one clean dashboard.",
   );
 
   return (
@@ -65,9 +68,9 @@ export const V2ForBusiness = () => {
             </span>
           </h1>
           <p className="mb-8 max-w-[480px] text-[16px] leading-[1.65] text-white/60 lg:text-[18px]">
-            Give employees private access to therapy, community and self-care tools
-            — and see anonymised wellbeing trends from one clean dashboard. Never
-            individual data.
+            Give employees private access to therapy, community and self-care
+            tools — and see anonymised wellbeing trends from one clean
+            dashboard. Never individual data.
           </p>
           <div className="flex flex-wrap gap-3.5">
             {/* Deck: padding 16px 32px, radius 14, 16px/800. */}
@@ -92,10 +95,16 @@ export const V2ForBusiness = () => {
           <div className="mt-9 flex flex-wrap gap-7">
             {businessHeroStats.map((stat, i) => (
               <div key={stat.value} className="flex gap-7">
-                {i > 0 ? <span className="w-px self-stretch bg-white/[0.12]" /> : null}
+                {i > 0 ? (
+                  <span className="w-px self-stretch bg-white/[0.12]" />
+                ) : null}
                 <div>
-                  <div className="text-[26px] font-blackNunito text-white">{stat.value}</div>
-                  <div className="text-[12.5px] text-white/50">{stat.label}</div>
+                  <div className="text-[26px] font-blackNunito text-white">
+                    {stat.value}
+                  </div>
+                  <div className="text-[12.5px] text-white/50">
+                    {stat.label}
+                  </div>
                 </div>
               </div>
             ))}
@@ -165,7 +174,7 @@ export const V2ForBusiness = () => {
               <div
                 className={classNames(
                   "mb-4 flex h-[46px] w-[46px] items-center justify-center rounded-[13px] text-[22px]",
-                  feature.bg
+                  feature.bg,
                 )}
               >
                 {feature.icon}
@@ -173,15 +182,22 @@ export const V2ForBusiness = () => {
               <h3 className="mb-2 text-[17px] font-extraboldNunito text-navy-800">
                 {feature.title}
               </h3>
-              <p className="text-[13.5px] leading-[1.6] text-[#5B6577]">{feature.body}</p>
+              <p className="text-[13.5px] leading-[1.6] text-[#5B6577]">
+                {feature.body}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
       {/* SEAT MANAGEMENT */}
-      <ShowcaseBand url="business.talkam.net/employees" preview={<EmployeesPreview />}>
-        <DsEyebrow className="mb-3 block text-brand-400">Seat management</DsEyebrow>
+      <ShowcaseBand
+        url="business.talkam.net/employees"
+        preview={<EmployeesPreview />}
+      >
+        <DsEyebrow className="mb-3 block text-brand-400">
+          Seat management
+        </DsEyebrow>
         <h2 className="mb-4 text-[26px] font-blackNunito tracking-[-0.02em] text-navy-800 lg:text-[32px]">
           Invite in bulk, manage seats in seconds.
         </h2>
@@ -200,7 +216,14 @@ export const V2ForBusiness = () => {
         />
         <div className="v2-reveal relative z-[1] mx-auto max-w-[760px] text-center">
           <div className="mx-auto mb-[22px] flex h-[60px] w-[60px] items-center justify-center rounded-ds-lg border border-wellness-400/30 bg-wellness-400/[0.16]">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3BA88F" strokeWidth="2">
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#3BA88F"
+              strokeWidth="2"
+            >
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
@@ -208,10 +231,10 @@ export const V2ForBusiness = () => {
             The employer never sees an individual.
           </h2>
           <p className="text-[16px] leading-[1.7] text-white/65 lg:text-[17px]">
-            Mood check-ins, sessions, messages and community activity are private to
-            the employee. HR only ever sees company-wide, anonymised totals — and
-            only above a minimum cohort size. It&apos;s wellbeing insight without
-            surveillance.
+            Mood check-ins, sessions, messages and community activity are
+            private to the employee. HR only ever sees company-wide, anonymised
+            totals — and only above a minimum cohort size. It&apos;s wellbeing
+            insight without surveillance.
           </p>
           <div className="mt-[22px] inline-flex items-center rounded-full border border-white/[0.12] bg-white/[0.06] px-[18px] py-[9px] text-[13px] font-boldNunito text-white/80">
             NDPA-compliant consent, built in
@@ -220,15 +243,22 @@ export const V2ForBusiness = () => {
       </section>
 
       {/* BILLING */}
-      <ShowcaseBand reverse tint url="business.talkam.net/billing" preview={<BillingPreview />}>
-        <DsEyebrow className="mb-3 block text-brand-400">Fair, post-paid billing</DsEyebrow>
+      <ShowcaseBand
+        reverse
+        tint
+        url="business.talkam.net/billing"
+        preview={<BillingPreview />}
+      >
+        <DsEyebrow className="mb-3 block text-brand-400">
+          Fair, post-paid billing
+        </DsEyebrow>
         <h2 className="mb-4 text-[26px] font-blackNunito tracking-[-0.02em] text-navy-800 lg:text-[32px]">
           Only pay for sessions your team actually uses.
         </h2>
         <p className="mb-6 text-[15.5px] leading-[1.7] text-[#5B6577]">
-          No big upfront commitment. TalkAM bills a flat rate per session per seat at
-          the end of each month, securely through Flutterwave. Add seats anytime; top
-          up when you hit a cap.
+          No big upfront commitment. TalkAM bills a flat rate per session per
+          seat at the end of each month, securely through Flutterwave. Add seats
+          anytime; top up when you hit a cap.
         </p>
         <DsButton
           to={V2.pricing}
@@ -243,7 +273,9 @@ export const V2ForBusiness = () => {
       {/* THREE STEPS */}
       <section className="bg-white px-6 py-16 lg:px-14 lg:py-[88px]">
         <div className="v2-reveal mb-12 text-center">
-          <DsEyebrow className="mb-3 block text-brand-400">Get started in days</DsEyebrow>
+          <DsEyebrow className="mb-3 block text-brand-400">
+            Get started in days
+          </DsEyebrow>
           <h2 className="text-[28px] font-blackNunito tracking-[-0.02em] text-navy-800 lg:text-[36px]">
             Live for your team in three steps.
           </h2>
@@ -257,8 +289,12 @@ export const V2ForBusiness = () => {
               <div className="mb-3 text-[44px] font-extraboldNunito leading-none text-[#D6E4F0]">
                 {step.n}
               </div>
-              <h3 className="mb-2 text-[18px] font-extraboldNunito text-navy-800">{step.title}</h3>
-              <p className="text-body leading-[1.6] text-[#5B6577]">{step.body}</p>
+              <h3 className="mb-2 text-[18px] font-extraboldNunito text-navy-800">
+                {step.title}
+              </h3>
+              <p className="text-body leading-[1.6] text-[#5B6577]">
+                {step.body}
+              </p>
             </div>
           ))}
         </div>
@@ -275,20 +311,23 @@ export const V2ForBusiness = () => {
             Bring real care to your workplace.
           </h2>
           <p className="mb-[30px] text-[16px] leading-[1.6] text-white/80 lg:text-[17px]">
-            Set up your organisation in minutes and invite your first team today.
+            Set up your organisation in minutes and invite your first team
+            today.
           </p>
           <div className="flex flex-wrap justify-center gap-3.5">
             <DsButton
               to={V2.businessSignUp}
+              variant="inverse"
               size="lg"
-              className="h-auto bg-white px-[34px] py-4 font-blackNunito !text-[#0D2240] shadow-[0_14px_30px_rgba(0,0,0,0.25)] hover:bg-ink-50"
+              className="h-auto px-[34px] py-4 font-blackNunito !text-[#0D2240] shadow-[0_14px_30px_rgba(0,0,0,0.25)] hover:bg-white/70"
             >
               Get started free →
             </DsButton>
             <DsButton
               to={V2.pricing}
+              variant="translucent"
               size="lg"
-              className="h-auto border-[1.5px] border-white/30 bg-white/[0.14] px-[34px] py-4 font-extraboldNunito !text-white hover:bg-white/25"
+              className="h-auto px-[34px] py-4 font-extraboldNunito !text-white"
             >
               View pricing
             </DsButton>
