@@ -896,7 +896,7 @@ const TherapistModal = ({ open, close, context }) => {
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex flex-wrap items-center gap-2">
               <span className="text-[19px] font-extraboldNunito text-navy-800">{t.name}</span>
-              <span className="text-[13px] text-gold-600">✦</span>
+              {verified && <span className="text-[13px] text-gold-600">✦</span>}
               <span className={classNames("rounded-full px-2.5 py-[3px] text-[10px] font-extraboldNunito", providerBadge)}>
                 {providerLabel}
               </span>
