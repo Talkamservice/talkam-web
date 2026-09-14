@@ -14,6 +14,26 @@ import { apiSliceV2 } from "../../app/api/apiSliceV2";
  */
 export const therapistApiSlice = apiSliceV2.injectEndpoints({
   endpoints: (builder) => ({
+    /* ── Application: Specialties step (web §business onboarding fork) ──
+     * The generic /user/interest-topics list, same one mobile's own
+     * Specialties screen sources from — not the 6-chip
+     * /business/onboarding/topics list, which is the wrong, too-narrow
+     * source for a clinical specialties picker. */
+    getInterestTopics: builder.query({
+      query: () => `/user/interest-topics`,
+      transformResponse: (response) => response?.data ?? [],
+    }),
+
+    saveTherapistSpecialties: builder.mutation({
+      query: (body) => ({
+        url: `/therapist/application/specialties`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["Me"],
+    }),
+
     getTherapistHome: builder.query({
       query: () => `/therapist/home`,
       transformResponse: (response) => response?.data,
@@ -155,6 +175,8 @@ export const therapistApiSlice = apiSliceV2.injectEndpoints({
 });
 
 export const {
+  useGetInterestTopicsQuery,
+  useSaveTherapistSpecialtiesMutation,
   useGetTherapistHomeQuery,
   useGetTherapistAnalyticsQuery,
   useGetAvailabilityQuery,

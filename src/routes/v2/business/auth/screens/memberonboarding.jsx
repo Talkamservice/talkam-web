@@ -27,6 +27,10 @@ import {
   useSaveSelfCheckMutation,
   useGetPricingConfigQuery,
 } from "../../../../../services/v2/businessApiSlice";
+import {
+  useGetInterestTopicsQuery,
+  useSaveTherapistSpecialtiesMutation,
+} from "../../../../../services/v2/therapistApiSlice";
 
 /** Screens 8–11: consent, topics, self-check assessment, complete. */
 
@@ -186,18 +190,31 @@ export const Consent = () => {
   );
 };
 
-/* ── 8. TOPICS OF INTEREST ─────────────────────────────────────────────── */
+/* ── 8. TOPICS OF INTEREST (employees) / SPECIALTIES (therapists) ──────── */
+/**
+ * A therapist landing here previously got the employee interest-topics
+ * picker too — wrong screen entirely, not just wrong copy: it never
+ * collected a bio or clinical specialties, and the completion screen went
+ * on to claim "your application now moves to credential verification"
+ * regardless. This forks on role at the top so each gets its own real step;
+ * everything else in the wizard (consent, welcome) is unchanged.
+ */
 export const TopicsOfInterest = () => {
+  const o = useOnboarding();
+  const { data: me } = useGetMeV2Query();
+  const isTherapist = (me?.business?.role ?? o.landingRole) === "therapist";
+
+  return isTherapist ? <TherapistSpecialties /> : <EmployeeTopics />;
+};
+
+const EmployeeTopics = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
   usePageMeta("What's on your mind lately? — TalkAM");
 
   const { data: topics = [], isLoading } = useGetOnboardingTopicsQuery();
-  const { data: me } = useGetMeV2Query();
   const [saveTopics, { isLoading: isSaving }] = useSaveOnboardingTopicsMutation();
   const [error, setError] = useState(null);
-
-  const isTherapist = (me?.business?.role ?? o.landingRole) === "therapist";
 
   const submit = async () => {
     setError(null);
@@ -208,9 +225,7 @@ export const TopicsOfInterest = () => {
 
     try {
       await saveTopics({ interests: ids }).unwrap();
-      // Therapists are providers, not clients — the employee self check-in is
-      // org.role:employee only, so skip it and go straight to the finish.
-      navigate(isTherapist ? V2.businessWelcome : V2.businessSelfCheck);
+      navigate(V2.businessSelfCheck);
     } catch (err) {
       setError(apiErrorMessage(err));
     }
@@ -247,6 +262,81 @@ export const TopicsOfInterest = () => {
         disabled={o.selectedTopics.length === 0 || isSaving}
         onClick={submit}
       >
+        {isSaving ? "Saving…" : "Continue →"}
+      </AuthButton>
+    </>
+  );
+};
+
+const TherapistSpecialties = () => {
+  const navigate = useNavigate();
+  usePageMeta("Specialties — TalkAM");
+
+  const { data: topics = [], isLoading } = useGetInterestTopicsQuery();
+  const [saveSpecialties, { isLoading: isSaving }] = useSaveTherapistSpecialtiesMutation();
+
+  const [bio, setBio] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [error, setError] = useState(null);
+
+  const toggleId = (id) =>
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+
+  const blocked = !bio.trim() || selectedIds.length === 0 || isSaving;
+
+  const submit = async () => {
+    setError(null);
+
+    try {
+      await saveSpecialties({ bio: bio.trim(), specialties: selectedIds }).unwrap();
+      // Therapists are providers, not clients — the employee self check-in is
+      // org.role:employee only, so skip it and go straight to the finish.
+      navigate(V2.businessWelcome);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  };
+
+  return (
+    <>
+      <StepEyebrow>LAST STEP</StepEyebrow>
+      <ScreenTitle>Specialties</ScreenTitle>
+      <ScreenLead className="mb-6">
+        Clients find you by these. Select all that apply.
+      </ScreenLead>
+
+      <label className="mb-1.5 block text-[11px] font-boldNunito uppercase tracking-[0.04em] text-ink-500">
+        Your bio (shown on profile)
+      </label>
+      <textarea
+        value={bio}
+        onChange={(e) => setBio(e.target.value)}
+        maxLength={1000}
+        placeholder="Describe yourself"
+        className="mb-5 h-[110px] w-full resize-none rounded-[10px] border-[1.5px] border-ink-200 px-[13px] py-2.5 text-[13px] leading-[1.6] text-navy-800 outline-none focus:border-brand-400"
+      />
+
+      <div className="mb-7 flex flex-wrap gap-2.5">
+        {isLoading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonLine key={i} className="h-[38px] w-[120px] rounded-full" />
+            ))
+          : topics.map((topic) => (
+              <SelectChip
+                key={topic.id}
+                selected={selectedIds.includes(topic.id)}
+                onClick={() => toggleId(topic.id)}
+              >
+                {topic.name}
+              </SelectChip>
+            ))}
+      </div>
+
+      <FormError>{error}</FormError>
+
+      <AuthButton disabled={blocked} onClick={submit}>
         {isSaving ? "Saving…" : "Continue →"}
       </AuthButton>
     </>
@@ -401,7 +491,7 @@ export const OnboardingComplete = () => {
       <ScreenLead className="mb-6 !leading-[1.7]">
         Your account is active.{" "}
         {isTherapist
-          ? "Your application now moves to credential verification. Meanwhile, set your availability from the dashboard."
+          ? "Your bio and specialties are saved. Finish credential verification in the TalkAM mobile app to start accepting clients — meanwhile, set your availability from the dashboard."
           : `Your consent choices are recorded and your interests are saved.${primary ? ` Based on your check-in, we'll suggest therapists specialising in ${primary} first.` : ""} Head to your dashboard to book.`}
       </ScreenLead>
 

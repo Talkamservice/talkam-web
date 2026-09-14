@@ -70,6 +70,12 @@ export const authBrandContent = {
     body: "This just shapes what you see first — you can browse or post in any topic regardless.",
     points: ["Anxiety · Depression · Relationships", "Work Stress · Grief · General Support", "Editable anytime from Profile"],
   },
+  specialties: {
+    eyebrow: "LAST STEP",
+    title: "Clients find you by these.",
+    body: "Your bio and specialties show on your public profile — the same fields the mobile app uses. You can update either anytime.",
+    points: ["Shown on your public profile", "Matches you with the right clients", "Editable anytime from your dashboard"],
+  },
   assessment: {
     eyebrow: "PRIVATE & CONFIDENTIAL",
     title: "Matched to the right therapist, faster.",
