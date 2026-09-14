@@ -126,9 +126,6 @@ const FullFooter = ({ journal }) => (
 
       <div className="flex flex-col gap-2 text-caption text-white/35 sm:flex-row sm:justify-between">
         <span>© {new Date().getFullYear()} TalkAM. All rights reserved.</span>
-        <Link to={V2.businessLogin} className="transition-colors hover:text-white/60">
-          Business Login
-        </Link>
       </div>
     </div>
   </footer>
