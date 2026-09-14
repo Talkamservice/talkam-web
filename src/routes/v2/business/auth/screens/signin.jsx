@@ -8,6 +8,7 @@ import {
   ScreenLead,
   Field,
   authInputClass,
+  PasswordInput,
   AuthButton,
   OtpBoxes,
   InfoNote,
@@ -149,13 +150,11 @@ export const SignIn = () => {
               Forgot password?
             </button>
           </div>
-          <input
+          <PasswordInput
             id="signin-password"
-            type="password"
             required
             value={form.password}
             onChange={set("password")}
-            className={authInputClass()}
           />
         </div>
 

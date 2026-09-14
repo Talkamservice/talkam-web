@@ -9,6 +9,7 @@ import {
   ScreenLead,
   AuthButton,
   SelectChip,
+  PasswordInput,
   FormError,
   SkeletonLine,
   apiErrorMessage,
@@ -671,13 +672,11 @@ export const InviteLanding = () => {
           <label htmlFor="invite-password" className="text-caption font-boldNunito text-ink-600">
             Create password
           </label>
-          <input
+          <PasswordInput
             id="invite-password"
-            type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="h-12 w-full rounded-ds-md border-[1.5px] border-ink-200 bg-white px-4 text-body text-navy-800"
           />
         </div>
         <AuthButton type="submit" disabled={isLoading || isAccepting} className="mt-1">
