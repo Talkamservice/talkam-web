@@ -812,6 +812,15 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "specialties",
+        lazy: async () => {
+          let { TherapistSpecialties } = await import(
+            "./routes/v2/business/auth/screens/memberonboarding"
+          );
+          return { Component: TherapistSpecialties };
+        },
+      },
+      {
         path: "self-check",
         lazy: async () => {
           let { SelfCheck } = await import(

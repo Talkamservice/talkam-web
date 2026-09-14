@@ -120,6 +120,7 @@ export const AUTH_SCREENS = [
   { id: "landing", label: "Invite Landing", path: "join" },
   { id: "consent", label: "Consent", path: "consent" },
   { id: "topics", label: "Topics of Interest", path: "topics" },
+  { id: "specialties", label: "Specialties", path: "specialties" },
   { id: "assessment", label: "Self Check-in", path: "self-check" },
   { id: "complete", label: "Complete", path: "welcome" },
   { id: "signin", label: "Sign In", path: "login" },

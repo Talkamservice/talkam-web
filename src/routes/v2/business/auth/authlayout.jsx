@@ -12,7 +12,6 @@ import classNames from "classnames";
 import TalkamWordmark from "../../../../assets/svgs/talkam-logo.svg";
 import { V2_ROOT } from "../../../../constants/v2routes";
 import { authBrandContent, AUTH_SCREENS } from "../../../../constants/businessauth";
-import { useGetMeV2Query } from "../../../../services/v2/authApiSliceV2";
 
 /**
  * B2B auth & onboarding shell.
@@ -100,15 +99,7 @@ export const AuthLayout = () => {
 
   const screen =
     AUTH_SCREENS.find((s) => pathname.endsWith(`/${s.path}`))?.id ?? "signup";
-
-  // The "topics" screen is a therapist-only fork (real Specialties step, not
-  // the employee interest-topics picker) — see TopicsOfInterest. me?.business
-  // is the source of truth once loaded; state.landingRole is the same
-  // pre-fetch fallback the fork itself uses.
-  const { data: me } = useGetMeV2Query();
-  const isTherapist = (me?.business?.role ?? state.landingRole) === "therapist";
-  const brandKey = screen === "topics" && isTherapist ? "specialties" : screen;
-  const brand = authBrandContent[brandKey] ?? authBrandContent.signup;
+  const brand = authBrandContent[screen] ?? authBrandContent.signup;
 
   return (
     <OnboardingContext.Provider value={value}>

@@ -67,11 +67,14 @@ const CONSENT_ORDER = [
 /* ── 7. CONSENT ────────────────────────────────────────────────────────── */
 export const Consent = () => {
   const navigate = useNavigate();
+  const o = useOnboarding();
   usePageMeta("Your data, your choice — TalkAM");
 
   const { data: state, isLoading } = useGetConsentsQuery();
+  const { data: me } = useGetMeV2Query();
   const [saveConsents, { isLoading: isSaving }] = useSaveConsentsMutation();
   const { data: pricing } = useGetPricingConfigQuery();
+  const isTherapist = (me?.business?.role ?? o.landingRole) === "therapist";
 
   const [choices, setChoices] = useState({});
   const [error, setError] = useState(null);
@@ -94,7 +97,9 @@ export const Consent = () => {
           {}
         ),
       }).unwrap();
-      navigate(V2.businessTopics);
+      // A therapist gets a real Specialties step at its own url — not the
+      // employee interest-topics picker (see TopicsOfInterest below).
+      navigate(isTherapist ? V2.businessSpecialties : V2.businessTopics);
     } catch (err) {
       setError(apiErrorMessage(err));
     }
@@ -190,24 +195,8 @@ export const Consent = () => {
   );
 };
 
-/* ── 8. TOPICS OF INTEREST (employees) / SPECIALTIES (therapists) ──────── */
-/**
- * A therapist landing here previously got the employee interest-topics
- * picker too — wrong screen entirely, not just wrong copy: it never
- * collected a bio or clinical specialties, and the completion screen went
- * on to claim "your application now moves to credential verification"
- * regardless. This forks on role at the top so each gets its own real step;
- * everything else in the wizard (consent, welcome) is unchanged.
- */
+/* ── 8. TOPICS OF INTEREST (employees only) ─────────────────────────────── */
 export const TopicsOfInterest = () => {
-  const o = useOnboarding();
-  const { data: me } = useGetMeV2Query();
-  const isTherapist = (me?.business?.role ?? o.landingRole) === "therapist";
-
-  return isTherapist ? <TherapistSpecialties /> : <EmployeeTopics />;
-};
-
-const EmployeeTopics = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
   usePageMeta("What's on your mind lately? — TalkAM");
@@ -268,7 +257,16 @@ const EmployeeTopics = () => {
   );
 };
 
-const TherapistSpecialties = () => {
+/* ── 8b. SPECIALTIES (therapists only, its own url/screen) ──────────────
+ * A therapist used to be routed through the exact same screen as above —
+ * wrong entirely, not just wrong copy: it never collected a bio or clinical
+ * specialties, and the completion screen went on to claim "your
+ * application now moves to credential verification" regardless. This is
+ * now a genuinely separate step at /business/specialties, reached only
+ * from Consent's own role branch — no runtime role-forking on one shared
+ * url/screen, which was fragile against a reload resetting local state.
+ */
+export const TherapistSpecialties = () => {
   const navigate = useNavigate();
   usePageMeta("Specialties — TalkAM");
 

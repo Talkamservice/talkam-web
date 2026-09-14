@@ -35,6 +35,7 @@ export const V2 = {
   businessJoin: at("/business/join"),
   businessConsent: at("/business/consent"),
   businessTopics: at("/business/topics"),
+  businessSpecialties: at("/business/specialties"),
   businessSelfCheck: at("/business/self-check"),
   businessWelcome: at("/business/welcome"),
   businessTwoFactor: at("/business/two-factor"),
