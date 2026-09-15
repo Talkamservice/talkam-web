@@ -298,7 +298,7 @@ const Directory = () => {
                   </Badge>
                 </Td>
                 <Td>
-                  {e.sessions_used !== null || e.sessions_cap !== null ? (
+                  {e.role === "employee" ? (
                     <div>
                       <div
                         className={classNames(
@@ -306,20 +306,25 @@ const Directory = () => {
                           e.status === "invited" ? "text-ink-300" : "text-ink-800"
                         )}
                       >
-                        {e.sessions_used ?? 0} / {e.sessions_cap ?? "—"}
+                        {e.sessions_used ?? 0}{e.sessions_cap ? ` / ${e.sessions_cap}` : " sessions"}
                       </div>
-                      {e.sessions_cap ? (
-                        <div className="mt-1 h-1 w-16 rounded-full bg-ink-100">
-                          <div
-                            className={classNames(
-                              "h-1 rounded-full",
-                              e.status === "invited" ? "bg-ink-200" : "bg-brand-400"
-                            )}
-                            style={{
-                              width: `${Math.min(100, ((e.sessions_used ?? 0) / e.sessions_cap) * 100)}%`,
-                            }}
-                          />
-                        </div>
+                      <div className="mt-1 h-1 w-16 rounded-full bg-ink-100">
+                        <div
+                          className={classNames(
+                            "h-1 rounded-full",
+                            e.status === "invited" ? "bg-ink-200" : "bg-brand-400"
+                          )}
+                          style={{
+                            width: e.sessions_cap
+                              ? `${Math.min(100, ((e.sessions_used ?? 0) / e.sessions_cap) * 100)}%`
+                              : (e.sessions_used ?? 0) > 0
+                              ? "100%"
+                              : "6%",
+                          }}
+                        />
+                      </div>
+                      {!e.sessions_cap ? (
+                        <div className="mt-0.5 text-[10px] text-ink-400">No cap set</div>
                       ) : null}
                     </div>
                   ) : (
