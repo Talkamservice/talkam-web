@@ -184,7 +184,6 @@ export const AdminTherapistNetwork = () => {
                       <span className="truncate text-[13px] font-extraboldNunito text-navy-800">
                         {t.name}
                       </span>
-                      {t.is_verified && <span className="text-[11px] text-gold-600">✦</span>}
                     </div>
                     <div className="truncate text-[11px] text-ink-400">{t.specialty}</div>
                   </div>
@@ -341,7 +340,7 @@ export const AdminMyTherapists = () => {
                     {t.initials}
                   </span>
                   <span className="font-boldNunito text-navy-800">
-                    {t.name} {t.is_verified && <span className="text-gold-600">✦</span>}
+                    {t.name}
                   </span>
                 </div>
               </Td>
