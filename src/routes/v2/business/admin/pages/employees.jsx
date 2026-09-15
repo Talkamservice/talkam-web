@@ -35,11 +35,11 @@ import { selectCurrentToken } from "../../../../../services/authSlice";
 /**
  * Admin › Employees. Spec: "TalkAM B2B Dashboard.dc.html" § EMPLOYEES.
  *
- * The deck's "SESSIONS USED" and "LAST ACTIVE" columns are NOT served: a
- * per-person therapy-session count and an activity timestamp are individual
- * data, and the privacy promise forbids showing them to an employer. They are
- * replaced by ROLE and SEATED SINCE — administrative facts the admin already
- * holds. See planning-docs/web-api/03-admin-dashboard.md §0.
+ * The table itself doesn't carry the deck's "SESSIONS USED"/"LAST ACTIVE"
+ * columns — it shows ROLE and SEATED SINCE instead, administrative facts the
+ * admin already holds. See planning-docs/web-api/03-admin-dashboard.md §0.
+ * Opening a row's "view" modal (EmployeeModal, adminmodals.jsx) is a
+ * deliberate exception: it does show that one member's own session usage.
  */
 
 const STATUS_TONE = { active: "green", invited: "blue", inactive: "grey" };
@@ -239,17 +239,19 @@ const Directory = () => {
       ) : null}
 
       {/*
-        The mock promised "session counts" here. A per-person session count is
-        individual data the privacy rule forbids, so it is not shown — and this
-        copy is corrected to match, rather than telling HR they can see something
-        they cannot. See planning-docs/web-api/03-admin-dashboard.md §0.
+        This list itself stays CONTRACT data only (who holds a seat, their
+        department, their invite status) — see
+        planning-docs/web-api/03-admin-dashboard.md §0. Opening a single
+        employee's seat record (the "view" modal) is the one deliberate
+        exception: it shows that member's own session usage, so the copy here
+        no longer claims it's never visible anywhere.
       */}
       <InfoStrip tone="purple">
-        <strong className="font-boldNunito">What you can see:</strong> who holds a seat,
+        <strong className="font-boldNunito">This list shows:</strong> who holds a seat,
         their department, and their invite status.{" "}
-        <strong className="font-boldNunito">What you can never see:</strong> individual
-        session counts, session content, chat messages, therapist notes, or community
-        activity — even in aggregate below 5 users.
+        <strong className="font-boldNunito">Never shown here:</strong> session content,
+        chat messages, therapist notes, or community activity — open a seat record to see
+        that employee&apos;s own session usage.
       </InfoStrip>
 
       {/* Table */}

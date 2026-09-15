@@ -1,11 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import classNames from "classnames";
+import * as Icon from "react-feather";
 import {
   Modal,
   PrimaryButton,
   SecondaryButton,
   InfoStrip,
+  Badge,
   Toast,
 } from "../../../../components/v2/dashboard/chrome";
 import { naira, tierForSeats } from "../../../../constants/admindashboard";
@@ -13,6 +15,7 @@ import {
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
   useGetAdminTherapistDetailQuery,
+  useGetAdminEmployeeDetailQuery,
   useRequestOrgDeletionMutation,
   useDeactivateEmployeeMutation,
   useRemoveTherapistFromNetworkMutation,
@@ -24,6 +27,7 @@ import {
   useSendInvitationsMutation,
   useImportRosterMutation,
   useGetOnboardingTopicsQuery,
+  useGetOrganizationQuery,
 } from "../../../../services/v2/businessApiSlice";
 import { OtpBoxes, apiErrorMessage } from "../auth/authlayout";
 
@@ -562,30 +566,235 @@ const InvoiceModal = ({ open, close, context }) => {
   );
 };
 
-const EmployeeModal = ({ open, close, context }) => (
-  <Modal open={open} onClose={close} title={context?.id ?? "Employee"} subtitle="Seat record">
-    <InfoStrip tone="purple" className="mb-4">
-      You see seat administration only. Session counts, session content, chat messages,
-      therapist notes and community activity are never visible to an employer account —
-      not even in aggregate below 5 users.
-    </InfoStrip>
-    <div className="flex flex-col gap-2.5">
-      {[
-        ["Employee ID", context?.id],
-        ["Work email", context?.email],
-        ["Department", context?.department],
-        ["Role", context?.role],
-        ["Status", context?.status],
-        ["Seated since", context?.activated_at ?? "—"],
-      ].map(([label, value]) => (
-        <div key={label} className="flex justify-between gap-4 border-b border-ink-100 pb-2.5">
-          <span className="text-caption text-ink-500">{label}</span>
-          <span className="text-[13px] font-boldNunito capitalize text-navy-800">{value}</span>
-        </div>
-      ))}
+const EMPLOYEE_STATUS_TONE = { active: "green", invited: "blue", inactive: "grey" };
+
+/** "Today, 2:00 PM" / "Yesterday, 2:00 PM" / "Jul 16, 2:00 PM" / "Never". */
+const formatLastActive = (iso) => {
+  if (!iso) return "Never";
+  const d = new Date(iso);
+  const time = d.toLocaleTimeString("en-NG", { hour: "numeric", minute: "2-digit" });
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const sameDay = (a, b) => a.toDateString() === b.toDateString();
+
+  if (sameDay(d, today)) return `Today, ${time}`;
+  if (sameDay(d, yesterday)) return `Yesterday, ${time}`;
+  return `${d.toLocaleDateString("en-NG", { month: "short", day: "numeric" })}, ${time}`;
+};
+
+/** The 6-month bar chart on "ENGAGEMENT SINCE JOINING". */
+const EngagementChart = ({ months }) => {
+  const max = Math.max(1, ...months.map((m) => m.count));
+
+  return (
+    <div className="flex h-24 items-end gap-2">
+      {months.map((m, i) => {
+        const isCurrent = i === months.length - 1;
+        const heightPct = m.count > 0 ? Math.max(14, (m.count / max) * 100) : 6;
+
+        return (
+          <div key={`${m.label}-${i}`} className="flex flex-1 flex-col items-center gap-1.5">
+            <div className="flex h-full w-full items-end">
+              <div
+                className={classNames(
+                  "w-full rounded-[4px]",
+                  isCurrent ? "bg-brand-400" : "bg-brand-100"
+                )}
+                style={{ height: `${heightPct}%` }}
+              />
+            </div>
+            <span className="text-[10.5px] text-ink-400">{m.label}</span>
+          </div>
+        );
+      })}
     </div>
-  </Modal>
-);
+  );
+};
+
+/**
+ * Employee "view seat" modal — spec: "TalkAM B2B Dashboard.dc.html" § EMPLOYEE
+ * VIEW MODAL. Unlike every other insight in this dashboard, this one member's
+ * own session usage IS shown here (sessions this cycle, avg/month, last
+ * active, a 6-month engagement chart) — a deliberate exception to the
+ * roster's usual anonymised/company-wide-only rule; see
+ * OrgRosterService::employeeDetail().
+ */
+const EmployeeModal = ({ open, close, context }) => {
+  const { open: openModal } = useAdminModal();
+  const { data: org } = useGetOrganizationQuery();
+  const { data: detail } = useGetAdminEmployeeDetailQuery(context?.member_id, {
+    skip: !open || !context?.member_id,
+  });
+  const [deactivate] = useDeactivateEmployeeMutation();
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => e.key === "Escape" && close();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, close]);
+
+  if (!open) return null;
+
+  const e = { ...(context ?? {}), ...(detail ?? {}) };
+  const companyName = org?.organization?.name ?? "your company";
+  const numericId = e.id ? String(parseInt(e.id.replace(/\D/g, ""), 10) || 0) : "—";
+  const cycle = e.sessions_this_cycle;
+  const months = e.monthly_sessions ?? [];
+  const trendUp = months.length >= 2 && months[months.length - 1].count > months[0].count;
+
+  const stats = [
+    [cycle ? `${cycle.used} / ${cycle.cap ?? "—"}` : "—", "sessions this cycle"],
+    [e.avg_sessions_per_month ?? "—", "avg sessions / month"],
+    [formatLastActive(e.last_active), "last active"],
+  ];
+
+  return (
+    <div
+      className="fixed inset-0 z-[300] flex items-start justify-center overflow-y-auto bg-navy-900/50 p-4 backdrop-blur-sm sm:p-8"
+      onClick={close}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={e.id ?? "Employee"}
+        onClick={(ev) => ev.stopPropagation()}
+        className="my-auto max-h-[90vh] w-full max-w-[620px] overflow-y-auto rounded-ds-xl bg-white shadow-e4"
+      >
+        {/* header */}
+        <div className="sticky top-0 z-[2] flex items-start gap-4 border-b border-ink-100 bg-white px-7 py-5">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-navy-800 text-[20px] font-extraboldNunito text-white">
+            {numericId}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <span className="text-[19px] font-extraboldNunito text-navy-800">{e.id}</span>
+              <Badge tone={EMPLOYEE_STATUS_TONE[e.status] ?? "grey"} className="capitalize">
+                {e.status}
+              </Badge>
+            </div>
+            <div className="text-[12.5px] text-ink-400">
+              {e.email} · <span className="capitalize">{e.department}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close"
+            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-ds-sm bg-surface-page text-ink-600 hover:text-navy-800"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-5 px-7 py-5">
+          {/* key stats */}
+          <div className="grid grid-cols-3 gap-3">
+            {stats.map(([value, label]) => (
+              <div key={label} className="rounded-ds-md bg-ink-50 p-3.5">
+                <div className="text-[18px] font-extraboldNunito text-navy-800">{value}</div>
+                <div className="text-[10.5px] text-ink-400">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* seat details */}
+          <div>
+            <div className="mb-2.5 text-[12px] font-extraboldNunito tracking-[0.04em] text-navy-800">
+              SEAT DETAILS
+            </div>
+            <div className="flex flex-col gap-2.5">
+              <div className="flex justify-between gap-4 border-b border-ink-100 pb-2.5">
+                <span className="text-caption text-ink-500">Seat type</span>
+                <span className="text-[13px] font-boldNunito capitalize text-navy-800">
+                  {e.role === "employee"
+                    ? `Employee seat · ${naira(e.seat_rate)}/mo`
+                    : `${e.role ?? "—"} seat`}
+                </span>
+              </div>
+              <div className="flex justify-between gap-4 border-b border-ink-100 pb-2.5">
+                <span className="text-caption text-ink-500">Department</span>
+                <span className="text-[13px] font-boldNunito capitalize text-navy-800">
+                  {e.department ?? "—"}
+                </span>
+              </div>
+              <div className="flex justify-between gap-4 pb-2.5">
+                <span className="text-caption text-ink-500">Status</span>
+                <Badge tone={EMPLOYEE_STATUS_TONE[e.status] ?? "grey"} className="capitalize">
+                  {e.status}
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* engagement chart */}
+          {months.length ? (
+            <div className="rounded-ds-md bg-ink-50 p-4">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <span className="text-[12px] font-extraboldNunito tracking-[0.04em] text-navy-800">
+                  ENGAGEMENT SINCE JOINING
+                </span>
+                <span
+                  className={classNames(
+                    "text-[11px] font-boldNunito",
+                    trendUp ? "text-wellness-600" : "text-ink-400"
+                  )}
+                >
+                  {trendUp ? "↑ Up since joining" : "→ Steady since joining"}
+                </span>
+              </div>
+              <EngagementChart months={months} />
+              <div className="mt-3 text-[10.5px] text-ink-400">
+                Sessions used per month — the only usage metric visible to admins
+              </div>
+            </div>
+          ) : null}
+
+          <InfoStrip tone="purple" icon={<Icon.Shield size={14} className="mt-0.5 shrink-0" />}>
+            That&apos;s everything visible to you. Session content, mood check-ins, chat
+            messages and community activity are never shared with {companyName} — only
+            these anonymised usage totals.
+          </InfoStrip>
+
+          {/* footer actions */}
+          <div className="sticky bottom-0 flex gap-2 bg-white pt-1">
+            <button
+              type="button"
+              onClick={close}
+              className="h-[46px] flex-1 rounded-[10px] border border-ink-200 bg-surface-page text-[13px] font-boldNunito text-navy-800 hover:bg-ink-100"
+            >
+              Close
+            </button>
+            {e.status === "active" ? (
+              <button
+                type="button"
+                onClick={() =>
+                  openModal("confirm", {
+                    title: `Deactivate ${e.id}?`,
+                    body: "They lose access at the end of the current billing period. Their individual TalkAM account and history stay with them.",
+                    confirmLabel: "Deactivate",
+                    toast: `${e.id} deactivated`,
+                    onConfirm: () => {
+                      close();
+                      return deactivate(e.member_id).unwrap();
+                    },
+                  })
+                }
+                className="h-[46px] flex-1 rounded-[10px] border border-[#FFCDD2] bg-surface-errorTint text-[13px] font-boldNunito text-surface-errorInk hover:bg-[#FFE4E4]"
+              >
+                Deactivate
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ConfirmModal = ({ open, close, showToast, context }) => (
   <Modal open={open} onClose={close} title={context?.title ?? "Are you sure?"} width="max-w-[440px]">

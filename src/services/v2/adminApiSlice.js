@@ -37,6 +37,12 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       providesTags: ["AdminEmployees"],
     }),
 
+    getAdminEmployeeDetail: builder.query({
+      query: (memberId) => ({ url: `/business/employees/${memberId}/detail` }),
+      transformResponse: (response) => response?.data,
+      providesTags: ["AdminEmployees"],
+    }),
+
     deactivateEmployee: builder.mutation({
       query: (memberId) => ({
         url: `/business/employees/${memberId}/deactivate`,
@@ -222,6 +228,7 @@ export const {
   useGetTeamNeedsQuery,
   useGetAdminReportsQuery,
   useGetAdminEmployeesQuery,
+  useGetAdminEmployeeDetailQuery,
   useDeactivateEmployeeMutation,
   useReactivateEmployeeMutation,
   useGetAdminTherapistsQuery,
