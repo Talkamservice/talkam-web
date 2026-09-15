@@ -10,7 +10,7 @@ import {
   Badge,
   Toast,
 } from "../../../../components/v2/dashboard/chrome";
-import { naira, tierForSeats } from "../../../../constants/admindashboard";
+import { naira, tierForSeats, formatLastActive } from "../../../../constants/admindashboard";
 import {
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
@@ -567,21 +567,6 @@ const InvoiceModal = ({ open, close, context }) => {
 };
 
 const EMPLOYEE_STATUS_TONE = { active: "green", invited: "blue", inactive: "grey" };
-
-/** "Today, 2:00 PM" / "Yesterday, 2:00 PM" / "Jul 16, 2:00 PM" / "Never". */
-const formatLastActive = (iso) => {
-  if (!iso) return "Never";
-  const d = new Date(iso);
-  const time = d.toLocaleTimeString("en-NG", { hour: "numeric", minute: "2-digit" });
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const sameDay = (a, b) => a.toDateString() === b.toDateString();
-
-  if (sameDay(d, today)) return `Today, ${time}`;
-  if (sameDay(d, yesterday)) return `Yesterday, ${time}`;
-  return `${d.toLocaleDateString("en-NG", { month: "short", day: "numeric" })}, ${time}`;
-};
 
 /** The 6-month bar chart on "ENGAGEMENT SINCE JOINING". */
 const EngagementChart = ({ months }) => {

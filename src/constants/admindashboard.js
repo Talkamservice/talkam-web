@@ -68,6 +68,21 @@ export const initialsOf = (name = "") =>
 
 export const EMPLOYEES_PER_PAGE = 5;
 
+/** "Today, 2:00 PM" / "Yesterday, 2:00 PM" / "Jul 16, 2:00 PM" / "—". */
+export const formatLastActive = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const time = d.toLocaleTimeString("en-NG", { hour: "numeric", minute: "2-digit" });
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const sameDay = (a, b) => a.toDateString() === b.toDateString();
+
+  if (sameDay(d, today)) return `Today, ${time}`;
+  if (sameDay(d, yesterday)) return `Yesterday, ${time}`;
+  return `${d.toLocaleDateString("en-NG", { month: "short", day: "numeric" })}, ${time}`;
+};
+
 /**
  * Pick the volume tier a seat count falls into (web §07 billing). Operates on
  * the `tiers` arrays returned by the billing catalogue; falls back to the last

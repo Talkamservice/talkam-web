@@ -15,7 +15,7 @@ import {
   SecondaryButton,
 } from "../../../../../components/v2/dashboard/chrome";
 import { useAdminModal } from "../adminmodals";
-import { EMPLOYEES_PER_PAGE } from "../../../../../constants/admindashboard";
+import { EMPLOYEES_PER_PAGE, formatLastActive } from "../../../../../constants/admindashboard";
 import {
   useGetAdminEmployeesQuery,
   useGetAdminOverviewQuery,
@@ -35,11 +35,12 @@ import { selectCurrentToken } from "../../../../../services/authSlice";
 /**
  * Admin › Employees. Spec: "TalkAM B2B Dashboard.dc.html" § EMPLOYEES.
  *
- * The table itself doesn't carry the deck's "SESSIONS USED"/"LAST ACTIVE"
- * columns — it shows ROLE and SEATED SINCE instead, administrative facts the
- * admin already holds. See planning-docs/web-api/03-admin-dashboard.md §0.
- * Opening a row's "view" modal (EmployeeModal, adminmodals.jsx) is a
- * deliberate exception: it does show that one member's own session usage.
+ * SESSIONS USED and LAST ACTIVE are a deliberate, explicit exception to this
+ * dashboard's usual anonymised/company-wide-only rule — see
+ * OrgRosterService's class docblock (talkam-api) — and only ever populated
+ * for employee-role seats; admin/therapist rows and pending invitations show
+ * "—". Opening a row's "view" modal (EmployeeModal, adminmodals.jsx) shows the
+ * same figures for that one seat, plus a 6-month breakdown.
  */
 
 const STATUS_TONE = { active: "green", invited: "blue", inactive: "grey" };
@@ -247,11 +248,11 @@ const Directory = () => {
         no longer claims it's never visible anywhere.
       */}
       <InfoStrip tone="purple">
-        <strong className="font-boldNunito">This list shows:</strong> who holds a seat,
-        their department, and their invite status.{" "}
-        <strong className="font-boldNunito">Never shown here:</strong> session content,
-        chat messages, therapist notes, or community activity — open a seat record to see
-        that employee&apos;s own session usage.
+        <strong className="font-boldNunito">What you can see:</strong> who holds a seat,
+        their department, invite status, and session <em>counts</em>.{" "}
+        <strong className="font-boldNunito">What you can never see:</strong> session
+        content, chat messages, therapist notes, or community activity — even in
+        aggregate below 5 users.
       </InfoStrip>
 
       {/* Table */}
@@ -269,8 +270,8 @@ const Directory = () => {
             "EMPLOYEE",
             "DEPARTMENT",
             "STATUS",
-            "ROLE",
-            "SEATED SINCE",
+            "SESSIONS USED",
+            "LAST ACTIVE",
             "ACTIONS",
           ]}
         >
@@ -296,8 +297,36 @@ const Directory = () => {
                     {e.status}
                   </Badge>
                 </Td>
-                <Td className="capitalize">{e.role ?? "—"}</Td>
-                <Td className="text-caption text-ink-500">{e.activated_at ?? "—"}</Td>
+                <Td>
+                  {e.sessions_used !== null || e.sessions_cap !== null ? (
+                    <div>
+                      <div
+                        className={classNames(
+                          "text-[13px] font-boldNunito",
+                          e.status === "invited" ? "text-ink-300" : "text-ink-800"
+                        )}
+                      >
+                        {e.sessions_used ?? 0} / {e.sessions_cap ?? "—"}
+                      </div>
+                      {e.sessions_cap ? (
+                        <div className="mt-1 h-1 w-16 rounded-full bg-ink-100">
+                          <div
+                            className={classNames(
+                              "h-1 rounded-full",
+                              e.status === "invited" ? "bg-ink-200" : "bg-brand-400"
+                            )}
+                            style={{
+                              width: `${Math.min(100, ((e.sessions_used ?? 0) / e.sessions_cap) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="text-ink-400">—</span>
+                  )}
+                </Td>
+                <Td className="text-caption text-ink-500">{formatLastActive(e.last_active)}</Td>
                 <Td>
                   {e.status === "invited" ? (
                     <div className="flex gap-1.5">
