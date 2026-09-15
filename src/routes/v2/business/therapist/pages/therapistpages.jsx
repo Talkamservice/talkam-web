@@ -1186,6 +1186,7 @@ export const TherapistMessages = () => {
 export const TherapistProfile = () => {
   const { open, showToast } = useTherapist();
   const { data: me } = useGetMeV2Query();
+  const { data: home } = useGetTherapistHomeQuery();
   const { data: serverProfile } = useGetTherapistProfileQuery();
   const { data: privacy } = useGetPrivacySettingsQuery();
   const { data: notifPrefs } = useGetNotificationPreferencesQuery();
@@ -1229,13 +1230,16 @@ export const TherapistProfile = () => {
   };
 
   const specialties = serverProfile?.specialties ?? [];
+  // A business-invited therapist is employer-vetted, not TalkAM-credentialed
+  // — see VerificationStrips in therapistlayout.jsx for the same rule.
+  const isBusinessEmployed = !!home?.employment?.is_business_employed;
 
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       <Card>
         <div className="mb-3.5 flex items-center justify-between gap-3">
           <div className="text-body font-extraboldNunito text-navy-800">Public Profile</div>
-          {me?.therapist?.is_verified ? (
+          {serverProfile?.is_verified ? (
             <span className="rounded-full bg-gold-50 px-[9px] py-[3px] text-[10px] font-boldNunito text-gold-600">✦ Verified</span>
           ) : null}
         </div>
@@ -1281,15 +1285,21 @@ export const TherapistProfile = () => {
         <div className="mb-1 text-body font-extraboldNunito text-navy-800">Account</div>
         <div className="mb-3.5 text-[11px] text-ink-400">{me?.email}</div>
         <div className="flex flex-col">
-          <div className="flex items-center justify-between gap-4 border-b border-[#F5F5F5] py-[11px]">
-            <div>
-              <div className="text-[13px] font-semiboldNunito text-ink-800">Credential verification</div>
-              <div className="text-[10.5px] text-ink-400">MDCN, NPA, indemnity insurance</div>
+          {/* A business-invited, not-yet-TalkAM-verified therapist has
+              nothing pending here, so the row is hidden rather than showing
+              a misleading "In review" — but a genuinely verified therapist
+              still sees their real "Verified" status either way. */}
+          {serverProfile?.is_verified || !isBusinessEmployed ? (
+            <div className="flex items-center justify-between gap-4 border-b border-[#F5F5F5] py-[11px]">
+              <div>
+                <div className="text-[13px] font-semiboldNunito text-ink-800">Credential verification</div>
+                <div className="text-[10.5px] text-ink-400">MDCN, NPA, indemnity insurance</div>
+              </div>
+              <span className="rounded-full bg-[#EEF4FC] px-[9px] py-[3px] text-[11px] font-boldNunito text-brand-600">
+                {serverProfile?.is_verified ? "Verified" : "In review"}
+              </span>
             </div>
-            <span className="rounded-full bg-[#EEF4FC] px-[9px] py-[3px] text-[11px] font-boldNunito text-brand-600">
-              {me?.therapist?.is_verified ? "Verified" : "In review"}
-            </span>
-          </div>
+          ) : null}
           <div className="flex items-center justify-between gap-4 border-b border-[#F5F5F5] py-[11px]">
             <div>
               <div className="text-[13px] font-semiboldNunito text-ink-800">Payout account</div>

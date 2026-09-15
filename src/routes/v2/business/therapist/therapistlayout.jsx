@@ -106,17 +106,36 @@ const notificationKind = (notification) => {
   return "reminder";
 };
 
-/** Deck: the two verification strips directly under the logo block. */
-const VerificationStrips = ({ isVerified, employer }) => (
+/**
+ * Deck: the two verification strips directly under the logo block.
+ *
+ * A business-invited therapist is employer-vetted, not TalkAM-credentialed —
+ * their employer vouches for them, so the web dashboard never nags an
+ * unverified one with a "verification in progress" state (nothing here is
+ * pending or restricted; they're fully usable the moment they accept the
+ * invite). Full TalkAM credentialing stays an optional path they can complete
+ * later, in the mobile app's own onboarding flow. If they've genuinely
+ * completed that (isVerified), the real "Verified" strip still shows —
+ * employment status never hides an earned credential, it only skips the
+ * false "in progress" state for someone who was never asked to go through it.
+ */
+const VerificationStrips = ({ isVerified, isBusinessEmployed, employer }) => (
   <>
-    <div className="flex items-center gap-2 rounded-[10px] border border-[rgba(219,182,110,0.28)] bg-[rgba(219,182,110,0.12)] px-2.5 py-2">
-      <span className="shrink-0 text-[12px] text-gold-400">✦</span>
-      <span className="text-[10.5px] leading-[1.4] text-[#E9CE95]">
-        {isVerified ? "Verified Therapist · MDCN Confirmed" : "Verification in progress"}
-      </span>
-    </div>
+    {isVerified || !isBusinessEmployed ? (
+      <div className="flex items-center gap-2 rounded-[10px] border border-[rgba(219,182,110,0.28)] bg-[rgba(219,182,110,0.12)] px-2.5 py-2">
+        <span className="shrink-0 text-[12px] text-gold-400">✦</span>
+        <span className="text-[10.5px] leading-[1.4] text-[#E9CE95]">
+          {isVerified ? "Verified Therapist · MDCN Confirmed" : "Verification in progress"}
+        </span>
+      </div>
+    ) : null}
     {employer ? (
-      <div className="mt-2 flex items-center gap-2 rounded-[10px] border border-[rgba(104,180,225,0.28)] bg-[rgba(104,180,225,0.12)] px-2.5 py-2">
+      <div
+        className={classNames(
+          "flex items-center gap-2 rounded-[10px] border border-[rgba(104,180,225,0.28)] bg-[rgba(104,180,225,0.12)] px-2.5 py-2",
+          (isVerified || !isBusinessEmployed) && "mt-2"
+        )}
+      >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#68B4E1" strokeWidth="2" className="shrink-0">
           <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" />
         </svg>
@@ -179,6 +198,7 @@ export const TherapistLayout = () => {
 
   const { data: me } = useGetMeV2Query();
   const { data: home } = useGetTherapistHomeQuery();
+  const { data: profile } = useGetTherapistProfileQuery();
   const { data: sessions } = useGetTherapistSessionsQuery();
   const { data: notificationPage } = useGetNotificationsQuery();
   const [markAllNotifications] = useMarkAllNotificationsMutation();
@@ -200,7 +220,7 @@ export const TherapistLayout = () => {
   const fullName = me?.name ?? "";
   const user = {
     name: fullName || me?.username || "",
-    role: me?.therapist?.credential_type ?? "Therapist",
+    role: profile?.credential_type ?? "Therapist",
     initials: initialsOf(fullName || me?.username || ""),
     avatarBg: "#017FC8",
     avatarColor: "#fff",
@@ -223,7 +243,13 @@ export const TherapistLayout = () => {
       sections={navSections({ upcoming, unread, showEarnings })}
       width={224}
       portalLabel={therapistPortalLabel}
-      topBlock={<VerificationStrips isVerified={!!me?.therapist?.is_verified} employer={employment.employer_name} />}
+      topBlock={
+        <VerificationStrips
+          isVerified={!!profile?.is_verified}
+          isBusinessEmployed={!!employment.is_business_employed}
+          employer={employment.employer_name}
+        />
+      }
       user={user}
       bellDot={(home?.attention?.pending_notes ?? 0) + unread > 0}
       notifications={notifications}
