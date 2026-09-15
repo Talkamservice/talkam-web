@@ -164,25 +164,25 @@ export const SignIn = () => {
             type="button"
             onClick={() => submit("admin")}
             disabled={isLoading}
-            className="h-14 sm:h-12 flex-1 cursor-pointer rounded-ds-md bg-navy-800 text-[13px] font-extraboldNunito text-white transition-colors hover:bg-navy-900 disabled:opacity-70"
+            className="h-14 sm:h-12 flex-1 cursor-pointer rounded-ds-md bg-navy-800 text-[13.5px] font-extraboldNunito text-white transition-colors hover:bg-navy-900 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {pendingRole === "admin" ? "Signing in…" : "Sign in as Admin"}
+            {pendingRole === "admin" ? "Signing in…" : "Admin"}
           </button>
           <button
             type="button"
             onClick={() => submit("employee")}
             disabled={isLoading}
-            className="h-14 sm:h-12 flex-1 cursor-pointer rounded-ds-md bg-brand-400 text-[13px] font-extraboldNunito text-white transition-colors hover:bg-brand-600 disabled:opacity-70"
+            className="h-14 sm:h-12 flex-1 cursor-pointer rounded-ds-md bg-brand-400 text-[13.5px] font-extraboldNunito text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {pendingRole === "employee" ? "Signing in…" : "as Employee"}
+            {pendingRole === "employee" ? "Signing in…" : "Employee"}
           </button>
           <button
             type="button"
             onClick={() => submit("therapist")}
             disabled={isLoading}
-            className="h-14 sm:h-12 flex-1 cursor-pointer rounded-ds-md bg-wellness-400 text-[13px] font-extraboldNunito text-white transition-colors hover:bg-wellness-600 disabled:opacity-70"
+            className="h-14 sm:h-12 flex-1 cursor-pointer rounded-ds-md bg-wellness-400 text-[13.5px] font-extraboldNunito text-white transition-colors hover:bg-wellness-600 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {pendingRole === "therapist" ? "Signing in…" : "as Therapist"}
+            {pendingRole === "therapist" ? "Signing in…" : "Therapist"}
           </button>
         </div>
       </form>
