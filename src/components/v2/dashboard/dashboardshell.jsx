@@ -132,7 +132,10 @@ export const DashboardShell = ({
         ) : workspace ? (
           <div className="relative border-b border-white/[0.06] px-3 py-2.5">
             {workspaceMenu && workspaceOpen ? (
-              <div className="absolute inset-x-3 top-[60px] z-[120] overflow-hidden rounded-[12px] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.28)]">
+              <div
+                onClick={() => setWorkspaceOpen(false)}
+                className="absolute inset-x-3 top-[60px] z-[120] overflow-hidden rounded-[12px] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.28)]"
+              >
                 {workspaceMenu}
               </div>
             ) : null}
@@ -226,7 +229,10 @@ export const DashboardShell = ({
         {/* User */}
         <div className="relative border-t border-white/[0.06] px-3.5 py-3">
           {userMenu && profileOpen ? (
-            <div className="absolute inset-x-3.5 bottom-16 z-[130] overflow-hidden rounded-[12px] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.28)]">
+            <div
+              onClick={() => setProfileOpen(false)}
+              className="absolute inset-x-3.5 bottom-16 z-[130] overflow-hidden rounded-[12px] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.28)]"
+            >
               {userMenu === true ? (
                 <Link
                   to={signOutTo}
