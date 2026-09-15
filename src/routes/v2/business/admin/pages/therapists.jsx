@@ -175,9 +175,11 @@ export const AdminTherapistNetwork = () => {
                     >
                       {t.initials}
                     </span>
-                    <span className="absolute -bottom-0.5 -right-0.5 flex h-[17px] w-[17px] items-center justify-center rounded-full border-2 border-white bg-brand-400">
-                      <Icon.Check size={9} color="#fff" strokeWidth={3.5} />
-                    </span>
+                    {t.is_verified && (
+                      <span className="absolute -bottom-0.5 -right-0.5 flex h-[17px] w-[17px] items-center justify-center rounded-full border-2 border-white bg-brand-400">
+                        <Icon.Check size={9} color="#fff" strokeWidth={3.5} />
+                      </span>
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
