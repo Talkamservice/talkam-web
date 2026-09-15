@@ -118,7 +118,7 @@ export const DashboardShell = ({
             <img
               src={TalkamWordmark}
               alt="TalkAM"
-              className="h-8 w-auto [filter:brightness(0)_invert(1)]"
+              className="h-10 w-auto [filter:brightness(0)_invert(1)]"
             />
           </Link>
           <div className="pl-0.5 text-[10px] tracking-[0.05em] text-white/25">
