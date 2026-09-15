@@ -205,6 +205,11 @@ export const TherapistLayout = () => {
 
   const employment = home?.employment ?? {};
   const showEarnings = !employment.is_business_employed;
+  // Both home and profile start undefined on first load — rendering the
+  // strip off that would flash "Verification in progress" at a business-
+  // employed therapist before their real (employed, so no strip at all)
+  // state arrives a moment later. Wait for both instead of guessing.
+  const verificationReady = home !== undefined && profile !== undefined;
   const upcoming = sessions?.upcoming?.length ?? 0;
   const unread = home?.attention?.unread_messages ?? 0;
 
@@ -244,11 +249,13 @@ export const TherapistLayout = () => {
       width={224}
       portalLabel={therapistPortalLabel}
       topBlock={
-        <VerificationStrips
-          isVerified={!!profile?.is_verified}
-          isBusinessEmployed={!!employment.is_business_employed}
-          employer={employment.employer_name}
-        />
+        verificationReady ? (
+          <VerificationStrips
+            isVerified={!!profile?.is_verified}
+            isBusinessEmployed={!!employment.is_business_employed}
+            employer={employment.employer_name}
+          />
+        ) : null
       }
       user={user}
       bellDot={(home?.attention?.pending_notes ?? 0) + unread > 0}

@@ -1233,6 +1233,10 @@ export const TherapistProfile = () => {
   // A business-invited therapist is employer-vetted, not TalkAM-credentialed
   // — see VerificationStrips in therapistlayout.jsx for the same rule.
   const isBusinessEmployed = !!home?.employment?.is_business_employed;
+  // Both queries start undefined on first load — gating the row on that would
+  // flash "In review" at a business-employed therapist before their real
+  // (employed, so hidden) state arrives a moment later.
+  const verificationReady = home !== undefined && serverProfile !== undefined;
 
   return (
     <div className="grid gap-4 xl:grid-cols-2">
@@ -1289,7 +1293,7 @@ export const TherapistProfile = () => {
               nothing pending here, so the row is hidden rather than showing
               a misleading "In review" — but a genuinely verified therapist
               still sees their real "Verified" status either way. */}
-          {serverProfile?.is_verified || !isBusinessEmployed ? (
+          {verificationReady && (serverProfile?.is_verified || !isBusinessEmployed) ? (
             <div className="flex items-center justify-between gap-4 border-b border-[#F5F5F5] py-[11px]">
               <div>
                 <div className="text-[13px] font-semiboldNunito text-ink-800">Credential verification</div>
