@@ -30,19 +30,11 @@ export const WEEK_DAYS = [
   { key: "sun", label: "Sunday" },
 ];
 
-/** The candidate slots the "add slot" picker offers, as {start,end} in H:i. */
-export const CANDIDATE_SLOTS = [
-  { start: "08:00", end: "08:50", label: "8:00 – 8:50 AM" },
-  { start: "09:00", end: "09:50", label: "9:00 – 9:50 AM" },
-  { start: "10:00", end: "10:50", label: "10:00 – 10:50 AM" },
-  { start: "11:00", end: "11:50", label: "11:00 – 11:50 AM" },
-  { start: "13:00", end: "13:50", label: "1:00 – 1:50 PM" },
-  { start: "14:00", end: "14:50", label: "2:00 – 2:50 PM" },
-  { start: "15:00", end: "15:50", label: "3:00 – 3:50 PM" },
-  { start: "16:00", end: "16:50", label: "4:00 – 4:50 PM" },
-  { start: "16:30", end: "17:20", label: "4:30 – 5:20 PM" },
-  { start: "17:00", end: "17:50", label: "5:00 – 5:50 PM" },
-];
+/**
+ * Every availability slot a therapist adds must fall inside this daily
+ * window (H:i, 24h) — enforced in the "add slot" modal, not just suggested.
+ */
+export const AVAILABILITY_WINDOW = { start: "08:00", end: "18:00" };
 
 /** "09:00" → "9:00 AM"; "09:00"+"09:50" → "9:00 – 9:50 AM". */
 export const to12h = (hhmm) => {

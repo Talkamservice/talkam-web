@@ -8,6 +8,8 @@ import {
   PanelCard,
   Badge,
   SecondaryButton,
+  PrimaryButton,
+  Modal,
   Withheld,
   AdminSkeleton as Skeleton,
 } from "../../../../../components/v2/dashboard/chrome";
@@ -18,7 +20,7 @@ import {
   onboardingChecklist,
   CHECKLIST_TONE,
   WEEK_DAYS,
-  CANDIDATE_SLOTS,
+  AVAILABILITY_WINDOW,
   analyticsRangeOpts,
   RATING_BAR_COLOURS,
   therapistNotifRows,
@@ -26,6 +28,7 @@ import {
   initialsOf,
   naira,
   slotLabel,
+  to12h,
   sessionWhen,
   countdownTo,
   SESSION_FORMAT_LABEL,
@@ -729,6 +732,99 @@ const statusLabel = (status) =>
 
 /* ── AVAILABILITY ─────────────────────────────────────────────────────── */
 
+/**
+ * Custom start/end time picker for one slot. Both bounds and overlap are
+ * enforced here, not just suggested by the native time input's min/max —
+ * browsers don't reliably block an out-of-range typed value.
+ */
+const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (open) {
+      setStart("");
+      setEnd("");
+      setError(null);
+    }
+  }, [open]);
+
+  const submit = () => {
+    if (!start || !end) {
+      setError("Set both a start and end time.");
+      return;
+    }
+    if (start < AVAILABILITY_WINDOW.start || end > AVAILABILITY_WINDOW.end) {
+      setError(`Slots must fall between ${to12h(AVAILABILITY_WINDOW.start)} and ${to12h(AVAILABILITY_WINDOW.end)}.`);
+      return;
+    }
+    if (end <= start) {
+      setError("End time must be after the start time.");
+      return;
+    }
+    if (existingSlots.some((s) => start < s.end && end > s.start)) {
+      setError("That overlaps a slot you've already added for this day.");
+      return;
+    }
+
+    onAdd({ start, end });
+  };
+
+  if (!open) return null;
+
+  return (
+    <Modal open={open} onClose={onClose} title={`Add a slot — ${dayLabel}`} width="max-w-[420px]">
+      <div className="mb-1 flex gap-3">
+        <div className="flex-1">
+          <label className="mb-[5px] block text-[11px] font-boldNunito text-ink-400" htmlFor="slot-start">
+            Start
+          </label>
+          <input
+            id="slot-start"
+            type="time"
+            min={AVAILABILITY_WINDOW.start}
+            max={AVAILABILITY_WINDOW.end}
+            value={start}
+            onChange={(e) => {
+              setStart(e.target.value);
+              setError(null);
+            }}
+            className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="mb-[5px] block text-[11px] font-boldNunito text-ink-400" htmlFor="slot-end">
+            End
+          </label>
+          <input
+            id="slot-end"
+            type="time"
+            min={AVAILABILITY_WINDOW.start}
+            max={AVAILABILITY_WINDOW.end}
+            value={end}
+            onChange={(e) => {
+              setEnd(e.target.value);
+              setError(null);
+            }}
+            className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
+          />
+        </div>
+      </div>
+      <div className="mb-4 text-[11px] text-ink-400">
+        Slots must fall between {to12h(AVAILABILITY_WINDOW.start)} and {to12h(AVAILABILITY_WINDOW.end)}.
+      </div>
+      {error ? (
+        <div className="mb-4 text-[12px] font-semiboldNunito text-surface-errorInk">{error}</div>
+      ) : null}
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={onClose}>Cancel</SecondaryButton>
+        <PrimaryButton onClick={submit}>Add slot</PrimaryButton>
+      </div>
+    </Modal>
+  );
+};
+
 export const TherapistAvailability = () => {
   const { showToast } = useTherapist();
   const { data: grid, isLoading } = useGetAvailabilityQuery();
@@ -737,6 +833,7 @@ export const TherapistAvailability = () => {
   /* Local editable copy, seeded from the server grid. */
   const [days, setDays] = useState({});
   const [slots, setSlots] = useState({});
+  const [slotModalDay, setSlotModalDay] = useState(null);
 
   useEffect(() => {
     if (grid) {
@@ -745,13 +842,12 @@ export const TherapistAvailability = () => {
     }
   }, [grid]);
 
-  const addSlot = (key) => {
-    const taken = (slots[key] || []).map((s) => s.start);
-    const next = CANDIDATE_SLOTS.find((c) => !taken.includes(c.start));
-    if (next) {
-      setSlots((p) => ({ ...p, [key]: [...(p[key] || []), { start: next.start, end: next.end, active: true }] }));
-      setDays((p) => ({ ...p, [key]: true }));
-    }
+  const addSlot = (key, slot) => {
+    setSlots((p) => ({
+      ...p,
+      [key]: [...(p[key] || []), { ...slot, active: true }].sort((a, b) => a.start.localeCompare(b.start)),
+    }));
+    setDays((p) => ({ ...p, [key]: true }));
   };
 
   const save = async () => {
@@ -811,7 +907,7 @@ export const TherapistAvailability = () => {
                         </button>
                       </span>
                     ))}
-                    <button type="button" onClick={() => addSlot(d.key)} className="flex cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] border-dashed border-brand-400 bg-[#EEF4FC] px-3.5 py-[7px]">
+                    <button type="button" onClick={() => setSlotModalDay(d.key)} className="flex cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] border-dashed border-brand-400 bg-[#EEF4FC] px-3.5 py-[7px]">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#015C94" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                       <span className="text-[12px] font-boldNunito text-brand-600">Add slot</span>
                     </button>
@@ -826,6 +922,17 @@ export const TherapistAvailability = () => {
       <button type="button" onClick={save} disabled={isSaving} className="h-[46px] w-fit cursor-pointer rounded-[12px] bg-navy-800 px-6 text-[13px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:bg-surface-muted">
         {isSaving ? "Saving…" : "Save availability"}
       </button>
+
+      <AddSlotModal
+        open={!!slotModalDay}
+        dayLabel={WEEK_DAYS.find((d) => d.key === slotModalDay)?.label ?? ""}
+        existingSlots={slots[slotModalDay] || []}
+        onClose={() => setSlotModalDay(null)}
+        onAdd={(slot) => {
+          addSlot(slotModalDay, slot);
+          setSlotModalDay(null);
+        }}
+      />
     </>
   );
 };
