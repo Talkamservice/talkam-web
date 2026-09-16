@@ -46,58 +46,6 @@ export const to12h = (hhmm) => {
 };
 export const slotLabel = (start, end) => `${to12h(start).replace(/ (AM|PM)$/, "")} – ${to12h(end)}`;
 
-/**
- * "9:15am" / "9:15 AM" / "09:15" / "14:30" / "9" → "HH:MM" (24h), or null if
- * unparseable. Backs the "add slot" modal's start/end fields — a free-text
- * input (paired with a <datalist> of suggestions) rather than a native
- * <input type="time">, whose own picker UI is wildly inconsistent across
- * browsers (Chrome only opens it via a small icon click, Safari has none at
- * all) and which can't be typed into as freely as plain text.
- */
-export const parseTimeInput = (raw) => {
-  if (!raw) return null;
-
-  const match = raw.trim().toLowerCase().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
-  if (!match) return null;
-
-  let hour = parseInt(match[1], 10);
-  const minute = match[2] ? parseInt(match[2], 10) : 0;
-  const period = match[3];
-
-  if (hour > 23 || minute > 59) return null;
-
-  if (period) {
-    if (hour < 1 || hour > 12) return null;
-    hour = period === "am" ? (hour === 12 ? 0 : hour) : (hour === 12 ? 12 : hour + 12);
-  } else if (hour >= 1 && hour <= 6) {
-    // No am/pm and an hour that's ambiguous between the two — e.g. typing
-    // "2:30" for an afternoon slot. AVAILABILITY_WINDOW is 8am-6pm, so 1-6
-    // can only sensibly mean the PM reading; bias toward that instead of
-    // making every such entry fail validation as a too-early AM time.
-    hour += 12;
-  }
-
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-};
-
-/**
- * 15-minute-increment time options spanning AVAILABILITY_WINDOW, as
- * {value: "HH:MM", label: "8:00 AM"} — the <datalist> suggestions offered
- * alongside free typing in the "add slot" modal.
- */
-export const AVAILABILITY_TIME_OPTIONS = (() => {
-  const [startH, startM] = AVAILABILITY_WINDOW.start.split(":").map(Number);
-  const [endH, endM] = AVAILABILITY_WINDOW.end.split(":").map(Number);
-  const options = [];
-
-  for (let mins = startH * 60 + startM; mins <= endH * 60 + endM; mins += 15) {
-    const value = `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
-    options.push({ value, label: to12h(value) });
-  }
-
-  return options;
-})();
-
 export const analyticsRangeOpts = [
   { key: "4w", label: "4 weeks" },
   { key: "12w", label: "12 weeks" },

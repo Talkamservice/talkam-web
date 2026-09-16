@@ -21,8 +21,6 @@ import {
   CHECKLIST_TONE,
   WEEK_DAYS,
   AVAILABILITY_WINDOW,
-  AVAILABILITY_TIME_OPTIONS,
-  parseTimeInput,
   analyticsRangeOpts,
   RATING_BAR_COLOURS,
   therapistNotifRows,
@@ -734,10 +732,23 @@ const statusLabel = (status) =>
 
 /* ── AVAILABILITY ─────────────────────────────────────────────────────── */
 
+/** "09:00" + 50 → "09:50"; clamps to the window end rather than rolling over. */
+const addMinutesClamped = (hhmm, minutes) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  const [maxH, maxM] = AVAILABILITY_WINDOW.end.split(":").map(Number);
+  const total = Math.min(h * 60 + m + minutes, maxH * 60 + maxM);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+};
+
 /**
- * Custom start/end time picker for one slot. Both bounds and overlap are
- * enforced here, not just suggested by the native time input's min/max —
- * browsers don't reliably block an out-of-range typed value.
+ * A native <input type="time"> for each bound — real keyboard entry with the
+ * browser's own segment auto-advance, clamped by min/max/step — rather than
+ * free text. Clicking anywhere in the field forces the native picker open via
+ * showPicker() (Chrome/Edge); elsewhere it just degrades to typing, which
+ * always works. Picking a start time auto-fills a 50-minute end as a
+ * starting point, editable like any other value. Bound/overlap checks still
+ * run in JS on submit — min/max/step are a strong hint, not every browser's
+ * hard guarantee against a typed out-of-range value.
  */
 const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
   const [start, setStart] = useState("");
@@ -752,28 +763,27 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
     }
   }, [open]);
 
-  const submit = () => {
-    const parsedStart = parseTimeInput(start);
-    const parsedEnd = parseTimeInput(end);
+  const openPicker = (e) => e.target.showPicker?.();
 
-    if (!parsedStart || !parsedEnd) {
-      setError("Enter both a start and end time, e.g. \"9:15 AM\".");
+  const submit = () => {
+    if (!start || !end) {
+      setError("Set both a start and end time.");
       return;
     }
-    if (parsedStart < AVAILABILITY_WINDOW.start || parsedEnd > AVAILABILITY_WINDOW.end) {
+    if (start < AVAILABILITY_WINDOW.start || end > AVAILABILITY_WINDOW.end) {
       setError(`Slots must fall between ${to12h(AVAILABILITY_WINDOW.start)} and ${to12h(AVAILABILITY_WINDOW.end)}.`);
       return;
     }
-    if (parsedEnd <= parsedStart) {
+    if (end <= start) {
       setError("End time must be after the start time.");
       return;
     }
-    if (existingSlots.some((s) => parsedStart < s.end && parsedEnd > s.start)) {
+    if (existingSlots.some((s) => start < s.end && end > s.start)) {
       setError("That overlaps a slot you've already added for this day.");
       return;
     }
 
-    onAdd({ start: parsedStart, end: parsedEnd });
+    onAdd({ start, end });
   };
 
   if (!open) return null;
@@ -787,21 +797,21 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
           </label>
           <input
             id="slot-start"
-            type="text"
-            list="slot-start-options"
-            placeholder="e.g. 9:00 AM"
+            type="time"
+            min={AVAILABILITY_WINDOW.start}
+            max={AVAILABILITY_WINDOW.end}
+            step={900}
             value={start}
+            onClick={openPicker}
+            onFocus={openPicker}
             onChange={(e) => {
-              setStart(e.target.value);
+              const value = e.target.value;
+              setStart(value);
               setError(null);
+              if (value && !end) setEnd(addMinutesClamped(value, 50));
             }}
-            className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
+            className="h-[42px] w-full cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
           />
-          <datalist id="slot-start-options">
-            {AVAILABILITY_TIME_OPTIONS.map((o) => (
-              <option key={o.value} value={o.label} />
-            ))}
-          </datalist>
         </div>
         <div className="flex-1">
           <label className="mb-[5px] block text-[11px] font-boldNunito text-ink-400" htmlFor="slot-end">
@@ -809,21 +819,19 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
           </label>
           <input
             id="slot-end"
-            type="text"
-            list="slot-end-options"
-            placeholder="e.g. 5:00 PM"
+            type="time"
+            min={AVAILABILITY_WINDOW.start}
+            max={AVAILABILITY_WINDOW.end}
+            step={900}
             value={end}
+            onClick={openPicker}
+            onFocus={openPicker}
             onChange={(e) => {
               setEnd(e.target.value);
               setError(null);
             }}
-            className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
+            className="h-[42px] w-full cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
           />
-          <datalist id="slot-end-options">
-            {AVAILABILITY_TIME_OPTIONS.map((o) => (
-              <option key={o.value} value={o.label} />
-            ))}
-          </datalist>
         </div>
       </div>
       <div className="mb-4 text-[11px] text-ink-400">
