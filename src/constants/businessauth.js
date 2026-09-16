@@ -43,7 +43,7 @@ export const authBrandContent = {
   invite: {
     eyebrow: "ONBOARDING",
     title: "Two roles, two very different flows.",
-    body: "Employees head straight into topic-of-interest onboarding. Therapists are routed into credential verification before they can accept sessions.",
+    body: "Employees head straight into topic-of-interest onboarding. Therapists complete a short bio & specialties step, then can start seeing your team right away — no TalkAM review required.",
     points: ["CSV bulk upload supported", "Role assigned per invite", "Resend or revoke anytime"],
   },
   inviteSent: {

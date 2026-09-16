@@ -249,7 +249,7 @@ export const TeamInvite = () => {
       <StepEyebrow>ONBOARD YOUR TEAM</StepEyebrow>
       <ScreenTitle>Invite employees &amp; therapists</ScreenTitle>
       <ScreenLead className="mb-5">
-        Assign a role to each invite. Therapists get a professional application flow;
+        Assign a role to each invite. Therapists complete a short bio &amp; specialties step;
         employees go straight to onboarding.
       </ScreenLead>
 
@@ -518,7 +518,7 @@ export const InvitesSent = () => {
 
   const breakdown = [
     employees > 0 ? `${employees} employee${employees === 1 ? "" : "s"} will complete community onboarding` : null,
-    therapists > 0 ? `${therapists} therapist${therapists === 1 ? "" : "s"} will be routed into the professional application flow` : null,
+    therapists > 0 ? `${therapists} therapist${therapists === 1 ? "" : "s"} will complete a quick profile setup` : null,
   ]
     .filter(Boolean)
     .join(", ");

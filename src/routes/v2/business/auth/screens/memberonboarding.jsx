@@ -489,7 +489,7 @@ export const OnboardingComplete = () => {
       <ScreenLead className="mb-6 !leading-[1.7]">
         Your account is active.{" "}
         {isTherapist
-          ? "Your bio and specialties are saved. Finish credential verification in the TalkAM mobile app to start accepting clients — meanwhile, set your availability from the dashboard."
+          ? "Your bio and specialties are saved, and your dashboard is ready — you can already accept sessions from your employer's team. Complete TalkAM verification anytime in the mobile app if you'd also like to appear in the public therapist directory."
           : `Your consent choices are recorded and your interests are saved.${primary ? ` Based on your check-in, we'll suggest therapists specialising in ${primary} first.` : ""} Head to your dashboard to book.`}
       </ScreenLead>
 
