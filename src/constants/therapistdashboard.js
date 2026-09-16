@@ -46,6 +46,26 @@ export const to12h = (hhmm) => {
 };
 export const slotLabel = (start, end) => `${to12h(start).replace(/ (AM|PM)$/, "")} – ${to12h(end)}`;
 
+/**
+ * 15-minute-increment time options spanning AVAILABILITY_WINDOW, as
+ * {value: "HH:MM", label: "8:00 AM"} — backs the "add slot" modal's start/end
+ * pickers. A plain <select> instead of a native <input type="time"> because
+ * browser support for that input's own picker UI is wildly inconsistent
+ * (Chrome only opens it via a small icon click, Safari has none at all).
+ */
+export const AVAILABILITY_TIME_OPTIONS = (() => {
+  const [startH, startM] = AVAILABILITY_WINDOW.start.split(":").map(Number);
+  const [endH, endM] = AVAILABILITY_WINDOW.end.split(":").map(Number);
+  const options = [];
+
+  for (let mins = startH * 60 + startM; mins <= endH * 60 + endM; mins += 15) {
+    const value = `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+    options.push({ value, label: to12h(value) });
+  }
+
+  return options;
+})();
+
 export const analyticsRangeOpts = [
   { key: "4w", label: "4 weeks" },
   { key: "12w", label: "12 weeks" },

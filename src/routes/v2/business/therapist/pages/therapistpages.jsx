@@ -21,6 +21,7 @@ import {
   CHECKLIST_TONE,
   WEEK_DAYS,
   AVAILABILITY_WINDOW,
+  AVAILABILITY_TIME_OPTIONS,
   analyticsRangeOpts,
   RATING_BAR_COLOURS,
   therapistNotifRows,
@@ -780,35 +781,39 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
           <label className="mb-[5px] block text-[11px] font-boldNunito text-ink-400" htmlFor="slot-start">
             Start
           </label>
-          <input
+          <select
             id="slot-start"
-            type="time"
-            min={AVAILABILITY_WINDOW.start}
-            max={AVAILABILITY_WINDOW.end}
             value={start}
             onChange={(e) => {
               setStart(e.target.value);
               setError(null);
             }}
-            className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
-          />
+            className="h-[42px] w-full cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
+          >
+            <option value="">Select time</option>
+            {AVAILABILITY_TIME_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
         </div>
         <div className="flex-1">
           <label className="mb-[5px] block text-[11px] font-boldNunito text-ink-400" htmlFor="slot-end">
             End
           </label>
-          <input
+          <select
             id="slot-end"
-            type="time"
-            min={AVAILABILITY_WINDOW.start}
-            max={AVAILABILITY_WINDOW.end}
             value={end}
             onChange={(e) => {
               setEnd(e.target.value);
               setError(null);
             }}
-            className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
-          />
+            className="h-[42px] w-full cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
+          >
+            <option value="">Select time</option>
+            {AVAILABILITY_TIME_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="mb-4 text-[11px] text-ink-400">
