@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import classNames from "classnames";
 import {
   useOnboarding,
+  OnboardingSteps,
   StepEyebrow,
   ScreenTitle,
   ScreenLead,
@@ -15,6 +16,7 @@ import {
 } from "../authlayout";
 import { usePageMeta } from "../../../../../hooks/usePageMeta";
 import { V2 } from "../../../../../constants/v2routes";
+import { THERAPIST_ONBOARDING_STEPS } from "../../../../../constants/businessauth";
 import {
   useGetConsentsQuery,
   useSaveConsentsMutation,
@@ -107,6 +109,7 @@ export const Consent = () => {
 
   return (
     <>
+      {isTherapist ? <OnboardingSteps steps={THERAPIST_ONBOARDING_STEPS} current={2} /> : null}
       <StepEyebrow>BEFORE YOU CONTINUE</StepEyebrow>
       <ScreenTitle>Your data, your choice</ScreenTitle>
       <ScreenLead className="mb-5">
@@ -299,6 +302,7 @@ export const TherapistSpecialties = () => {
 
   return (
     <>
+      <OnboardingSteps steps={THERAPIST_ONBOARDING_STEPS} current={3} />
       <StepEyebrow>LAST STEP</StepEyebrow>
       <ScreenTitle>Specialties</ScreenTitle>
       <ScreenLead className="mb-6">

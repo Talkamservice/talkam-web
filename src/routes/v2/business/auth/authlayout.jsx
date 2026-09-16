@@ -190,6 +190,64 @@ export const AuthLayout = () => {
 
 /* ── Small shared bits used by every screen ───────────────────────────────── */
 
+/**
+ * Numbered step tracker + progress bar for a multi-screen wizard (currently
+ * only the therapist invite-onboarding flow: Join → Consent → Specialties).
+ * `current` is 1-indexed; steps before it read as done (✓), the current one
+ * is highlighted, later ones are dimmed.
+ */
+export const OnboardingSteps = ({ steps, current }) => (
+  <div className="mb-6">
+    <div className="mb-2 flex items-center">
+      {steps.map((label, i) => {
+        const stepNumber = i + 1;
+        const done = stepNumber < current;
+        const active = stepNumber === current;
+
+        return (
+          <div key={label} className="flex flex-1 items-center last:flex-none">
+            <div className="flex flex-col items-center gap-1">
+              <span
+                className={classNames(
+                  "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-extraboldNunito",
+                  done && "bg-wellness-400 text-white",
+                  active && "bg-brand-400 text-white",
+                  !done && !active && "bg-ink-100 text-ink-400"
+                )}
+              >
+                {done ? (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : (
+                  stepNumber
+                )}
+              </span>
+              <span
+                className={classNames(
+                  "whitespace-nowrap text-[10px] font-boldNunito",
+                  active ? "text-navy-800" : "text-ink-400"
+                )}
+              >
+                {label}
+              </span>
+            </div>
+            {stepNumber < steps.length ? (
+              <div className={classNames("mx-2 h-px flex-1", done ? "bg-wellness-400" : "bg-ink-200")} />
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink-100">
+      <div
+        className="h-full rounded-full bg-brand-400 transition-[width]"
+        style={{ width: `${Math.min(100, (current / steps.length) * 100)}%` }}
+      />
+    </div>
+  </div>
+);
+
 export const StepEyebrow = ({ children }) => (
   <div className="mb-2 text-[11px] font-boldNunito tracking-[0.08em] text-brand-400">
     {children}

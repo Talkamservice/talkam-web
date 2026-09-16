@@ -8,6 +8,9 @@
  * now comes from api/v2/business — see planning-docs/web-api/01-b2b-auth.md.
  */
 
+/** Step labels for the therapist invite-onboarding flow's OnboardingSteps tracker. */
+export const THERAPIST_ONBOARDING_STEPS = ["Join", "Consent", "Specialties"];
+
 /** Left brand panel copy, keyed by screen. */
 export const authBrandContent = {
   signup: {

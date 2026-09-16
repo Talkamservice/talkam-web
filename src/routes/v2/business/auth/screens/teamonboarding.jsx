@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import classNames from "classnames";
 import {
   useOnboarding,
+  OnboardingSteps,
   StepEyebrow,
   ScreenTitle,
   ScreenLead,
@@ -16,6 +17,7 @@ import {
 } from "../authlayout";
 import { usePageMeta } from "../../../../../hooks/usePageMeta";
 import { V2 } from "../../../../../constants/v2routes";
+import { THERAPIST_ONBOARDING_STEPS } from "../../../../../constants/businessauth";
 import { setCredentials } from "../../../../../services/authSlice";
 import {
   useGetOrganizationQuery,
@@ -606,6 +608,7 @@ export const InviteLanding = () => {
 
   return (
     <>
+      {role === "therapist" ? <OnboardingSteps steps={THERAPIST_ONBOARDING_STEPS} current={1} /> : null}
       <div className="mb-6 flex items-center gap-2.5 rounded-ds-md border border-surface-line bg-ink-50 px-4 py-3.5">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-brand-400 text-[13px] font-extraboldNunito text-white">
           {initial}
@@ -613,7 +616,7 @@ export const InviteLanding = () => {
         <span className="text-[13px] text-ink-600">
           You were invited by{" "}
           <strong className="text-navy-800">{company}</strong> to join TalkAM
-          as a{role === "therapist" ? " verified therapist." : "n employee."}
+          as a{role === "therapist" ? " therapist." : "n employee."}
         </span>
       </div>
 
