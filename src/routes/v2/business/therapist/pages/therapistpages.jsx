@@ -266,10 +266,6 @@ export const TherapistHome = () => {
           <span className="text-[20px] font-blackNunito tracking-[-0.01em] text-navy-800">
             Good morning, {firstName}
           </span>
-          <span className="inline-flex items-center gap-[5px] rounded-full bg-[linear-gradient(135deg,#6B44A8,#8B5FC2)] px-2.5 py-1 text-[10px] font-extraboldNunito tracking-[0.05em] text-white shadow-[0_3px_8px_rgba(107,68,168,0.3)]">
-            <span className="h-[5px] w-[5px] rounded-full bg-white" />
-            V2 PREVIEW
-          </span>
         </div>
         <div className="text-[13px] text-ink-400">
           {next
