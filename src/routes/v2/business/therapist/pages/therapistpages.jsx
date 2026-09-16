@@ -1196,7 +1196,7 @@ export const TherapistProfile = () => {
   const [deactivateProfile, { isLoading: isDeactivating }] = useDeactivateTherapistProfileMutation();
   const [reactivateProfile, { isLoading: isReactivating }] = useReactivateTherapistProfileMutation();
 
-  const [profile, setProfile] = useState({ bio: "", years: "", rate: "" });
+  const [profile, setProfile] = useState({ bio: "", years: "", rate: "", languages: "" });
   const twoFa = !!privacy?.two_factor_enabled;
   const isDeactivated = serverProfile?.status === "Inactive";
 
@@ -1206,6 +1206,7 @@ export const TherapistProfile = () => {
         bio: serverProfile.bio ?? "",
         years: String(serverProfile.years_experience ?? ""),
         rate: String(serverProfile.session_rate ?? ""),
+        languages: (serverProfile.languages ?? []).join(", "),
       });
     }
   }, [serverProfile]);
@@ -1222,7 +1223,17 @@ export const TherapistProfile = () => {
 
   const save = async () => {
     try {
-      await updateProfile({ bio: profile.bio, years_experience: Number(profile.years) || undefined, session_rate: Number(profile.rate) || undefined }).unwrap();
+      const languages = profile.languages
+        .split(",")
+        .map((l) => l.trim())
+        .filter(Boolean);
+
+      await updateProfile({
+        bio: profile.bio,
+        years_experience: Number(profile.years) || undefined,
+        session_rate: Number(profile.rate) || undefined,
+        languages: languages.length ? languages : undefined,
+      }).unwrap();
       showToast("Profile saved");
     } catch (err) {
       showToast(apiErrorMessage(err, "Couldn't save your profile — please try again"));
@@ -1264,6 +1275,17 @@ export const TherapistProfile = () => {
               ))}
               {specialties.length === 0 ? <span className="text-[11px] text-ink-400">Set in the mobile app</span> : null}
             </div>
+          </div>
+          <div>
+            <label className={label} htmlFor="thr-languages">Languages</label>
+            <input
+              id="thr-languages"
+              className={input}
+              placeholder="English, Yoruba"
+              value={profile.languages}
+              onChange={field("languages")}
+            />
+            <div className="mt-1 text-[10.5px] text-ink-400">Comma-separated — shown to clients on your profile.</div>
           </div>
           <div className="flex gap-3">
             <div className="flex-1">
