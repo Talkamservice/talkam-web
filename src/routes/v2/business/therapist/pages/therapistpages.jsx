@@ -22,6 +22,7 @@ import {
   WEEK_DAYS,
   AVAILABILITY_WINDOW,
   AVAILABILITY_TIME_OPTIONS,
+  parseTimeInput,
   analyticsRangeOpts,
   RATING_BAR_COLOURS,
   therapistNotifRows,
@@ -752,24 +753,27 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
   }, [open]);
 
   const submit = () => {
-    if (!start || !end) {
-      setError("Set both a start and end time.");
+    const parsedStart = parseTimeInput(start);
+    const parsedEnd = parseTimeInput(end);
+
+    if (!parsedStart || !parsedEnd) {
+      setError("Enter both a start and end time, e.g. \"9:15 AM\".");
       return;
     }
-    if (start < AVAILABILITY_WINDOW.start || end > AVAILABILITY_WINDOW.end) {
+    if (parsedStart < AVAILABILITY_WINDOW.start || parsedEnd > AVAILABILITY_WINDOW.end) {
       setError(`Slots must fall between ${to12h(AVAILABILITY_WINDOW.start)} and ${to12h(AVAILABILITY_WINDOW.end)}.`);
       return;
     }
-    if (end <= start) {
+    if (parsedEnd <= parsedStart) {
       setError("End time must be after the start time.");
       return;
     }
-    if (existingSlots.some((s) => start < s.end && end > s.start)) {
+    if (existingSlots.some((s) => parsedStart < s.end && parsedEnd > s.start)) {
       setError("That overlaps a slot you've already added for this day.");
       return;
     }
 
-    onAdd({ start, end });
+    onAdd({ start: parsedStart, end: parsedEnd });
   };
 
   if (!open) return null;
@@ -781,39 +785,45 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
           <label className="mb-[5px] block text-[11px] font-boldNunito text-ink-400" htmlFor="slot-start">
             Start
           </label>
-          <select
+          <input
             id="slot-start"
+            type="text"
+            list="slot-start-options"
+            placeholder="e.g. 9:00 AM"
             value={start}
             onChange={(e) => {
               setStart(e.target.value);
               setError(null);
             }}
-            className="h-[42px] w-full cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
-          >
-            <option value="">Select time</option>
+            className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
+          />
+          <datalist id="slot-start-options">
             {AVAILABILITY_TIME_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.label} />
             ))}
-          </select>
+          </datalist>
         </div>
         <div className="flex-1">
           <label className="mb-[5px] block text-[11px] font-boldNunito text-ink-400" htmlFor="slot-end">
             End
           </label>
-          <select
+          <input
             id="slot-end"
+            type="text"
+            list="slot-end-options"
+            placeholder="e.g. 5:00 PM"
             value={end}
             onChange={(e) => {
               setEnd(e.target.value);
               setError(null);
             }}
-            className="h-[42px] w-full cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
-          >
-            <option value="">Select time</option>
+            className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
+          />
+          <datalist id="slot-end-options">
             {AVAILABILITY_TIME_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.label} />
             ))}
-          </select>
+          </datalist>
         </div>
       </div>
       <div className="mb-4 text-[11px] text-ink-400">
