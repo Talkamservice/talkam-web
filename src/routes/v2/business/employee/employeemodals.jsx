@@ -39,10 +39,6 @@ const slotLabel = (iso) => {
   return `${d.toLocaleDateString("en-NG", { weekday: "short", month: "short", day: "numeric" })} · ${d.toLocaleTimeString("en-NG", { hour: "numeric", minute: "2-digit" })}`;
 };
 
-/** Hours until a session — drives the refund copy the deck spells out. */
-const hoursUntil = (iso) =>
-  (new Date(String(iso).replace(" ", "T")).getTime() - Date.now()) / 3600000;
-
 /** A therapist's specialty line — the care-team card's own `focus` string,
  *  or the directory card's `specialties` array joined the same way. */
 const therapistFocus = (t) =>
@@ -295,53 +291,160 @@ const RescheduleModal = ({ close, showToast, session }) => {
 
 /* ── Cancel ───────────────────────────────────────────────────────────────── */
 
-const CancelModal = ({ close, showToast, session }) => {
+/** Cancellation reasons — free text on the wire (SessionLifecycleService
+ *  validates `reason` as a plain nullable string, no fixed enum), but a
+ *  closed set of options here so the picker stays quick to tap. */
+const CANCEL_REASONS = [
+  { key: "scheduling_conflict", label: "Scheduling conflict" },
+  { key: "not_feeling_ready", label: "Not feeling ready" },
+  { key: "different_therapist", label: "Want a different therapist" },
+  { key: "other", label: "Other reason" },
+];
+
+const CancelReasonIcon = ({ reasonKey }) => {
+  if (reasonKey === "scheduling_conflict") {
+    return (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    );
+  }
+  if (reasonKey === "not_feeling_ready") {
+    return (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M8 15s1.5 2 4 2 4-2 4-2" />
+        <line x1="9" y1="9" x2="9.01" y2="9" />
+        <line x1="15" y1="9" x2="15.01" y2="9" />
+      </svg>
+    );
+  }
+  if (reasonKey === "different_therapist") {
+    return (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="5" cy="12" r="1.3" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.3" fill="currentColor" />
+      <circle cx="19" cy="12" r="1.3" fill="currentColor" />
+    </svg>
+  );
+};
+
+/**
+ * Cancel a session — pick a reason, confirm, then a real outcome screen
+ * (not just a toast). The reason is stored server-side (cancellation_reason)
+ * but never shown back to the therapist or anyone else — "stays private" is
+ * accurate, not just copy.
+ */
+const CancelModal = ({ close, open, session }) => {
   const [cancelBooking, { isLoading }] = useCancelBookingMutation();
-  const moreThanADay = hoursUntil(session?.starts_at) > 24;
+  const [reason, setReason] = useState(null);
+  const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
 
   const confirm = async () => {
+    setError(null);
     try {
-      await cancelBooking({ id: session.id }).unwrap();
-      close();
-      showToast("Session cancelled");
+      const label = CANCEL_REASONS.find((r) => r.key === reason)?.label;
+      const res = await cancelBooking({ id: session.id, reason: label }).unwrap();
+      setResult(res?.data ?? res ?? {});
     } catch (err) {
-      close();
-      showToast(apiErrorMessage(err, "Couldn't cancel just now — please try again"));
+      setError(apiErrorMessage(err, "Couldn't cancel just now — please try again"));
     }
   };
 
+  // Outcome screen — the cancellation already happened; this just reports it.
+  if (result) {
+    // A shared session-bundle draw returns to the company's allowance; a
+    // self-billed ("own therapist") or individually paid session has no such
+    // token to hand back, so that line only shows when it's actually true.
+    const tokenReturned = result.coverage === "org_bundle";
+
+    return (
+      <Scrim onClose={close}>
+        <Sheet width={420} className="p-6 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[14px] bg-[#E8F7F4]">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1F8A5B" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div className="mb-2 text-[17px] font-extraboldNunito text-navy-800">
+            Session cancelled
+          </div>
+          <div className="mb-4 text-[13px] leading-[1.7] text-ink-500">
+            Your session with{" "}
+            <strong className="font-boldNunito text-navy-800">{session?.therapist_name}</strong> has been
+            cancelled.
+            {tokenReturned ? " 1 session has been returned to your monthly allowance." : ""}
+          </div>
+          <div className="mb-5 rounded-[12px] bg-[#EEF4FC] px-3.5 py-3 text-left text-[11.5px] leading-[1.6] text-brand-600">
+            A confirmation has been sent to your inbox. {session?.therapist_name} has also been notified.
+          </div>
+          <div className="flex gap-2.5">
+            <GreyButton className="flex-1" onClick={close}>
+              Done
+            </GreyButton>
+            <NavyButton
+              className="flex-1"
+              onClick={() => {
+                close();
+                open("booking");
+              }}
+            >
+              Book another →
+            </NavyButton>
+          </div>
+        </Sheet>
+      </Scrim>
+    );
+  }
+
+  // Reason picker.
   return (
-  <Scrim onClose={close}>
-    <Sheet width={420} className="p-6">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF0F0]">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#AC4242" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <line x1="15" y1="9" x2="9" y2="15" />
-          <line x1="9" y1="9" x2="15" y2="15" />
-        </svg>
-      </div>
-      <div className="mb-2 text-[17px] font-extraboldNunito text-navy-800">
-        Cancel this session?
-      </div>
-      <div className="mb-[18px] text-[13px] leading-[1.7] text-ink-500">
-        Your session with {session?.therapist_name} is{" "}
-        {moreThanADay ? "more than 24 hours away" : "less than 24 hours away"} — you&apos;ll
-        receive a{" "}
-        <strong className="font-boldNunito text-[#3BA88F]">
-          {moreThanADay ? "full refund" : "50% refund"}
-        </strong>
-        . Cancelling within 24 hours refunds 50%; no-shows are not refunded.
-      </div>
-      <div className="flex gap-2.5">
-        <GreyButton className="flex-1" onClick={close}>
-          Keep Session
-        </GreyButton>
-        <RedButton className="flex-1" onClick={confirm} disabled={isLoading}>
-          {isLoading ? "Cancelling…" : "Cancel Session"}
-        </RedButton>
-      </div>
-    </Sheet>
-  </Scrim>
+    <Scrim onClose={close}>
+      <Sheet width={420}>
+        <SheetHeader title="Why are you cancelling?" onClose={close} />
+        <div className="flex flex-col gap-3 px-6 py-[22px]">
+          <p className="text-[13px] text-ink-500">
+            This helps us improve. Your reason stays private.
+          </p>
+          <div className="flex flex-col gap-2">
+            {CANCEL_REASONS.map((r) => (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => setReason(r.key)}
+                aria-pressed={reason === r.key}
+                className={classNames(
+                  "flex cursor-pointer items-center gap-3 rounded-[10px] border-[1.5px] px-3.5 py-3 text-left",
+                  reason === r.key ? "border-navy-800 bg-[#F8F9FC]" : "border-ink-200 bg-white"
+                )}
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-surface-page text-ink-600">
+                  <CancelReasonIcon reasonKey={r.key} />
+                </span>
+                <span className="text-[13px] font-boldNunito text-navy-800">{r.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {error ? <p className="text-caption text-signal-error">{error}</p> : null}
+
+          <RedButton onClick={confirm} disabled={!reason || isLoading}>
+            {isLoading ? "Cancelling…" : "Confirm cancellation"}
+          </RedButton>
+        </div>
+      </Sheet>
+    </Scrim>
   );
 };
 
@@ -1449,7 +1552,7 @@ export const EmployeeModals = ({
     case "reschedule":
       return <RescheduleModal close={close} showToast={showToast} session={context} />;
     case "cancel":
-      return <CancelModal close={close} showToast={showToast} session={context} />;
+      return <CancelModal close={close} open={open} session={context} />;
     case "feedback":
       return <FeedbackModal close={close} showToast={showToast} session={context} />;
     case "preSessionMood":
