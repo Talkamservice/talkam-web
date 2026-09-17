@@ -411,6 +411,14 @@ const Directory = () => {
                       </button>
                       <button
                         type="button"
+                        onClick={() => open("editEmployee", e)}
+                        aria-label={`Edit ${e.id}`}
+                        className="flex h-[27px] w-[27px] cursor-pointer items-center justify-center rounded-[7px] bg-surface-page hover:bg-ink-100"
+                      >
+                        <Icon.Edit2 size={12} className="text-ink-600" />
+                      </button>
+                      <button
+                        type="button"
                         onClick={() =>
                           open("confirm", {
                             title: `Deactivate ${e.id}?`,

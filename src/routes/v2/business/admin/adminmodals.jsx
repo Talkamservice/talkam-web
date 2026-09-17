@@ -16,6 +16,7 @@ import {
   useGetBillingInvoicesQuery,
   useGetAdminTherapistDetailQuery,
   useGetAdminEmployeeDetailQuery,
+  useUpdateEmployeeMutation,
   useRequestOrgDeletionMutation,
   useDeactivateEmployeeMutation,
   useRemoveTherapistFromNetworkMutation,
@@ -781,6 +782,59 @@ const EmployeeModal = ({ open, close, context }) => {
   );
 };
 
+/** Pencil-triggered edit form on the Employees list — department only, the
+ *  one contract detail an admin can change after the invite was sent. */
+const EditEmployeeModal = ({ open, close, showToast, context }) => {
+  const [updateEmployee, { isLoading }] = useUpdateEmployeeMutation();
+  const [department, setDepartment] = useState(context?.department ?? "");
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (open) {
+      setDepartment(context?.department ?? "");
+      setError(null);
+    }
+  }, [open, context]);
+
+  const submit = async () => {
+    setError(null);
+
+    try {
+      await updateEmployee({ memberId: context?.member_id, department: department.trim() || null }).unwrap();
+      showToast(`${context?.id ?? "Employee"} updated`);
+      close();
+    } catch (err) {
+      setError(apiErrorMessage(err, "Couldn't update employee — please try again"));
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={close} title={`Edit ${context?.id ?? "employee"}`} subtitle={context?.email}>
+      <div className="mb-4 flex flex-col gap-1.5">
+        <span className="text-[11px] font-boldNunito text-ink-400">Department</span>
+        <input
+          value={department}
+          onChange={(e) => setDepartment(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          placeholder="e.g. Engineering"
+          className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+        />
+      </div>
+
+      {error ? (
+        <div className="mb-4 text-[12px] font-boldNunito text-signal-error">{error}</div>
+      ) : null}
+
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={close}>Cancel</SecondaryButton>
+        <PrimaryButton disabled={isLoading} onClick={submit}>
+          {isLoading ? "Saving…" : "Save changes"}
+        </PrimaryButton>
+      </div>
+    </Modal>
+  );
+};
+
 const ConfirmModal = ({ open, close, showToast, context }) => (
   <Modal open={open} onClose={close} title={context?.title ?? "Are you sure?"} width="max-w-[440px]">
     <p className="mb-5 text-[13px] leading-[1.7] text-ink-500">{context?.body}</p>
@@ -1489,6 +1543,7 @@ const AdminModals = ({ modal, context, close, showToast }) => (
     <AddSeatsModal open={modal === "addSeats"} close={close} showToast={showToast} />
     <InvoiceModal open={modal === "invoice"} close={close} context={context} />
     <EmployeeModal open={modal === "employee"} close={close} context={context} />
+    <EditEmployeeModal open={modal === "editEmployee"} close={close} showToast={showToast} context={context} />
     <ConfirmModal open={modal === "confirm"} close={close} showToast={showToast} context={context} />
     <CapacityModal open={modal === "capacity"} close={close} showToast={showToast} />
     <AddOwnTherapistModal open={modal === "addOwn"} close={close} showToast={showToast} />

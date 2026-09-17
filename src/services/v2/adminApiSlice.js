@@ -43,6 +43,15 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       providesTags: ["AdminEmployees"],
     }),
 
+    updateEmployee: builder.mutation({
+      query: ({ memberId, ...body }) => ({
+        url: `/business/employees/${memberId}/update`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["AdminEmployees"],
+    }),
+
     deactivateEmployee: builder.mutation({
       query: (memberId) => ({
         url: `/business/employees/${memberId}/deactivate`,
@@ -229,6 +238,7 @@ export const {
   useGetAdminReportsQuery,
   useGetAdminEmployeesQuery,
   useGetAdminEmployeeDetailQuery,
+  useUpdateEmployeeMutation,
   useDeactivateEmployeeMutation,
   useReactivateEmployeeMutation,
   useGetAdminTherapistsQuery,
