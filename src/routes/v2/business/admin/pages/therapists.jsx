@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import classNames from "classnames";
 import * as Icon from "react-feather";
 import {
@@ -15,6 +16,7 @@ import {
 import { useAdminModal } from "../adminmodals";
 import { TOPIC_BAR_COLOURS, avatarColour, naira } from "../../../../../constants/admindashboard";
 import { Withheld } from "../../../../../components/v2/dashboard/chrome";
+import { V2 } from "../../../../../constants/v2routes";
 import {
   useGetAdminTherapistsQuery,
   useGetTeamNeedsQuery,
@@ -284,6 +286,7 @@ const useRemoveTherapistAction = () => {
 
 export const AdminMyTherapists = () => {
   const { open } = useAdminModal();
+  const navigate = useNavigate();
   const { data } = useGetAdminTherapistsQuery();
   const therapists = data?.therapists ?? [];
   const networkStats = data?.stats ?? {};
@@ -325,6 +328,9 @@ export const AdminMyTherapists = () => {
             <SecondaryButton onClick={() => open("addOwn")}>
               + Add your own therapist
             </SecondaryButton>
+            <PrimaryButton onClick={() => navigate(`${V2.admin}/therapists`)}>
+              Browse Network
+            </PrimaryButton>
           </div>
         }
       >
@@ -348,7 +354,7 @@ export const AdminMyTherapists = () => {
               </Td>
               <Td>
                 <Badge tone={t.is_own ? "purple" : "blue"}>
-                  {t.is_own ? "Your own provider" : "TalkAM network"}
+                  {t.is_own ? "Your provider" : "TalkAM network"}
                 </Badge>
               </Td>
               <Td>{t.specialty}</Td>
@@ -357,9 +363,11 @@ export const AdminMyTherapists = () => {
                 {t.month_sessions === null || t.month_sessions === undefined ? "—" : t.month_sessions}
               </Td>
               <Td>
-                <Badge tone="green">
-                  {"Via TalkAM"}
-                </Badge>
+                {t.is_own ? (
+                  <Badge tone="gold">Self-billed</Badge>
+                ) : (
+                  <Badge tone="blue">TalkAM-billed · ₦8,000/session</Badge>
+                )}
               </Td>
               <Td>
                 <Badge tone="green" dot>
