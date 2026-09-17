@@ -555,14 +555,10 @@ export const TherapistSessions = () => {
   const [decline, { isLoading: isDeclining }] = useDeclineSessionMutation();
   const [declineLead, { isLoading: isDecliningLead }] = useDeclineSessionRequestMutation();
 
+  const upcoming = (data?.upcoming ?? []).filter((s) => s.status === "confirmed");
   // Acknowledging a request is the therapist's own "dealt with" signal — the
-  // session itself stays pending_payment until the client actually pays, so
-  // it drops out of the action queue (Requests) once reviewed but must still
-  // show up SOMEWHERE, or an acknowledged-but-unpaid session just vanishes
-  // from the dashboard entirely with no way to see or follow up on it.
-  const upcoming = (data?.upcoming ?? []).filter(
-    (s) => s.status === "confirmed" || (s.status === "pending_payment" && s.acknowledged_at)
-  );
+  // session itself stays pending_payment until the client actually pays, but
+  // it should still drop out of the action queue once reviewed.
   const paymentPending = (data?.upcoming ?? []).filter((s) => s.status === "pending_payment" && !s.acknowledged_at);
   const leads = leadsData ?? [];
   const past = data?.past ?? [];
@@ -637,9 +633,7 @@ export const TherapistSessions = () => {
           <div className="flex flex-col gap-2 p-5"><Skeleton className="h-12" /><Skeleton className="h-12" /></div>
         ) : null}
 
-        {!isLoading && tab === "upcoming" && (upcoming.length ? upcoming.map((s) => {
-          const pendingPayment = s.status === "pending_payment";
-          return (
+        {!isLoading && tab === "upcoming" && (upcoming.length ? upcoming.map((s) => (
           <div key={s.id} className="border-b border-[#F5F5F5] px-5 py-4 last:border-b-0">
             <div className="flex flex-wrap items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-extraboldNunito text-white" style={{ background: avatarColour(clientRef(s)) }}>
@@ -650,33 +644,14 @@ export const TherapistSessions = () => {
                 <div className="text-[11px] text-ink-400">{sessionWhen(s.starts_at)}</div>
               </div>
               <Badge tone="blue">{SESSION_FORMAT_LABEL[s.format] ?? s.format}</Badge>
-              {pendingPayment ? <Badge tone="gold">Pending payment</Badge> : null}
               <div className="flex gap-2">
                 <SecondaryButton onClick={() => open("rescheduleReq", s)}>Reschedule</SecondaryButton>
-                {pendingPayment ? (
-                  <SecondaryButton
-                    disabled
-                    title="Can't join until the client's payment is confirmed"
-                    className="cursor-not-allowed opacity-50 hover:bg-white"
-                  >
-                    Join
-                  </SecondaryButton>
-                ) : (
-                  <TealButton onClick={() => open("joinConfirm", s)}>Join</TealButton>
-                )}
+                <TealButton onClick={() => open("joinConfirm", s)}>Join</TealButton>
               </div>
             </div>
-            {pendingPayment ? (
-              <p className="mt-2 text-[11px] text-ink-400">
-                {s.coverage === "consumer"
-                  ? "Waiting on the client's payment before this can be joined."
-                  : "Waiting on this session to be confirmed."}
-              </p>
-            ) : null}
             <PendingRescheduleBanner session={s} showToast={showToast} dark={false} />
           </div>
-          );
-        }) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No upcoming sessions</div><p className="text-caption text-ink-400">Confirmed and acknowledged sessions will appear here.</p></div>)}
+        )) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No upcoming sessions</div><p className="text-caption text-ink-400">Confirmed sessions will appear here.</p></div>)}
 
         {!isLoading && tab === "past" && (past.length ? past.map((s) => {
           const done = !!s.has_note;
