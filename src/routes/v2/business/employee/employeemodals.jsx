@@ -48,6 +48,37 @@ const hoursUntil = (iso) =>
 const therapistFocus = (t) =>
   t?.focus ?? ((t?.specialties ?? []).map((s) => s.name).filter(Boolean).join(" · ") || t?.credential_type || "");
 
+const THERAPIST_SQUARE_COLOURS = ["#017FC8", "#3BA88F", "#6B44A8", "#9A6E0A", "#AC4242"];
+/** A stable-per-therapist card colour — purely visual variety, no real data. */
+const therapistSquareColour = (seed = "") => {
+  const sum = [...String(seed)].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return THERAPIST_SQUARE_COLOURS[sum % THERAPIST_SQUARE_COLOURS.length];
+};
+
+/** "Today" / "Tomorrow" / "Thu Sep 19" — the day half of a slot button. */
+const slotDayLabel = (iso) => {
+  const d = new Date(String(iso).replace(" ", "T"));
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const sameDay = (a, b) => a.toDateString() === b.toDateString();
+  if (sameDay(d, today)) return "Today";
+  if (sameDay(d, tomorrow)) return "Tomorrow";
+  return d.toLocaleDateString("en-NG", { weekday: "short", month: "short", day: "numeric" });
+};
+
+/** "4:00 PM" — the time half of a slot button. */
+const slotTimeLabel = (iso) => {
+  const d = new Date(String(iso).replace(" ", "T"));
+  return d.toLocaleTimeString("en-NG", { hour: "numeric", minute: "2-digit" });
+};
+
+/** "Today · 4:00 PM" summary line for a therapist card's next-slot preview,
+ *  from the directory card's next_slot: {starts_at} (or null — no upcoming
+ *  availability found in the next 14 days). */
+const nextSlotSummary = (nextSlot) =>
+  nextSlot?.starts_at ? `${slotDayLabel(nextSlot.starts_at)} · ${slotTimeLabel(nextSlot.starts_at)}` : null;
+
 /**
  * Employee dashboard modals.
  * Spec: § MODALS of "TalkAM B2B Employee Dashboard.dc.html" — each one is a
@@ -82,10 +113,28 @@ const Sheet = ({ width, className, children }) => (
   </div>
 );
 
-/** Deck: the 28×28 `#F2F3F7` close square in titled modals. */
-const SheetHeader = ({ title, onClose }) => (
-  <div className="flex items-center justify-between gap-3 border-b border-ink-100 px-6 py-[22px]">
-    <div className="text-[16px] font-extraboldNunito text-navy-800">{title}</div>
+/** Deck: the 28×28 `#F2F3F7` close square in titled modals. `subtitle` and
+ *  `onBack` are optional — the multi-step booking wizard is the only caller
+ *  that uses them ("Step 1 of 3 — Choose your therapist" + a back chevron on
+ *  steps after the first); every other call site is unaffected. */
+const SheetHeader = ({ title, subtitle, onBack, onClose }) => (
+  <div className="flex items-center gap-3 border-b border-ink-100 px-6 py-[22px]">
+    {onBack ? (
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label="Back"
+        className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-[8px] bg-surface-page"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="2">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+    ) : null}
+    <div className="min-w-0 flex-1">
+      <div className="text-[16px] font-extraboldNunito text-navy-800">{title}</div>
+      {subtitle ? <div className="text-[11.5px] text-ink-400">{subtitle}</div> : null}
+    </div>
     <button
       type="button"
       onClick={onClose}
@@ -595,7 +644,13 @@ const PreSessionMoodModal = ({ close, open, session }) => {
 
 /* ── Booking ──────────────────────────────────────────────────────────────── */
 
+/**
+ * "Book a session" — a 3-step wizard: choose a therapist, choose a time +
+ * format, review and confirm. Step 1 is skipped straight to step 2 when
+ * there's only one therapist to choose from (nothing to pick).
+ */
 const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) => {
+  const [step, setStep] = useState(1);
   const [type, setType] = useState(sessionType);
   const [slot, setSlot] = useState(null);
   const [error, setError] = useState(null);
@@ -625,12 +680,27 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
   const suggested = candidates.find((c) => c.id === selectedTherapistId) ?? candidates[0] ?? null;
   const therapistId = suggested?.id;
 
+  // Nothing to choose between with 0-1 candidates — land straight on step 2
+  // rather than showing a "choose your therapist" screen with one option.
+  useEffect(() => {
+    if (candidates.length === 1 && !selectedTherapistId) {
+      setSelectedTherapistId(candidates[0].id);
+      setStep(2);
+    }
+  }, [candidates, selectedTherapistId]);
+
   const { data: slotData } = useGetTherapistSlotsQuery(
     { id: therapistId },
     { skip: !therapistId }
   );
   const slots = useMemo(() => (slotData?.slots ?? slotData ?? []).slice(0, 6), [slotData]);
   const chosen = slot ?? slots[0]?.starts_at ?? slots[0] ?? null;
+
+  const pickTherapist = (id) => {
+    setSelectedTherapistId(id);
+    setSlot(null);
+    setStep(2);
+  };
 
   // Business-employed members book through their employer's therapist
   // network (§09 coverage: org_bundle/org_external) — no card payment on
@@ -690,7 +760,7 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
     return (
       <Scrim onClose={close}>
         <Sheet width={440}>
-          <SheetHeader title="Request a session" onClose={close} />
+          <SheetHeader title="Request a session" onBack={() => setRequestMode(false)} onClose={close} />
           <div className="flex flex-col gap-4 px-6 py-[22px]">
             <div className="flex items-center gap-3 rounded-[12px] bg-[#F8F9FC] px-3.5 py-3">
               <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[#017FC8] text-[13px] font-extraboldNunito text-white">
@@ -768,70 +838,93 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
     );
   }
 
-  // Payment outcome screen — shown once the Flutterwave modal closes, in
-  // place of the booking form (the booking itself already exists by then).
-  return (
-    <Scrim onClose={close}>
-      <Sheet width={440}>
-        <SheetHeader title="Book a session" onClose={close} />
-        <div className="flex flex-col gap-4 px-6 py-[22px]">
-          <div className="flex items-center gap-3 rounded-[12px] bg-[#F8F9FC] px-3.5 py-3">
-            <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[#017FC8] text-[13px] font-extraboldNunito text-white">
-              {initialsOf(suggested?.name ?? "")}
-            </span>
-            <div>
-              <div className="text-[13px] font-boldNunito text-navy-800">
-                {suggested?.name ?? "Finding you a therapist…"}
+  // Step 1 — choose a therapist. Auto-advances to step 2 on tap; nothing to
+  // "continue" from here since there's no other choice on this screen.
+  if (step === 1) {
+    return (
+      <Scrim onClose={close}>
+        <Sheet width={480}>
+          <SheetHeader title="Book a session" subtitle="Step 1 of 3 — Choose your therapist" onClose={close} />
+          <div className="flex flex-col gap-4 px-6 py-[22px]">
+            <p className="text-[13px] leading-[1.6] text-ink-500">
+              Your organisation has {candidates.length} therapist{candidates.length === 1 ? "" : "s"} available.
+              Select based on your preference and what you need right now.
+            </p>
+            {candidates.length === 0 ? (
+              <div className="rounded-[10px] bg-surface-page px-3.5 py-3 text-[13px] text-ink-500">
+                No therapists are available on your organisation&apos;s network right now.
               </div>
-              <div className="text-[11px] text-ink-400">
-                {[therapistFocus(suggested), chosen ? slotLabel(chosen) : null].filter(Boolean).join(" · ") ||
-                  "Checking availability"}
-              </div>
-            </div>
-          </div>
-
-          {candidates.length > 1 ? (
-            <div>
-              <span className="mb-2 block text-[12px] font-boldNunito text-ink-600">
-                Choose a therapist
-              </span>
-              <div className="flex flex-col gap-2">
-                {candidates.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedTherapistId(c.id);
-                      setSlot(null);
-                    }}
-                    aria-pressed={therapistId === c.id}
-                    className={classNames(
-                      "flex cursor-pointer items-center gap-3 rounded-[10px] border-[1.5px] px-3 py-2.5 text-left",
-                      therapistId === c.id
-                        ? "border-navy-800 bg-[#F8F9FC]"
-                        : "border-ink-200 bg-white"
-                    )}
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#017FC8] text-[12px] font-extraboldNunito text-white">
-                      {initialsOf(c.name ?? "")}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[12.5px] font-boldNunito text-navy-800">{c.name}</div>
-                      <div className="truncate text-[11px] text-ink-400">
-                        {therapistFocus(c) || "Therapist"}
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {candidates.map((c) => {
+                  const next = nextSlotSummary(c.next_slot);
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => pickTherapist(c.id)}
+                      className="flex cursor-pointer items-start gap-3 rounded-[12px] border-[1.5px] border-ink-200 bg-white px-3.5 py-3 text-left hover:border-navy-800"
+                    >
+                      <span
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] text-[13px] font-extraboldNunito text-white"
+                        style={{ background: therapistSquareColour(c.name) }}
+                      >
+                        {initialsOf(c.name ?? "")}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[13.5px] font-boldNunito text-navy-800">{c.name}</div>
+                        <div className="truncate text-[12px] text-ink-500">
+                          {therapistFocus(c) || "Therapist"}
+                        </div>
+                        {next ? (
+                          <div className="mt-1 flex items-center gap-1.5 text-[11.5px] font-semiboldNunito text-wellness-600">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="3" y="4" width="18" height="18" rx="2" />
+                              <line x1="16" y1="2" x2="16" y2="6" />
+                              <line x1="8" y1="2" x2="8" y2="6" />
+                              <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            Next: {next}
+                          </div>
+                        ) : null}
                       </div>
-                    </div>
-                  </button>
-                ))}
+                      {c.rating ? (
+                        <span className="shrink-0 text-[12.5px] font-extraboldNunito text-gold-600">
+                          {c.rating}★
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
-            </div>
-          ) : null}
+            )}
+          </div>
+        </Sheet>
+      </Scrim>
+    );
+  }
 
-          {slots.length > 1 ? (
-            <div>
-              <span className="mb-2 block text-[12px] font-boldNunito text-ink-600">
-                Pick a time
-              </span>
+  // Step 2 — choose a time + format.
+  if (step === 2) {
+    return (
+      <Scrim onClose={close}>
+        <Sheet width={460}>
+          <SheetHeader
+            title="Choose a time"
+            subtitle={`Step 2 of 3 — with ${suggested?.name ?? "your therapist"}`}
+            onBack={candidates.length > 1 ? () => setStep(1) : undefined}
+            onClose={close}
+          />
+          <div className="flex flex-col gap-4 px-6 py-[22px]">
+            <p className="text-[13px] leading-[1.6] text-ink-500">
+              Pick an available slot. All times are in WAT (West Africa Time).
+            </p>
+
+            {slots.length === 0 ? (
+              <div className="rounded-[10px] bg-surface-page px-3.5 py-3 text-[13px] text-ink-500">
+                No open slots right now — send a request instead below.
+              </div>
+            ) : (
               <div className="grid grid-cols-2 gap-2">
                 {slots.map((sl) => {
                   const value = sl.starts_at ?? sl;
@@ -842,44 +935,97 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
                       onClick={() => setSlot(value)}
                       aria-pressed={chosen === value}
                       className={classNames(
-                        "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-[11px] text-center text-[12.5px] font-boldNunito",
+                        "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-[11px] text-center",
                         chosen === value
                           ? "border-navy-800 bg-navy-800 text-white"
                           : "border-ink-200 bg-surface-page text-ink-600"
                       )}
                     >
-                      {slotLabel(value)}
+                      <div className={classNames("text-[11px] font-semiboldNunito", chosen === value ? "text-white/70" : "text-ink-400")}>
+                        {slotDayLabel(value)}
+                      </div>
+                      <div className="text-[13px] font-extraboldNunito">{slotTimeLabel(value)}</div>
                     </button>
                   );
                 })}
               </div>
-            </div>
-          ) : null}
+            )}
 
-          <div>
-            <label className="mb-2 block text-[12px] font-boldNunito text-ink-600">
-              How would you like to connect?
-            </label>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setType("video")} className={chip(type === "video")}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polygon points="23 7 16 12 23 17 23 7" />
-                  <rect x="1" y="5" width="15" height="14" rx="2" />
-                </svg>
-                Video call
-              </button>
-              <button type="button" onClick={() => setType("voice")} className={chip(type === "voice")}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-                </svg>
-                Voice call
-              </button>
+            <div>
+              <label className="mb-2 block text-[12px] font-boldNunito text-ink-600">
+                Session format
+              </label>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setType("video")} className={chip(type === "video")}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="23 7 16 12 23 17 23 7" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" />
+                  </svg>
+                  Video
+                </button>
+                <button type="button" onClick={() => setType("voice")} className={chip(type === "voice")}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  Voice
+                </button>
+              </div>
+            </div>
+
+            {error ? <p className="text-caption text-signal-error">{error}</p> : null}
+
+            <button
+              type="button"
+              onClick={() => setStep(3)}
+              disabled={!chosen}
+              className="h-12 cursor-pointer rounded-[12px] bg-navy-800 text-[14px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:bg-[#C7CEDA]"
+            >
+              Continue →
+            </button>
+            <button
+              type="button"
+              onClick={() => setRequestMode(true)}
+              className="cursor-pointer text-center text-[12.5px] font-boldNunito text-ink-500"
+            >
+              Can&apos;t find a good time? Send a request instead
+            </button>
+          </div>
+        </Sheet>
+      </Scrim>
+    );
+  }
+
+  // Step 3 — review and confirm.
+  return (
+    <Scrim onClose={close}>
+      <Sheet width={440}>
+        <SheetHeader
+          title="Confirm your booking"
+          subtitle="Step 3 of 3 — Review & confirm"
+          onBack={() => setStep(2)}
+          onClose={close}
+        />
+        <div className="flex flex-col gap-4 px-6 py-[22px]">
+          <div className="flex flex-col gap-3 rounded-[12px] bg-[#F8F9FC] px-4 py-3.5">
+            {[
+              ["Therapist", suggested?.name ?? "—"],
+              ["Date & time", chosen ? slotLabel(chosen) : "—"],
+              ["Format", type === "video" ? "Video" : "Voice"],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between gap-4">
+                <span className="text-[11px] font-boldNunito uppercase tracking-[0.04em] text-ink-400">{label}</span>
+                <span className="text-[13px] font-extraboldNunito text-navy-800">{value}</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between gap-4 border-t border-ink-100 pt-3">
+              <span className="text-[11px] font-boldNunito uppercase tracking-[0.04em] text-ink-400">Session cost</span>
+              <span className="text-[13px] font-extraboldNunito text-wellness-600">Covered by your employer</span>
             </div>
           </div>
 
           <div className="rounded-[12px] bg-[#EEF4FC] px-3.5 py-3 text-[11.5px] leading-[1.6] text-brand-600">
-            We&apos;ll send you a reminder before your session, and{" "}
-            {suggested?.name ?? "your therapist"} will see this on their schedule right away.
+            A reminder will be sent before your session. {suggested?.name ?? "Your therapist"} will see this
+            request immediately.
           </div>
 
           {error ? <p className="text-caption text-signal-error">{error}</p> : null}
@@ -891,14 +1037,6 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
             className="h-12 cursor-pointer rounded-[12px] bg-navy-800 text-[14px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:bg-[#C7CEDA]"
           >
             {isBooking ? "Booking…" : "Confirm Session →"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setRequestMode(true)}
-            disabled={!therapistId}
-            className="cursor-pointer text-center text-[12.5px] font-boldNunito text-ink-500 disabled:opacity-50"
-          >
-            Can&apos;t find a good time? Send a request instead
           </button>
         </div>
       </Sheet>
