@@ -16,7 +16,6 @@ import {
   useGetBillingInvoicesQuery,
   useGetAdminTherapistDetailQuery,
   useGetAdminEmployeeDetailQuery,
-  useUpdateEmployeeMutation,
   useRequestOrgDeletionMutation,
   useDeactivateEmployeeMutation,
   useRemoveTherapistFromNetworkMutation,
@@ -606,21 +605,13 @@ const EngagementChart = ({ months }) => {
  * roster's usual anonymised/company-wide-only rule; see
  * OrgRosterService::employeeDetail().
  */
-const EmployeeModal = ({ open, close, context, showToast }) => {
+const EmployeeModal = ({ open, close, context }) => {
   const { open: openModal } = useAdminModal();
   const { data: org } = useGetOrganizationQuery();
   const { data: detail } = useGetAdminEmployeeDetailQuery(context?.member_id, {
     skip: !open || !context?.member_id,
   });
   const [deactivate] = useDeactivateEmployeeMutation();
-  const [updateEmployee] = useUpdateEmployeeMutation();
-  const savedDepartment = detail?.department ?? context?.department ?? "";
-  const [department, setDepartment] = useState(savedDepartment);
-  const [savingDept, setSavingDept] = useState(false);
-
-  useEffect(() => {
-    setDepartment(savedDepartment);
-  }, [context?.member_id, savedDepartment]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -632,19 +623,6 @@ const EmployeeModal = ({ open, close, context, showToast }) => {
   if (!open) return null;
 
   const e = { ...(context ?? {}), ...(detail ?? {}) };
-
-  const saveDepartment = async () => {
-    setSavingDept(true);
-    try {
-      await updateEmployee({ memberId: e.member_id, department: department.trim() || null }).unwrap();
-      showToast?.("Department updated");
-    } catch (err) {
-      showToast?.(apiErrorMessage(err, "Couldn't update department — please try again"));
-      setDepartment(savedDepartment);
-    } finally {
-      setSavingDept(false);
-    }
-  };
   const companyName = org?.organization?.name ?? "your company";
   const numericId = e.id ? String(parseInt(e.id.replace(/\D/g, ""), 10) || 0) : "—";
   const cycle = e.sessions_this_cycle;
@@ -723,27 +701,11 @@ const EmployeeModal = ({ open, close, context, showToast }) => {
                     : `${e.role ?? "—"} seat`}
                 </span>
               </div>
-              <div className="flex items-center justify-between gap-4 border-b border-ink-100 pb-2.5">
-                <span className="shrink-0 text-caption text-ink-500">Department</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    value={department}
-                    onChange={(ev) => setDepartment(ev.target.value)}
-                    placeholder="—"
-                    aria-label="Department"
-                    className="h-8 w-36 rounded-[8px] border-[1.5px] border-ink-200 px-2.5 text-right text-[13px] font-boldNunito text-navy-800"
-                  />
-                  {department.trim() !== savedDepartment ? (
-                    <button
-                      type="button"
-                      disabled={savingDept}
-                      onClick={saveDepartment}
-                      className="shrink-0 cursor-pointer rounded-[8px] bg-brand-400 px-2.5 py-1.5 text-[11px] font-boldNunito text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {savingDept ? "Saving…" : "Save"}
-                    </button>
-                  ) : null}
-                </div>
+              <div className="flex justify-between gap-4 border-b border-ink-100 pb-2.5">
+                <span className="text-caption text-ink-500">Department</span>
+                <span className="text-[13px] font-boldNunito capitalize text-navy-800">
+                  {e.department ?? "—"}
+                </span>
               </div>
               <div className="flex justify-between gap-4 pb-2.5">
                 <span className="text-caption text-ink-500">Status</span>
@@ -1526,7 +1488,7 @@ const AdminModals = ({ modal, context, close, showToast }) => (
     <TopUpModal open={modal === "topUp"} close={close} showToast={showToast} />
     <AddSeatsModal open={modal === "addSeats"} close={close} showToast={showToast} />
     <InvoiceModal open={modal === "invoice"} close={close} context={context} />
-    <EmployeeModal open={modal === "employee"} close={close} context={context} showToast={showToast} />
+    <EmployeeModal open={modal === "employee"} close={close} context={context} />
     <ConfirmModal open={modal === "confirm"} close={close} showToast={showToast} context={context} />
     <CapacityModal open={modal === "capacity"} close={close} showToast={showToast} />
     <AddOwnTherapistModal open={modal === "addOwn"} close={close} showToast={showToast} />
