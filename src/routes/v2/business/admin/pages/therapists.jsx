@@ -347,9 +347,12 @@ export const AdminMyTherapists = () => {
                   >
                     {t.initials}
                   </span>
-                  <span className="font-boldNunito text-navy-800">
-                    {t.name}
-                  </span>
+                  <div>
+                    <div className="font-boldNunito text-navy-800">
+                      {t.name}
+                    </div>
+                    <div className="text-[11px] font-regularNunito text-ink-400">{t.email}</div>
+                  </div>
                 </div>
               </Td>
               <Td>
