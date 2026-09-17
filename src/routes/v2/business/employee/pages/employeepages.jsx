@@ -456,78 +456,82 @@ export const EmployeeHome = () => {
 
       <div className="grid gap-4 xl:grid-cols-[1.3fr_1fr]">
         {/* upcoming session */}
-        <div className="relative overflow-hidden rounded-ds-lg bg-[linear-gradient(135deg,#141B34,#1A2E5A)] px-6 py-[22px] shadow-[0_4px_16px_rgba(20,27,52,0.18)]">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-5 -top-5 h-[160px] w-[160px] rounded-full bg-[radial-gradient(circle,rgba(59,168,143,0.16)_0%,transparent_65%)]"
-          />
-          <div className="relative z-[1] mb-3.5 flex items-center gap-[7px]">
-            <span className="h-[7px] w-[7px] rounded-full bg-[#3BA88F]" />
-            <span className="text-[10px] font-boldNunito tracking-[0.08em] text-[#6FCDB6]">
-              NEXT SESSION
-            </span>
-          </div>
+        {next ? (
+          <div className="relative overflow-hidden rounded-ds-lg bg-[linear-gradient(135deg,#141B34,#1A2E5A)] px-6 py-[22px] shadow-[0_4px_16px_rgba(20,27,52,0.18)]">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-5 -top-5 h-[160px] w-[160px] rounded-full bg-[radial-gradient(circle,rgba(59,168,143,0.16)_0%,transparent_65%)]"
+            />
+            <div className="relative z-[1] mb-3.5 flex items-center gap-[7px]">
+              <span className="h-[7px] w-[7px] rounded-full bg-[#3BA88F]" />
+              <span className="text-[10px] font-boldNunito tracking-[0.08em] text-[#6FCDB6]">
+                NEXT SESSION
+              </span>
+            </div>
 
-          {next ? (
-            <>
-              <div className="relative z-[1] flex items-center gap-3.5">
-                <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-[#017FC8] text-[18px] font-extraboldNunito text-white">
-                  {initialsOf(next.therapist_name)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[17px] font-extraboldNunito text-white">
-                    {next.therapist_name}
-                  </div>
-                  <div className="text-[12px] text-white/50">
-                    {typeLabel} · {sessionDayLabel(next.starts_at)}
-                  </div>
+            <div className="relative z-[1] flex items-center gap-3.5">
+              <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-[#017FC8] text-[18px] font-extraboldNunito text-white">
+                {initialsOf(next.therapist_name)}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[17px] font-extraboldNunito text-white">
+                  {next.therapist_name}
+                </div>
+                <div className="text-[12px] text-white/50">
+                  {typeLabel} · {sessionDayLabel(next.starts_at)}
                 </div>
               </div>
-              <PendingRescheduleBanner session={next} showToast={showToast} />
-              <div className="relative z-[1] mt-5 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => open("reschedule", next)}
-                  className="flex-1 cursor-pointer rounded-[10px] border border-white/[0.18] bg-white/10 p-2.5 text-center text-[12px] font-boldNunito text-white"
-                >
-                  Reschedule
-                </button>
-                <button
-                  type="button"
-                  onClick={() => open("cancel", next)}
-                  className="flex-1 cursor-pointer rounded-[10px] border border-[rgba(172,66,66,0.3)] bg-[rgba(172,66,66,0.15)] p-2.5 text-center text-[12px] font-boldNunito text-[#FF9B9B]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => open("preSessionMood", next)}
-                  className="flex-1 cursor-pointer rounded-[10px] bg-[#3BA88F] p-2.5 text-center text-[12px] font-extraboldNunito text-white"
-                >
-                  Join Room
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="relative z-[1] text-[15px] font-extraboldNunito text-white">
-                No session booked yet
-              </div>
-              <div className="relative z-[1] mt-1 text-[12px] leading-[1.6] text-white/50">
-                When you&apos;re ready, book a time that suits you — your benefit covers it.
-              </div>
-              <div className="relative z-[1] mt-5">
-                <button
-                  type="button"
-                  onClick={() => open("booking")}
-                  className="w-full cursor-pointer rounded-[10px] bg-[#3BA88F] p-2.5 text-center text-[12px] font-extraboldNunito text-white"
-                >
-                  Book a Session
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+            </div>
+            <PendingRescheduleBanner session={next} showToast={showToast} />
+            <div className="relative z-[1] mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => open("reschedule", next)}
+                className="flex-1 cursor-pointer rounded-[10px] border border-white/[0.18] bg-white/10 p-2.5 text-center text-[12px] font-boldNunito text-white"
+              >
+                Reschedule
+              </button>
+              <button
+                type="button"
+                onClick={() => open("cancel", next)}
+                className="flex-1 cursor-pointer rounded-[10px] border border-[rgba(172,66,66,0.3)] bg-[rgba(172,66,66,0.15)] p-2.5 text-center text-[12px] font-boldNunito text-[#FF9B9B]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => open("preSessionMood", next)}
+                className="flex-1 cursor-pointer rounded-[10px] bg-[#3BA88F] p-2.5 text-center text-[12px] font-extraboldNunito text-white"
+              >
+                Join Room
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed border-[#C9CEDA] bg-[#FAFBFD] p-6 text-center">
+            <span className="flex h-11 w-11 items-center justify-center rounded-[11px] bg-[#EEF4FC]">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#017FC8" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </span>
+            <div className="text-[15px] font-extraboldNunito text-navy-800">
+              No upcoming session
+            </div>
+            <div className="max-w-[320px] text-[12px] leading-[1.6] text-ink-400">
+              Book a session whenever you&apos;re ready — your benefit covers it.
+            </div>
+            <button
+              type="button"
+              onClick={() => open("booking")}
+              className="mt-1 cursor-pointer rounded-[10px] bg-brand-400 px-5 py-2.5 text-center text-[12.5px] font-extraboldNunito text-white hover:bg-brand-600"
+            >
+              Book a session
+            </button>
+          </div>
+        )}
 
         {/* get the app */}
         <Card className="flex flex-col">
