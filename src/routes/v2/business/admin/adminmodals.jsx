@@ -15,6 +15,7 @@ import {
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
   useGetAdminTherapistDetailQuery,
+  useGetAdminEmployeesQuery,
   useGetAdminEmployeeDetailQuery,
   useUpdateEmployeeMutation,
   useRequestOrgDeletionMutation,
@@ -786,6 +787,13 @@ const EmployeeModal = ({ open, close, context }) => {
  *  one contract detail an admin can change after the invite was sent. */
 const EditEmployeeModal = ({ open, close, showToast, context }) => {
   const [updateEmployee, { isLoading }] = useUpdateEmployeeMutation();
+  // Same source as the list page's own department filter — departments()
+  // returns whatever is actually in use across the org's members.
+  const { data: employeesData } = useGetAdminEmployeesQuery();
+  const knownDepartments = employeesData?.departments ?? [];
+  const departmentOptions = context?.department && !knownDepartments.includes(context.department)
+    ? [...knownDepartments, context.department]
+    : knownDepartments;
   const [department, setDepartment] = useState(context?.department ?? "");
   const [error, setError] = useState(null);
 
@@ -812,13 +820,16 @@ const EditEmployeeModal = ({ open, close, showToast, context }) => {
     <Modal open={open} onClose={close} title={`Edit ${context?.id ?? "employee"}`} subtitle={context?.email}>
       <div className="mb-4 flex flex-col gap-1.5">
         <span className="text-[11px] font-boldNunito text-ink-400">Department</span>
-        <input
+        <select
           value={department}
           onChange={(e) => setDepartment(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="e.g. Engineering"
-          className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
-        />
+          className="h-[42px] cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+        >
+          <option value="">— No department —</option>
+          {departmentOptions.map((d) => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
       </div>
 
       {error ? (
