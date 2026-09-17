@@ -22,7 +22,6 @@ import {
   useGetTherapistSlotsQuery,
   useCreateBookingMutation,
   useInitiatePaymentMutation,
-  useSubmitSessionRequestMutation,
   useDeclineMySessionRequestMutation,
   useRequestTopUpMutation,
   useGetCareTeamQuery,
@@ -762,10 +761,6 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
   const [type, setType] = useState(sessionType);
   const [slot, setSlot] = useState(null);
   const [error, setError] = useState(null);
-  const [requestMode, setRequestMode] = useState(false);
-  const [preferredAt, setPreferredAt] = useState("");
-  const [note, setNote] = useState("");
-  const [submitRequest, { isLoading: isSendingRequest }] = useSubmitSessionRequestMutation();
 
   const [selectedTherapistId, setSelectedTherapistId] = useState(null);
   const { data: careTeam, isLoading: careTeamLoading } = useGetCareTeamQuery();
@@ -842,110 +837,11 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
     }
   };
 
-  const sendRequest = async () => {
-    if (!therapistId || !preferredAt) return;
-    setError(null);
-    try {
-      await submitRequest({
-        therapist_id: therapistId,
-        format: type,
-        preferred_at: preferredAt.replace("T", " ") + ":00",
-        note: note || undefined,
-      }).unwrap();
-      close();
-      showToast(`Request sent — ${suggested?.name ?? "your therapist"} will get back to you soon`);
-    } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't send that request — please try again"));
-    }
-  };
-
   const chip = (active) =>
     classNames(
       "flex flex-1 cursor-pointer items-center justify-center gap-[7px] rounded-[10px] border-[1.5px] p-[11px] text-[13px] font-boldNunito",
       active ? "border-navy-800 bg-navy-800 text-white" : "border-ink-200 bg-surface-page text-ink-600"
     );
-
-  if (requestMode) {
-    return (
-      <Scrim onClose={close}>
-        <Sheet width={440}>
-          <SheetHeader title="Request a session" onBack={() => setRequestMode(false)} onClose={close} />
-          <div className="flex flex-col gap-4 px-6 py-[22px]">
-            <div className="flex items-center gap-3 rounded-[12px] bg-[#F8F9FC] px-3.5 py-3">
-              <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[#017FC8] text-[13px] font-extraboldNunito text-white">
-                {initialsOf(suggested?.name ?? "")}
-              </span>
-              <div>
-                <div className="text-[13px] font-boldNunito text-navy-800">
-                  {suggested?.name ?? "Your therapist"}
-                </div>
-                <div className="text-[11px] text-ink-400">
-                  No open slot works? Tell them your preferred time instead.
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-[12px] font-boldNunito text-ink-600">
-                Preferred day &amp; time
-              </label>
-              <input
-                type="datetime-local"
-                value={preferredAt}
-                onChange={(e) => setPreferredAt(e.target.value)}
-                className="w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 py-[11px] text-[13px] font-semiboldNunito text-ink-800"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-[12px] font-boldNunito text-ink-600">
-                How would you like to connect?
-              </label>
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setType("video")} className={chip(type === "video")}>
-                  Video call
-                </button>
-                <button type="button" onClick={() => setType("voice")} className={chip(type === "voice")}>
-                  Voice call
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-[12px] font-boldNunito text-ink-600">
-                Note (optional)
-              </label>
-              <textarea
-                rows={3}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Anything that helps them plan for the session…"
-                className="w-full resize-none rounded-[10px] border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] leading-[1.6] text-ink-800"
-              />
-            </div>
-
-            {error ? <p className="text-caption text-signal-error">{error}</p> : null}
-
-            <button
-              type="button"
-              onClick={sendRequest}
-              disabled={!therapistId || !preferredAt || isSendingRequest}
-              className="h-12 cursor-pointer rounded-[12px] bg-navy-800 text-[14px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:bg-[#C7CEDA]"
-            >
-              {isSendingRequest ? "Sending…" : "Send Request"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setRequestMode(false)}
-              className="cursor-pointer text-center text-[12.5px] font-boldNunito text-ink-500"
-            >
-              ← Back to available times
-            </button>
-          </div>
-        </Sheet>
-      </Scrim>
-    );
-  }
 
   // Step 1 — choose a therapist. Auto-advances to step 2 on tap; nothing to
   // "continue" from here since there's no other choice on this screen.
@@ -1115,13 +1011,6 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
               className="h-12 cursor-pointer rounded-[12px] bg-navy-800 text-[14px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:bg-[#C7CEDA]"
             >
               Continue →
-            </button>
-            <button
-              type="button"
-              onClick={() => setRequestMode(true)}
-              className="cursor-pointer text-center text-[12.5px] font-boldNunito text-ink-500"
-            >
-              Can&apos;t find a good time? Send a request instead
             </button>
           </div>
         </Sheet>
