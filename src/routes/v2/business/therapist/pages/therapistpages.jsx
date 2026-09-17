@@ -1322,7 +1322,7 @@ export const TherapistProfile = () => {
   const [deactivateProfile, { isLoading: isDeactivating }] = useDeactivateTherapistProfileMutation();
   const [reactivateProfile, { isLoading: isReactivating }] = useReactivateTherapistProfileMutation();
 
-  const [profile, setProfile] = useState({ bio: "", years: "", rate: "", languages: "" });
+  const [profile, setProfile] = useState({ bio: "", years: "", rate: "", languages: "", duration: "" });
   const twoFa = !!privacy?.two_factor_enabled;
   const isDeactivated = serverProfile?.status === "Inactive";
 
@@ -1333,6 +1333,11 @@ export const TherapistProfile = () => {
         years: String(serverProfile.years_experience ?? ""),
         rate: String(serverProfile.session_rate ?? ""),
         languages: (serverProfile.languages ?? []).join(", "),
+        // Falls back to 50 to match TherapistSlotService's own hidden
+        // default — a therapist with no value set yet is effectively
+        // already running 50-minute sessions, so show that rather than a
+        // blank field that would submit as "unchanged" and hide the gap.
+        duration: String(serverProfile.session_duration ?? 50),
       });
     }
   }, [serverProfile]);
@@ -1358,6 +1363,7 @@ export const TherapistProfile = () => {
         bio: profile.bio,
         years_experience: Number(profile.years) || undefined,
         session_rate: Number(profile.rate) || undefined,
+        session_duration: Number(profile.duration) || undefined,
         languages: languages.length ? languages : undefined,
       }).unwrap();
       showToast("Profile saved");
@@ -1421,6 +1427,22 @@ export const TherapistProfile = () => {
             <div className="flex-1">
               <label className={label} htmlFor="thr-rate">Session rate</label>
               <input id="thr-rate" className={input} value={profile.rate} onChange={field("rate")} />
+            </div>
+          </div>
+          <div>
+            <label className={label} htmlFor="thr-duration">Session length (minutes)</label>
+            <input
+              id="thr-duration"
+              type="number"
+              min="1"
+              max="480"
+              className={input}
+              value={profile.duration}
+              onChange={field("duration")}
+            />
+            <div className="mt-1 text-[10.5px] text-ink-400">
+              How long each of your sessions runs — your Availability windows need to be at
+              least this long to produce a bookable slot.
             </div>
           </div>
           <div className="flex gap-2 rounded-[10px] bg-[#EEF4FC] px-[13px] py-2.5">
