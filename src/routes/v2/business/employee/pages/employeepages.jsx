@@ -353,7 +353,7 @@ export const EmployeeHome = () => {
   const { data: me } = useGetMeV2Query();
   const { data: today } = useGetMoodTodayQuery();
   const { data: summary, isLoading: summaryLoading } = useGetMoodSummaryQuery(14);
-  const { data: bookings } = useGetBookingsQuery();
+  const { data: bookings, isLoading: bookingsLoading } = useGetBookingsQuery();
   const { data: trending } = useGetCommunityTrendingQuery();
   const [saveCheckin] = useSaveMoodCheckinMutation();
 
@@ -456,7 +456,18 @@ export const EmployeeHome = () => {
 
       <div className="grid gap-4 xl:grid-cols-[1.3fr_1fr]">
         {/* upcoming session */}
-        {next ? (
+        {bookingsLoading ? (
+          <div className="rounded-ds-lg bg-white px-6 py-[22px] shadow-[0_4px_16px_rgba(20,27,52,0.08)]">
+            <Skeleton className="mb-3.5 h-2.5 w-24" />
+            <div className="flex items-center gap-3.5">
+              <Skeleton className="h-[52px] w-[52px] shrink-0 rounded-full" />
+              <div className="flex-1">
+                <Skeleton className="mb-2 h-3.5 w-32" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+          </div>
+        ) : next ? (
           <div className="relative overflow-hidden rounded-ds-lg bg-[linear-gradient(135deg,#141B34,#1A2E5A)] px-6 py-[22px] shadow-[0_4px_16px_rgba(20,27,52,0.18)]">
             <div
               aria-hidden="true"

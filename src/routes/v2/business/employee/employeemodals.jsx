@@ -150,6 +150,11 @@ const SheetHeader = ({ title, subtitle, onBack, onClose }) => (
 );
 
 /** Deck: `buildMoodPicker(..., small=true)` — used by the pre-session + feedback modals. */
+/** Loading placeholder — no layout shift while a query is in flight. */
+const Skeleton = ({ className }) => (
+  <div className={classNames("animate-pulse rounded-[10px] bg-ink-100", className)} />
+);
+
 const SmallMoodRow = ({ value, onPick }) => (
   <div className="flex gap-2">
     {MOODS.map((m) => (
@@ -660,9 +665,10 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
   const [submitRequest, { isLoading: isSendingRequest }] = useSubmitSessionRequestMutation();
 
   const [selectedTherapistId, setSelectedTherapistId] = useState(null);
-  const { data: careTeam } = useGetCareTeamQuery();
-  const { data: directory } = useGetTherapistsQuery({ per_page: 20 });
+  const { data: careTeam, isLoading: careTeamLoading } = useGetCareTeamQuery();
+  const { data: directory, isLoading: directoryLoading } = useGetTherapistsQuery({ per_page: 20 });
   const [createBooking, { isLoading: isBooking }] = useCreateBookingMutation();
+  const loadingCandidates = careTeamLoading || directoryLoading;
 
   /* Whoever this member can actually book: their existing care-team
      therapist first (continuity of care), then everyone else the directory
@@ -689,7 +695,7 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
     }
   }, [candidates, selectedTherapistId]);
 
-  const { data: slotData } = useGetTherapistSlotsQuery(
+  const { data: slotData, isLoading: slotsLoading } = useGetTherapistSlotsQuery(
     { id: therapistId },
     { skip: !therapistId }
   );
@@ -846,16 +852,33 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
         <Sheet width={480}>
           <SheetHeader title="Book a session" subtitle="Step 1 of 3 — Choose your therapist" onClose={close} />
           <div className="flex flex-col gap-4 px-6 py-[22px]">
-            <p className="text-[13px] leading-[1.6] text-ink-500">
-              Your organisation has {candidates.length} therapist{candidates.length === 1 ? "" : "s"} available.
-              Select based on your preference and what you need right now.
-            </p>
-            {candidates.length === 0 ? (
-              <div className="rounded-[10px] bg-surface-page px-3.5 py-3 text-[13px] text-ink-500">
-                No therapists are available on your organisation&apos;s network right now.
-              </div>
+            {loadingCandidates ? (
+              <>
+                <Skeleton className="h-4 w-full" />
+                <div className="flex flex-col gap-2.5">
+                  {[0, 1].map((i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-[12px] border-[1.5px] border-ink-100 px-3.5 py-3">
+                      <Skeleton className="h-11 w-11 shrink-0 rounded-[10px]" />
+                      <div className="flex-1">
+                        <Skeleton className="mb-2 h-3.5 w-32" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
-              <div className="flex flex-col gap-2.5">
+              <>
+                <p className="text-[13px] leading-[1.6] text-ink-500">
+                  Your organisation has {candidates.length} therapist{candidates.length === 1 ? "" : "s"} available.
+                  Select based on your preference and what you need right now.
+                </p>
+                {candidates.length === 0 ? (
+                  <div className="rounded-[10px] bg-surface-page px-3.5 py-3 text-[13px] text-ink-500">
+                    No therapists are available on your organisation&apos;s network right now.
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2.5">
                 {candidates.map((c) => {
                   const next = nextSlotSummary(c.next_slot);
                   return (
@@ -896,7 +919,9 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
                     </button>
                   );
                 })}
-              </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </Sheet>
@@ -920,7 +945,13 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
               Pick an available slot. All times are in WAT (West Africa Time).
             </p>
 
-            {slots.length === 0 ? (
+            {slotsLoading ? (
+              <div className="grid grid-cols-2 gap-2">
+                {[0, 1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-[52px]" />
+                ))}
+              </div>
+            ) : slots.length === 0 ? (
               <div className="rounded-[10px] bg-surface-page px-3.5 py-3 text-[13px] text-ink-500">
                 No open slots right now — send a request instead below.
               </div>
