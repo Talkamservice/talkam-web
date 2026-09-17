@@ -50,15 +50,17 @@ const therapistSquareColour = (seed = "") => {
   return THERAPIST_SQUARE_COLOURS[sum % THERAPIST_SQUARE_COLOURS.length];
 };
 
-/** "Today" / "Tomorrow" / "Thu Sep 19" — the day half of a slot button. */
+/** "Today, Sep 17" / "Tomorrow, Sep 18" / "Thu, Sep 19" — the day half of a
+ *  slot button, always carrying the actual date alongside the relative label. */
 const slotDayLabel = (iso) => {
   const d = new Date(String(iso).replace(" ", "T"));
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
   const sameDay = (a, b) => a.toDateString() === b.toDateString();
-  if (sameDay(d, today)) return "Today";
-  if (sameDay(d, tomorrow)) return "Tomorrow";
+  const dateLabel = d.toLocaleDateString("en-NG", { month: "short", day: "numeric" });
+  if (sameDay(d, today)) return `Today, ${dateLabel}`;
+  if (sameDay(d, tomorrow)) return `Tomorrow, ${dateLabel}`;
   return d.toLocaleDateString("en-NG", { weekday: "short", month: "short", day: "numeric" });
 };
 
@@ -73,6 +75,42 @@ const slotTimeLabel = (iso) => {
  *  availability found in the next 14 days). */
 const nextSlotSummary = (nextSlot) =>
   nextSlot?.starts_at ? `${slotDayLabel(nextSlot.starts_at)} · ${slotTimeLabel(nextSlot.starts_at)}` : null;
+
+/** "Monday" — day of the week only, no calendar date. Matches how the
+ *  therapist's own availability settings present these same recurring
+ *  weekly windows (Monday/Tuesday/…, never a specific date). */
+const slotWeekdayLabel = (iso) => {
+  const d = new Date(String(iso).replace(" ", "T"));
+  return d.toLocaleDateString("en-NG", { weekday: "long" });
+};
+
+/** "9:00" + "9:20" → "12:00 AM"-free 12-hour clock string. */
+const to12hFromDate = (d) => {
+  const hour24 = d.getHours();
+  const period = hour24 < 12 ? "AM" : "PM";
+  const hour = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${hour}:${String(d.getMinutes()).padStart(2, "0")} ${period}`;
+};
+
+/** "9:00 – 9:20 AM" — start/end range for a slot button, mirroring the
+ *  availability settings screen's own start–end pill format. */
+const slotRangeLabel = (startIso, endIso) => {
+  const start = new Date(String(startIso).replace(" ", "T"));
+  const startLabel = to12hFromDate(start);
+  if (!endIso) return startLabel;
+  const end = new Date(String(endIso).replace(" ", "T"));
+  const endLabel = to12hFromDate(end);
+  const samePeriod = startLabel.slice(-2) === endLabel.slice(-2);
+  return `${samePeriod ? startLabel.replace(/ (AM|PM)$/, "") : startLabel} – ${endLabel}`;
+};
+
+/** "2026-09-17" in the viewer's own local date — what the day-view slot
+ *  picker asks the backend for, so it gets just today's slots (the backend
+ *  already excludes anything already past). */
+const todayDateParam = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 /**
  * Employee dashboard modals.
@@ -215,17 +253,26 @@ const RedButton = ({ className, children, ...props }) => (
 
 const RescheduleModal = ({ close, showToast, session }) => {
   const [slot, setSlot] = useState(null);
+  const [slotPage, setSlotPage] = useState(1);
   const [reschedule, { isLoading }] = useRescheduleBookingMutation();
+  const SLOTS_PER_PAGE = 6;
 
+  // Today only, matching the booking modal's "Choose a time" step — not a
+  // multi-day scan (that used to paginate into the dozens of pages once a
+  // therapist had a full day's worth of 20-minute slots).
   const { data: slotData } = useGetTherapistSlotsQuery(
-    { id: session?.therapist_id },
+    { id: session?.therapist_id, date: todayDateParam() },
     { skip: !session?.therapist_id }
   );
 
-  const slots = useMemo(
-    () => (slotData?.slots ?? slotData ?? []).slice(0, 6),
-    [slotData]
-  );
+  const slots = useMemo(() => slotData?.slots ?? slotData ?? [], [slotData]);
+  const slotPageCount = Math.max(1, Math.ceil(slots.length / SLOTS_PER_PAGE));
+  const visibleSlots = slots.slice((slotPage - 1) * SLOTS_PER_PAGE, slotPage * SLOTS_PER_PAGE);
+
+  // A different session/therapist can have a shorter slot list than the page we were on.
+  useEffect(() => {
+    setSlotPage(1);
+  }, [session?.therapist_id]);
 
   const confirm = async () => {
     if (!slot) return;
@@ -251,10 +298,10 @@ const RescheduleModal = ({ close, showToast, session }) => {
           <div className="grid grid-cols-2 gap-2">
             {slots.length === 0 ? (
               <div className="col-span-2 rounded-[10px] bg-[#F8F9FC] px-3.5 py-3 text-[12px] leading-[1.6] text-ink-400">
-                No open slots in the next two weeks. Try messaging your therapist directly.
+                No open slots left today. Try messaging your therapist directly.
               </div>
             ) : (
-              slots.map((s) => {
+              visibleSlots.map((s) => {
                 const value = s.starts_at ?? s;
                 return (
                   <button
@@ -263,18 +310,44 @@ const RescheduleModal = ({ close, showToast, session }) => {
                     onClick={() => setSlot(value)}
                     aria-pressed={slot === value}
                     className={classNames(
-                      "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-[11px] text-center text-[12.5px] font-boldNunito",
+                      "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-[11px] text-center",
                       slot === value
                         ? "border-navy-800 bg-navy-800 text-white"
                         : "border-ink-200 bg-surface-page text-ink-600"
                     )}
                   >
-                    {slotLabel(value)}
+                    <div className={classNames("text-[11px] font-semiboldNunito", slot === value ? "text-white/70" : "text-ink-400")}>
+                      {slotWeekdayLabel(value)}
+                    </div>
+                    <div className="text-[13px] font-extraboldNunito">{slotRangeLabel(value, s.ends_at)}</div>
                   </button>
                 );
               })
             )}
           </div>
+          {slotPageCount > 1 ? (
+            <div className="flex items-center justify-between pt-0.5">
+              <button
+                type="button"
+                onClick={() => setSlotPage((p) => Math.max(1, p - 1))}
+                disabled={slotPage === 1}
+                className="cursor-pointer text-[12.5px] font-boldNunito text-navy-800 disabled:cursor-not-allowed disabled:text-ink-300"
+              >
+                Back
+              </button>
+              <span className="text-[12px] text-ink-500">
+                Page {slotPage} of {slotPageCount}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSlotPage((p) => Math.min(slotPageCount, p + 1))}
+                disabled={slotPage === slotPageCount}
+                className="cursor-pointer text-[12.5px] font-boldNunito text-navy-800 disabled:cursor-not-allowed disabled:text-ink-300"
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
           <div className="rounded-[10px] bg-[#FBF5E8] px-3 py-2.5 text-[11.5px] leading-[1.6] text-[#9A6E0A]">
             Rescheduling more than 24h before your session is free — it just needs your
             therapist to confirm the new time.
@@ -763,10 +836,15 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
   const [error, setError] = useState(null);
 
   const [selectedTherapistId, setSelectedTherapistId] = useState(null);
+  const [therapistSearch, setTherapistSearch] = useState("");
+  const [visibleTherapistCount, setVisibleTherapistCount] = useState(5);
+  const [slotPage, setSlotPage] = useState(1);
   const { data: careTeam, isLoading: careTeamLoading } = useGetCareTeamQuery();
   const { data: directory, isLoading: directoryLoading } = useGetTherapistsQuery({ per_page: 20 });
   const [createBooking, { isLoading: isBooking }] = useCreateBookingMutation();
   const loadingCandidates = careTeamLoading || directoryLoading;
+  const THERAPISTS_PER_PAGE = 5;
+  const SLOTS_PER_PAGE = 6;
 
   /* Whoever this member can actually book: their existing care-team
      therapist first (continuity of care), then everyone else the directory
@@ -781,6 +859,32 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
     return list;
   }, [careTeam, directory]);
 
+  const filteredCandidates = useMemo(() => {
+    const q = therapistSearch.trim().toLowerCase();
+    if (!q) return candidates;
+    return candidates.filter(
+      (c) => c.name?.toLowerCase().includes(q) || therapistFocus(c)?.toLowerCase().includes(q)
+    );
+  }, [candidates, therapistSearch]);
+
+  const visibleCandidates = filteredCandidates.slice(0, visibleTherapistCount);
+  const hasMoreTherapists = visibleTherapistCount < filteredCandidates.length;
+
+  // Infinite scroll: reveal THERAPISTS_PER_PAGE more candidates once the
+  // internally-scrollable list is scrolled near its bottom, instead of a
+  // Back/Next pager. A plain onScroll check on the container itself, rather
+  // than an IntersectionObserver sentinel — simpler to reason about and
+  // doesn't depend on the observer's root/target refs both already being
+  // attached by the time the effect first runs.
+  const onTherapistListScroll = (e) => {
+    if (!hasMoreTherapists) return;
+    const el = e.currentTarget;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 96;
+    if (nearBottom) {
+      setVisibleTherapistCount((n) => Math.min(n + THERAPISTS_PER_PAGE, filteredCandidates.length));
+    }
+  };
+
   const suggested = candidates.find((c) => c.id === selectedTherapistId) ?? candidates[0] ?? null;
   const therapistId = suggested?.id;
 
@@ -793,12 +897,21 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
     }
   }, [candidates, selectedTherapistId]);
 
+  // Today only, not a multi-day scan — and only what's still bookable; the
+  // backend already drops anything already past rather than returning it.
   const { data: slotData, isLoading: slotsLoading } = useGetTherapistSlotsQuery(
-    { id: therapistId },
+    { id: therapistId, date: todayDateParam() },
     { skip: !therapistId }
   );
-  const slots = useMemo(() => (slotData?.slots ?? slotData ?? []).slice(0, 6), [slotData]);
+  const slots = useMemo(() => slotData?.slots ?? slotData ?? [], [slotData]);
   const chosen = slot ?? slots[0]?.starts_at ?? slots[0] ?? null;
+  const slotPageCount = Math.max(1, Math.ceil(slots.length / SLOTS_PER_PAGE));
+  const visibleSlots = slots.slice((slotPage - 1) * SLOTS_PER_PAGE, slotPage * SLOTS_PER_PAGE);
+
+  // A new therapist's slot list can be shorter than the page we were on.
+  useEffect(() => {
+    setSlotPage(1);
+  }, [therapistId]);
 
   const pickTherapist = (id) => {
     setSelectedTherapistId(id);
@@ -872,52 +985,90 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
                   Your organisation has {candidates.length} therapist{candidates.length === 1 ? "" : "s"} available.
                   Select based on your preference and what you need right now.
                 </p>
+                {candidates.length > 0 ? (
+                  <div className="relative">
+                    <svg
+                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400"
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input
+                      value={therapistSearch}
+                      onChange={(e) => {
+                        setTherapistSearch(e.target.value);
+                        setVisibleTherapistCount(THERAPISTS_PER_PAGE);
+                      }}
+                      placeholder="Search by name or specialty"
+                      aria-label="Search therapists"
+                      className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 pl-9 pr-3.5 text-[13px] text-ink-800 placeholder:text-ink-400"
+                    />
+                  </div>
+                ) : null}
                 {candidates.length === 0 ? (
                   <div className="rounded-[10px] bg-surface-page px-3.5 py-3 text-[13px] text-ink-500">
                     No therapists are available on your organisation&apos;s network right now.
                   </div>
+                ) : filteredCandidates.length === 0 ? (
+                  <div className="rounded-[10px] bg-surface-page px-3.5 py-3 text-[13px] text-ink-500">
+                    No therapists match &quot;{therapistSearch}&quot;.
+                  </div>
                 ) : (
-                  <div className="flex flex-col gap-2.5">
-                {candidates.map((c) => {
-                  const next = nextSlotSummary(c.next_slot);
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => pickTherapist(c.id)}
-                      className="flex cursor-pointer items-start gap-3 rounded-[12px] border-[1.5px] border-ink-200 bg-white px-3.5 py-3 text-left hover:border-navy-800"
-                    >
-                      <span
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] text-[13px] font-extraboldNunito text-white"
-                        style={{ background: therapistSquareColour(c.name) }}
-                      >
-                        {initialsOf(c.name ?? "")}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[13.5px] font-boldNunito text-navy-800">{c.name}</div>
-                        <div className="truncate text-[12px] text-ink-500">
-                          {therapistFocus(c) || "Therapist"}
-                        </div>
-                        {next ? (
-                          <div className="mt-1 flex items-center gap-1.5 text-[11.5px] font-semiboldNunito text-wellness-600">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <rect x="3" y="4" width="18" height="18" rx="2" />
-                              <line x1="16" y1="2" x2="16" y2="6" />
-                              <line x1="8" y1="2" x2="8" y2="6" />
-                              <line x1="3" y1="10" x2="21" y2="10" />
-                            </svg>
-                            Next: {next}
+                  <div
+                    onScroll={onTherapistListScroll}
+                    className="flex max-h-[360px] flex-col gap-2.5 overflow-y-auto pr-1"
+                  >
+                    {visibleCandidates.map((c) => {
+                      const next = nextSlotSummary(c.next_slot);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => pickTherapist(c.id)}
+                          className="flex cursor-pointer items-start gap-3 rounded-[12px] border-[1.5px] border-ink-200 bg-white px-3.5 py-3 text-left hover:border-navy-800"
+                        >
+                          <span
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] text-[13px] font-extraboldNunito text-white"
+                            style={{ background: therapistSquareColour(c.name) }}
+                          >
+                            {initialsOf(c.name ?? "")}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[13.5px] font-boldNunito text-navy-800">{c.name}</div>
+                            <div className="truncate text-[12px] text-ink-500">
+                              {therapistFocus(c) || "Therapist"}
+                            </div>
+                            {next ? (
+                              <div className="mt-1 flex items-center gap-1.5 text-[11.5px] font-semiboldNunito text-wellness-600">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                                  <line x1="16" y1="2" x2="16" y2="6" />
+                                  <line x1="8" y1="2" x2="8" y2="6" />
+                                  <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                Next: {next}
+                              </div>
+                            ) : null}
                           </div>
-                        ) : null}
+                          {c.rating ? (
+                            <span className="shrink-0 text-[12.5px] font-extraboldNunito text-gold-600">
+                              {c.rating}★
+                            </span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                    {hasMoreTherapists ? (
+                      <div className="flex items-center justify-center py-2">
+                        <span className="text-[11px] text-ink-400">Loading more…</span>
                       </div>
-                      {c.rating ? (
-                        <span className="shrink-0 text-[12.5px] font-extraboldNunito text-gold-600">
-                          {c.rating}★
-                        </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
+                    ) : null}
                   </div>
                 )}
               </>
@@ -941,7 +1092,7 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
           />
           <div className="flex flex-col gap-4 px-6 py-[22px]">
             <p className="text-[13px] leading-[1.6] text-ink-500">
-              Pick an available slot. All times are in WAT (West Africa Time).
+              Today&apos;s available slots. All times are in WAT (West Africa Time).
             </p>
 
             {slotsLoading ? (
@@ -955,30 +1106,55 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
                 No open slots right now — send a request instead below.
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {slots.map((sl) => {
-                  const value = sl.starts_at ?? sl;
-                  return (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  {visibleSlots.map((sl) => {
+                    const value = sl.starts_at ?? sl;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setSlot(value)}
+                        aria-pressed={chosen === value}
+                        className={classNames(
+                          "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-[11px] text-center",
+                          chosen === value
+                            ? "border-navy-800 bg-navy-800 text-white"
+                            : "border-ink-200 bg-surface-page text-ink-600"
+                        )}
+                      >
+                        <div className={classNames("text-[11px] font-semiboldNunito", chosen === value ? "text-white/70" : "text-ink-400")}>
+                          {slotWeekdayLabel(value)}
+                        </div>
+                        <div className="text-[13px] font-extraboldNunito">{slotRangeLabel(value, sl.ends_at)}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {slotPageCount > 1 ? (
+                  <div className="flex items-center justify-between pt-0.5">
                     <button
-                      key={value}
                       type="button"
-                      onClick={() => setSlot(value)}
-                      aria-pressed={chosen === value}
-                      className={classNames(
-                        "cursor-pointer rounded-[10px] border-[1.5px] px-2 py-[11px] text-center",
-                        chosen === value
-                          ? "border-navy-800 bg-navy-800 text-white"
-                          : "border-ink-200 bg-surface-page text-ink-600"
-                      )}
+                      onClick={() => setSlotPage((p) => Math.max(1, p - 1))}
+                      disabled={slotPage === 1}
+                      className="cursor-pointer text-[12.5px] font-boldNunito text-navy-800 disabled:cursor-not-allowed disabled:text-ink-300"
                     >
-                      <div className={classNames("text-[11px] font-semiboldNunito", chosen === value ? "text-white/70" : "text-ink-400")}>
-                        {slotDayLabel(value)}
-                      </div>
-                      <div className="text-[13px] font-extraboldNunito">{slotTimeLabel(value)}</div>
+                      Back
                     </button>
-                  );
-                })}
-              </div>
+                    <span className="text-[12px] text-ink-500">
+                      Page {slotPage} of {slotPageCount}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSlotPage((p) => Math.min(slotPageCount, p + 1))}
+                      disabled={slotPage === slotPageCount}
+                      className="cursor-pointer text-[12.5px] font-boldNunito text-navy-800 disabled:cursor-not-allowed disabled:text-ink-300"
+                    >
+                      Next
+                    </button>
+                  </div>
+                ) : null}
+              </>
             )}
 
             <div>
