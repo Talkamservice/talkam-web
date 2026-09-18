@@ -740,17 +740,26 @@ const addMinutesClamped = (hhmm, minutes) => {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 };
 
+const toMinutes = (hhmm) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+};
+
 /**
  * A native <input type="time"> for each bound — real keyboard entry with the
  * browser's own segment auto-advance, clamped by min/max/step — rather than
  * free text. Clicking anywhere in the field forces the native picker open via
  * showPicker() (Chrome/Edge); elsewhere it just degrades to typing, which
- * always works. Picking a start time auto-fills a 50-minute end as a
- * starting point, editable like any other value. Bound/overlap checks still
- * run in JS on submit — min/max/step are a strong hint, not every browser's
- * hard guarantee against a typed out-of-range value.
+ * always works. Picking a start time auto-fills an end this many minutes
+ * later as a starting point, editable like any other value — using the
+ * therapist's real session length rather than a fixed guess, since a window
+ * longer than that but not a clean multiple of it silently wastes minutes
+ * no client can ever book (TherapistSlotService slices strictly by
+ * session_duration). Bound/overlap checks still run in JS on submit —
+ * min/max/step are a strong hint, not every browser's hard guarantee against
+ * a typed out-of-range value.
  */
-const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
+const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose, onAdd }) => {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [error, setError] = useState(null);
@@ -776,6 +785,10 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
     }
     if (end <= start) {
       setError("End time must be after the start time.");
+      return;
+    }
+    if (toMinutes(end) - toMinutes(start) < sessionDuration) {
+      setError(`This window is shorter than your ${sessionDuration}-minute session length, so it could never be booked.`);
       return;
     }
     if (existingSlots.some((s) => start < s.end && end > s.start)) {
@@ -808,7 +821,7 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
               const value = e.target.value;
               setStart(value);
               setError(null);
-              if (value && !end) setEnd(addMinutesClamped(value, 50));
+              if (value && !end) setEnd(addMinutesClamped(value, sessionDuration));
             }}
             className="h-[42px] w-full cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
           />
@@ -835,7 +848,10 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, onClose, onAdd }) => {
         </div>
       </div>
       <div className="mb-4 text-[11px] text-ink-400">
-        Slots must fall between {to12h(AVAILABILITY_WINDOW.start)} and {to12h(AVAILABILITY_WINDOW.end)}.
+        Slots must fall between {to12h(AVAILABILITY_WINDOW.start)} and {to12h(AVAILABILITY_WINDOW.end)}. Your
+        sessions are {sessionDuration} minutes — clients can book every {sessionDuration} minutes inside
+        whatever window you set here, so a window that isn&apos;t a clean multiple of that wastes the leftover
+        minutes.
       </div>
       {error ? (
         <div className="mb-4 text-[12px] font-semiboldNunito text-surface-errorInk">{error}</div>
@@ -852,6 +868,7 @@ export const TherapistAvailability = () => {
   const { showToast } = useTherapist();
   const { data: grid, isLoading } = useGetAvailabilityQuery();
   const [saveAvailability, { isLoading: isSaving }] = useUpdateAvailabilityMutation();
+  const sessionDuration = grid?.session_duration ?? 50;
 
   /* Local editable copy, seeded from the server grid. */
   const [days, setDays] = useState({});
@@ -950,6 +967,7 @@ export const TherapistAvailability = () => {
         open={!!slotModalDay}
         dayLabel={WEEK_DAYS.find((d) => d.key === slotModalDay)?.label ?? ""}
         existingSlots={slots[slotModalDay] || []}
+        sessionDuration={sessionDuration}
         onClose={() => setSlotModalDay(null)}
         onAdd={(slot) => {
           addSlot(slotModalDay, slot);
