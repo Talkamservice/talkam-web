@@ -73,6 +73,17 @@ export const employeeApiSlice = apiSliceV2.injectEndpoints({
       transformResponse: (response) => response?.data,
     }),
 
+    // Best-effort: tells the backend this participant left the call room, so
+    // it can auto-complete the session once BOTH sides have joined and left
+    // (before the session's due time) instead of only via sweep()/the AV
+    // webhook's whole-channel-destroyed event. Works for either participant
+    // — the backend resolves role from the token, same as joinBooking.
+    leaveBooking: builder.mutation({
+      query: (id) => ({ url: `/user/bookings/${id}/leave`, method: "POST" }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["Bookings"],
+    }),
+
     reviewBooking: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/user/bookings/${id}/review`, method: "POST", body }),
       invalidatesTags: ["Bookings"],
@@ -264,6 +275,7 @@ export const {
   useRescheduleBookingMutation,
   useRespondToRescheduleMutation,
   useLazyJoinBookingQuery,
+  useLeaveBookingMutation,
   useReviewBookingMutation,
   useSaveSessionMoodMutation,
   useGetCareTeamQuery,

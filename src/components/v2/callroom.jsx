@@ -11,7 +11,7 @@ import AgoraRTC, {
   RemoteUser,
   LocalVideoTrack,
 } from "agora-rtc-react";
-import { useLazyJoinBookingQuery } from "../../services/v2/employeeApiSlice";
+import { useLazyJoinBookingQuery, useLeaveBookingMutation } from "../../services/v2/employeeApiSlice";
 import { useGetMeV2Query } from "../../services/v2/authApiSliceV2";
 import { apiErrorMessage } from "../../routes/v2/business/auth/authlayout";
 
@@ -103,14 +103,20 @@ export const CallScreen = ({ bookingId, format, counterpartName, onExit }) => {
 
   return (
     <AgoraRTCProvider client={client}>
-      <CallRoom format={format} counterpartName={counterpartName} joinData={joinData} onExit={onExit} />
+      <CallRoom
+        bookingId={bookingId}
+        format={format}
+        counterpartName={counterpartName}
+        joinData={joinData}
+        onExit={onExit}
+      />
     </AgoraRTCProvider>
   );
 };
 
 /** The actual call room — real mic/camera tracks, real join, real remote
  *  participant. Only ever mounted once join credentials exist. */
-const CallRoom = ({ format, counterpartName, joinData, onExit }) => {
+const CallRoom = ({ bookingId, format, counterpartName, joinData, onExit }) => {
   const { data: me } = useGetMeV2Query();
   const client = useRTCClient();
   const uid = me?.id;
@@ -125,6 +131,15 @@ const CallRoom = ({ format, counterpartName, joinData, onExit }) => {
   const [cameraOn, setCameraOn] = useState(isVideo);
   const [seconds, setSeconds] = useState(0);
   const [ending, setEnding] = useState(false);
+  const [remainingMs, setRemainingMs] = useState(null);
+  const [leaveBooking] = useLeaveBookingMutation();
+
+  // The session's scheduled due time — starts_at + duration_minutes, exactly
+  // what the backend's own sweep()/leave() completion checks use.
+  const dueAt = joinData?.starts_at && joinData?.duration_minutes
+    ? new Date(String(joinData.starts_at).replace(" ", "T")).getTime()
+      + joinData.duration_minutes * 60000
+    : null;
 
   const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack(true);
   const { localCameraTrack, error: camError } = useLocalCameraTrack(isVideo);
@@ -158,6 +173,17 @@ const CallRoom = ({ format, counterpartName, joinData, onExit }) => {
     return () => clearInterval(id);
   }, [isConnected]);
 
+  // Ticks toward the session's due time regardless of connection state — a
+  // dropped connection right before the end still needs the countdown (and
+  // the auto-leave it drives) to keep going.
+  useEffect(() => {
+    if (!dueAt) return undefined;
+    const tick = () => setRemainingMs(dueAt - Date.now());
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [dueAt]);
+
   const label = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
   const permissionBlocked = Boolean(micError) || (isVideo && Boolean(camError));
 
@@ -171,8 +197,26 @@ const CallRoom = ({ format, counterpartName, joinData, onExit }) => {
     } catch {
       /* Best-effort teardown — still exit either way. */
     }
+    // Best-effort — if this never lands, the AV webhook's whole-channel-
+    // destroyed event (or the per-minute sweep, once due time passes) still
+    // catches it, just later.
+    if (bookingId) leaveBooking(bookingId).catch(() => {});
     onExit();
   };
+
+  const remainingSeconds = remainingMs !== null ? Math.max(0, Math.round(remainingMs / 1000)) : null;
+  const showCountdown = remainingSeconds !== null && remainingSeconds <= 300;
+  const countdownLabel = remainingSeconds !== null
+    ? `${String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:${String(remainingSeconds % 60).padStart(2, "0")}`
+    : null;
+
+  // Auto-leave once the due time is reached — mirrors clicking "End call".
+  useEffect(() => {
+    if (remainingMs !== null && remainingMs <= 0 && !ending) {
+      endCall();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remainingMs, ending]);
 
   return (
     <div className="fixed inset-0 z-[600] flex flex-col bg-[#0A1220]">
@@ -190,6 +234,19 @@ const CallRoom = ({ format, counterpartName, joinData, onExit }) => {
         </div>
         <span className="text-[12px] text-white/40">Encrypted · not recorded</span>
       </div>
+
+      {showCountdown ? (
+        <div className="flex justify-center px-[26px] pb-3">
+          <span
+            className={classNames(
+              "rounded-full px-4 py-1.5 text-[12.5px] font-boldNunito text-white",
+              remainingSeconds <= 60 ? "bg-[#AC4242]" : "bg-[#8A5A1F]"
+            )}
+          >
+            Session ends in {countdownLabel}
+          </span>
+        </div>
+      ) : null}
 
       {permissionBlocked ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 px-8 text-center">
