@@ -286,6 +286,7 @@ export const ChooseSeats = () => {
   const bundleOptions = pricing?.bundle_options ?? [];
   const blockRate = pricing?.session_rate ?? 0;
   const customRate = pricing?.session_custom_rate ?? blockRate;
+  const networkRate = pricing?.therapist_access_rate ?? 0;
 
   // Seed the stepper from what the company already saved, once.
   const savedSeats = org?.organization?.seats_licensed;
@@ -318,6 +319,8 @@ export const ChooseSeats = () => {
   const hasBundle = usesNetwork && prepay && bundleSessions > 0;
 
   const seatsMonthly = seats * seatRate; // recurring
+  const networkMonthly = usesNetwork ? seats * networkRate : 0; // recurring, independent of prepay/postpay
+  const recurringMonthly = seatsMonthly + networkMonthly;
   const bundleDueNow = hasBundle ? bundleSessions * sessionRate : 0; // one-off
 
   const submit = async () => {
@@ -602,6 +605,16 @@ export const ChooseSeats = () => {
               {naira(seatsMonthly)}/mo
             </span>
           </div>
+          {usesNetwork ? (
+            <div className="flex justify-between gap-3">
+              <span className="text-[12.5px] text-white/65">
+                Therapist network access · {seats} × {naira(networkRate)}
+              </span>
+              <span className="text-[13px] font-boldNunito text-white">
+                {naira(networkMonthly)}/mo
+              </span>
+            </div>
+          ) : null}
           {usesNetwork && prepay && hasBundle ? (
             <div className="flex justify-between gap-3">
               <span className="text-[12.5px] text-white/65">
@@ -626,25 +639,28 @@ export const ChooseSeats = () => {
               <div className="flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
                 <span className="text-[13px] font-extraboldNunito text-white">Your first bill</span>
                 <span className="text-[22px] font-extraboldNunito text-white">
-                  {naira(seatsMonthly + bundleDueNow)}
+                  {naira(recurringMonthly + bundleDueNow)}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[12px] text-white/55">Then monthly · seats</span>
+                <span className="text-[12px] text-white/55">Then monthly · seats{usesNetwork ? " + network access" : ""}</span>
                 <span className="text-[13px] font-boldNunito text-white/80">
-                  {naira(seatsMonthly)}
+                  {naira(recurringMonthly)}
                 </span>
               </div>
               <p className="pt-0.5 text-[10.5px] leading-[1.45] text-white/40">
-                Seats + bundle. Charged now if you pay by card, or on your first invoice
-                (net terms) if you pay by transfer — you choose on the next step.
+                Seats{usesNetwork ? " + network access" : ""} + bundle. Charged now if you pay by
+                card, or on your first invoice (net terms) if you pay by transfer — you choose on
+                the next step.
               </p>
             </>
           ) : (
             <div className="flex items-center justify-between gap-3 border-t border-white/[0.14] pt-[11px]">
-              <span className="text-[13px] font-extraboldNunito text-white">Seats / month</span>
+              <span className="text-[13px] font-extraboldNunito text-white">
+                {usesNetwork ? "Seats + network access" : "Seats"} / month
+              </span>
               <span className="text-[22px] font-extraboldNunito text-white">
-                {naira(seatsMonthly)}
+                {naira(recurringMonthly)}
               </span>
             </div>
           )}
@@ -740,11 +756,14 @@ export const PlanBilling = () => {
   const perSeat = quote?.plan?.per_seat ?? seatRate;
   const seatsMonthly = quote?.seats_monthly ?? 0;
   const usesNetwork = quote?.uses_network ?? false;
+  const networkRate = quote?.rates?.network_access ?? 0;
+  const networkMonthly = quote?.network_monthly ?? 0;
+  const recurringMonthly = seatsMonthly + networkMonthly;
   const prepay = (quote?.payment_timing ?? "prepay") !== "postpay";
   const bundleSessions = quote?.bundle_sessions ?? 0;
   const bundleRate = quote?.rates?.session_applied ?? 0;
   const bundleTotal = quote?.bundle_total ?? 0;
-  const dueAtSignup = prepay ? seatsMonthly + bundleTotal : 0; // first month (seats) + prepaid bundle
+  const dueAtSignup = prepay ? recurringMonthly + bundleTotal : 0; // first month (seats + network) + prepaid bundle
   const meteredRate = quote?.rates?.metered_session ?? 0;
   const meteredSessions = quote?.metered_sessions ?? false;
   const planName = quote?.plan?.name ?? pricing?.plan?.name ?? "";
@@ -938,7 +957,7 @@ export const PlanBilling = () => {
           <span className="text-[13px] text-ink-400">/ employee / month</span>
         </div>
         <p className="mb-[18px] text-caption text-ink-400">
-          {naira(seatsMonthly)} total/month · billed monthly
+          {naira(recurringMonthly)} total/month · billed monthly
         </p>
 
         <div className="mb-[18px] flex flex-col gap-2.5">
@@ -964,6 +983,16 @@ export const PlanBilling = () => {
               {naira(seatsMonthly)}/mo
             </span>
           </div>
+          {usesNetwork ? (
+            <div className="flex justify-between gap-3">
+              <span className="text-caption text-ink-500">
+                Therapist network access · {seats} × {naira(networkRate)}
+              </span>
+              <span className="text-caption font-boldNunito text-navy-800">
+                {naira(networkMonthly)}/mo
+              </span>
+            </div>
+          ) : null}
           {usesNetwork && prepay && bundleSessions > 0 ? (
             <div className="flex justify-between gap-3">
               <span className="text-caption text-ink-500">
@@ -994,9 +1023,11 @@ export const PlanBilling = () => {
                   </span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-caption text-ink-500">Then monthly (seats)</span>
+                  <span className="text-caption text-ink-500">
+                    Then monthly ({usesNetwork ? "seats + network access" : "seats"})
+                  </span>
                   <span className="text-caption font-boldNunito text-navy-800">
-                    {naira(seatsMonthly)}
+                    {naira(recurringMonthly)}
                   </span>
                 </div>
               </>
@@ -1004,7 +1035,7 @@ export const PlanBilling = () => {
               <div className="flex justify-between gap-3">
                 <span className="text-caption font-boldNunito text-navy-800">Billed monthly</span>
                 <span className="text-[13px] font-extraboldNunito text-brand-400">
-                  {naira(seatsMonthly)}
+                  {naira(recurringMonthly)}
                 </span>
               </div>
             )}
