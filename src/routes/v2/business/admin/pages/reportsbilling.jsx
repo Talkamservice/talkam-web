@@ -12,6 +12,7 @@ import {
   Tr,
   InfoStrip,
   SecondaryButton,
+  PrimaryButton,
 } from "../../../../../components/v2/dashboard/chrome";
 import { Withheld, AdminSkeleton } from "../../../../../components/v2/dashboard/chrome";
 import { useAdminModal } from "../adminmodals";
@@ -21,9 +22,13 @@ import {
   useGetAdminOverviewQuery,
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
+  useGetBillingTopUpsQuery,
   useCreateVirtualAccountMutation,
+  useMarkInvoicePaidMutation,
+  useRequestCustomQuoteMutation,
   downloadCsv,
 } from "../../../../../services/v2/adminApiSlice";
+import { apiErrorMessage } from "../../auth/authlayout";
 import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
 import { useSelector } from "react-redux";
 import { selectCurrentToken } from "../../../../../services/authSlice";
@@ -257,6 +262,59 @@ CopyButton.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
+const HISTORY_TABS = [
+  { key: "invoices", label: "Invoices" },
+  { key: "topups", label: "Session Top-Ups" },
+];
+
+const PAGE_SIZE = 10;
+
+/** Prev/next pager for a client-side-sliced list; hides itself under one page. */
+function Pagination({ page, setPage, total, pageSize = PAGE_SIZE }) {
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  if (pageCount <= 1) return null;
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(total, page * pageSize);
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 px-5 py-3">
+      <span className="text-[11.5px] text-ink-400">
+        Showing {from}–{to} of {total}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          aria-label="Previous page"
+          disabled={page === 1}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-[8px] border border-ink-200 text-ink-500 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Icon.ChevronLeft size={15} />
+        </button>
+        <span className="px-1.5 text-[12px] font-boldNunito text-ink-600">
+          {page} / {pageCount}
+        </span>
+        <button
+          type="button"
+          aria-label="Next page"
+          disabled={page === pageCount}
+          onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-[8px] border border-ink-200 text-ink-500 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Icon.ChevronRight size={15} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+Pagination.propTypes = {
+  page: PropTypes.number.isRequired,
+  setPage: PropTypes.func.isRequired,
+  total: PropTypes.number.isRequired,
+  pageSize: PropTypes.number,
+};
+
 /**
  * Bank-transfer reconciliation (web §11). Three states: prompt → KYC form → the
  * org's own dedicated account. The raw BVN/NIN is posted to the API (which passes
@@ -464,9 +522,19 @@ export const AdminBilling = () => {
   const { open, showToast } = useAdminModal();
   const [view, setView] = useState("billing"); // billing | manage | compare
   const [seats, setSeats] = useState(null); // null → mirrors the org's current seats
+  const [pricingPlanKey, setPricingPlanKey] = useState(null); // which plan's volume table is open on Compare
+  const [quoteForm, setQuoteForm] = useState({ teamSize: "", email: "", notes: "" });
+  const [quoteSent, setQuoteSent] = useState(false);
+  const [historyTab, setHistoryTab] = useState("invoices"); // invoices | topups
+  const [invoicePage, setInvoicePage] = useState(1);
+  const [topUpPage, setTopUpPage] = useState(1);
 
   const { data: billing } = useGetBillingQuery();
   const { data: invoices = [] } = useGetBillingInvoicesQuery();
+  const { data: topUps = [] } = useGetBillingTopUpsQuery();
+  const { data: me } = useGetMeV2Query();
+  const [markInvoicePaid, { isLoading: isMarkingPaid }] = useMarkInvoicePaidMutation();
+  const [requestCustomQuote, { isLoading: isSendingQuote }] = useRequestCustomQuoteMutation();
 
   const PLANS = billing?.catalogue?.plans;
   const seatTiers = billing?.catalogue?.seatTiers ?? [];
@@ -505,6 +573,9 @@ export const AdminBilling = () => {
     (t) => seatNum >= t.min && (t.max === null || seatNum <= t.max)
   );
   const nextTier = tierIdx >= 0 ? seatTiers[tierIdx + 1] : null;
+
+  const pagedInvoices = invoices.slice((invoicePage - 1) * PAGE_SIZE, invoicePage * PAGE_SIZE);
+  const pagedTopUps = topUps.slice((topUpPage - 1) * PAGE_SIZE, topUpPage * PAGE_SIZE);
 
   /* ── Manage plan & seats ─────────────────────────────────────────────── */
   if (view === "manage") {
@@ -677,6 +748,12 @@ export const AdminBilling = () => {
 
   /* ── Compare plans (read-only) ───────────────────────────────────────── */
   if (view === "compare") {
+    const plansList = Object.values(PLANS);
+    // Defaults to whichever plan the org is actually on — matches how the
+    // Billing page's own plan card always opens already "viewing" itself.
+    const openPlanKey = pricingPlanKey ?? plansList.find((p) => p.isCurrent)?.key;
+    const openPlan = plansList.find((p) => p.key === openPlanKey);
+
     return (
       <Card>
         <button type="button" onClick={() => setView("manage")} className={BACK_BTN}>
@@ -684,46 +761,273 @@ export const AdminBilling = () => {
           Manage plan &amp; seats
         </button>
         <div className="mb-1 text-body font-extraboldNunito text-navy-800">
-          What you unlock as you grow
+          {(PLANS[openPlanKey] ?? PLANS.lite)?.name ?? "Your plan"} is your active plan today —
+          select any plan below to see its per-seat pricing
         </div>
         <p className="mb-5 text-[12.5px] text-ink-400">
           Every plan bills at your seat-band rate — plans differ only by features, and follow
           your team size. Nothing to buy here.
         </p>
-        <div className="grid gap-3.5 lg:grid-cols-3">
-          {Object.values(PLANS).map((p) => (
-            <div
-              key={p.key}
-              className={classNames(
-                "rounded-ds-md border-[1.5px] p-4",
-                p.isCurrent ? "border-brand-400 bg-brand-25" : "border-ink-200 bg-white"
-              )}
-            >
+        <div className="mb-6 grid gap-3.5 lg:grid-cols-3">
+          {plansList.map((p) => {
+            const fromPrice = !p.custom && p.tiers?.[0] ? naira(p.tiers[0].price) : null;
+            const viewing = openPlanKey === p.key;
+
+            return (
               <div
+                key={p.key}
+                role="button"
+                tabIndex={0}
+                onClick={() => setPricingPlanKey(p.key)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setPricingPlanKey(p.key);
+                  }
+                }}
                 className={classNames(
-                  "text-[10px] font-extraboldNunito tracking-[0.08em]",
-                  p.isCurrent ? "text-brand-400" : "text-ink-400"
+                  "flex cursor-pointer flex-col rounded-ds-md border-[1.5px] p-4 text-left",
+                  viewing ? "border-brand-400 bg-brand-25" : "border-ink-200 bg-white hover:border-ink-300"
                 )}
               >
-                {p.isCurrent ? "YOUR PLAN" : `AT ${p.minSeats.toLocaleString("en-NG")}+ SEATS`}
+                <div
+                  className={classNames(
+                    "text-[10px] font-extraboldNunito tracking-[0.08em]",
+                    p.isCurrent ? "text-brand-400" : "text-ink-400"
+                  )}
+                >
+                  {p.isCurrent ? "YOUR PLAN" : `AT ${p.minSeats.toLocaleString("en-NG")}+ SEATS`}
+                </div>
+                <div className="mb-1 mt-1.5 text-[15px] font-extraboldNunito text-navy-800">
+                  {p.name}
+                </div>
+                <span className="mb-3 inline-block w-fit rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-boldNunito text-ink-500">
+                  {p.seatRange}
+                </span>
+                <div className="mb-3 text-[18px] font-extraboldNunito text-navy-800">
+                  {fromPrice ? (
+                    <>
+                      From {fromPrice}
+                      <span className="text-[12px] font-boldNunito text-ink-400">/seat/mo</span>
+                    </>
+                  ) : (
+                    "Custom"
+                  )}
+                </div>
+                <ul className="mb-4 flex flex-1 flex-col gap-1.5">
+                  {p.features.map((f) => (
+                    <li key={f} className="flex gap-2 text-[12px] text-ink-500">
+                      <Icon.Check size={13} className="mt-0.5 shrink-0 text-wellness-400" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                {viewing ? (
+                  <button
+                    type="button"
+                    className="cursor-default rounded-[9px] bg-brand-400 px-4 py-2 text-center text-[12.5px] font-extraboldNunito text-white"
+                  >
+                    Viewing pricing ✓
+                  </button>
+                ) : (
+                  <SecondaryButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPricingPlanKey(p.key);
+                    }}
+                  >
+                    View Pricing →
+                  </SecondaryButton>
+                )}
               </div>
-              <div className="mb-1 mt-1.5 text-[15px] font-extraboldNunito text-navy-800">
-                {p.name}
-              </div>
-              <span className="mb-3 inline-block rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-boldNunito text-ink-500">
-                {p.seatRange}
-              </span>
-              <ul className="flex flex-col gap-1.5">
-                {p.features.map((f) => (
-                  <li key={f} className="flex gap-2 text-[12px] text-ink-500">
-                    <Icon.Check size={13} className="mt-0.5 shrink-0 text-wellness-400" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            );
+          })}
         </div>
+
+        {/* Volume pricing for whichever plan is open above */}
+        {openPlan && !openPlan.custom ? (
+          <div>
+            <div className="mb-1 text-[13px] font-extraboldNunito text-navy-800">
+              {openPlan.name} volume pricing
+            </div>
+            <p className="mb-3 text-[12px] text-ink-400">
+              Your per-seat rate is based on total licensed seats — it applies automatically the
+              moment you cross a tier.
+            </p>
+            <div className="flex flex-col overflow-hidden rounded-ds-md border border-surface-line">
+              {openPlan.tiers.map((t) => {
+                const isYourTier = openPlan.isCurrent && currentSeats >= t.min
+                  && (t.max === null || currentSeats <= t.max);
+                const range = t.max === null
+                  ? `${t.min.toLocaleString("en-NG")}+ seats`
+                  : `${t.min.toLocaleString("en-NG")}–${t.max.toLocaleString("en-NG")} seats`;
+
+                return (
+                  <div
+                    key={`${t.min}-${t.max}`}
+                    className={classNames(
+                      "flex items-center justify-between gap-4 border-b border-surface-line px-4 py-2.5 text-[13px] last:border-b-0",
+                      isYourTier ? "bg-brand-25" : "bg-white"
+                    )}
+                  >
+                    <span className="text-ink-600">{range}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-boldNunito text-navy-800">
+                        {naira(t.price)}/seat
+                      </span>
+                      {isYourTier ? (
+                        <Badge tone="blue">YOUR TIER</Badge>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Seat picker — the actual paying action. Rate always follows the
+                real global tier ladder (same one PlanCheckoutModal charges
+                against), not this specific plan's own table above — typing a
+                seat count that lands in a different band correctly switches
+                which plan you'd end up on. */}
+            <div className="mt-6 rounded-ds-md border border-surface-line p-4">
+              <div className="mb-3 text-[13px] font-extraboldNunito text-navy-800">
+                Choose how many seats to pay for
+              </div>
+              <div className="mb-4 flex items-center gap-3">
+                <button
+                  type="button"
+                  aria-label="Decrease seats"
+                  onClick={() => setSeats(String(Math.max(1, seatNum - 1)))}
+                  className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-[9px] border-[1.5px] border-ink-200 bg-white text-[18px] font-boldNunito text-ink-600"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  value={seats ?? String(currentSeats)}
+                  onChange={(e) => setSeats(e.target.value)}
+                  aria-label="Seats to pay for"
+                  className="h-[46px] w-[100px] rounded-[9px] border-[1.5px] border-brand-400 px-3 text-center text-[15px] font-extraboldNunito text-navy-800 shadow-focus-brand"
+                />
+                <button
+                  type="button"
+                  aria-label="Increase seats"
+                  onClick={() => setSeats(String(seatNum + 1))}
+                  className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-[9px] border-[1.5px] border-ink-200 bg-white text-[18px] font-boldNunito text-ink-600"
+                >
+                  +
+                </button>
+                <span className="text-[13px] text-ink-500">seats</span>
+              </div>
+              <div className="mb-2 flex items-center justify-between text-[13px]">
+                <span className="text-ink-500">Rate per seat</span>
+                <span className="font-boldNunito text-navy-800">{naira(perSeat)}/seat</span>
+              </div>
+              <div className="mb-4 flex items-center justify-between border-t border-surface-line pt-2 text-[14px]">
+                <span className="font-boldNunito text-navy-800">Monthly total</span>
+                <span className="font-extraboldNunito text-navy-800">
+                  {naira(perSeat * seatNum)}/mo
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  open("planCheckout", {
+                    planName: derivedPlan?.name,
+                    seats: seatNum,
+                    perSeat: `${naira(perSeat)}/seat`,
+                    monthly: naira(perSeat * seatNum),
+                  })
+                }
+                className="w-full cursor-pointer rounded-[10px] bg-navy-800 px-5 py-3 text-center text-[13.5px] font-extraboldNunito text-white"
+              >
+                Continue to Payment →
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Wellbeing Plus has no fixed tiers — a real lead instead of a table. */}
+        {openPlan?.custom ? (
+          quoteSent || billing?.catalogue?.customQuoteRequested ? (
+            <div className="rounded-ds-md border border-wellness-200 bg-wellness-25 p-4 text-center text-[13px] text-wellness-600">
+              <strong className="font-extraboldNunito">Request sent.</strong> Our team will reach
+              out to size a plan for your organisation.
+            </div>
+          ) : (
+            <div>
+              <div className="mb-1 text-[13px] font-extraboldNunito text-navy-800">
+                Request custom pricing for {openPlan.name}
+              </div>
+              <p className="mb-3 text-[12px] text-ink-400">
+                For 2,000+ seats, multi-country rollouts, or a dedicated account manager — our
+                enterprise team builds a plan around your organisation.
+              </p>
+              <div className="grid gap-3.5 lg:grid-cols-2">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-boldNunito text-ink-400">
+                    Estimated team size
+                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 2500"
+                    value={quoteForm.teamSize}
+                    onChange={(e) => setQuoteForm((f) => ({ ...f, teamSize: e.target.value }))}
+                    className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-boldNunito text-ink-400">
+                    Best contact email
+                  </span>
+                  <input
+                    type="email"
+                    value={quoteForm.email || me?.email || ""}
+                    onChange={(e) => setQuoteForm((f) => ({ ...f, email: e.target.value }))}
+                    className="h-[42px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+                  />
+                </label>
+              </div>
+              <label className="mt-3.5 flex flex-col gap-1.5">
+                <span className="text-[11px] font-boldNunito text-ink-400">
+                  Anything specific you need?
+                </span>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. rollout across 3 subsidiaries, custom EAP reporting cadence…"
+                  value={quoteForm.notes}
+                  onChange={(e) => setQuoteForm((f) => ({ ...f, notes: e.target.value }))}
+                  className="rounded-[10px] border-[1.5px] border-ink-200 px-3.5 py-2.5 text-[13px] text-ink-800"
+                />
+              </label>
+              <button
+                type="button"
+                disabled={isSendingQuote}
+                onClick={async () => {
+                  const email = quoteForm.email || me?.email || "";
+                  if (!email) {
+                    showToast("Add a contact email first");
+                    return;
+                  }
+                  try {
+                    await requestCustomQuote({
+                      team_size: quoteForm.teamSize ? Number(quoteForm.teamSize) : undefined,
+                      email,
+                      notes: quoteForm.notes || undefined,
+                    }).unwrap();
+                    setQuoteSent(true);
+                  } catch (err) {
+                    showToast(apiErrorMessage(err, "Couldn't send that — please try again"));
+                  }
+                }}
+                className="mt-4 cursor-pointer rounded-[10px] bg-navy-800 px-5 py-3 text-[13.5px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSendingQuote ? "Sending…" : "Request Custom Quote →"}
+              </button>
+            </div>
+          )
+        ) : null}
       </Card>
     );
   }
@@ -766,13 +1070,23 @@ export const AdminBilling = () => {
                   : currentPlan.label}
               </span>
             </div>
-            <div className="text-[38px] font-extraboldNunito leading-none tracking-[-0.02em] text-white">
-              {currentPlan.total}{" "}
-              <span className="text-[16px] font-boldNunito text-white/60">/ month</span>
+            {currentPlan.lines?.length ? (
+              <div className="mb-3 flex flex-col gap-1.5 border-b border-white/10 pb-3.5">
+                {currentPlan.lines.map((line) => (
+                  <div key={line.label} className="flex items-center justify-between gap-4 text-[12.5px]">
+                    <span className="text-white/55">{line.label}</span>
+                    <span className="font-boldNunito text-white/85">{line.value}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <div className="flex items-end justify-between gap-4">
+              <span className="text-[13px] font-boldNunito text-white/60">Total / month</span>
+              <span className="text-[32px] font-extraboldNunito leading-none tracking-[-0.02em] text-white">
+                {currentPlan.total}
+              </span>
             </div>
-            <div className="mt-2.5 text-[13px] text-white/60">
-              {currentPlan.seats} employee seats × {currentPlan.perSeat} · {currentPlan.renews}
-            </div>
+            <div className="mt-2.5 text-[13px] text-white/60">{currentPlan.renews}</div>
             {currentPlan.payMethodLabel ? (
               <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#3BA88F]/40 bg-[#3BA88F]/[0.16] px-3 py-1.5 text-[12px] font-boldNunito text-[#CDE6D9]">
                 <span className="h-1.5 w-1.5 rounded-full bg-wellness-400" />
@@ -789,17 +1103,63 @@ export const AdminBilling = () => {
               </button>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setView("manage")}
-            className="cursor-pointer rounded-[10px] bg-gold-400 px-[18px] py-[10px] text-[13px] font-extraboldNunito text-navy-800"
-          >
-            Manage plan &amp; seats
-          </button>
+          <div className="flex flex-col items-stretch gap-2">
+            <button
+              type="button"
+              onClick={() => setView("compare")}
+              className="cursor-pointer rounded-[10px] bg-gold-400 px-[18px] py-[10px] text-[13px] font-extraboldNunito text-navy-800"
+            >
+              Upgrade Plan
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("manage")}
+              className="cursor-pointer rounded-[10px] border border-white/15 bg-white/[0.08] px-[18px] py-[10px] text-[13px] font-boldNunito text-white/80"
+            >
+              Manage Seats
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Seats + Sessions */}
+      {/* Session Bundle Usage */}
+      <PanelCard
+        title="Session Bundle Usage"
+        subtitle={`Resets ${usage.nextReset} · unused sessions do not roll over`}
+        action={
+          <PrimaryButton onClick={() => open("topUp")}>Top Up Sessions</PrimaryButton>
+        }
+        className="p-5"
+      >
+        <div className="mb-1 text-[28px] font-extraboldNunito text-navy-800">
+          {bundleFunded ? sessionsUsed : 0}{" "}
+          <span className="text-[14px] font-boldNunito text-ink-400">
+            / {sessionsBundle} sessions used this month
+          </span>
+        </div>
+        <div className="mb-2.5 h-2 rounded-[4px] bg-ink-100">
+          <div
+            className={classNames(
+              "h-2 rounded-[4px]",
+              !bundleFunded ? "bg-gold-400/40" : sessionsLow ? "bg-gold-600" : "bg-wellness-400"
+            )}
+            style={{ width: `${bundleFunded ? 100 - sessionPct : 100}%` }}
+          />
+        </div>
+        {bundleFunded ? (
+          <p className="text-caption text-ink-500">
+            {sessionsRemaining} sessions remaining · ₦8,000 per session, reserved on your invoice
+            and drawn down as sessions happen
+          </p>
+        ) : (
+          <p className="text-caption text-gold-600">
+            <strong className="font-boldNunito">Pending payment.</strong> Your {sessionsBundle}
+            -session bundle activates once your first bill is paid.
+          </p>
+        )}
+      </PanelCard>
+
+      {/* Seats + Next invoice */}
       <div className="grid gap-3.5 lg:grid-cols-2">
         <Card>
           <div className="mb-2.5 flex items-start justify-between gap-3">
@@ -828,39 +1188,21 @@ export const AdminBilling = () => {
         </Card>
 
         <Card>
-          <div className="mb-2.5 flex items-start justify-between gap-3">
-            <div className="text-[11px] font-boldNunito tracking-[0.06em] text-ink-400">
-              SESSION BUNDLE
-            </div>
-            <SecondaryButton className="!px-3 !py-1.5 !text-[12px]" onClick={() => open("topUp")}>
-              Top up
-            </SecondaryButton>
+          <div className="mb-2.5 text-[11px] font-boldNunito tracking-[0.06em] text-ink-400">
+            NEXT INVOICE
           </div>
           <div className="mb-1 text-[30px] font-extraboldNunito text-navy-800">
-            {bundleFunded ? sessionsRemaining : sessionsBundle}{" "}
-            <span className="text-[15px] font-boldNunito text-ink-400">
-              {bundleFunded ? "sessions left" : "sessions · pending"}
-            </span>
+            {currentPlan.total}
           </div>
-          <div className="mb-2.5 h-2 rounded-[4px] bg-ink-100">
-            <div
-              className={classNames(
-                "h-2 rounded-[4px]",
-                !bundleFunded ? "bg-gold-400/40" : sessionsLow ? "bg-gold-600" : "bg-wellness-400"
-              )}
-              style={{ width: `${bundleFunded ? sessionPct : 100}%` }}
-            />
-          </div>
-          <p className="text-caption text-ink-500">{sessionsUsed} used · ₦8,000 per session</p>
-          {bundleFunded ? (
-            <div className="mt-3 rounded-[11px] border border-[#CDE9DF] bg-[#E7F4EF] px-3.5 py-3 text-[12.5px] font-semiboldNunito text-[#1F6B55]">
-              <strong className="font-extraboldNunito">Sessions never expire.</strong> They’re drawn
-              down as your team books — refill whenever you run low.
+          <p className="text-caption text-ink-500">{currentPlan.renews}</p>
+          {currentPlan.payMethodLabel ? (
+            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-wellness-25 px-2.5 py-1 text-[11px] font-boldNunito text-wellness-600">
+              <span className="h-1.5 w-1.5 rounded-full bg-wellness-400" />
+              Auto-pay enabled
             </div>
           ) : (
-            <div className="mt-3 rounded-[11px] border border-gold-400/40 bg-gold-50 px-3.5 py-3 text-[12.5px] font-semiboldNunito text-gold-600">
-              <strong className="font-extraboldNunito">Pending payment.</strong> Your{" "}
-              {sessionsBundle}-session bundle activates once your first bill is paid.
+            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gold-50 px-2.5 py-1 text-[11px] font-boldNunito text-gold-600">
+              Billing setup needed
             </div>
           )}
         </Card>
@@ -871,53 +1213,116 @@ export const AdminBilling = () => {
         <BankTransferCard va={billing?.virtual_account} />
       ) : null}
 
-      {/* Invoices */}
-      <PanelCard
-        title="Invoices"
-        subtitle="Settled by bank transfer"
-        action={<SecondaryButton>Download all</SecondaryButton>}
-      >
-        {invoices.length === 0 ? (
+      {/* Billing history — Invoices (recurring seats+network) and Session
+          Top-Ups (one-off topUpCheckout charges) share a panel as tabs so
+          the page doesn't grow two long tables end to end; each is paged
+          10 rows at a time. */}
+      <PanelCard>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 px-5 py-4">
+          <div className="flex items-center gap-1.5 rounded-[10px] bg-ink-50 p-1">
+            {HISTORY_TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setHistoryTab(t.key)}
+                aria-pressed={historyTab === t.key}
+                className={classNames(
+                  "cursor-pointer rounded-[8px] px-3.5 py-2 text-[12.5px] font-boldNunito transition-colors",
+                  historyTab === t.key
+                    ? "bg-white text-navy-800 shadow-[0_1px_3px_rgba(20,27,52,0.08)]"
+                    : "text-ink-500 hover:text-ink-700"
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {historyTab === "invoices" ? (
+            <SecondaryButton>Download all</SecondaryButton>
+          ) : (
+            <span className="text-[11px] text-ink-400">
+              Sessions bought on top of your prepaid bundle
+            </span>
+          )}
+        </div>
+
+        {historyTab === "invoices" ? (
+          invoices.length === 0 ? (
+            <div className="py-8 text-center text-caption text-ink-400">
+              No invoices yet — your first one is issued once your first employee activates.
+            </div>
+          ) : (
+            <>
+              <Table head={["INVOICE", "PERIOD", "SEATS", "AMOUNT", "STATUS", ""]}>
+                {pagedInvoices.map((inv) => (
+                  <Tr key={inv.id}>
+                    <Td first>{inv.id}</Td>
+                    <Td className="text-ink-500">{inv.period}</Td>
+                    <Td>{inv.seats}</Td>
+                    <Td className="font-boldNunito text-ink-800">{inv.amount}</Td>
+                    <Td>
+                      <Badge tone={inv.tone} dot={inv.tone === "green"}>
+                        {inv.status}
+                      </Badge>
+                    </Td>
+                    <Td>
+                      <div className="flex justify-end gap-1.5">
+                        <SecondaryButton
+                          onClick={() => open("invoice", inv.id)}
+                          className="!px-2.5 !py-1.5 !text-[11px]"
+                        >
+                          View
+                        </SecondaryButton>
+                        {/* With a dedicated account, transfers auto-reconcile — the
+                            customer self-mark-paid is retired (web §11). */}
+                        {inv.tone !== "green" && !billing?.virtual_account ? (
+                          <button
+                            type="button"
+                            disabled={isMarkingPaid}
+                            onClick={async () => {
+                              try {
+                                await markInvoicePaid(inv.id).unwrap();
+                                showToast(`${inv.id} marked paid`);
+                              } catch (err) {
+                                showToast(apiErrorMessage(err, "Couldn't mark that invoice paid — please try again"));
+                              }
+                            }}
+                            className="cursor-pointer rounded-[7px] bg-brand-400 px-2.5 py-1.5 text-[11px] font-boldNunito text-white disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Mark paid
+                          </button>
+                        ) : null}
+                      </div>
+                    </Td>
+                  </Tr>
+                ))}
+              </Table>
+              <Pagination page={invoicePage} setPage={setInvoicePage} total={invoices.length} />
+            </>
+          )
+        ) : topUps.length === 0 ? (
           <div className="py-8 text-center text-caption text-ink-400">
-            No invoices yet — your first one is issued once your first employee activates.
+            No top-ups yet — sessions you buy from the Session Bundle Usage card above will show
+            up here.
           </div>
         ) : (
-          <Table head={["INVOICE", "PERIOD", "SEATS", "AMOUNT", "STATUS", ""]}>
-            {invoices.map((inv) => (
-              <Tr key={inv.id}>
-                <Td first>{inv.id}</Td>
-                <Td className="text-ink-500">{inv.period}</Td>
-                <Td>{inv.seats}</Td>
-                <Td className="font-boldNunito text-ink-800">{inv.amount}</Td>
-                <Td>
-                  <Badge tone={inv.tone} dot={inv.tone === "green"}>
-                    {inv.status}
-                  </Badge>
-                </Td>
-                <Td>
-                  <div className="flex justify-end gap-1.5">
-                    <SecondaryButton
-                      onClick={() => open("invoice", inv.id)}
-                      className="!px-2.5 !py-1.5 !text-[11px]"
-                    >
-                      View
-                    </SecondaryButton>
-                    {/* With a dedicated account, transfers auto-reconcile — the
-                        customer self-mark-paid is retired (web §11). */}
-                    {inv.tone !== "green" && !billing?.virtual_account ? (
-                      <button
-                        type="button"
-                        onClick={() => showToast(`${inv.id} marked paid`)}
-                        className="cursor-pointer rounded-[7px] bg-brand-400 px-2.5 py-1.5 text-[11px] font-boldNunito text-white"
-                      >
-                        Mark paid
-                      </button>
-                    ) : null}
-                  </div>
-                </Td>
-              </Tr>
-            ))}
-          </Table>
+          <>
+            <Table head={["DATE", "SESSIONS", "AMOUNT", "STATUS"]}>
+              {pagedTopUps.map((t) => (
+                <Tr key={t.reference}>
+                  <Td first className="text-ink-500">{t.date}</Td>
+                  <Td>{t.sessions}</Td>
+                  <Td className="font-boldNunito text-ink-800">{t.amount}</Td>
+                  <Td>
+                    <Badge tone={t.tone} dot={t.tone === "green"}>
+                      {t.status}
+                    </Badge>
+                  </Td>
+                </Tr>
+              ))}
+            </Table>
+            <Pagination page={topUpPage} setPage={setTopUpPage} total={topUps.length} />
+          </>
         )}
       </PanelCard>
 

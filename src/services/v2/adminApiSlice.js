@@ -195,6 +195,77 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       providesTags: ["AdminBilling"],
     }),
 
+    getBillingTopUps: builder.query({
+      query: () => `/business/billing/topups`,
+      transformResponse: (response) => response?.data ?? [],
+      providesTags: ["AdminBilling"],
+    }),
+
+    // Bank-transfer reconciliation: the admin confirms a net-terms invoice
+    // was settled offline. `reference` is the invoice's own `id` field
+    // (OrganizationBillingService::invoices() aliases reference → id).
+    markInvoicePaid: builder.mutation({
+      query: (reference) => ({
+        url: `/business/billing/invoices/${reference}/mark-paid`,
+        method: "POST",
+      }),
+      transformResponse: (response) => response?.data ?? [],
+      invalidatesTags: ["AdminBilling"],
+    }),
+
+    // Client-driven verification: called right after the Flutterwave widget
+    // reports success, instead of waiting solely on Flutterwave's own
+    // server-to-server webhook (which can't reach a local dev machine at
+    // all, and isn't instant even in production). The backend independently
+    // re-verifies the transaction with Flutterwave before fulfilling
+    // anything — this call is an outbound request WE make, so it works
+    // regardless of whether Flutterwave can reach us back.
+    verifyPayment: builder.mutation({
+      query: (reference) => ({
+        url: `/finance/payments/callback`,
+        method: "POST",
+        body: { reference },
+      }),
+      invalidatesTags: ["AdminBilling"],
+    }),
+
+    // Wellbeing Plus (custom pricing) lead — persisted (one per org), so
+    // this flips catalogue.customQuoteRequested and must refetch it.
+    requestCustomQuote: builder.mutation({
+      query: (body) => ({
+        url: `/business/organization/custom-quote-request`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["AdminBilling"],
+    }),
+
+    // Same endpoint onboarding's saveSeats hits, reused here (in this slice,
+    // not businessApiSlice's) so a seats/bundle change from the Billing page
+    // actually invalidates AdminBilling and refetches the usage the page shows.
+    updateOrgSeats: builder.mutation({
+      query: (body) => ({
+        url: `/business/organization/seats`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["AdminBilling"],
+    }),
+
+    // Starts a real Flutterwave charge for just the sessions being added —
+    // the actual bundle increment happens on the webhook once payment clears,
+    // not here, so this alone doesn't need to invalidate AdminBilling.
+    topUpSessionBundle: builder.mutation({
+      query: (body) => ({
+        url: `/business/billing/topup-checkout`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response) => response?.data,
+    }),
+
     // Bank-transfer reconciliation (web §11) — mint the org's dedicated virtual
     // account from a director's BVN/NIN + consent. The raw id goes to the gateway
     // only; the billing summary refetches to show the new account.
@@ -261,5 +332,11 @@ export const {
   useSaveAdminNotificationPreferencesMutation,
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
+  useGetBillingTopUpsQuery,
   useCreateVirtualAccountMutation,
+  useUpdateOrgSeatsMutation,
+  useTopUpSessionBundleMutation,
+  useMarkInvoicePaidMutation,
+  useRequestCustomQuoteMutation,
+  useVerifyPaymentMutation,
 } = adminApiSlice;

@@ -22,6 +22,7 @@ import {
   useGetTherapistSlotsQuery,
   useCreateBookingMutation,
   useInitiatePaymentMutation,
+  useVerifyPaymentMutation,
   useDeclineMySessionRequestMutation,
   useRequestTopUpMutation,
   useGetCareTeamQuery,
@@ -524,12 +525,18 @@ const CancelModal = ({ close, open, session }) => {
 
 /** Confirming a therapist's proposed time is just paying for the session
  *  they already created on hold — reuses the same real Flutterwave flow as
- *  BookingModal, scoped to an existing session id instead of a new one. */
+ *  BookingModal, scoped to an existing session id instead of a new one.
+ *  Verification is client-driven (calls the backend right after Flutterwave
+ *  reports success) rather than waiting solely on Flutterwave's own
+ *  server-to-server webhook — same reasoning as the admin billing top-up
+ *  flow's TopUpModal. The webhook still exists as a fallback. */
 const PaySessionRequestModal = ({ close, showToast, context: request }) => {
   const [checkout, setCheckout] = useState(null);
   const [result, setResult] = useState(null);
+  const [verifying, setVerifying] = useState(false);
   const paidRef = useRef(false);
   const [initiatePayment, { isLoading }] = useInitiatePaymentMutation();
+  const [verifyPayment] = useVerifyPaymentMutation();
 
   const flwConfig = {
     public_key: import.meta.env.VITE_FLUTTERWAVE_KEY,
@@ -551,15 +558,25 @@ const PaySessionRequestModal = ({ close, showToast, context: request }) => {
 
   useEffect(() => {
     if (!checkout) return;
+    const reference = checkout.reference;
     paidRef.current = false;
     handleFlutterPayment({
-      callback: (response) => {
+      callback: async (response) => {
         const ok = ["successful", "completed"].includes(response?.status);
-        if (ok) {
-          paidRef.current = true;
+        closePaymentModal();
+        if (!ok) return;
+        paidRef.current = true;
+        setVerifying(true);
+        try {
+          await verifyPayment(reference).unwrap();
+        } catch {
+          // Flutterwave itself already said this succeeded — a failed verify
+          // call here (network blip, retry exhaustion) doesn't mean the
+          // charge didn't happen, and the webhook is still a fallback.
+        } finally {
+          setVerifying(false);
           setResult({ status: "success" });
         }
-        closePaymentModal();
       },
       onClose: () => {
         if (paidRef.current) return;
@@ -648,7 +665,9 @@ const PaySessionRequestModal = ({ close, showToast, context: request }) => {
   return (
     <div className="fixed inset-0 z-[600] flex flex-col items-center justify-center gap-3 bg-black/40">
       <span className="h-8 w-8 animate-spin rounded-full border-2 border-navy-200 border-t-navy-800" />
-      <div className="text-[13px] text-white">Starting payment…</div>
+      <div className="text-[13px] text-white">
+        {verifying ? "Confirming your payment with Flutterwave…" : "Starting payment…"}
+      </div>
     </div>
   );
 };

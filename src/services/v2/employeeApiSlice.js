@@ -116,6 +116,16 @@ export const employeeApiSlice = apiSliceV2.injectEndpoints({
       invalidatesTags: ["Bookings"],
     }),
 
+    // Client-driven verification: called right after the Flutterwave widget
+    // reports success, instead of waiting solely on Flutterwave's own
+    // server-to-server webhook — same reasoning as the admin billing
+    // top-up flow (adminApiSlice's verifyPayment). The backend independently
+    // re-verifies with Flutterwave before marking the session confirmed.
+    verifyPayment: builder.mutation({
+      query: (reference) => ({ url: `/finance/payments/callback`, method: "POST", body: { reference } }),
+      invalidatesTags: ["Bookings"],
+    }),
+
     /* ── Inbound session requests (no real-time slot fit yet) ─────────── */
 
     getMySessionRequests: builder.query({
@@ -261,6 +271,7 @@ export const {
   useGetTherapistSlotsQuery,
   useCreateBookingMutation,
   useInitiatePaymentMutation,
+  useVerifyPaymentMutation,
   useGetMySessionRequestsQuery,
   useSubmitSessionRequestMutation,
   useDeclineMySessionRequestMutation,

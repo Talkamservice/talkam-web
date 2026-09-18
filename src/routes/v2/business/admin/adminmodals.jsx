@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { Outlet } from "react-router-dom";
 import classNames from "classnames";
 import * as Icon from "react-feather";
+import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import {
   Modal,
   PrimaryButton,
@@ -23,6 +24,9 @@ import {
   useRemoveTherapistFromNetworkMutation,
   useAddOwnTherapistMutation,
   useRequestTherapistCapacityMutation,
+  useUpdateOrgSeatsMutation,
+  useTopUpSessionBundleMutation,
+  useVerifyPaymentMutation,
 } from "../../../../services/v2/adminApiSlice";
 import { useRequestOtpV2Mutation } from "../../../../services/v2/authApiSliceV2";
 import {
@@ -399,13 +403,151 @@ const RoiModal = ({ open, close, context }) => {
   );
 };
 
+/**
+ * A real prepay charge for just the sessions being added — not "billed on
+ * your next invoice" like seats (see PlanCheckoutModal), since a bundle must
+ * actually be paid for before it's usable (BundleLedgerService). Reuses the
+ * same inline-Flutterwave pattern as the employee booking flow's
+ * PaySessionRequestModal: initiate → open the widget → verify. Verification
+ * is client-driven (calls the backend right after Flutterwave reports
+ * success) rather than waiting solely on Flutterwave's own server-to-server
+ * webhook, which can't reach a local dev machine at all and isn't instant
+ * even in production. The webhook still exists as a fallback if this call
+ * itself fails for some transient reason.
+ */
 const TopUpModal = ({ open, close, showToast }) => {
   const [key, setKey] = useState("25");
+  const [checkout, setCheckout] = useState(null);
+  const [result, setResult] = useState(null);
+  const [verifying, setVerifying] = useState(false);
+  const paidRef = useRef(false);
   const { data: billing } = useGetBillingQuery();
+  const [topUp, { isLoading }] = useTopUpSessionBundleMutation();
+  const [verifyPayment] = useVerifyPaymentMutation();
   const topUpOptions = billing?.catalogue?.topUpOptions ?? [];
   const selected = topUpOptions.find((o) => o.key === key) ?? topUpOptions[0];
 
+  const flwConfig = {
+    public_key: import.meta.env.VITE_FLUTTERWAVE_KEY,
+    tx_ref: checkout?.reference ?? "",
+    amount: checkout?.amount ?? 0,
+    currency: checkout?.currency ?? "NGN",
+    payment_options: "card,mobilemoney,ussd",
+    customer: {
+      email: checkout?.customer?.email ?? "",
+      name: checkout?.customer?.name ?? "",
+    },
+    customizations: {
+      title: "TalkAM session top-up",
+      description: `${selected?.sessions ?? ""} sessions`,
+    },
+    meta: { ...(checkout?.meta ?? {}) },
+  };
+  const handleFlutterPayment = useFlutterwave(flwConfig);
+
+  useEffect(() => {
+    if (!checkout) return;
+    const reference = checkout.reference;
+    paidRef.current = false;
+    handleFlutterPayment({
+      callback: async (response) => {
+        const ok = ["successful", "completed"].includes(response?.status);
+        closePaymentModal();
+        if (!ok) return;
+        paidRef.current = true;
+        setVerifying(true);
+        try {
+          await verifyPayment(reference).unwrap();
+        } catch {
+          // Flutterwave itself already said this succeeded — a failed verify
+          // call here (network blip, retry exhaustion) doesn't mean the
+          // charge didn't happen, and the webhook is still a fallback.
+        } finally {
+          setVerifying(false);
+          setResult({ status: "success" });
+        }
+      },
+      onClose: () => {
+        if (paidRef.current) return;
+        setResult({ status: "error" });
+      },
+    });
+    setCheckout(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkout]);
+
+  const pay = async () => {
+    try {
+      const payload = await topUp({ sessions: selected.sessions }).unwrap();
+      setCheckout(payload);
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't start payment — please try again"));
+    }
+  };
+
+  const handleClose = () => {
+    setResult(null);
+    setCheckout(null);
+    setVerifying(false);
+    close();
+  };
+
   if (!selected) return null;
+
+  if (verifying) {
+    return (
+      <Modal open={open} onClose={() => {}} title="Confirming payment" width="max-w-[380px]">
+        <div className="flex flex-col items-center gap-3 py-4 text-center">
+          <span className="h-8 w-8 animate-spin rounded-full border-2 border-navy-200 border-t-navy-800" />
+          <p className="text-[13px] text-ink-500">Confirming your payment with Flutterwave…</p>
+        </div>
+      </Modal>
+    );
+  }
+
+  if (result?.status === "success") {
+    return (
+      <Modal open={open} onClose={handleClose} title="Payment received" width="max-w-[380px]">
+        <div className="mb-5 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-wellness-50">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1F8A5B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <p className="text-[14px] leading-[1.6] text-ink-600">
+            <strong className="font-extraboldNunito text-navy-800">{selected.sessions} sessions</strong>{" "}
+            have been added to your bundle.
+          </p>
+        </div>
+        <PrimaryButton className="w-full" onClick={handleClose}>
+          Done
+        </PrimaryButton>
+      </Modal>
+    );
+  }
+
+  if (result?.status === "error") {
+    return (
+      <Modal open={open} onClose={handleClose} title="Payment didn't go through" width="max-w-[380px]">
+        <p className="mb-5 text-[13.5px] leading-[1.7] text-ink-500">
+          You can try again now, or come back to this later from Billing.
+        </p>
+        <div className="flex gap-2">
+          <SecondaryButton className="flex-1" onClick={handleClose}>Later</SecondaryButton>
+          <PrimaryButton
+            className="flex-1"
+            disabled={isLoading}
+            onClick={() => {
+              setResult(null);
+              pay();
+            }}
+          >
+            {isLoading ? "Starting…" : "Try again"}
+          </PrimaryButton>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal open={open} onClose={close} title="Top up sessions" subtitle="₦8,000 per session">
@@ -435,19 +577,16 @@ const TopUpModal = ({ open, close, showToast }) => {
       </div>
 
       <InfoStrip className="mb-4">
-        Added to your next invoice. Sessions are available immediately and drawn down
-        as they happen.
+        You&apos;ll complete payment now — sessions are added to your bundle once it
+        clears, and never expire after that.
       </InfoStrip>
 
       <div className="flex justify-end gap-2">
         <SecondaryButton onClick={close}>Cancel</SecondaryButton>
-        <PrimaryButton
-          onClick={() => {
-            close();
-            showToast(`${selected.sessions} sessions added to your bundle`);
-          }}
-        >
-          Add {selected.sessions} sessions · {naira(selected.sessions * 8000)}
+        <PrimaryButton disabled={isLoading} onClick={pay}>
+          {isLoading
+            ? "Starting…"
+            : `Pay ${naira(selected.sessions * 8000)} for ${selected.sessions} sessions`}
         </PrimaryButton>
       </div>
     </Modal>
@@ -1375,38 +1514,52 @@ const ReportModal = ({ open, close, context }) => (
   </Modal>
 );
 
-const PlanCheckoutModal = ({ open, close, showToast, context }) => (
-  <Modal open={open} onClose={close} title="Confirm plan change" subtitle={context?.planName}>
-    <div className="mb-4 flex flex-col gap-2 rounded-ds-md bg-ink-50 p-3.5">
-      <div className="flex justify-between gap-4">
-        <span className="text-caption text-ink-500">Seats</span>
-        <span className="text-[13px] font-boldNunito text-navy-800">{context?.seats}</span>
+const PlanCheckoutModal = ({ open, close, showToast, context }) => {
+  const [updateSeats, { isLoading }] = useUpdateOrgSeatsMutation();
+  const [error, setError] = useState(null);
+
+  const confirm = async () => {
+    setError(null);
+    try {
+      await updateSeats({ seats_licensed: context?.seats }).unwrap();
+      close();
+      showToast("Plan updated");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Couldn't update your plan — please try again"));
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={close} title="Confirm plan change" subtitle={context?.planName}>
+      <div className="mb-4 flex flex-col gap-2 rounded-ds-md bg-ink-50 p-3.5">
+        <div className="flex justify-between gap-4">
+          <span className="text-caption text-ink-500">Seats</span>
+          <span className="text-[13px] font-boldNunito text-navy-800">{context?.seats}</span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span className="text-caption text-ink-500">Rate per seat</span>
+          <span className="text-[13px] font-boldNunito text-navy-800">{context?.perSeat}</span>
+        </div>
+        <div className="flex justify-between gap-4 border-t border-surface-line pt-2">
+          <span className="text-caption font-boldNunito text-navy-800">Monthly total</span>
+          <span className="text-body font-extraboldNunito text-brand-400">{context?.monthly}</span>
+        </div>
       </div>
-      <div className="flex justify-between gap-4">
-        <span className="text-caption text-ink-500">Rate per seat</span>
-        <span className="text-[13px] font-boldNunito text-navy-800">{context?.perSeat}</span>
+      <InfoStrip className="mb-4">
+        Billed on your next invoice. Nothing is charged today.
+      </InfoStrip>
+      {error ? (
+        <div className="mb-4 text-[12px] font-boldNunito text-signal-error">{error}</div>
+      ) : null}
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={close}>Cancel</SecondaryButton>
+        <PrimaryButton disabled={isLoading} onClick={confirm}>
+          {isLoading ? "Saving…" : "Confirm & continue"}
+        </PrimaryButton>
       </div>
-      <div className="flex justify-between gap-4 border-t border-surface-line pt-2">
-        <span className="text-caption font-boldNunito text-navy-800">Monthly total</span>
-        <span className="text-body font-extraboldNunito text-brand-400">{context?.monthly}</span>
-      </div>
-    </div>
-    <InfoStrip className="mb-4">
-      Billed on your next invoice. Nothing is charged today.
-    </InfoStrip>
-    <div className="flex justify-end gap-2">
-      <SecondaryButton onClick={close}>Cancel</SecondaryButton>
-      <PrimaryButton
-        onClick={() => {
-          close();
-          showToast("Plan updated");
-        }}
-      >
-        Confirm &amp; continue
-      </PrimaryButton>
-    </div>
-  </Modal>
-);
+    </Modal>
+  );
+};
 
 /**
  * Enabling 2FA (off -> on) requires a fresh email OTP server-side
