@@ -556,6 +556,13 @@ export const TherapistSessions = () => {
   const [declineLead, { isLoading: isDecliningLead }] = useDeclineSessionRequestMutation();
 
   const upcoming = (data?.upcoming ?? []).filter((s) => s.status === "confirmed");
+  // A session that's actually in progress (someone joined, at least — the
+  // API keeps it in `upcoming` until its scheduled end time passes, same as
+  // confirmed/pending_payment). Its own tab rather than folded into Upcoming
+  // — if the therapist steps away mid-call, this is the only place they can
+  // find their way back in; it's a fundamentally different action ("rejoin")
+  // than a not-yet-started booking's ("join when it's time").
+  const ongoing = (data?.upcoming ?? []).filter((s) => s.status === "in_progress");
   // Acknowledging a request is the therapist's own "dealt with" signal — the
   // session itself stays pending_payment until the client actually pays, but
   // it should still drop out of the action queue once reviewed.
@@ -569,6 +576,7 @@ export const TherapistSessions = () => {
 
   const tabs = [
     { key: "upcoming", label: "Upcoming", count: upcoming.length },
+    { key: "ongoing", label: "Ongoing", count: ongoing.length },
     { key: "past", label: "Past", count: past.length },
     { key: "requests", label: "Requests", count: requestCount },
   ];
@@ -652,6 +660,25 @@ export const TherapistSessions = () => {
             <PendingRescheduleBanner session={s} showToast={showToast} dark={false} />
           </div>
         )) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No upcoming sessions</div><p className="text-caption text-ink-400">Confirmed sessions will appear here.</p></div>)}
+
+        {!isLoading && tab === "ongoing" && (ongoing.length ? ongoing.map((s) => (
+          <div key={s.id} className="border-b border-[#F5F5F5] px-5 py-4 last:border-b-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-extraboldNunito text-white" style={{ background: avatarColour(clientRef(s)) }}>
+                {String(s.user_id ?? s.id).slice(-1)}
+              </span>
+              <div className="min-w-[180px] flex-1">
+                <div className="text-[13px] font-boldNunito text-navy-800">{clientRef(s)}</div>
+                <div className="flex items-center gap-1.5 text-[11px] text-wellness-600">
+                  <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-wellness-400" />
+                  Live now — {sessionWhen(s.starts_at)}
+                </div>
+              </div>
+              <Badge tone="blue">{SESSION_FORMAT_LABEL[s.format] ?? s.format}</Badge>
+              <TealButton onClick={() => open("joinConfirm", s)}>Rejoin call</TealButton>
+            </div>
+          </div>
+        )) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No ongoing calls</div><p className="text-caption text-ink-400">A session you've stepped away from mid-call shows up here to rejoin.</p></div>)}
 
         {!isLoading && tab === "past" && (past.length ? past.map((s) => {
           const done = !!s.has_note;
