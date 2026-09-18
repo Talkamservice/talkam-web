@@ -34,6 +34,7 @@ import {
   useImportRosterMutation,
   useGetOnboardingTopicsQuery,
   useGetOrganizationQuery,
+  useCardSetupMutation,
 } from "../../../../services/v2/businessApiSlice";
 import { OtpBoxes, apiErrorMessage } from "../auth/authlayout";
 
@@ -587,6 +588,154 @@ const TopUpModal = ({ open, close, showToast }) => {
           {isLoading
             ? "Starting…"
             : `Pay ${naira(selected.sessions * 8000)} for ${selected.sessions} sessions`}
+        </PrimaryButton>
+      </div>
+    </Modal>
+  );
+};
+
+/**
+ * Finishes billing setup for a "pay by card" org that never completed the
+ * card-on-file capture (skipped at onboarding, or the checkout never landed).
+ * Charges a small refundable hold to verify the card — nothing is really
+ * charged — same client-driven verify pattern as TopUpModal above.
+ */
+const CardSetupModal = ({ open, close, showToast }) => {
+  const [checkout, setCheckout] = useState(null);
+  const [result, setResult] = useState(null);
+  const [verifying, setVerifying] = useState(false);
+  const paidRef = useRef(false);
+  const [cardSetup, { isLoading }] = useCardSetupMutation();
+  const [verifyPayment] = useVerifyPaymentMutation();
+
+  const flwConfig = {
+    public_key: import.meta.env.VITE_FLUTTERWAVE_KEY,
+    tx_ref: checkout?.reference ?? "",
+    amount: checkout?.amount ?? 0,
+    currency: checkout?.currency ?? "NGN",
+    payment_options: "card",
+    customer: {
+      email: checkout?.customer?.email ?? "",
+      name: checkout?.customer?.name ?? "",
+    },
+    customizations: {
+      title: "TalkAM for Business",
+      description: "Save your card — a small refundable hold verifies it (not charged)",
+    },
+    meta: { ...(checkout?.meta ?? {}) },
+  };
+  const handleFlutterPayment = useFlutterwave(flwConfig);
+
+  useEffect(() => {
+    if (!checkout) return;
+    const reference = checkout.reference;
+    paidRef.current = false;
+    handleFlutterPayment({
+      callback: async (response) => {
+        const ok = ["successful", "completed"].includes(response?.status);
+        closePaymentModal();
+        if (!ok) return;
+        paidRef.current = true;
+        setVerifying(true);
+        try {
+          await verifyPayment(reference).unwrap();
+        } catch {
+          // Flutterwave itself already said this succeeded — a failed verify
+          // call here doesn't mean the hold/refund didn't happen.
+        } finally {
+          setVerifying(false);
+          setResult({ status: "success" });
+        }
+      },
+      onClose: () => {
+        if (paidRef.current) return;
+        setResult({ status: "error" });
+      },
+    });
+    setCheckout(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkout]);
+
+  const pay = async () => {
+    try {
+      const payload = await cardSetup().unwrap();
+      setCheckout(payload);
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't start card verification — please try again"));
+    }
+  };
+
+  const handleClose = () => {
+    setResult(null);
+    setCheckout(null);
+    setVerifying(false);
+    close();
+  };
+
+  if (verifying) {
+    return (
+      <Modal open={open} onClose={() => {}} title="Verifying card" width="max-w-[380px]">
+        <div className="flex flex-col items-center gap-3 py-4 text-center">
+          <span className="h-8 w-8 animate-spin rounded-full border-2 border-navy-200 border-t-navy-800" />
+          <p className="text-[13px] text-ink-500">Confirming your card with Flutterwave…</p>
+        </div>
+      </Modal>
+    );
+  }
+
+  if (result?.status === "success") {
+    return (
+      <Modal open={open} onClose={handleClose} title="Billing set up" width="max-w-[380px]">
+        <div className="mb-5 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-wellness-50">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1F8A5B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <p className="text-[14px] leading-[1.6] text-ink-600">
+            Your card is verified and on file — your plan is now active.
+          </p>
+        </div>
+        <PrimaryButton className="w-full" onClick={handleClose}>
+          Done
+        </PrimaryButton>
+      </Modal>
+    );
+  }
+
+  if (result?.status === "error") {
+    return (
+      <Modal open={open} onClose={handleClose} title="Card verification didn't go through" width="max-w-[380px]">
+        <p className="mb-5 text-[13.5px] leading-[1.7] text-ink-500">
+          You can try again now, or come back to this later from Billing.
+        </p>
+        <div className="flex gap-2">
+          <SecondaryButton className="flex-1" onClick={handleClose}>Later</SecondaryButton>
+          <PrimaryButton
+            className="flex-1"
+            disabled={isLoading}
+            onClick={() => {
+              setResult(null);
+              pay();
+            }}
+          >
+            {isLoading ? "Starting…" : "Try again"}
+          </PrimaryButton>
+        </div>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal open={open} onClose={close} title="Finish setting up billing" subtitle="Verify your card to activate your plan">
+      <InfoStrip className="mb-4">
+        We place a small refundable hold to verify your card — you&apos;re never charged, and
+        it&apos;s refunded automatically. Your plan activates as soon as it clears.
+      </InfoStrip>
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={close}>Not now</SecondaryButton>
+        <PrimaryButton disabled={isLoading} onClick={pay}>
+          {isLoading ? "Starting…" : "Verify my card →"}
         </PrimaryButton>
       </div>
     </Modal>
@@ -1704,6 +1853,7 @@ const AdminModals = ({ modal, context, close, showToast }) => (
     <CsvUploadModal open={modal === "csv"} close={close} showToast={showToast} />
     <RoiModal open={modal === "roi"} close={close} context={context} />
     <TopUpModal open={modal === "topUp"} close={close} showToast={showToast} />
+    <CardSetupModal open={modal === "cardSetup"} close={close} showToast={showToast} />
     <AddSeatsModal open={modal === "addSeats"} close={close} showToast={showToast} />
     <InvoiceModal open={modal === "invoice"} close={close} context={context} />
     <EmployeeModal open={modal === "employee"} close={close} context={context} />

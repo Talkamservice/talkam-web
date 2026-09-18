@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import PropTypes from "prop-types";
 import classNames from "classnames";
 import * as Icon from "react-feather";
@@ -528,6 +528,7 @@ export const AdminBilling = () => {
   const [historyTab, setHistoryTab] = useState("invoices"); // invoices | topups
   const [invoicePage, setInvoicePage] = useState(1);
   const [topUpPage, setTopUpPage] = useState(1);
+  const bankTransferRef = useRef(null);
 
   const { data: billing } = useGetBillingQuery();
   const { data: invoices = [] } = useGetBillingInvoicesQuery();
@@ -562,6 +563,23 @@ export const AdminBilling = () => {
     ? Math.round((sessionsRemaining / sessionsBundle) * 100)
     : 100;
   const sessionsLow = bundleFunded && sessionsBundle > 0 && sessionsRemaining <= 5;
+
+  /**
+   * Routes "finish setup" to whichever action actually clears billingReady()
+   * (card_token / va_account_number / session_bundle_funded_at — see
+   * Organization::billingReady()) for however this org chose to pay.
+   */
+  const completeSetup = () => {
+    if (sessionsBundle > 0 && !bundleFunded) {
+      open("topUp");
+    } else if (currentPlan.payMethod === "card") {
+      open("cardSetup");
+    } else if (currentPlan.payMethod === "invoice") {
+      bankTransferRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      setView("manage");
+    }
+  };
 
   // Manage calculator — seats drive the rate (one global ladder); the plan follows size.
   const seatNum = parseInt(seats ?? currentSeats, 10) || 0;
@@ -1062,14 +1080,25 @@ export const AdminBilling = () => {
         />
         <div className="relative z-[1] flex flex-wrap items-start justify-between gap-6">
           <div className="min-w-[280px] flex-1">
-            <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/[0.15] px-3 py-1">
-              <span className="text-[11px] text-gold-400">✦</span>
-              <span className="text-[10px] font-boldNunito tracking-[0.06em] text-gold-400">
-                {currentPlan.billingReady === false
-                  ? `${currentPlan.planName ?? "PLAN"} · SETUP INCOMPLETE`
-                  : currentPlan.label}
-              </span>
-            </div>
+            {currentPlan.billingReady === false ? (
+              <button
+                type="button"
+                onClick={completeSetup}
+                className="mb-4 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/[0.15] px-3 py-1 hover:bg-gold-400/25"
+              >
+                <span className="text-[11px] text-gold-400">✦</span>
+                <span className="text-[10px] font-boldNunito tracking-[0.06em] text-gold-400">
+                  {currentPlan.planName ?? "PLAN"} · SETUP INCOMPLETE · finish →
+                </span>
+              </button>
+            ) : (
+              <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/[0.15] px-3 py-1">
+                <span className="text-[11px] text-gold-400">✦</span>
+                <span className="text-[10px] font-boldNunito tracking-[0.06em] text-gold-400">
+                  {currentPlan.label}
+                </span>
+              </div>
+            )}
             {currentPlan.lines?.length ? (
               <div className="mb-3 flex flex-col gap-1.5 border-b border-white/10 pb-3.5">
                 {currentPlan.lines.map((line) => (
@@ -1095,7 +1124,7 @@ export const AdminBilling = () => {
             ) : (
               <button
                 type="button"
-                onClick={() => setView("manage")}
+                onClick={completeSetup}
                 className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/[0.16] px-3 py-1.5 text-[12px] font-boldNunito text-[#E8D3A3]"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-gold-400" />
@@ -1201,16 +1230,23 @@ export const AdminBilling = () => {
               Auto-pay enabled
             </div>
           ) : (
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gold-50 px-2.5 py-1 text-[11px] font-boldNunito text-gold-600">
-              Billing setup needed
-            </div>
+            <button
+              type="button"
+              onClick={completeSetup}
+              className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-gold-50 px-2.5 py-1 text-[11px] font-boldNunito text-gold-600 hover:bg-gold-100"
+            >
+              Billing setup needed · finish →
+            </button>
           )}
         </Card>
       </div>
 
-      {/* Bank transfer — dedicated virtual account (web §11), when enabled */}
+      {/* Bank transfer — dedicated virtual account (web §11), when enabled.
+          Scroll target for completeSetup() when payMethod is "invoice". */}
       {billing?.virtual_accounts_enabled ? (
-        <BankTransferCard va={billing?.virtual_account} />
+        <div ref={bankTransferRef}>
+          <BankTransferCard va={billing?.virtual_account} />
+        </div>
       ) : null}
 
       {/* Billing history — Invoices (recurring seats+network) and Session
