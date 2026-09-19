@@ -675,7 +675,7 @@ export const TherapistSessions = () => {
                 </div>
               </div>
               <Badge tone="blue">{SESSION_FORMAT_LABEL[s.format] ?? s.format}</Badge>
-              <TealButton onClick={() => open("joinConfirm", s)}>Rejoin call</TealButton>
+              <TealButton onClick={() => open("joinConfirm", s)}>Join Call</TealButton>
             </div>
           </div>
         )) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No ongoing calls</div><p className="text-caption text-ink-400">A session you've stepped away from mid-call shows up here to rejoin.</p></div>)}
