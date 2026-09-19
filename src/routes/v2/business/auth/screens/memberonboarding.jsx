@@ -471,7 +471,7 @@ export const OnboardingComplete = () => {
   const o = useOnboarding();
   usePageMeta("You're all set — TalkAM");
 
-  const { data: me } = useGetMeV2Query();
+  const { data: me, isLoading: isLoadingMe } = useGetMeV2Query();
   const { data: selfCheck } = useGetSelfCheckQuery(undefined, {
     skip: me?.business?.role !== "employee",
   });
@@ -481,6 +481,23 @@ export const OnboardingComplete = () => {
   // v1 UserResource exposes one `name` (full name) — there is no first_name.
   const firstName = (me?.name ?? "").split(" ")[0];
   const primary = o.primaryConcern ?? selfCheck?.primary_concern ?? "";
+
+  // o.landingRole defaults to "employee" (authlayout.jsx) and is only ever
+  // set to the real role by teamonboarding.jsx's own invite-detection step —
+  // a therapist going through THIS flow never sets it, so before `me` loads,
+  // `role` above resolves to the wrong default and briefly renders the
+  // employee copy before flipping to the correct one once useGetMeV2Query()
+  // resolves. me.business.role is the only value worth trusting here; wait
+  // for it rather than flash a guess.
+  if (isLoadingMe) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-6">
+        <SkeletonLine className="h-16 w-16 rounded-full" />
+        <SkeletonLine className="h-6 w-48 rounded-full" />
+        <SkeletonLine className="h-4 w-64 rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <>
