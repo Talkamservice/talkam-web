@@ -1165,6 +1165,59 @@ const router = createBrowserRouter([
     ],
   },
 
+  /* Platform Admin panel — staff-only, gated by a real "platform.role"
+     (see routes/api_v2.php's "platform-admin" group in talkam-api). Its own
+     top-level tree, deliberately at /platform (not /admin, which already
+     means the B2B org-admin dashboard). */
+  {
+    path: "/platform/login",
+    errorElement: <ErrorPage />,
+    lazy: async () => {
+      let { PlatformLogin } = await import("./routes/v2/platform/auth/platformlogin");
+      return { Component: PlatformLogin };
+    },
+  },
+  {
+    path: "/platform",
+    errorElement: <ErrorPage />,
+    lazy: async () => {
+      let { PlatformProvider } = await import("./routes/v2/platform/platformlayout");
+      return { Component: PlatformProvider };
+    },
+    children: [
+      {
+        lazy: async () => {
+          let { PlatformLayout } = await import("./routes/v2/platform/platformlayout");
+          return { Component: PlatformLayout };
+        },
+        children: [
+          { index: true, lazy: async () => { let { PlatformDashboardPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformDashboardPage }; } },
+          { path: "users", lazy: async () => { let { PlatformUsersPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformUsersPage }; } },
+          { path: "users/:id", lazy: async () => { let { PlatformUserDetailPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformUserDetailPage }; } },
+          { path: "therapist-verification", lazy: async () => { let { PlatformTherapistVerificationPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformTherapistVerificationPage }; } },
+          { path: "performance", lazy: async () => { let { PlatformPerformancePage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformPerformancePage }; } },
+          { path: "activity-logs", lazy: async () => { let { PlatformActivityLogsPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformActivityLogsPage }; } },
+          { path: "growth", lazy: async () => { let { PlatformGrowthPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformGrowthPage }; } },
+          { path: "businesses", lazy: async () => { let { PlatformBusinessesPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformBusinessesPage }; } },
+          { path: "businesses/:id", lazy: async () => { let { PlatformBusinessDetailPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformBusinessDetailPage }; } },
+          { path: "sessions", lazy: async () => { let { PlatformSessionsPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformSessionsPage }; } },
+          { path: "billing", lazy: async () => { let { PlatformBillingPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformBillingPage }; } },
+          { path: "payouts", lazy: async () => { let { PlatformPayoutsPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformPayoutsPage }; } },
+          { path: "community", lazy: async () => { let { PlatformCommunityPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformCommunityPage }; } },
+          { path: "community/groups/:id", lazy: async () => { let { PlatformGroupDetailPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformGroupDetailPage }; } },
+          { path: "cms", lazy: async () => { let { PlatformCmsPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformCmsPage }; } },
+          { path: "disputes", lazy: async () => { let { PlatformDisputesPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformDisputesPage }; } },
+          { path: "feedback", lazy: async () => { let { PlatformFeedbackPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformFeedbackPage }; } },
+          { path: "deactivations", lazy: async () => { let { PlatformDeactivationsPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformDeactivationsPage }; } },
+          { path: "roles", lazy: async () => { let { PlatformRolesPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformRolesPage }; } },
+          { path: "waitlist", lazy: async () => { let { PlatformWaitlistPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformWaitlistPage }; } },
+          { path: "legal", lazy: async () => { let { PlatformLegalPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformLegalPage }; } },
+          { path: "settings", lazy: async () => { let { PlatformSettingsPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformSettingsPage }; } },
+        ],
+      },
+    ],
+  },
+
   {
     path: "*",
     element: <NotFound />,

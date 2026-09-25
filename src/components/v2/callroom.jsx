@@ -35,6 +35,44 @@ const MicIcon = () => (
   </svg>
 );
 
+/** Small muted-mic badge overlaid on a participant's own tile — the big
+ *  red control-bar button only shows your own state and only if you look
+ *  down there; this is the at-a-glance "who's muted right now" signal,
+ *  for either side, directly on their video. */
+const MicOffBadge = ({ className }) => (
+  <span
+    className={classNames(
+      "absolute flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#0A1220] bg-[#AC4242]",
+      className
+    )}
+  >
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
+      <line x1="1" y1="1" x2="23" y2="23" />
+      <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
+      <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
+    </svg>
+  </span>
+);
+
+/** The "someone's actually talking" bubble — two staggered expanding rings
+ *  behind an avatar circle, only while Agora's volume indicator reports that
+ *  uid above the speaking threshold. Sits inside a `relative` ancestor sized
+ *  to the avatar itself (every call site below is already that), growing
+ *  outward via negative inset rather than needing its own fixed size. */
+const SpeakingPulse = ({ active }) =>
+  active ? (
+    <>
+      <span
+        className="absolute -inset-2 -z-10 animate-ping rounded-full bg-[#3BA88F]/40"
+        style={{ animationDuration: "1.2s" }}
+      />
+      <span
+        className="absolute -inset-2 -z-10 rounded-full bg-[#3BA88F]/25"
+        style={{ animation: "ping 1.2s cubic-bezier(0,0,0.2,1) 0.3s infinite" }}
+      />
+    </>
+  ) : null;
+
 const HONORIFICS = ["dr", "dr.", "mr", "mr.", "mrs", "mrs.", "ms", "ms.", "prof", "prof."];
 
 /** Avatar-fallback initials. A name starting with "Anonymous" (the
@@ -129,6 +167,11 @@ const CallRoom = ({ bookingId, format, counterpartName, joinData, onExit }) => {
 
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(isVideo);
+  // Which tile is the big "main" one — clicking either tile swaps them.
+  // Positioning-only (see the two tiles below): the underlying RemoteUser/
+  // LocalVideoTrack elements stay mounted throughout, just repositioned via
+  // class, so swapping never interrupts the actual audio/video pipeline.
+  const [pinnedSelf, setPinnedSelf] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [ending, setEnding] = useState(false);
   const [remainingMs, setRemainingMs] = useState(null);
@@ -158,6 +201,33 @@ const CallRoom = ({ bookingId, format, counterpartName, joinData, onExit }) => {
 
   const remoteUsers = useRemoteUsers();
   const remoteUser = remoteUsers[0];
+
+  // Per-uid mic volume (0-100), Agora's own "who's actually talking right
+  // now" signal — covers both the local mic and every remote publisher in
+  // one subscription, polled internally by the SDK (~200ms) rather than
+  // us reading getVolumeLevel() off each track ourselves.
+  const [volumeByUid, setVolumeByUid] = useState({});
+  useEffect(() => {
+    client.enableAudioVolumeIndicator();
+    const onVolume = (volumes) => {
+      setVolumeByUid((prev) => {
+        const next = { ...prev };
+        volumes.forEach(({ uid: vUid, level }) => {
+          // Agora reports the LOCAL user's own volume under uid 0, never the
+          // actual join uid — remap it so isSpeaking(uid) below can find it.
+          next[vUid === 0 ? uid : vUid] = level;
+        });
+        return next;
+      });
+    };
+    client.on("volume-indicator", onVolume);
+    return () => client.off("volume-indicator", onVolume);
+  }, [client, uid]);
+
+  const SPEAKING_THRESHOLD = 5;
+  const isSpeaking = (vUid) => (volumeByUid[vUid] ?? 0) > SPEAKING_THRESHOLD;
+  const iAmSpeaking = micOn && isSpeaking(uid);
+  const remoteIsSpeaking = !!remoteUser && remoteUser.hasAudio !== false && isSpeaking(remoteUser.uid);
 
   useEffect(() => {
     localMicrophoneTrack?.setEnabled(micOn);
@@ -263,37 +333,93 @@ const CallRoom = ({ bookingId, format, counterpartName, joinData, onExit }) => {
           {isVideo ? (
             remoteUser ? (
               <>
-                {remoteUser.hasVideo ? (
-                  <RemoteUser
-                    user={remoteUser}
-                    playVideo
-                    playAudio
-                    className="h-full w-full"
-                  />
-                ) : (
-                  // hasVideo false covers both "never published" and "camera
-                  // toggled off mid-call" — RemoteUser's own `cover` prop only
-                  // catches the former and renders a black frame for the
-                  // latter, so this is handled explicitly instead. Audio still
-                  // needs a mounted (hidden) RemoteUser to actually play.
-                  <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(160deg,#141B34,#0D2240)]">
-                    <span className="flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#017FC8] text-[40px] font-extraboldNunito text-white">
-                      {counterpartInitials}
+                {/* Remote tile — main by default, corner when self is pinned.
+                    RemoteUser stays mounted across the swap; only the
+                    wrapper's size/position class changes, so audio/video
+                    never interrupts. */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label={pinnedSelf ? "Maximize their video" : "Their video (main view)"}
+                  onClick={pinnedSelf ? () => setPinnedSelf(false) : undefined}
+                  onKeyDown={pinnedSelf ? (e) => e.key === "Enter" && setPinnedSelf(false) : undefined}
+                  className={classNames(
+                    pinnedSelf
+                      ? "absolute bottom-6 right-6 z-10 flex h-[100px] w-[140px] cursor-pointer items-center justify-center overflow-hidden rounded-[14px] border-2 border-white/[0.15] bg-[#1A2E5A]"
+                      : "absolute inset-0 flex h-full w-full items-center justify-center"
+                  )}
+                >
+                  {remoteUser.hasVideo ? (
+                    <RemoteUser
+                      user={remoteUser}
+                      playVideo
+                      playAudio
+                      className="h-full w-full"
+                    />
+                  ) : (
+                    // hasVideo false covers both "never published" and "camera
+                    // toggled off mid-call" — RemoteUser's own `cover` prop only
+                    // catches the former and renders a black frame for the
+                    // latter, so this is handled explicitly instead. Audio still
+                    // needs a mounted (hidden) RemoteUser to actually play.
+                    <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(160deg,#141B34,#0D2240)]">
+                      <span
+                        className={classNames(
+                          "relative flex items-center justify-center rounded-full bg-[#017FC8] font-extraboldNunito text-white",
+                          pinnedSelf ? "h-11 w-11 text-[15px]" : "h-[120px] w-[120px] text-[40px]"
+                        )}
+                      >
+                        <SpeakingPulse active={remoteIsSpeaking} />
+                        {counterpartInitials}
+                      </span>
+                      <RemoteUser user={remoteUser} playVideo={false} playAudio className="hidden" />
+                    </div>
+                  )}
+                  {remoteUser.hasAudio === false ? (
+                    <MicOffBadge className={pinnedSelf ? "right-1.5 top-1.5" : "right-4 top-4"} />
+                  ) : null}
+                  {pinnedSelf ? (
+                    <span className="absolute bottom-1.5 left-2 text-[9px] font-boldNunito text-white/60">
+                      {counterpartName || "THEM"}
                     </span>
-                    <RemoteUser user={remoteUser} playVideo={false} playAudio className="hidden" />
-                  </div>
-                )}
-                <div className="absolute bottom-6 right-6 flex h-[100px] w-[140px] items-center justify-center overflow-hidden rounded-[14px] border-2 border-white/[0.15] bg-[#1A2E5A]">
+                  ) : null}
+                </div>
+
+                {/* Self tile — corner by default, main when pinned. Same
+                    swap-by-repositioning approach as the remote tile above. */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label={pinnedSelf ? "Your video (main view)" : "Maximize your video"}
+                  onClick={!pinnedSelf ? () => setPinnedSelf(true) : undefined}
+                  onKeyDown={!pinnedSelf ? (e) => e.key === "Enter" && setPinnedSelf(true) : undefined}
+                  className={classNames(
+                    pinnedSelf
+                      ? "absolute inset-0 flex h-full w-full items-center justify-center"
+                      : "absolute bottom-6 right-6 z-10 flex h-[100px] w-[140px] cursor-pointer items-center justify-center overflow-hidden rounded-[14px] border-2 border-white/[0.15] bg-[#1A2E5A]"
+                  )}
+                >
                   {cameraOn && localCameraTrack ? (
                     <LocalVideoTrack track={localCameraTrack} play className="h-full w-full" />
                   ) : (
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#017FC8] text-[15px] font-extraboldNunito text-white">
+                    <span
+                      className={classNames(
+                        "relative flex items-center justify-center rounded-full bg-[#017FC8] font-extraboldNunito text-white",
+                        pinnedSelf ? "h-[120px] w-[120px] text-[40px]" : "h-11 w-11 text-[15px]"
+                      )}
+                    >
+                      <SpeakingPulse active={iAmSpeaking} />
                       {myInitials}
                     </span>
                   )}
-                  <span className="absolute bottom-1.5 left-2 text-[9px] font-boldNunito text-white/60">
-                    YOU
-                  </span>
+                  {!micOn ? (
+                    <MicOffBadge className={pinnedSelf ? "right-4 top-4" : "right-1.5 top-1.5"} />
+                  ) : null}
+                  {!pinnedSelf ? (
+                    <span className="absolute bottom-1.5 left-2 text-[9px] font-boldNunito text-white/60">
+                      YOU
+                    </span>
+                  ) : null}
                 </div>
               </>
             ) : (
@@ -305,28 +431,53 @@ const CallRoom = ({ bookingId, format, counterpartName, joinData, onExit }) => {
                   <LocalVideoTrack track={localCameraTrack} play className="h-full w-full" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(160deg,#141B34,#0D2240)]">
-                    <span className="flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#017FC8] text-[40px] font-extraboldNunito text-white">
+                    <span className="relative flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#017FC8] text-[40px] font-extraboldNunito text-white">
+                      <SpeakingPulse active={iAmSpeaking} />
                       {myInitials}
                     </span>
                   </div>
                 )}
+                {!micOn ? <MicOffBadge className="right-4 top-4" /> : null}
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-4 py-2 text-[12px] text-white/70">
                   Waiting for {counterpartName || "them"} to join…
                 </div>
               </div>
             )
           ) : (
-            <div className="flex flex-col items-center gap-[18px]">
-              <div className="relative flex h-[140px] w-[140px] items-center justify-center rounded-full bg-[rgba(1,127,200,0.15)]">
-                <span className="absolute -inset-3.5 rounded-full border-2 border-[rgba(1,127,200,0.25)]" />
-                <span className="flex h-[100px] w-[100px] items-center justify-center rounded-full bg-[#017FC8] text-[32px] font-extraboldNunito text-white">
-                  {counterpartInitials}
-                </span>
+            <div className="flex flex-wrap items-start justify-center gap-6 px-6">
+              {/* Their card */}
+              <div className="flex w-[220px] flex-col items-center gap-3 rounded-[18px] border border-white/10 bg-white/[0.04] px-6 py-8">
+                <div className="relative flex h-[100px] w-[100px] items-center justify-center rounded-full bg-[rgba(1,127,200,0.15)]">
+                  <SpeakingPulse active={remoteIsSpeaking} />
+                  <span className="absolute -inset-2.5 rounded-full border-2 border-[rgba(1,127,200,0.25)]" />
+                  <span className="flex h-[76px] w-[76px] items-center justify-center rounded-full bg-[#017FC8] text-[26px] font-extraboldNunito text-white">
+                    {counterpartInitials}
+                  </span>
+                  {remoteUser?.hasAudio === false ? <MicOffBadge className="-right-1 -top-1" /> : null}
+                </div>
+                <div className="text-center">
+                  <div className="text-[14px] font-extraboldNunito text-white">{counterpartName}</div>
+                  <div className="text-[11px] text-white/40">
+                    {remoteUser ? `Connected · ${label}` : "Waiting to join…"}
+                  </div>
+                </div>
               </div>
-              <div className="text-[16px] font-extraboldNunito text-white">{counterpartName}</div>
-              <div className="text-[12px] text-white/40">
-                {remoteUser ? `Voice call · ${label}` : "Waiting for them to join…"}
+
+              {/* Your card */}
+              <div className="flex w-[220px] flex-col items-center gap-3 rounded-[18px] border border-white/10 bg-white/[0.04] px-6 py-8">
+                <div className="relative flex h-[100px] w-[100px] items-center justify-center rounded-full bg-[rgba(1,127,200,0.15)]">
+                  <SpeakingPulse active={iAmSpeaking} />
+                  <span className="flex h-[76px] w-[76px] items-center justify-center rounded-full bg-[#017FC8] text-[26px] font-extraboldNunito text-white">
+                    {myInitials}
+                  </span>
+                  {!micOn ? <MicOffBadge className="-right-1 -top-1" /> : null}
+                </div>
+                <div className="text-center">
+                  <div className="text-[14px] font-extraboldNunito text-white">You</div>
+                  <div className="text-[11px] text-white/40">Voice call</div>
+                </div>
               </div>
+
               {remoteUser ? (
                 <RemoteUser user={remoteUser} playVideo={false} playAudio className="hidden" />
               ) : null}

@@ -261,10 +261,11 @@ const RescheduleModal = ({ close, showToast, session }) => {
   // Today only, matching the booking modal's "Choose a time" step — not a
   // multi-day scan (that used to paginate into the dozens of pages once a
   // therapist had a full day's worth of 20-minute slots).
-  const { data: slotData } = useGetTherapistSlotsQuery(
+  const { data: slotData, isLoading: slotsIsLoading, isFetching: slotsIsFetching } = useGetTherapistSlotsQuery(
     { id: session?.therapist_id, date: todayDateParam() },
     { skip: !session?.therapist_id }
   );
+  const slotsLoading = slotsIsLoading || slotsIsFetching;
 
   const slots = useMemo(() => slotData?.slots ?? slotData ?? [], [slotData]);
   const slotPageCount = Math.max(1, Math.ceil(slots.length / SLOTS_PER_PAGE));
@@ -297,7 +298,9 @@ const RescheduleModal = ({ close, showToast, session }) => {
             new slot to propose below — your session stays as-is until they confirm it.
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {slots.length === 0 ? (
+            {slotsLoading ? (
+              [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[52px]" />)
+            ) : slots.length === 0 ? (
               <div className="col-span-2 rounded-[10px] bg-[#F8F9FC] px-3.5 py-3 text-[12px] leading-[1.6] text-ink-400">
                 No open slots left today. Try messaging your therapist directly.
               </div>
@@ -918,10 +921,15 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
 
   // Today only, not a multi-day scan — and only what's still bookable; the
   // backend already drops anything already past rather than returning it.
-  const { data: slotData, isLoading: slotsLoading } = useGetTherapistSlotsQuery(
+  const { data: slotData, isLoading: slotsIsLoading, isFetching: slotsIsFetching } = useGetTherapistSlotsQuery(
     { id: therapistId, date: todayDateParam() },
     { skip: !therapistId }
   );
+  // isLoading alone only covers the very first fetch for a given cache key
+  // (id+date) — switching therapists or any background refetch would skip
+  // straight to "No open slots" for a beat before the real data lands.
+  // isFetching covers every fetch, initial or not.
+  const slotsLoading = slotsIsLoading || slotsIsFetching;
   const slots = useMemo(() => slotData?.slots ?? slotData ?? [], [slotData]);
   const chosen = slot ?? slots[0]?.starts_at ?? slots[0] ?? null;
   const slotPageCount = Math.max(1, Math.ceil(slots.length / SLOTS_PER_PAGE));

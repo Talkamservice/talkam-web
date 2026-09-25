@@ -154,6 +154,16 @@ export const therapistApiSlice = apiSliceV2.injectEndpoints({
       invalidatesTags: ["TherapistProfile"],
     }),
 
+    addTherapistSpecialty: builder.mutation({
+      query: (categoryId) => ({ url: `/therapist/profile/specialties`, method: "POST", body: { category_id: categoryId } }),
+      invalidatesTags: ["TherapistProfile"],
+    }),
+
+    removeTherapistSpecialty: builder.mutation({
+      query: (categoryId) => ({ url: `/therapist/profile/specialties/${categoryId}`, method: "DELETE" }),
+      invalidatesTags: ["TherapistProfile"],
+    }),
+
     deactivateTherapistProfile: builder.mutation({
       query: () => ({ url: `/therapist/profile/deactivate`, method: "POST" }),
       invalidatesTags: ["TherapistProfile"],
@@ -196,6 +206,8 @@ export const {
   useGetEarningsTransactionsQuery,
   useGetTherapistProfileQuery,
   useUpdateTherapistProfileMutation,
+  useAddTherapistSpecialtyMutation,
+  useRemoveTherapistSpecialtyMutation,
   useDeactivateTherapistProfileMutation,
   useReactivateTherapistProfileMutation,
   useGetClientsQuery,

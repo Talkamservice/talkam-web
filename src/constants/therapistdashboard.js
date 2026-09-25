@@ -33,8 +33,14 @@ export const WEEK_DAYS = [
 /**
  * Every availability slot a therapist adds must fall inside this daily
  * window (H:i, 24h) — enforced in the "add slot" modal, not just suggested.
+ * Wide open in local dev (import.meta.env.DEV, i.e. `vite dev`) so testing
+ * isn't stuck matching whatever the actual clock says right now; every real
+ * build (staging, production) keeps the real 8am–6pm window. Mirrors the
+ * same APP_ENV=local carve-out in TherapistAvailabilityService.
  */
-export const AVAILABILITY_WINDOW = { start: "08:00", end: "18:00" };
+export const AVAILABILITY_WINDOW = import.meta.env.DEV
+  ? { start: "00:00", end: "23:59" }
+  : { start: "08:00", end: "18:00" };
 
 /** "09:00" → "9:00 AM"; "09:00"+"09:50" → "9:00 – 9:50 AM". */
 export const to12h = (hhmm) => {

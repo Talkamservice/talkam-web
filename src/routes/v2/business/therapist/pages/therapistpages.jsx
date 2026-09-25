@@ -49,6 +49,9 @@ import {
   useDeactivateTherapistProfileMutation,
   useReactivateTherapistProfileMutation,
   useRespondToBookingRescheduleMutation,
+  useGetInterestTopicsQuery,
+  useAddTherapistSpecialtyMutation,
+  useRemoveTherapistSpecialtyMutation,
 } from "../../../../../services/v2/therapistApiSlice";
 import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
 import {
@@ -571,7 +574,17 @@ export const TherapistSessions = () => {
   const past = data?.past ?? [];
   const requestCount = paymentPending.length + leads.length;
 
-  const clientRef = (session) => "Anonymous · #" + (4000 + ((session.user_id ?? session.id) % 6000));
+  // A business-covered booking (org_bundle/org_meter/org_external — anything
+  // but "consumer") means the client is an employee the therapist is
+  // actually seeing through their employer's network, not an anonymous
+  // public booking — the API already sends client_name for exactly this
+  // case (listForTherapist()'s own serialize()); only a true consumer
+  // session (or one from before client_name existed on the payload) falls
+  // back to the anonymized ref.
+  const clientRef = (session) =>
+    session.coverage && session.coverage !== "consumer" && session.client_name
+      ? session.client_name
+      : "Anonymous · #" + (4000 + ((session.user_id ?? session.id) % 6000));
   const leadRef = (lead) => "Anonymous · #" + (4000 + (lead.id % 6000));
 
   const tabs = [
@@ -678,7 +691,7 @@ export const TherapistSessions = () => {
               <TealButton onClick={() => open("joinConfirm", s)}>Join Call</TealButton>
             </div>
           </div>
-        )) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No ongoing calls</div><p className="text-caption text-ink-400">A session you've stepped away from mid-call shows up here to rejoin.</p></div>)}
+        )) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No ongoing calls</div><p className="text-caption text-ink-400">A session you&apos;ve stepped away from mid-call shows up here to rejoin.</p></div>)}
 
         {!isLoading && tab === "past" && (past.length ? past.map((s) => {
           const done = !!s.has_note;
@@ -767,11 +780,6 @@ const addMinutesClamped = (hhmm, minutes) => {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 };
 
-const toMinutes = (hhmm) => {
-  const [h, m] = hhmm.split(":").map(Number);
-  return h * 60 + m;
-};
-
 /**
  * A native <input type="time"> for each bound — real keyboard entry with the
  * browser's own segment auto-advance, clamped by min/max/step — rather than
@@ -793,10 +801,16 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose,
 
   useEffect(() => {
     if (open) {
-      setStart("");
-      setEnd("");
+      // Prefill from the day's last slot + a 5-minute gap, so adding several
+      // slots back-to-back doesn't mean retyping the same start time each
+      // round — the first slot of a day still opens blank.
+      const latestEnd = existingSlots.reduce((max, s) => (s.end > max ? s.end : max), "");
+      const gappedStart = latestEnd ? addMinutesClamped(latestEnd, 5) : "";
+      setStart(gappedStart);
+      setEnd(gappedStart ? addMinutesClamped(gappedStart, sessionDuration) : "");
       setError(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const openPicker = (e) => e.target.showPicker?.();
@@ -812,10 +826,6 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose,
     }
     if (end <= start) {
       setError("End time must be after the start time.");
-      return;
-    }
-    if (toMinutes(end) - toMinutes(start) < sessionDuration) {
-      setError(`This window is shorter than your ${sessionDuration}-minute session length, so it could never be booked.`);
       return;
     }
     if (existingSlots.some((s) => start < s.end && end > s.start)) {
@@ -840,7 +850,7 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose,
             type="time"
             min={AVAILABILITY_WINDOW.start}
             max={AVAILABILITY_WINDOW.end}
-            step={900}
+            step={60}
             value={start}
             onClick={openPicker}
             onFocus={openPicker}
@@ -862,7 +872,7 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose,
             type="time"
             min={AVAILABILITY_WINDOW.start}
             max={AVAILABILITY_WINDOW.end}
-            step={900}
+            step={60}
             value={end}
             onClick={openPicker}
             onFocus={openPicker}
@@ -901,13 +911,29 @@ export const TherapistAvailability = () => {
   const [days, setDays] = useState({});
   const [slots, setSlots] = useState({});
   const [slotModalDay, setSlotModalDay] = useState(null);
+  // The last-saved (server) shape, for the unsaved-changes indicator below —
+  // same normalized form buildPayload() produces, so comparison is exact
+  // regardless of key-insertion-order quirks in the raw days/slots state.
+  const [savedSnapshot, setSavedSnapshot] = useState(null);
+
+  const buildPayload = (daysState, slotsState) => {
+    const payload = { days: {} };
+    for (const d of WEEK_DAYS) {
+      payload.days[d.key] = daysState[d.key] ? (slotsState[d.key] || []).map((s) => ({ start: s.start, end: s.end, active: true })) : [];
+    }
+    return payload;
+  };
 
   useEffect(() => {
     if (grid) {
       setDays(grid.days ?? {});
       setSlots(grid.slots ?? {});
+      setSavedSnapshot(JSON.stringify(buildPayload(grid.days ?? {}, grid.slots ?? {})));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [grid]);
+
+  const isDirty = savedSnapshot !== null && JSON.stringify(buildPayload(days, slots)) !== savedSnapshot;
 
   const addSlot = (key, slot) => {
     setSlots((p) => ({
@@ -918,10 +944,7 @@ export const TherapistAvailability = () => {
   };
 
   const save = async () => {
-    const payload = { days: {} };
-    for (const d of WEEK_DAYS) {
-      payload.days[d.key] = days[d.key] ? (slots[d.key] || []).map((s) => ({ start: s.start, end: s.end, active: true })) : [];
-    }
+    const payload = buildPayload(days, slots);
 
     try {
       await saveAvailability(payload).unwrap();
@@ -942,6 +965,15 @@ export const TherapistAvailability = () => {
           booking — your existing sessions keep their times.
         </span>
       </div>
+
+      {isDirty ? (
+        <div className="flex items-center gap-3 rounded-[12px] border-[1.5px] border-gold-500 bg-gold-400 px-4 py-3.5 shadow-[0_2px_10px_rgba(184,134,26,0.25)]">
+          <Icon.AlertTriangle size={18} className="shrink-0 text-navy-800" strokeWidth={2.5} />
+          <span className="flex-1 text-[13px] font-boldNunito leading-[1.5] text-navy-800">
+            You have unsaved changes — click &quot;Save availability&quot; below to apply them.
+          </span>
+        </div>
+      ) : null}
 
       {isLoading ? (
         <div className="flex flex-col gap-2.5"><Skeleton className="h-[70px]" /><Skeleton className="h-[70px]" /></div>
@@ -1366,6 +1398,10 @@ export const TherapistProfile = () => {
   const [saveNotifPrefs] = useSaveNotificationPreferencesMutation();
   const [deactivateProfile, { isLoading: isDeactivating }] = useDeactivateTherapistProfileMutation();
   const [reactivateProfile, { isLoading: isReactivating }] = useReactivateTherapistProfileMutation();
+  const [addSpecialty, { isLoading: isAddingSpecialty }] = useAddTherapistSpecialtyMutation();
+  const [removeSpecialty] = useRemoveTherapistSpecialtyMutation();
+  const [specialtyPickerOpen, setSpecialtyPickerOpen] = useState(false);
+  const { data: interestTopics = [] } = useGetInterestTopicsQuery(undefined, { skip: !specialtyPickerOpen });
 
   const [profile, setProfile] = useState({ bio: "", years: "", rate: "", languages: "" });
   const twoFa = !!privacy?.two_factor_enabled;
@@ -1440,11 +1476,64 @@ export const TherapistProfile = () => {
           </div>
           <div>
             <span className={label}>Specialties</span>
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="relative flex flex-wrap items-center gap-1.5">
               {specialties.map((sp) => (
-                <span key={sp} className="rounded-full bg-[#EEF4FC] px-3 py-[5px] text-[11px] font-boldNunito text-brand-600">{sp}</span>
+                <span key={sp.id} className="inline-flex items-center gap-1 rounded-full bg-[#EEF4FC] px-3 py-[5px] text-[11px] font-boldNunito text-brand-600">
+                  {sp.name}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await removeSpecialty(sp.id).unwrap();
+                      } catch (err) {
+                        showToast(apiErrorMessage(err, "Couldn't remove that specialty"));
+                      }
+                    }}
+                    aria-label={`Remove ${sp.name}`}
+                    className="cursor-pointer text-brand-400 hover:text-brand-600"
+                  >
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </span>
               ))}
-              {specialties.length === 0 ? <span className="text-[11px] text-ink-400">Set in the mobile app</span> : null}
+              {specialties.length === 0 ? <span className="text-[11px] text-ink-400">None yet</span> : null}
+              <button
+                type="button"
+                onClick={() => setSpecialtyPickerOpen((v) => !v)}
+                className="cursor-pointer rounded-full border border-dashed border-brand-400 px-3 py-[5px] text-[11px] font-boldNunito text-brand-400 hover:bg-brand-25"
+              >
+                + Add
+              </button>
+              {specialtyPickerOpen ? (
+                <div className="absolute left-0 top-full z-10 mt-1.5 max-h-[220px] w-[220px] overflow-y-auto rounded-[10px] border border-ink-200 bg-white p-1.5 shadow-[0_4px_16px_rgba(20,27,52,0.12)]">
+                  {interestTopics
+                    .filter((t) => !specialties.some((sp) => sp.id === t.id))
+                    .map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        disabled={isAddingSpecialty}
+                        onClick={async () => {
+                          try {
+                            await addSpecialty(t.id).unwrap();
+                            setSpecialtyPickerOpen(false);
+                          } catch (err) {
+                            showToast(apiErrorMessage(err, "Couldn't add that specialty"));
+                            setSpecialtyPickerOpen(false);
+                          }
+                        }}
+                        className="block w-full cursor-pointer rounded-[7px] px-2.5 py-1.5 text-left text-[12px] text-ink-700 hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {t.name}
+                      </button>
+                    ))}
+                  {interestTopics.length === 0 ? (
+                    <div className="px-2.5 py-1.5 text-[11px] text-ink-400">Loading…</div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>
           <div>

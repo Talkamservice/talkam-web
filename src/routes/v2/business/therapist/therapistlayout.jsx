@@ -45,8 +45,15 @@ import {
 } from "../../../../services/v2/therapistApiSlice";
 
 /** Stable pseudonymous client ref, matching the backend's own "#4021" scheme
- *  (§11 privacy) — therapists never see a client's real name here. */
-const anonRef = (session) => "Anonymous · #" + (4000 + ((session?.id ?? 0) % 6000));
+ *  (§11 privacy) — for a true public/consumer booking, a therapist never
+ *  sees that client's real name. A business-covered session (anything but
+ *  "consumer") is an employee seen through the employer's network, not an
+ *  anonymous public client, so the API sends client_name for those — same
+ *  distinction the Sessions list's own clientRef() makes. */
+const anonRef = (session) =>
+  session?.coverage && session.coverage !== "consumer" && session?.client_name
+    ? session.client_name
+    : "Anonymous · #" + (4000 + ((session?.id ?? 0) % 6000));
 
 const RESCHEDULE_REASONS = [
   { key: "personal_emergency", label: "Personal emergency" },

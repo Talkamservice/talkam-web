@@ -46,6 +46,11 @@ export const V2 = {
   admin: at("/business/admin"),
   employee: at("/business/employee"),
   therapist: at("/business/therapist"),
+
+  // Platform Admin (staff-only, gated by a real "platform.role" — see
+  // routes/api_v2.php's "platform-admin" group in talkam-api).
+  platformLogin: at("/platform/login"),
+  platform: at("/platform"),
 };
 
 /**

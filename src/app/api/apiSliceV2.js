@@ -36,7 +36,11 @@ const baseQuery = async (args, api, extraOptions) => {
 
     if (typeof window !== "undefined") {
       const { pathname } = window.location;
-      const loginPath = pathname.startsWith("/business") ? "/business/login" : "/login";
+      const loginPath = pathname.startsWith("/platform")
+        ? "/platform/login"
+        : pathname.startsWith("/business")
+          ? "/business/login"
+          : "/login";
       // Don't fight a login attempt's own 401, or loop while already on login.
       if (pathname !== loginPath) {
         window.location.replace(loginPath);
@@ -80,6 +84,27 @@ export const apiSliceV2 = createApi({
     "TherapistClients",
     "Journal",
     "Legal",
+    "PlatformDashboard",
+    "PlatformNavCounts",
+    "PlatformUsers",
+    "PlatformTherapistVerification",
+    "PlatformPerformance",
+    "PlatformActivityLogs",
+    "PlatformGrowth",
+    "PlatformBusinesses",
+    "PlatformSessions",
+    "PlatformBilling",
+    "PlatformPayouts",
+    "PlatformPayoutRun",
+    "PlatformCommunity",
+    "PlatformCms",
+    "PlatformDisputes",
+    "PlatformFeedback",
+    "PlatformDeactivations",
+    "PlatformRoles",
+    "PlatformWaitlist",
+    "PlatformLegal",
+    "PlatformSettings",
   ],
   endpoints: () => ({}),
 });
