@@ -28,7 +28,6 @@ import {
   initialsOf,
   naira,
   slotLabel,
-  to12h,
   sessionWhen,
   countdownTo,
   SESSION_FORMAT_LABEL,
@@ -820,10 +819,6 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose,
       setError("Set both a start and end time.");
       return;
     }
-    if (start < AVAILABILITY_WINDOW.start || end > AVAILABILITY_WINDOW.end) {
-      setError(`Slots must fall between ${to12h(AVAILABILITY_WINDOW.start)} and ${to12h(AVAILABILITY_WINDOW.end)}.`);
-      return;
-    }
     if (end <= start) {
       setError("End time must be after the start time.");
       return;
@@ -848,8 +843,6 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose,
           <input
             id="slot-start"
             type="time"
-            min={AVAILABILITY_WINDOW.start}
-            max={AVAILABILITY_WINDOW.end}
             step={60}
             value={start}
             onClick={openPicker}
@@ -870,8 +863,6 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose,
           <input
             id="slot-end"
             type="time"
-            min={AVAILABILITY_WINDOW.start}
-            max={AVAILABILITY_WINDOW.end}
             step={60}
             value={end}
             onClick={openPicker}
@@ -885,8 +876,7 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose,
         </div>
       </div>
       <div className="mb-4 text-[11px] text-ink-400">
-        Slots must fall between {to12h(AVAILABILITY_WINDOW.start)} and {to12h(AVAILABILITY_WINDOW.end)}. Your
-        sessions are {sessionDuration} minutes — clients can book every {sessionDuration} minutes inside
+        Your sessions are {sessionDuration} minutes — clients can book every {sessionDuration} minutes inside
         whatever window you set here, so a window that isn&apos;t a clean multiple of that wastes the leftover
         minutes.
       </div>
