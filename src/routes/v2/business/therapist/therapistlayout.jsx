@@ -547,6 +547,8 @@ const CallModal = ({ close, showToast, context }) => (
     bookingId={context?.id}
     format={context?.format}
     counterpartName={anonRef(context)}
+    isTherapist
+    showToast={showToast}
     onExit={() => {
       close();
       showToast("Call ended");

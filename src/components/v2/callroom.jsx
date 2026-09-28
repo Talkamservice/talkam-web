@@ -12,6 +12,7 @@ import AgoraRTC, {
   LocalVideoTrack,
 } from "agora-rtc-react";
 import { useLazyJoinBookingQuery, useLeaveBookingMutation } from "../../services/v2/employeeApiSlice";
+import { useGetSessionNotesQuery, useSaveSessionNotesMutation } from "../../services/v2/therapistApiSlice";
 import { useGetMeV2Query } from "../../services/v2/authApiSliceV2";
 import { apiErrorMessage } from "../../routes/v2/business/auth/authlayout";
 
@@ -102,7 +103,7 @@ const initialsFor = (name) => {
  * participant (client or therapist) — the backend resolves the caller's role
  * from the token, so this is shared by both dashboards.
  */
-export const CallScreen = ({ bookingId, format, counterpartName, onExit }) => {
+export const CallScreen = ({ bookingId, format, counterpartName, isTherapist, showToast, onExit }) => {
   const [fetchJoin, { data: joinData, isFetching, isError, error }] = useLazyJoinBookingQuery();
   const [client] = useState(() => AgoraRTC.createClient({ mode: "rtc", codec: "vp8" }));
 
@@ -145,6 +146,8 @@ export const CallScreen = ({ bookingId, format, counterpartName, onExit }) => {
         bookingId={bookingId}
         format={format}
         counterpartName={counterpartName}
+        isTherapist={isTherapist}
+        showToast={showToast}
         joinData={joinData}
         onExit={onExit}
       />
@@ -154,10 +157,46 @@ export const CallScreen = ({ bookingId, format, counterpartName, onExit }) => {
 
 /** The actual call room — real mic/camera tracks, real join, real remote
  *  participant. Only ever mounted once join credentials exist. */
-const CallRoom = ({ bookingId, format, counterpartName, joinData, onExit }) => {
+const CallRoom = ({ bookingId, format, counterpartName, isTherapist, showToast, joinData, onExit }) => {
   const { data: me } = useGetMeV2Query();
   const client = useRTCClient();
   const uid = me?.id;
+
+  // Session notes, writable live — reuses the exact same note (one per
+  // session, upserted) the Past-sessions "Write notes" modal reads/writes;
+  // there's no backend restriction on writing while a session is still
+  // in_progress, so this is just a mid-call surface for the same real data.
+  const [notesOpen, setNotesOpen] = useState(false);
+  const { data: existingNote, isFetching: notesLoading } = useGetSessionNotesQuery(bookingId, {
+    skip: !isTherapist || !bookingId,
+  });
+  const [saveNotes, { isLoading: isSavingNotes }] = useSaveSessionNotesMutation();
+  const [noteTitle, setNoteTitle] = useState("");
+  const [noteContent, setNoteContent] = useState("");
+  const [noteShared, setNoteShared] = useState(false);
+
+  useEffect(() => {
+    if (!existingNote) return;
+    setNoteTitle(existingNote.title ?? "");
+    setNoteContent(existingNote.content ?? "");
+    setNoteShared(!!existingNote.shared_with_client);
+  }, [existingNote]);
+
+  const saveNote = async (status) => {
+    if (!bookingId || !noteTitle.trim()) return;
+    try {
+      await saveNotes({
+        id: bookingId,
+        title: noteTitle.trim(),
+        content: noteContent,
+        shared_with_client: noteShared,
+        status,
+      }).unwrap();
+      showToast?.(status === "draft" ? "Draft saved" : "Session notes saved");
+    } catch (err) {
+      showToast?.(apiErrorMessage(err, "Couldn't save that note — please try again"));
+    }
+  };
 
   const isVideo = format === "video";
   const counterpartInitials = initialsFor(counterpartName);
@@ -302,7 +341,28 @@ const CallRoom = ({ bookingId, format, counterpartName, joinData, onExit }) => {
             {isConnected ? label : "Connecting…"}
           </span>
         </div>
-        <span className="text-[12px] text-white/40">Encrypted · not recorded</span>
+        <div className="flex items-center gap-3">
+          <span className="text-[12px] text-white/40">Encrypted · not recorded</span>
+          {isTherapist ? (
+            <button
+              type="button"
+              onClick={() => setNotesOpen((v) => !v)}
+              aria-label={notesOpen ? "Close notes" : "Open session notes"}
+              className={classNames(
+                "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-boldNunito text-white",
+                notesOpen ? "bg-brand-400" : "bg-white/[0.12]"
+              )}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+              Notes
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {showCountdown ? (
@@ -528,6 +588,78 @@ const CallRoom = ({ bookingId, format, counterpartName, joinData, onExit }) => {
           </svg>
         </button>
       </div>
+
+      {isTherapist && notesOpen ? (
+        <div className="absolute bottom-0 right-0 top-0 z-20 flex w-full max-w-[360px] flex-col border-l border-white/10 bg-[#111A2E] shadow-[-8px_0_24px_rgba(0,0,0,0.35)]">
+          <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+            <div>
+              <div className="text-[14px] font-boldNunito text-white">Session notes</div>
+              <div className="text-[11px] text-white/40">Private to you — never shared with the employer</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setNotesOpen(false)}
+              aria-label="Close notes"
+              className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-[8px] bg-white/[0.08] text-white/60"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
+            {notesLoading ? (
+              <div className="h-32 animate-pulse rounded-[10px] bg-white/[0.06]" />
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={noteTitle}
+                  onChange={(e) => setNoteTitle(e.target.value)}
+                  placeholder="Title (e.g. Follow-up on anxiety management)"
+                  className="w-full rounded-[10px] border border-white/10 bg-white/[0.06] px-3.5 py-2.5 text-[13px] font-semiboldNunito text-white placeholder:text-white/30"
+                />
+                <textarea
+                  rows={10}
+                  value={noteContent}
+                  onChange={(e) => setNoteContent(e.target.value)}
+                  placeholder="What came up, what you tried, and what to pick up next time…"
+                  className="w-full flex-1 resize-none rounded-[10px] border border-white/10 bg-white/[0.06] px-3.5 py-3 text-[13px] leading-[1.6] text-white placeholder:text-white/30"
+                />
+                <label className="flex cursor-pointer items-center gap-2 text-[12px] text-white/60">
+                  <input
+                    type="checkbox"
+                    checked={noteShared}
+                    onChange={(e) => setNoteShared(e.target.checked)}
+                  />
+                  Share a copy of this note with the client
+                </label>
+              </>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-white/10 px-5 py-4">
+            <button
+              type="button"
+              onClick={() => saveNote("draft")}
+              disabled={!noteTitle.trim() || isSavingNotes}
+              className="cursor-pointer rounded-[10px] border border-white/15 px-3.5 py-2 text-[12.5px] font-boldNunito text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Save draft
+            </button>
+            <button
+              type="button"
+              onClick={() => saveNote("final")}
+              disabled={!noteTitle.trim() || isSavingNotes}
+              className="cursor-pointer rounded-[10px] bg-brand-400 px-3.5 py-2 text-[12.5px] font-boldNunito text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isSavingNotes ? "Saving…" : "Save notes"}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
