@@ -51,6 +51,8 @@ import {
   useGetInterestTopicsQuery,
   useAddTherapistSpecialtyMutation,
   useRemoveTherapistSpecialtyMutation,
+  useGetSessionNotesQuery,
+  useSaveSessionNotesMutation,
 } from "../../../../../services/v2/therapistApiSlice";
 import { useGetMeV2Query } from "../../../../../services/v2/authApiSliceV2";
 import {
@@ -67,6 +69,7 @@ import {
 import { apiErrorMessage } from "../../auth/authlayout";
 import { selectCurrentToken } from "../../../../../services/authSlice";
 import { useConversationChannel } from "../../../../../hooks/useConversationChannel";
+import { useNow } from "../../../../../hooks/useNow";
 
 /**
  * All eight therapist dashboard pages, wired to api/v2/therapist.
@@ -74,6 +77,22 @@ import { useConversationChannel } from "../../../../../hooks/useConversationChan
  * aggregates and the reused §§11–14/16 endpoints; only labels and palettes are
  * local (constants/therapistdashboard.js).
  */
+
+/** True once `now` has actually reached the session's real join window —
+ *  the same `join_opens_at` SessionLifecycleService::join() itself enforces
+ *  server-side, not a guessed client-side window. */
+const canJoinSession = (session, now) => {
+  if (!session?.join_opens_at) return false;
+  return now >= new Date(session.join_opens_at.replace(" ", "T")).getTime();
+};
+
+/** "Available in 12 min" — shown on a disabled Join button before its real
+ *  join window opens. */
+const joinAvailabilityLabel = (session) => {
+  if (!session?.join_opens_at) return "";
+  const label = countdownTo(session.join_opens_at);
+  return label && label !== "now" ? `Available in ${label}` : "";
+};
 
 const TealButton = ({ className, children, ...props }) => (
   <button
@@ -208,7 +227,9 @@ export const TherapistHome = () => {
   // while /me is still resolving.
   const lastName = (me?.name ?? "").trim().split(/\s+/).filter(Boolean).slice(-1)[0];
   const firstName = lastName ? `Dr. ${lastName}` : "Doctor";
+  const now = useNow();
   const next = home?.next_session;
+  const nextIsJoinable = canJoinSession(next, now);
   const kpis = home?.kpis ?? {};
   const attention = home?.attention ?? {};
   const continuity = home?.continuity ?? [];
@@ -389,7 +410,7 @@ export const TherapistHome = () => {
                   {next.client_ref?.replace("#", "").slice(0, 1)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[18px] font-extraboldNunito text-white">Anonymous · {next.client_ref}</div>
+                  <div className="text-[18px] font-extraboldNunito text-white">{next.client_ref}</div>
                   <div className="text-[12px] text-white/55">
                     {next.session_number} · {sessionWhen(next.starts_at).split(" · ")[1]} · {SESSION_FORMAT_LABEL[next.format] ?? next.format}
                   </div>
@@ -406,8 +427,14 @@ export const TherapistHome = () => {
               ) : null}
               <PendingRescheduleBanner session={next} showToast={showToast} />
               <div className="relative z-[1] mt-auto flex gap-2.5">
-                <button type="button" onClick={() => open("joinConfirm", next)} className="flex-1 cursor-pointer rounded-[11px] bg-brand-400 p-3 text-center text-[13px] font-extraboldNunito text-white shadow-[0_6px_16px_rgba(1,127,200,0.35)]">
-                  Join Session →
+                <button
+                  type="button"
+                  onClick={() => open("joinConfirm", next)}
+                  disabled={!nextIsJoinable}
+                  title={nextIsJoinable ? undefined : joinAvailabilityLabel(next)}
+                  className="flex-1 cursor-pointer rounded-[11px] bg-brand-400 p-3 text-center text-[13px] font-extraboldNunito text-white shadow-[0_6px_16px_rgba(1,127,200,0.35)] disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40 disabled:shadow-none"
+                >
+                  {nextIsJoinable ? "Join Session →" : joinAvailabilityLabel(next) || "Join Session →"}
                 </button>
                 <button
                   type="button"
@@ -496,7 +523,7 @@ export const TherapistHome = () => {
                     {c.client_ref?.replace("#", "").slice(0, 1)}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[12.5px] font-boldNunito text-ink-800">Anonymous · {c.client_ref}</div>
+                    <div className="text-[12.5px] font-boldNunito text-ink-800">{c.client_ref}</div>
                     <div className="text-[10.5px] text-ink-400">{sessionWhen(c.next_at)}</div>
                   </div>
                   {c.focus ? (
@@ -545,11 +572,141 @@ export const TherapistHome = () => {
   );
 };
 
+// A business-covered booking (org_bundle/org_meter/org_external — anything
+// but "consumer") means the client is an employee the therapist is
+// actually seeing through their employer's network, not an anonymous
+// public booking — the API already sends client_name for exactly this
+// case (listForTherapist()'s own serialize()); only a true consumer
+// session (or one from before client_name existed on the payload) falls
+// back to the anonymized ref.
+const clientRef = (session) =>
+  session.coverage && session.coverage !== "consumer" && session.client_name
+    ? session.client_name
+    : "Anonymous · #" + (4000 + ((session.user_id ?? session.id) % 6000));
+
+/**
+ * A Past-sessions row that expands in place to read/write its one real note
+ * (SessionNote — one per session, upserted) instead of only a "Notes saved"
+ * badge that forced a separate modal for every read or edit. Collapsed by
+ * default; each row owns its own note fetch/save so opening one never
+ * fetches every row's note up front.
+ */
+const PastSessionRow = ({ session, showToast }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const done = !!session.has_note;
+
+  const { data: note, isFetching } = useGetSessionNotesQuery(session.id, { skip: !expanded });
+  const [saveNotes, { isLoading: isSaving }] = useSaveSessionNotesMutation();
+
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [shared, setShared] = useState(false);
+
+  useEffect(() => {
+    if (note) {
+      setTitle(note.title ?? "");
+      setContent(note.content ?? "");
+      setShared(!!note.shared_with_client);
+    }
+  }, [note]);
+
+  // Expanding a session with no note yet lands straight in the compose
+  // form — there's nothing to "view" first.
+  useEffect(() => {
+    if (expanded && !done && !isFetching) setEditing(true);
+  }, [expanded, done, isFetching]);
+
+  const toggle = () => setExpanded((v) => !v);
+
+  const save = async (status) => {
+    if (!title.trim()) return;
+    try {
+      await saveNotes({ id: session.id, title: title.trim(), content, shared_with_client: shared, status }).unwrap();
+      showToast(status === "draft" ? "Draft saved" : "Session notes saved");
+      setEditing(false);
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't save that note — please try again"));
+    }
+  };
+
+  return (
+    <div className="border-b border-[#F5F5F5] last:border-b-0">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={expanded}
+        className="flex w-full cursor-pointer flex-wrap items-center gap-3 px-5 py-4 text-left"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-extraboldNunito text-white" style={{ background: avatarColour(clientRef(session)) }}>
+          {String(session.user_id ?? session.id).slice(-1)}
+        </span>
+        <div className="min-w-[180px] flex-1">
+          <div className="text-[13px] font-boldNunito text-navy-800">{clientRef(session)}</div>
+          <div className="text-[11px] text-ink-400">{sessionWhen(session.starts_at)} · {statusLabel(session.status)}</div>
+        </div>
+        {done ? <Badge tone="green" dot>Notes saved</Badge> : <Badge tone="gold" dot>No notes yet</Badge>}
+        <Icon.ChevronDown size={16} className={classNames("text-ink-400 transition-transform", expanded ? "rotate-180" : "")} />
+      </button>
+
+      {expanded ? (
+        <div className="px-5 pb-5">
+          {isFetching ? (
+            <div className="h-24 animate-pulse rounded-ds-md bg-ink-50" />
+          ) : editing ? (
+            <div className="rounded-ds-md border-[1.5px] border-ink-200 bg-surface-page p-4">
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Title (e.g. Follow-up on anxiety management)"
+                className="mb-3 w-full rounded-ds-md border-[1.5px] border-ink-200 bg-white px-3.5 py-2.5 text-[13px] font-semiboldNunito text-ink-800"
+              />
+              <textarea
+                rows={5}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="What came up, what you tried, and what to pick up next time…"
+                className="mb-3 w-full resize-none rounded-ds-md border-[1.5px] border-ink-200 bg-white px-3.5 py-3 text-[13px] leading-[1.6] text-ink-800"
+              />
+              <label className="mb-4 flex cursor-pointer items-center gap-2 text-[12.5px] text-ink-500">
+                <input type="checkbox" checked={shared} onChange={(e) => setShared(e.target.checked)} />
+                Share a copy of this note with the client
+              </label>
+              <div className="flex flex-wrap justify-end gap-2">
+                {done ? <SecondaryButton onClick={() => setEditing(false)}>Cancel</SecondaryButton> : null}
+                <SecondaryButton onClick={() => save("draft")} disabled={!title.trim() || isSaving}>Save draft</SecondaryButton>
+                <PrimaryButton onClick={() => save("final")} disabled={!title.trim() || isSaving}>
+                  {isSaving ? "Saving…" : "Save notes"}
+                </PrimaryButton>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-ds-md border-[1.5px] border-ink-100 bg-surface-page p-4">
+              <div className="mb-2 flex items-start justify-between gap-3">
+                <div className="text-[13.5px] font-boldNunito text-navy-800">{note?.title}</div>
+                {note?.shared_with_client ? <Badge tone="blue">Shared with client</Badge> : null}
+              </div>
+              <p className="mb-3 whitespace-pre-wrap text-[13px] leading-[1.6] text-ink-600">
+                {note?.content || "No details written yet."}
+              </p>
+              <div className="flex justify-end">
+                <SecondaryButton onClick={() => setEditing(true)}>Edit</SecondaryButton>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 /* ── SESSIONS ─────────────────────────────────────────────────────────── */
 
 export const TherapistSessions = () => {
   const { open, showToast } = useTherapist();
   const [tab, setTab] = useState("upcoming");
+  const now = useNow();
 
   const { data, isLoading } = useGetTherapistSessionsQuery();
   const { data: leadsData, isLoading: isLoadingLeads } = useGetTherapistSessionRequestsQuery();
@@ -557,14 +714,24 @@ export const TherapistSessions = () => {
   const [decline, { isLoading: isDeclining }] = useDeclineSessionMutation();
   const [declineLead, { isLoading: isDecliningLead }] = useDeclineSessionRequestMutation();
 
-  const upcoming = (data?.upcoming ?? []).filter((s) => s.status === "confirmed");
-  // A session that's actually in progress (someone joined, at least — the
-  // API keeps it in `upcoming` until its scheduled end time passes, same as
-  // confirmed/pending_payment). Its own tab rather than folded into Upcoming
-  // — if the therapist steps away mid-call, this is the only place they can
-  // find their way back in; it's a fundamentally different action ("rejoin")
+  // Reclassified by real clock time, not just status: a confirmed session
+  // whose scheduled start has already passed reads as "Ongoing" even before
+  // either side has actually joined (status only flips to in_progress once
+  // someone does) — otherwise it sits under "Upcoming" looking like it
+  // hasn't started yet long after it should have.
+  const hasStarted = (s) => !!s?.starts_at && now >= new Date(s.starts_at.replace(" ", "T")).getTime();
+
+  const upcoming = (data?.upcoming ?? []).filter((s) => s.status === "confirmed" && !hasStarted(s));
+  // A session that's actually in progress (someone joined) OR whose
+  // scheduled time has arrived but hasn't ended (the API keeps it in
+  // `upcoming` until its scheduled end time passes, same as confirmed/
+  // pending_payment). Its own tab rather than folded into Upcoming — if the
+  // therapist steps away mid-call, this is the only place they can find
+  // their way back in; it's a fundamentally different action ("rejoin")
   // than a not-yet-started booking's ("join when it's time").
-  const ongoing = (data?.upcoming ?? []).filter((s) => s.status === "in_progress");
+  const ongoing = (data?.upcoming ?? []).filter(
+    (s) => s.status === "in_progress" || (s.status === "confirmed" && hasStarted(s))
+  );
   // Acknowledging a request is the therapist's own "dealt with" signal — the
   // session itself stays pending_payment until the client actually pays, but
   // it should still drop out of the action queue once reviewed.
@@ -573,18 +740,13 @@ export const TherapistSessions = () => {
   const past = data?.past ?? [];
   const requestCount = paymentPending.length + leads.length;
 
-  // A business-covered booking (org_bundle/org_meter/org_external — anything
-  // but "consumer") means the client is an employee the therapist is
-  // actually seeing through their employer's network, not an anonymous
-  // public booking — the API already sends client_name for exactly this
-  // case (listForTherapist()'s own serialize()); only a true consumer
-  // session (or one from before client_name existed on the payload) falls
-  // back to the anonymized ref.
-  const clientRef = (session) =>
-    session.coverage && session.coverage !== "consumer" && session.client_name
-      ? session.client_name
-      : "Anonymous · #" + (4000 + ((session.user_id ?? session.id) % 6000));
-  const leadRef = (lead) => "Anonymous · #" + (4000 + (lead.id % 6000));
+  // No TherapySession exists yet at the request stage, so there's no
+  // coverage to check — same_organization (from OrganizationMember rows,
+  // not a booking) is the only signal available this early.
+  const leadRef = (lead) =>
+    lead.same_organization && lead.client_name
+      ? lead.client_name
+      : "Anonymous · #" + (4000 + (lead.id % 6000));
 
   const tabs = [
     { key: "upcoming", label: "Upcoming", count: upcoming.length },
@@ -666,7 +828,13 @@ export const TherapistSessions = () => {
               <Badge tone="blue">{SESSION_FORMAT_LABEL[s.format] ?? s.format}</Badge>
               <div className="flex gap-2">
                 <SecondaryButton onClick={() => open("rescheduleReq", s)}>Reschedule</SecondaryButton>
-                <TealButton onClick={() => open("joinConfirm", s)}>Join</TealButton>
+                <TealButton
+                  onClick={() => open("joinConfirm", s)}
+                  disabled={!canJoinSession(s, now)}
+                  title={canJoinSession(s, now) ? undefined : joinAvailabilityLabel(s)}
+                >
+                  {canJoinSession(s, now) ? "Join" : joinAvailabilityLabel(s) || "Join"}
+                </TealButton>
               </div>
             </div>
             <PendingRescheduleBanner session={s} showToast={showToast} dark={false} />
@@ -692,25 +860,9 @@ export const TherapistSessions = () => {
           </div>
         )) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No ongoing calls</div><p className="text-caption text-ink-400">A session you&apos;ve stepped away from mid-call shows up here to rejoin.</p></div>)}
 
-        {!isLoading && tab === "past" && (past.length ? past.map((s) => {
-          const done = !!s.has_note;
-          return (
-            <div key={s.id} className="flex flex-wrap items-center gap-3 border-b border-[#F5F5F5] px-5 py-4 last:border-b-0">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-[13px] font-extraboldNunito text-white" style={{ background: avatarColour(clientRef(s)) }}>
-                {String(s.user_id ?? s.id).slice(-1)}
-              </span>
-              <div className="min-w-[180px] flex-1">
-                <div className="text-[13px] font-boldNunito text-navy-800">{clientRef(s)}</div>
-                <div className="text-[11px] text-ink-400">{sessionWhen(s.starts_at)} · {statusLabel(s.status)}</div>
-              </div>
-              {done ? (
-                <Badge tone="green" dot>Notes saved</Badge>
-              ) : (
-                <SecondaryButton onClick={() => open("notes", s)}>Write notes</SecondaryButton>
-              )}
-            </div>
-          );
-        }) : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No past sessions</div></div>)}
+        {!isLoading && tab === "past" && (past.length
+          ? past.map((s) => <PastSessionRow key={s.id} session={s} showToast={showToast} />)
+          : <div className="px-5 py-10 text-center"><div className="text-body font-extraboldNunito text-navy-800">No past sessions</div></div>)}
 
         {!isLoading && tab === "requests" && (requestCount ? (
           <>
@@ -1301,7 +1453,25 @@ export const TherapistMessages = () => {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
   }, [currentId, messages.length]);
 
-  const clientRef = (thread) => "Anonymous · #" + (4000 + ((thread.other_member?.id ?? thread.id) % 6000));
+  // other_member.same_organization is a backend-computed "these two aren't
+  // strangers" signal (shared org membership) — same rule the Sessions tab
+  // applies via session.coverage, just derived differently since a
+  // conversation has no booking/coverage of its own to read.
+  const clientRef = (thread) =>
+    thread.other_member?.same_organization && thread.other_member?.name
+      ? thread.other_member.name
+      : "Anonymous · #" + (4000 + ((thread.other_member?.id ?? thread.id) % 6000));
+
+  // The avatar circle showed the last digit of the other member's user id
+  // (e.g. "2") — a fixed value that never changes with read state, easy to
+  // mistake for a stuck unread badge. initialsOf already exists for this
+  // (used identically on the employee side); "AN" for the anonymized case
+  // mirrors callroom.jsx's initialsFor, since a literal word-split of
+  // "Anonymous · #4021" gives a nonsensical "A·".
+  const threadInitials = (thread) => {
+    const ref = clientRef(thread);
+    return /^anonymous\b/i.test(ref) ? "AN" : initialsOf(ref) || "?";
+  };
 
   const send = async (e) => {
     e.preventDefault();
@@ -1313,7 +1483,7 @@ export const TherapistMessages = () => {
   };
 
   return (
-    <div className="grid gap-3.5 lg:h-[50dvh] lg:grid-cols-[280px_1fr]">
+    <div className="grid gap-3.5 lg:h-[75dvh] lg:grid-cols-[280px_1fr]">
       <PanelCard title="Clients" className="flex min-h-0 flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto">
         {isLoading ? (
@@ -1324,7 +1494,7 @@ export const TherapistMessages = () => {
           threads.map((t) => (
             <button key={t.id} type="button" onClick={() => setActiveId(t.id)} className={classNames("flex w-full cursor-pointer items-start gap-2.5 border-b border-[#F5F5F5] px-4 py-3.5 text-left last:border-b-0", currentId === t.id ? "bg-wellness-50" : "hover:bg-ink-50")}>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-extraboldNunito text-white" style={{ background: avatarColour(clientRef(t)) }}>
-                {String(t.other_member?.id ?? t.id).slice(-1)}
+                {threadInitials(t)}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center justify-between gap-2">
@@ -1352,13 +1522,36 @@ export const TherapistMessages = () => {
             <EmptyNote>{active ? "No messages in this conversation yet." : "Pick a conversation to read it."}</EmptyNote>
           ) : (
             <>
-              {messages.map((m) => (
-                <div key={m.id} className={classNames("flex", m.sender_id === me?.id ? "justify-end" : "justify-start")}>
-                  <div className={classNames("max-w-[75%] rounded-ds-md px-3.5 py-2.5", m.sender_id === me?.id ? "bg-wellness-400 text-white" : "bg-ink-50 text-ink-800")}>
-                    <p className="text-[13px] leading-[1.55]">{m.message}</p>
+              {messages.map((m) => {
+                const isOwn = m.sender_id === me?.id;
+                const isFile = m.message_type === "File" && m.file_url;
+                return (
+                  <div key={m.id} className={classNames("flex flex-col gap-1", isOwn ? "items-end" : "items-start")}>
+                    <div className={classNames("max-w-[75%] rounded-ds-md px-3.5 py-2.5", isOwn ? "bg-wellness-400 text-white" : "bg-ink-50 text-ink-800")}>
+                      {isFile ? (
+                        <>
+                          {m.message ? <p className="mb-1.5 text-[13px] leading-[1.55]">{m.message}</p> : null}
+                          <a
+                            href={m.file_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={classNames(
+                              "flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-[12.5px] font-boldNunito",
+                              isOwn ? "bg-white/15 text-white" : "bg-white text-wellness-600"
+                            )}
+                          >
+                            <Icon.FileText size={14} />
+                            {m.file_name ?? "View file"}
+                          </a>
+                        </>
+                      ) : (
+                        <p className="text-[13px] leading-[1.55]">{m.message}</p>
+                      )}
+                    </div>
+                    <span className="px-1 text-[10.5px] text-ink-400">{sessionWhen(m.created_at)}</span>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={messagesEndRef} />
             </>
           )}
