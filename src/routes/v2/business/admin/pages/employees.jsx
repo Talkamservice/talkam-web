@@ -21,6 +21,8 @@ import {
   useGetAdminOverviewQuery,
   useDeactivateEmployeeMutation,
   useReactivateEmployeeMutation,
+  useGetDepartmentsQuery,
+  useDeleteDepartmentMutation,
   downloadCsv,
 } from "../../../../../services/v2/adminApiSlice";
 import {
@@ -64,7 +66,10 @@ const Directory = () => {
   const [revoked, setRevoked] = useState([]);
 
   const employees = data?.employees ?? [];
-  const employeeDepartments = ["All Departments", ...(data?.departments ?? [])];
+  // departments() now returns real {id, name} rows (Department, FK'd from
+  // organization_id) rather than plain strings — this filter still just
+  // compares against the display name, same as before.
+  const employeeDepartments = ["All Departments", ...(data?.departments ?? []).map((d) => d.name)];
   const employeeStatuses = ["All Status", "Active", "Invited", "Inactive"];
 
   const filtered = useMemo(() => {
@@ -492,6 +497,78 @@ const Directory = () => {
   );
 };
 
+/**
+ * Employees › Departments — CRUD over the real, org-scoped `departments`
+ * table (each row FK'd from organization_members.department_id /
+ * invitations.department_id, no more free-text). Deleting one in use
+ * doesn't fail or take anyone with it — the backend FK is nullOnDelete, so
+ * affected people just fall back to "— No department —", which the confirm
+ * dialog below says up front.
+ */
+const Departments = () => {
+  const { open } = useAdminModal();
+  const { data: departments = [], isLoading } = useGetDepartmentsQuery();
+  const [deleteDepartment] = useDeleteDepartmentMutation();
+
+  return (
+    <PanelCard
+      title="Departments"
+      subtitle="Used across the Directory, invites and CSV imports for this organization"
+      action={
+        <PrimaryButton onClick={() => open("department")}>+ New Department</PrimaryButton>
+      }
+    >
+      <Table head={["NAME", "PEOPLE", "ACTIONS"]}>
+        {departments.map((d) => (
+          <Tr key={d.id}>
+            <Td first>{d.name}</Td>
+            <Td>{d.people_count}</Td>
+            <Td>
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => open("department", d)}
+                  aria-label={`Rename ${d.name}`}
+                  className="flex h-[27px] w-[27px] cursor-pointer items-center justify-center rounded-[7px] bg-surface-page hover:bg-ink-100"
+                >
+                  <Icon.Edit2 size={12} className="text-ink-600" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    open("confirm", {
+                      title: `Delete "${d.name}"?`,
+                      body: d.people_count > 0
+                        ? `${d.people_count} ${d.people_count === 1 ? "person" : "people"} currently in this department will show as "— No department —" instead. This can't be undone.`
+                        : "This can't be undone.",
+                      confirmLabel: "Delete",
+                      toast: `"${d.name}" deleted`,
+                      onConfirm: () => deleteDepartment(d.id).unwrap(),
+                    })
+                  }
+                  aria-label={`Delete ${d.name}`}
+                  className="flex h-[27px] w-[27px] cursor-pointer items-center justify-center rounded-[7px] bg-surface-errorTint hover:bg-[#FFE0E0]"
+                >
+                  <Icon.Trash2 size={12} className="text-signal-error" />
+                </button>
+              </div>
+            </Td>
+          </Tr>
+        ))}
+      </Table>
+
+      {!isLoading && departments.length === 0 ? (
+        <div className="px-5 py-10 text-center">
+          <div className="text-body font-extraboldNunito text-navy-800">No departments yet</div>
+          <div className="mt-1 text-caption text-ink-400">
+            Create one, or they're added automatically the first time you invite someone into one.
+          </div>
+        </div>
+      ) : null}
+    </PanelCard>
+  );
+};
+
 const Reminders = () => {
   const { showToast } = useAdminModal();
   const [autoReminder, setAutoReminder] = useState(true);
@@ -622,6 +699,7 @@ export const AdminEmployees = () => {
       <div className="flex w-fit max-w-full gap-1.5 overflow-x-auto rounded-[11px] border border-surface-line bg-white p-1">
         {[
           { key: "directory", label: "Directory" },
+          { key: "departments", label: "Departments" },
           { key: "activity", label: "Session Reminders & Follow-ups" },
         ].map((t) => (
           <button
@@ -639,7 +717,7 @@ export const AdminEmployees = () => {
         ))}
       </div>
 
-      {tab === "directory" ? <Directory /> : <Reminders />}
+      {tab === "directory" ? <Directory /> : tab === "departments" ? <Departments /> : <Reminders />}
     </>
   );
 };

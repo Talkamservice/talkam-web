@@ -16,8 +16,10 @@ import {
   useGetBillingQuery,
   useGetBillingInvoicesQuery,
   useGetAdminTherapistDetailQuery,
-  useGetAdminEmployeesQuery,
   useGetAdminEmployeeDetailQuery,
+  useGetDepartmentsQuery,
+  useCreateDepartmentMutation,
+  useRenameDepartmentMutation,
   useUpdateEmployeeMutation,
   useRequestOrgDeletionMutation,
   useDeactivateEmployeeMutation,
@@ -1072,31 +1074,58 @@ const EmployeeModal = ({ open, close, context }) => {
 };
 
 /** Pencil-triggered edit form on the Employees list — department only, the
- *  one contract detail an admin can change after the invite was sent. */
+ *  one contract detail an admin can change after the invite was sent.
+ *  Departments are real, org-scoped rows (Department, FK'd from
+ *  organization_members.department_id) rather than a free string, so
+ *  "+ Create new department" actually creates one via createDepartment
+ *  before the employee is saved against its id. */
 const EditEmployeeModal = ({ open, close, showToast, context }) => {
   const [updateEmployee, { isLoading }] = useUpdateEmployeeMutation();
-  // Same source as the list page's own department filter — departments()
-  // returns whatever is actually in use across the org's members.
-  const { data: employeesData } = useGetAdminEmployeesQuery();
-  const knownDepartments = employeesData?.departments ?? [];
-  const departmentOptions = context?.department && !knownDepartments.includes(context.department)
-    ? [...knownDepartments, context.department]
-    : knownDepartments;
-  const [department, setDepartment] = useState(context?.department ?? "");
+  const { data: departments = [] } = useGetDepartmentsQuery();
+  const [createDepartment, { isLoading: isCreating }] = useCreateDepartmentMutation();
+  const [departmentId, setDepartmentId] = useState(context?.department_id ?? "");
+  const [creatingNew, setCreatingNew] = useState(false);
+  const [newDeptName, setNewDeptName] = useState("");
   const [error, setError] = useState(null);
+  const newDeptRef = useRef(null);
 
   useEffect(() => {
     if (open) {
-      setDepartment(context?.department ?? "");
+      setDepartmentId(context?.department_id ?? "");
+      setCreatingNew(false);
+      setNewDeptName("");
       setError(null);
     }
   }, [open, context]);
+
+  useEffect(() => {
+    if (creatingNew) newDeptRef.current?.focus();
+  }, [creatingNew]);
+
+  const pickDepartment = (value) => {
+    if (value === "__new__") {
+      setCreatingNew(true);
+    } else {
+      setDepartmentId(value);
+    }
+  };
 
   const submit = async () => {
     setError(null);
 
     try {
-      await updateEmployee({ memberId: context?.member_id, department: department.trim() || null }).unwrap();
+      let finalDepartmentId = departmentId || null;
+
+      if (creatingNew) {
+        if (!newDeptName.trim()) {
+          setError("Enter a name for the new department");
+          return;
+        }
+        const created = await createDepartment(newDeptName.trim()).unwrap();
+        finalDepartmentId = created.id;
+      }
+
+      await updateEmployee({ memberId: context?.member_id, department_id: finalDepartmentId }).unwrap();
       showToast(`${context?.id ?? "Employee"} updated`);
       close();
     } catch (err) {
@@ -1108,16 +1137,114 @@ const EditEmployeeModal = ({ open, close, showToast, context }) => {
     <Modal open={open} onClose={close} title={`Edit ${context?.id ?? "employee"}`} subtitle={context?.email}>
       <div className="mb-4 flex flex-col gap-1.5">
         <span className="text-[11px] font-boldNunito text-ink-400">Department</span>
-        <select
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-          className="h-[42px] cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
-        >
-          <option value="">— No department —</option>
-          {departmentOptions.map((d) => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
+        {creatingNew ? (
+          <div className="flex items-center gap-2">
+            <input
+              ref={newDeptRef}
+              type="text"
+              value={newDeptName}
+              onChange={(e) => setNewDeptName(e.target.value)}
+              placeholder="New department name"
+              maxLength={100}
+              className="h-[42px] flex-1 rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setCreatingNew(false);
+                setNewDeptName("");
+              }}
+              aria-label="Choose an existing department instead"
+              className="flex h-[42px] w-[42px] shrink-0 cursor-pointer items-center justify-center rounded-[10px] border-[1.5px] border-ink-200 text-ink-500"
+            >
+              <Icon.X size={16} />
+            </button>
+          </div>
+        ) : (
+          <select
+            value={departmentId}
+            onChange={(e) => pickDepartment(e.target.value)}
+            className="h-[42px] cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+          >
+            <option value="">— No department —</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+            <option value="__new__">+ Create new department…</option>
+          </select>
+        )}
+      </div>
+
+      {error ? (
+        <div className="mb-4 text-[12px] font-boldNunito text-signal-error">{error}</div>
+      ) : null}
+
+      <div className="flex justify-end gap-2">
+        <SecondaryButton onClick={close}>Cancel</SecondaryButton>
+        <PrimaryButton disabled={isLoading || isCreating} onClick={submit}>
+          {isLoading || isCreating ? "Saving…" : "Save changes"}
+        </PrimaryButton>
+      </div>
+    </Modal>
+  );
+};
+
+/** Create or rename a department (Employees › Departments tab). `context`
+ *  carries the department being edited ({id, name}), or is empty for a
+ *  fresh "+ New Department". */
+const DepartmentModal = ({ open, close, showToast, context }) => {
+  const isEditing = !!context?.id;
+  const [createDepartment, { isLoading: isCreating }] = useCreateDepartmentMutation();
+  const [renameDepartment, { isLoading: isRenaming }] = useRenameDepartmentMutation();
+  const [name, setName] = useState(context?.name ?? "");
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (open) {
+      setName(context?.name ?? "");
+      setError(null);
+    }
+  }, [open, context]);
+
+  const submit = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError("Enter a department name");
+      return;
+    }
+
+    setError(null);
+
+    try {
+      if (isEditing) {
+        await renameDepartment({ id: context.id, name: trimmed }).unwrap();
+        showToast(`Renamed to "${trimmed}"`);
+      } else {
+        await createDepartment(trimmed).unwrap();
+        showToast(`"${trimmed}" created`);
+      }
+      close();
+    } catch (err) {
+      setError(apiErrorMessage(err, "Couldn't save that department — please try again"));
+    }
+  };
+
+  const isLoading = isCreating || isRenaming;
+
+  return (
+    <Modal open={open} onClose={close} title={isEditing ? "Rename department" : "New department"} width="max-w-[420px]">
+      <div className="mb-4 flex flex-col gap-1.5">
+        <span className="text-[11px] font-boldNunito text-ink-400">Department name</span>
+        <input
+          type="text"
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          placeholder="e.g. Engineering"
+          maxLength={100}
+          className="h-[42px] w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
+        />
       </div>
 
       {error ? (
@@ -1127,7 +1254,7 @@ const EditEmployeeModal = ({ open, close, showToast, context }) => {
       <div className="flex justify-end gap-2">
         <SecondaryButton onClick={close}>Cancel</SecondaryButton>
         <PrimaryButton disabled={isLoading} onClick={submit}>
-          {isLoading ? "Saving…" : "Save changes"}
+          {isLoading ? "Saving…" : isEditing ? "Save changes" : "Create department"}
         </PrimaryButton>
       </div>
     </Modal>
@@ -1391,17 +1518,21 @@ const TherapistModal = ({ open, close, context }) => {
   const isOwn = !!t.is_own;
   const verified = !!t.is_verified;
   const rating = t.rating ?? null;
-  const ratingText = rating != null ? rating : "—";
+  const ratingText = rating != null ? rating : 0;
   const stars = starsFor(rating);
-  const teamSessions = t.team_sessions ?? null;
+  // null here is never "zero sessions" — the backend only ever sends null
+  // when the org is below the privacy cohort floor and withholds the real
+  // count (a real 0 is sent as the literal number 0). Showing "0" would
+  // misrepresent a withheld figure as a known one.
+  const teamSessions = t.team_sessions ?? "Withheld";
   const focusAreas = t.focus_areas?.length ? t.focus_areas : splitSpecialty(t.specialty);
   const reviews = t.reviews_list ?? [];
   const hasReviews = reviews.length > 0;
   const breakdown = t.rating_breakdown ?? null;
-  const nextSlot = t.next_slot ?? "—";
-  const responseTime = t.response_time ?? "—";
-  const formats = t.formats ?? "—";
-  const languages = t.languages ?? "—";
+  const nextSlot = t.next_slot ?? "N/A";
+  const responseTime = t.response_time ?? "N/A";
+  const formats = t.formats ?? "N/A";
+  const languages = t.languages ?? "N/A";
   const years = t.years_experience ?? null;
   const bio =
     t.bio ??
@@ -1414,7 +1545,7 @@ const TherapistModal = ({ open, close, context }) => {
 
   const kpis = [
     ["avg rating", ratingText, "text-navy-800"],
-    ["team sessions", teamSessions ?? "—", "text-navy-800"],
+    ["team sessions", teamSessions, "text-navy-800"],
     ["next slot", nextSlot, "text-brand-400"],
     ["avg response", responseTime, "text-navy-800"],
   ];
@@ -1858,6 +1989,7 @@ const AdminModals = ({ modal, context, close, showToast }) => (
     <InvoiceModal open={modal === "invoice"} close={close} context={context} />
     <EmployeeModal open={modal === "employee"} close={close} context={context} />
     <EditEmployeeModal open={modal === "editEmployee"} close={close} showToast={showToast} context={context} />
+    <DepartmentModal open={modal === "department"} close={close} showToast={showToast} context={context} />
     <ConfirmModal open={modal === "confirm"} close={close} showToast={showToast} context={context} />
     <CapacityModal open={modal === "capacity"} close={close} showToast={showToast} />
     <AddOwnTherapistModal open={modal === "addOwn"} close={close} showToast={showToast} />

@@ -66,7 +66,7 @@ export const initialsOf = (name = "") =>
     .map((w) => w.charAt(0).toUpperCase())
     .join("");
 
-export const EMPLOYEES_PER_PAGE = 5;
+export const EMPLOYEES_PER_PAGE = 10;
 
 /** "Today, 2:00 PM" / "Yesterday, 2:00 PM" / "Jul 16, 2:00 PM" / "—". */
 export const formatLastActive = (iso) => {

@@ -43,6 +43,33 @@ export const adminApiSlice = apiSliceV2.injectEndpoints({
       providesTags: ["AdminEmployees"],
     }),
 
+    // Departments are real, org-scoped rows now (not a free-text string) —
+    // this is the dropdown/combobox source everywhere a department is
+    // picked, and creating one here is what "+ Create new department"
+    // actually calls.
+    getDepartments: builder.query({
+      query: () => `/business/departments`,
+      transformResponse: (response) => response?.data ?? [],
+      providesTags: ["Departments"],
+    }),
+
+    createDepartment: builder.mutation({
+      query: (name) => ({ url: `/business/departments`, method: "POST", body: { name } }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["Departments", "AdminEmployees"],
+    }),
+
+    renameDepartment: builder.mutation({
+      query: ({ id, name }) => ({ url: `/business/departments/${id}/update`, method: "POST", body: { name } }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["Departments", "AdminEmployees"],
+    }),
+
+    deleteDepartment: builder.mutation({
+      query: (id) => ({ url: `/business/departments/${id}/delete`, method: "POST" }),
+      invalidatesTags: ["Departments", "AdminEmployees"],
+    }),
+
     updateEmployee: builder.mutation({
       query: ({ memberId, ...body }) => ({
         url: `/business/employees/${memberId}/update`,
@@ -309,6 +336,10 @@ export const {
   useGetAdminReportsQuery,
   useGetAdminEmployeesQuery,
   useGetAdminEmployeeDetailQuery,
+  useGetDepartmentsQuery,
+  useCreateDepartmentMutation,
+  useRenameDepartmentMutation,
+  useDeleteDepartmentMutation,
   useUpdateEmployeeMutation,
   useDeactivateEmployeeMutation,
   useReactivateEmployeeMutation,
