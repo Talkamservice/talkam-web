@@ -182,37 +182,272 @@ StatusBadge.propTypes = { status: PropTypes.string };
 
 /* ── 1. Dashboard ─────────────────────────────────────────────────────── */
 
+const ChangeLine = ({ percent, suffix = "this month" }) => {
+  if (percent === null || percent === undefined) return <div className="mt-1 text-[11px] text-ink-400">No prior-period data yet</div>;
+  return (
+    <div className="mt-1 text-[11px]">
+      <span className={percent >= 0 ? "font-boldNunito text-wellness-600" : "font-boldNunito text-signal-error"}>
+        {percent >= 0 ? "+" : ""}{percent}%
+      </span>{" "}
+      <span className="text-ink-400">{suffix}</span>
+    </div>
+  );
+};
+ChangeLine.propTypes = { percent: PropTypes.number, suffix: PropTypes.string };
+
+const USER_TYPE_META = {
+  regular: { label: "Regular Users", icon: <Icon.User size={15} />, tone: "bg-brand-25 text-brand-600", note: "Mobile app" },
+  employees: { label: "B2B Employees", icon: <Icon.Briefcase size={15} />, tone: "bg-brand-25 text-brand-600", note: "Web + mobile" },
+  therapists: { label: "Therapists", icon: <Icon.CheckCircle size={15} />, tone: "bg-wellness-25 text-wellness-600", note: "Web + mobile" },
+  business: { label: "Business Admins", icon: <Icon.Users size={15} />, tone: "bg-gold-50 text-gold-600", note: "Web only" },
+};
+
+const UsersByTypePanel = ({ counts }) => {
+  const entries = Object.keys(USER_TYPE_META).map((key) => ({ key, count: counts?.[key] ?? 0, ...USER_TYPE_META[key] }));
+  const max = Math.max(1, ...entries.map((e) => e.count));
+
+  return (
+    <PanelCard title="Platform Users by Type">
+      <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
+        {entries.map((e) => (
+          <div key={e.key} className={`rounded-[12px] ${e.tone} p-4`}>
+            <div className="mb-2 flex items-center gap-1.5 text-[12.5px] font-boldNunito">{e.icon} {e.label}</div>
+            <div className="mb-1 text-[22px] font-extraboldNunito text-navy-800">{e.count.toLocaleString()}</div>
+            <div className="mb-2 text-[11px] text-ink-500">{e.note}</div>
+            <div className="h-1.5 w-full rounded-full bg-white/60">
+              <div className="h-1.5 rounded-full bg-current opacity-60" style={{ width: `${Math.max(4, (e.count / max) * 100)}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </PanelCard>
+  );
+};
+UsersByTypePanel.propTypes = { counts: PropTypes.object };
+
+const MonthlyChart = ({ data }) => {
+  const rows = data ?? [];
+  const maxSessions = Math.max(1, ...rows.map((m) => m.sessions));
+  const maxRevenue = Math.max(1, ...rows.map((m) => m.revenue));
+
+  return (
+    <div className="p-5">
+      <div className="mb-3 flex items-center gap-4 text-[11.5px] text-ink-500">
+        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-brand-300" /> Sessions</span>
+        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-wellness-300" /> Revenue</span>
+      </div>
+      <div className="flex h-[170px] items-end gap-2 overflow-x-auto">
+        {rows.map((m) => (
+          <div key={m.month} className="flex min-w-[34px] flex-1 flex-col items-center gap-1.5">
+            <div className="flex h-[140px] w-full items-end justify-center gap-1">
+              <div
+                className="w-1/2 rounded-t-[3px] bg-brand-200"
+                style={{ height: `${Math.max(2, (m.sessions / maxSessions) * 140)}px` }}
+                title={`${m.sessions} sessions`}
+              />
+              <div
+                className="w-1/2 rounded-t-[3px] bg-wellness-200"
+                style={{ height: `${Math.max(2, (m.revenue / maxRevenue) * 140)}px` }}
+                title={money(m.revenue)}
+              />
+            </div>
+            <span className="text-[10.5px] text-ink-400">{m.month}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+MonthlyChart.propTypes = { data: PropTypes.array };
+
+const UpcomingPayoutsPanel = () => {
+  const { data } = useGetPlatformPayoutsQuery({ tab: "pending" });
+  const overview = data?.overview ?? {};
+  const top = (data?.payouts?.data ?? []).slice(0, 3);
+
+  return (
+    <Card className="!bg-[linear-gradient(135deg,#141B34,#1A2E5A)] !p-6 text-white">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <div className="text-[15px] font-extraboldNunito">Upcoming Payouts</div>
+          <div className="text-[11.5px] text-white/50">{overview.next_payout_date ? fmtDate(overview.next_payout_date) : "—"}</div>
+        </div>
+        <Badge tone={overview.flutterwave?.connected ? "green" : "grey"}>Flutterwave</Badge>
+      </div>
+
+      <div className="mb-4 rounded-[10px] bg-white/[0.06] p-4">
+        <div className="mb-1 text-[10.5px] uppercase tracking-wide text-white/45">Total due</div>
+        <div className="mb-1 text-[24px] font-extraboldNunito">{money(overview.pending_total)}</div>
+        <div className="text-[11.5px] text-white/50">{overview.pending_therapist_count ?? 0} therapists · {overview.pending_session_count ?? 0} sessions</div>
+      </div>
+
+      <div className="flex flex-col gap-2.5">
+        {top.length === 0 ? (
+          <div className="text-[12px] text-white/40">Nothing pending right now.</div>
+        ) : top.map((p) => (
+          <div key={p.therapist_id} className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-extraboldNunito text-white" style={{ background: avatarColor(p.therapist_id) }}>
+                {initialsOfName(p.name || "?")}
+              </span>
+              <div>
+                <div className="text-[12.5px] font-boldNunito">Dr. {p.name || "—"}</div>
+                <div className="text-[11px] text-white/45">{p.sessions} sessions</div>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[12.5px] font-boldNunito">{money(p.amount_due)}</div>
+              <div className="text-[10.5px] text-white/45">{p.type}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Link to={`${V2.platform}/payouts`} className="mt-4 block rounded-[10px] bg-white/10 px-4 py-2.5 text-center text-[12.5px] font-boldNunito text-white hover:bg-white/[0.16]">
+        Manage Payouts →
+      </Link>
+    </Card>
+  );
+};
+
+const PendingVerificationsPanel = () => {
+  const { showToast } = usePlatform();
+  const { data } = useGetPlatformTherapistVerificationsQuery({ tab: "pending" });
+  const [approve] = useApprovePlatformApplicationMutation();
+  const top = (data?.applications?.data ?? []).slice(0, 3);
+  const total = data?.overview?.pending ?? 0;
+
+  const doApprove = async (id) => {
+    try {
+      await approve(id).unwrap();
+      showToast("Application approved — therapist role granted");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't approve that application"));
+    }
+  };
+
+  return (
+    <PanelCard
+      title={
+        <span className="flex items-center gap-2">
+          Pending Verifications <Badge tone="red">{total}</Badge>
+        </span>
+      }
+      action={<Link to={`${V2.platform}/therapist-verification`} className="text-[12px] font-boldNunito text-brand-600">Review →</Link>}
+    >
+      <div className="flex flex-col divide-y divide-surface-line">
+        {top.length === 0 ? (
+          <div className="p-5 text-center text-[12.5px] text-ink-400">No applications pending.</div>
+        ) : top.map((app) => (
+          <div key={app.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-extraboldNunito text-white" style={{ background: avatarColor(app.id) }}>
+                {initialsOfName(app.user?.name || "?")}
+              </span>
+              <div>
+                <div className="text-[13px] font-boldNunito text-navy-800">Dr. {app.user?.name || "—"}</div>
+                <div className="text-[11px] text-ink-400">{app.specialties?.[0] ?? "No specialty yet"}</div>
+              </div>
+            </div>
+            <div className="flex gap-1.5">
+              <button type="button" onClick={() => doApprove(app.id)} className="cursor-pointer rounded-[8px] bg-wellness-25 px-2.5 py-1.5 text-[11.5px] font-boldNunito text-wellness-600 hover:bg-wellness-50">
+                ✓ Approve
+              </button>
+              <Link to={`${V2.platform}/therapist-verification`} title="Decline (with reason)" className="flex cursor-pointer items-center rounded-[8px] bg-surface-errorTint px-2 text-signal-error hover:bg-[#FFD9D9]">
+                <Icon.X size={13} />
+              </Link>
+            </div>
+          </div>
+        ))}
+      </div>
+    </PanelCard>
+  );
+};
+
+const RecentActivityPanel = ({ items }) => (
+  <PanelCard title="Recent Admin Activity" action={<Link to={`${V2.platform}/activity-logs`} className="text-[12px] font-boldNunito text-brand-600">View all →</Link>}>
+    <div className="flex flex-col gap-3 p-5">
+      {(items ?? []).length === 0 ? (
+        <div className="text-center text-[12.5px] text-ink-400">Nothing logged yet.</div>
+      ) : (items ?? []).map((a) => (
+        <div key={a.id} className="flex items-start gap-2.5">
+          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
+          <div>
+            <div className="text-[12.5px] text-ink-700">
+              <span className="font-boldNunito text-navy-800">{a.actor_name ?? "System"}</span> — {a.description ?? a.title}
+            </div>
+            <div className="text-[11px] text-ink-400">{ago(a.created_at)}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </PanelCard>
+);
+RecentActivityPanel.propTypes = { items: PropTypes.array };
+
 export const PlatformDashboardPage = () => {
   const { data, isLoading } = useGetPlatformDashboardQuery();
+  const kpis = data?.kpis ?? {};
 
   if (isLoading) return <KpiRow>{Array.from({ length: 4 }).map((_, i) => <AdminSkeleton key={i} className="h-32" />)}</KpiRow>;
 
   return (
     <div className="flex flex-col gap-5">
       <KpiRow>
-        <KpiCard dark icon={<Icon.Users size={17} className="text-gold-400" />} value={data?.users?.total ?? 0} label={`${data?.users?.new_this_month ?? 0} new this month`} />
-        <KpiCard icon={<Icon.Briefcase size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={data?.organizations?.total ?? 0} label={`${data?.organizations?.active ?? 0} active`} />
-        <KpiCard icon={<Icon.Calendar size={17} className="text-wellness-600" />} iconBg="bg-wellness-25" value={data?.sessions?.completed_this_month ?? 0} label="Sessions completed this month" />
-        <KpiCard icon={<Icon.DollarSign size={17} className="text-gold-600" />} iconBg="bg-gold-50" value={money(data?.sessions?.revenue_this_month)} label="Session revenue this month" />
+        <KpiCard icon={<Icon.Users size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={(kpis.total_users?.value ?? 0).toLocaleString()} label="Total Platform Users">
+          <ChangeLine percent={kpis.total_users?.change_percent} />
+        </KpiCard>
+        <KpiCard icon={<Icon.Calendar size={17} className="text-wellness-600" />} iconBg="bg-wellness-25" value={(kpis.active_sessions_mtd?.value ?? 0).toLocaleString()} label="Active Sessions MTD">
+          <ChangeLine percent={kpis.active_sessions_mtd?.change_percent} />
+        </KpiCard>
+        <KpiCard icon={<Icon.DollarSign size={17} className="text-gold-600" />} iconBg="bg-gold-50" value={money(kpis.platform_revenue?.value)} label="Platform Revenue">
+          <ChangeLine percent={kpis.platform_revenue?.change_percent} />
+        </KpiCard>
+        <KpiCard icon={<Icon.Clock size={17} className="text-signal-error" />} iconBg="bg-surface-errorTint" value={(kpis.pending_actions?.value ?? 0).toLocaleString()} label="Pending Actions">
+          <div className="mt-1 text-[11px]">
+            <span className="font-boldNunito text-gold-600">+{kpis.pending_actions?.opened_last_30_days ?? 0}</span>{" "}
+            <span className="text-ink-400">opened this month</span>
+          </div>
+        </KpiCard>
       </KpiRow>
 
-      <Card>
-        <div className="mb-3 text-body font-extraboldNunito text-navy-800">Open queues</div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="flex items-center justify-between rounded-[10px] bg-surface-page px-4 py-3">
-            <span className="text-[13px] text-ink-600">Pending feedback</span>
-            <Badge tone="gold">{data?.queues?.pending_feedback ?? 0}</Badge>
-          </div>
-          <div className="flex items-center justify-between rounded-[10px] bg-surface-page px-4 py-3">
-            <span className="text-[13px] text-ink-600">Pending deactivations</span>
-            <Badge tone="gold">{data?.queues?.pending_deactivations ?? 0}</Badge>
-          </div>
-          <div className="flex items-center justify-between rounded-[10px] bg-surface-page px-4 py-3">
-            <span className="text-[13px] text-ink-600">Open disputes</span>
-            <Badge tone="gold">{data?.queues?.open_disputes ?? 0}</Badge>
-          </div>
+      <UsersByTypePanel counts={data?.users_by_type} />
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px]">
+        <PanelCard title="Monthly Sessions & Revenue">
+          <MonthlyChart data={data?.monthly_chart} />
+        </PanelCard>
+        <UpcomingPayoutsPanel />
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <PanelCard title="Latest Users" action={<Link to={`${V2.platform}/users`} className="text-[12px] font-boldNunito text-brand-600">View all →</Link>}>
+          <Table head={["User", "Type", "Joined"]}>
+            {(data?.latest_users ?? []).length === 0 ? (
+              <EmptyRow span={3}>No users yet.</EmptyRow>
+            ) : (data?.latest_users ?? []).map((u) => (
+              <Tr key={u.id}>
+                <Td first>
+                  <div className="flex items-center gap-2.5">
+                    <UserAvatar user={u} />
+                    <div>
+                      <div className="font-boldNunito text-ink-800">{u.name || "—"}</div>
+                      <div className="text-[11px] font-normal text-ink-400">{u.email}</div>
+                    </div>
+                  </div>
+                </Td>
+                <Td><Badge tone={TYPE_BADGE_TONE[u.type] ?? "grey"} className="capitalize">{u.type}</Badge></Td>
+                <Td>{new Date(u.created_at).toLocaleDateString()}</Td>
+              </Tr>
+            ))}
+          </Table>
+        </PanelCard>
+
+        <div className="flex flex-col gap-5">
+          <PendingVerificationsPanel />
+          <RecentActivityPanel items={data?.recent_activity} />
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
@@ -4752,6 +4987,96 @@ const DOC_LABEL = {
   headshot: "Headshot",
 };
 
+const DOC_IMAGE_MIME = ["jpg", "jpeg", "png", "webp", "gif"];
+
+/** One document's real preview + approve/reject — image types get an inline
+ *  thumbnail (click to open full-size), anything else (pdf) gets a plain
+ *  "View file" link, since browsers won't reliably preview those inline. */
+const DocumentReviewRow = ({ doc, onVerdict }) => {
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+  const isImage = DOC_IMAGE_MIME.includes((doc.mime_type || "").toLowerCase());
+
+  return (
+    <div className="flex flex-col gap-2 rounded-[10px] border border-ink-200 p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-boldNunito text-ink-800">{DOC_LABEL[doc.type] ?? doc.type}</span>
+        {doc.status ? <StatusBadge status={doc.status} /> : <span className="text-[11px] text-ink-400">Not uploaded</span>}
+      </div>
+
+      {doc.file_url ? (
+        isImage ? (
+          <a href={doc.file_url} target="_blank" rel="noreferrer">
+            <img src={doc.file_url} alt={DOC_LABEL[doc.type] ?? doc.type} className="h-36 w-full rounded-[8px] border border-ink-100 object-cover" />
+          </a>
+        ) : (
+          <a href={doc.file_url} target="_blank" rel="noreferrer" className="flex h-16 items-center justify-center gap-1.5 rounded-[8px] bg-surface-page text-[12.5px] font-boldNunito text-brand-600 hover:underline">
+            <Icon.FileText size={15} /> View file
+          </a>
+        )
+      ) : (
+        <div className="flex h-16 items-center justify-center rounded-[8px] bg-surface-page text-[12px] text-ink-400">No document on file</div>
+      )}
+
+      {doc.status === "rejected" && doc.rejection_reason ? (
+        <div className="text-[11.5px] text-signal-error">Rejected: {doc.rejection_reason}</div>
+      ) : null}
+
+      {doc.file_url && doc.status === "pending" ? (
+        rejecting ? (
+          <div className="flex items-center gap-1.5">
+            <input
+              autoFocus
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Rejection reason"
+              className="h-8 flex-1 rounded-[8px] border-[1.5px] border-ink-200 px-2.5 text-[12px]"
+            />
+            <SecondaryButton
+              className="!px-2 !py-1 !text-[11px]"
+              onClick={() => {
+                if (!reason.trim()) return;
+                onVerdict(doc.id, "rejected", reason.trim());
+                setRejecting(false);
+                setReason("");
+              }}
+            >
+              Confirm
+            </SecondaryButton>
+            <SecondaryButton className="!px-2 !py-1 !text-[11px]" onClick={() => setRejecting(false)}>Cancel</SecondaryButton>
+          </div>
+        ) : (
+          <div className="flex gap-1.5">
+            <button type="button" onClick={() => onVerdict(doc.id, "approved")} className="flex-1 cursor-pointer rounded-[8px] bg-wellness-25 py-1.5 text-[12px] font-boldNunito text-wellness-600 hover:bg-wellness-50">
+              ✓ Approve
+            </button>
+            <button type="button" onClick={() => setRejecting(true)} className="flex-1 cursor-pointer rounded-[8px] bg-surface-errorTint py-1.5 text-[12px] font-boldNunito text-surface-errorInk hover:bg-[#FFD9D9]">
+              ✕ Reject
+            </button>
+          </div>
+        )
+      ) : null}
+    </div>
+  );
+};
+DocumentReviewRow.propTypes = { doc: PropTypes.object.isRequired, onVerdict: PropTypes.func.isRequired };
+
+const DocumentsReviewModal = ({ app, onVerdict, onClose }) => {
+  const byType = new Map((app?.documents ?? []).map((d) => [d.type, d]));
+  const rows = Object.keys(DOC_LABEL).map((type) => byType.get(type) ?? { id: null, type, status: null, file_url: null, mime_type: null, rejection_reason: null });
+
+  return (
+    <Modal open={!!app} onClose={onClose} title="Review documents" subtitle={app ? `Dr. ${app.user?.name ?? "—"}` : undefined} width="max-w-[640px]">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {rows.map((doc) => (
+          <DocumentReviewRow key={doc.type} doc={doc} onVerdict={onVerdict} />
+        ))}
+      </div>
+    </Modal>
+  );
+};
+DocumentsReviewModal.propTypes = { app: PropTypes.object, onVerdict: PropTypes.func.isRequired, onClose: PropTypes.func.isRequired };
+
 export const PlatformTherapistVerificationPage = () => {
   const { showToast } = usePlatform();
   const [tab, setTab] = useState("pending");
@@ -4763,10 +5088,14 @@ export const PlatformTherapistVerificationPage = () => {
   const [verdictDocument] = useVerdictPlatformDocumentMutation();
   const [rejectingId, setRejectingId] = useState(null);
   const [reason, setReason] = useState("");
+  const [reviewingDocsId, setReviewingDocsId] = useState(null);
 
   const rows = data?.applications?.data ?? [];
   const overview = data?.overview ?? {};
   const tabCounts = { pending: overview.pending ?? 0, under_review: overview.under_review ?? 0, approved: overview.approved_mtd ?? 0, declined: overview.declined_mtd ?? 0 };
+  // Re-derived from the live query result (not a snapshot) so the modal
+  // reflects each verdict immediately once the list refetches.
+  const reviewingDocsApp = rows.find((a) => a.id === reviewingDocsId) ?? null;
 
   const act = async (fn, okMsg) => {
     try {
@@ -4782,6 +5111,14 @@ export const PlatformTherapistVerificationPage = () => {
     await act(() => reject({ id: rejectingId, reason }).unwrap(), "Application rejected");
     setRejectingId(null);
     setReason("");
+  };
+
+  const docVerdict = (documentId, status, docReason) => {
+    if (!documentId) return;
+    act(
+      () => verdictDocument({ documentId, status, reason: docReason }).unwrap(),
+      status === "approved" ? "Document approved" : "Document rejected"
+    );
   };
 
   return (
@@ -4833,33 +5170,24 @@ export const PlatformTherapistVerificationPage = () => {
                 <Field label="Submitted">{fmtDate(app.submitted_at)}</Field>
               </div>
 
-              {(app.documents ?? []).length ? (
-                <div className="mb-3 flex flex-wrap gap-1.5">
-                  {app.documents.map((d) => (
-                    <span key={d.id} className="inline-flex items-center gap-1.5 rounded-[8px] border border-ink-200 bg-surface-page px-2.5 py-1.5 text-[11.5px]">
-                      {d.file_url ? (
-                        <a href={d.file_url} target="_blank" rel="noreferrer" className="font-boldNunito text-brand-600 hover:underline">
-                          {DOC_LABEL[d.type] ?? d.type}
-                        </a>
-                      ) : (
-                        <span className="text-ink-400">{DOC_LABEL[d.type] ?? d.type} (not uploaded)</span>
-                      )}
-                      {d.status === "pending" && d.file_url ? (
-                        <span className="flex gap-0.5">
-                          <button type="button" title="Approve document" onClick={() => act(() => verdictDocument({ documentId: d.id, status: "approved" }).unwrap(), "Document approved")} className="cursor-pointer text-wellness-600">
-                            <Icon.Check size={12} />
-                          </button>
-                          <button type="button" title="Reject document" onClick={() => act(() => verdictDocument({ documentId: d.id, status: "rejected", reason: "Rejected by staff" }).unwrap(), "Document rejected")} className="cursor-pointer text-signal-error">
-                            <Icon.X size={12} />
-                          </button>
-                        </span>
-                      ) : (
-                        <StatusBadge status={d.status} />
-                      )}
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                {Object.keys(DOC_LABEL).map((type) => {
+                  const d = (app.documents ?? []).find((doc) => doc.type === type);
+                  return (
+                    <span key={type} className="inline-flex items-center gap-1.5 rounded-[8px] border border-ink-200 bg-surface-page px-2.5 py-1.5 text-[11.5px] text-ink-600">
+                      {DOC_LABEL[type]}
+                      {d ? <StatusBadge status={d.status} /> : <span className="text-ink-400">missing</span>}
                     </span>
-                  ))}
-                </div>
-              ) : null}
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setReviewingDocsId(app.id)}
+                  className="cursor-pointer rounded-[8px] bg-brand-25 px-2.5 py-1.5 text-[11.5px] font-boldNunito text-brand-600 hover:bg-brand-50"
+                >
+                  <Icon.Eye size={12} className="mr-1 inline" /> Review Documents
+                </button>
+              </div>
 
               {rejectingId === app.id ? (
                 <div className="flex items-center gap-2">
@@ -4897,6 +5225,8 @@ export const PlatformTherapistVerificationPage = () => {
           <Pager page={data?.applications?.current_page ?? 1} lastPage={data?.applications?.last_page ?? 1} onChange={setPage} />
         </div>
       )}
+
+      <DocumentsReviewModal app={reviewingDocsApp} onVerdict={docVerdict} onClose={() => setReviewingDocsId(null)} />
     </div>
   );
 };
