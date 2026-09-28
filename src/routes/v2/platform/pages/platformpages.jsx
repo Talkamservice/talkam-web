@@ -1957,9 +1957,6 @@ export const PlatformPayoutsPage = () => {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
-            <Badge tone={fw.webhooks_active ? "green" : "grey"} dot>
-              {fw.connected ? `Flutterwave Connected (${fw.mode})` : "Flutterwave Not Connected"} · Webhooks {fw.webhooks_active ? "Active" : "Idle"}
-            </Badge>
             {watchingRun ? (
               <Badge tone="gold" dot>Batch running…</Badge>
             ) : null}
