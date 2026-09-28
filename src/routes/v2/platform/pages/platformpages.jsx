@@ -3880,7 +3880,16 @@ export const PlatformUsersPage = () => {
 
   const saveEdit = async () => {
     if (!editing?.name?.trim()) return;
-    await act(() => updateUser({ id: editing.id, name: editing.name.trim() }).unwrap(), "User updated");
+    await act(
+      () => updateUser({
+        id: editing.id,
+        name: editing.name.trim(),
+        phone_number: editing.phone_number?.trim() || null,
+        gender: editing.gender || null,
+        date_of_birth: editing.date_of_birth || null,
+      }).unwrap(),
+      "User updated"
+    );
     setEditing(null);
   };
 
@@ -3935,7 +3944,18 @@ export const PlatformUsersPage = () => {
                       <button type="button" title="View" onClick={() => navigate(`${V2.platform}/users/${u.id}`)} className="cursor-pointer rounded-[8px] p-1.5 text-brand-600 hover:bg-brand-25">
                         <Icon.Eye size={15} />
                       </button>
-                      <button type="button" title="Edit" onClick={() => setEditing({ id: u.id, name: u.name })} className="cursor-pointer rounded-[8px] p-1.5 text-ink-500 hover:bg-ink-50">
+                      <button
+                        type="button"
+                        title="Edit"
+                        onClick={() => setEditing({
+                          id: u.id,
+                          name: u.name,
+                          phone_number: u.phone_number ?? "",
+                          gender: u.gender ?? "",
+                          date_of_birth: u.date_of_birth ?? "",
+                        })}
+                        className="cursor-pointer rounded-[8px] p-1.5 text-ink-500 hover:bg-ink-50"
+                      >
                         <Icon.Edit2 size={15} />
                       </button>
                       {u.status === "Inactive" ? (
@@ -3960,14 +3980,51 @@ export const PlatformUsersPage = () => {
         </PanelCard>
       )}
 
-      {/* Edit name */}
-      <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit user" width="max-w-[400px]">
-        <input
-          value={editing?.name ?? ""}
-          onChange={(e) => setEditing((s) => ({ ...s, name: e.target.value }))}
-          placeholder="Full name"
-          className="mb-4 h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
-        />
+      {/* Edit user */}
+      <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit user" width="max-w-[440px]">
+        <div className="mb-3">
+          <label className="mb-1.5 block text-[11px] font-boldNunito text-ink-400">Full name</label>
+          <input
+            value={editing?.name ?? ""}
+            onChange={(e) => setEditing((s) => ({ ...s, name: e.target.value }))}
+            placeholder="Full name"
+            className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
+          />
+        </div>
+        <div className="mb-3 grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1.5 block text-[11px] font-boldNunito text-ink-400">Phone number</label>
+            <input
+              value={editing?.phone_number ?? ""}
+              onChange={(e) => setEditing((s) => ({ ...s, phone_number: e.target.value }))}
+              placeholder="Phone number"
+              className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-boldNunito text-ink-400">Gender</label>
+            <select
+              value={editing?.gender ?? ""}
+              onChange={(e) => setEditing((s) => ({ ...s, gender: e.target.value }))}
+              className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px] text-ink-800"
+            >
+              <option value="">—</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Others">Others</option>
+              <option value="Choose not to specify">Choose not to specify</option>
+            </select>
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="mb-1.5 block text-[11px] font-boldNunito text-ink-400">Date of birth</label>
+          <input
+            type="date"
+            value={editing?.date_of_birth ?? ""}
+            onChange={(e) => setEditing((s) => ({ ...s, date_of_birth: e.target.value }))}
+            className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
+          />
+        </div>
         <div className="flex justify-end gap-2">
           <SecondaryButton onClick={() => setEditing(null)}>Cancel</SecondaryButton>
           <PrimaryButton onClick={saveEdit} disabled={isSaving || !editing?.name?.trim()}>{isSaving ? "Saving…" : "Save"}</PrimaryButton>
@@ -4063,7 +4120,7 @@ export const PlatformUserDetailPage = () => {
   const [deleteUser] = useDeletePlatformUserMutation();
 
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState("");
+  const [editForm, setEditForm] = useState({ name: "", phone_number: "", gender: "", date_of_birth: "" });
   const [suspending, setSuspending] = useState(false);
   const [banning, setBanning] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -4120,7 +4177,19 @@ export const PlatformUserDetailPage = () => {
             <button type="button" onClick={() => setDeleting(true)} className="cursor-pointer rounded-[10px] bg-surface-errorTint px-4 py-2.5 text-[13px] font-boldNunito text-surface-errorInk hover:bg-[#FFD9D9]">
               Delete
             </button>
-            <PrimaryButton onClick={() => { setName(user.name); setEditing(true); }}>Edit Profile</PrimaryButton>
+            <PrimaryButton
+              onClick={() => {
+                setEditForm({
+                  name: user.name ?? "",
+                  phone_number: user.phone_number ?? "",
+                  gender: user.gender ?? "",
+                  date_of_birth: user.date_of_birth ?? "",
+                });
+                setEditing(true);
+              }}
+            >
+              Edit Profile
+            </PrimaryButton>
           </div>
         </div>
       </Card>
@@ -4152,11 +4221,65 @@ export const PlatformUserDetailPage = () => {
       {tab === "community" ? <UserCommunityTab id={id} /> : null}
       {tab === "activity" ? <UserActivityTab id={id} /> : null}
 
-      <Modal open={editing} onClose={() => setEditing(false)} title="Edit user" width="max-w-[400px]">
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className="mb-4 h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+      <Modal open={editing} onClose={() => setEditing(false)} title="Edit user" width="max-w-[440px]">
+        <div className="mb-3">
+          <label className="mb-1.5 block text-[11px] font-boldNunito text-ink-400">Full name</label>
+          <input
+            value={editForm.name}
+            onChange={(e) => setEditForm((s) => ({ ...s, name: e.target.value }))}
+            placeholder="Full name"
+            className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
+          />
+        </div>
+        <div className="mb-3 grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1.5 block text-[11px] font-boldNunito text-ink-400">Phone number</label>
+            <input
+              value={editForm.phone_number}
+              onChange={(e) => setEditForm((s) => ({ ...s, phone_number: e.target.value }))}
+              placeholder="Phone number"
+              className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-boldNunito text-ink-400">Gender</label>
+            <select
+              value={editForm.gender}
+              onChange={(e) => setEditForm((s) => ({ ...s, gender: e.target.value }))}
+              className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px] text-ink-800"
+            >
+              <option value="">—</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Others">Others</option>
+              <option value="Choose not to specify">Choose not to specify</option>
+            </select>
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="mb-1.5 block text-[11px] font-boldNunito text-ink-400">Date of birth</label>
+          <input
+            type="date"
+            value={editForm.date_of_birth}
+            onChange={(e) => setEditForm((s) => ({ ...s, date_of_birth: e.target.value }))}
+            className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
+          />
+        </div>
         <div className="flex justify-end gap-2">
           <SecondaryButton onClick={() => setEditing(false)}>Cancel</SecondaryButton>
-          <PrimaryButton disabled={isSaving || !name.trim()} onClick={() => act(() => updateUser({ id: user.id, name: name.trim() }).unwrap(), "User updated").then(() => setEditing(false))}>
+          <PrimaryButton
+            disabled={isSaving || !editForm.name.trim()}
+            onClick={() => act(
+              () => updateUser({
+                id: user.id,
+                name: editForm.name.trim(),
+                phone_number: editForm.phone_number.trim() || null,
+                gender: editForm.gender || null,
+                date_of_birth: editForm.date_of_birth || null,
+              }).unwrap(),
+              "User updated"
+            ).then(() => setEditing(false))}
+          >
             {isSaving ? "Saving…" : "Save"}
           </PrimaryButton>
         </div>
