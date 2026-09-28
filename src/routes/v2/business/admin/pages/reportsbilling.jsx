@@ -772,6 +772,17 @@ export const AdminBilling = () => {
     const openPlanKey = pricingPlanKey ?? plansList.find((p) => p.isCurrent)?.key;
     const openPlan = plansList.find((p) => p.key === openPlanKey);
 
+    // Switching which plan's pricing you're viewing refills the seat picker
+    // to that plan's own band (its minSeats) — otherwise a seat count typed
+    // while looking at one plan silently carries over and can land outside
+    // the newly-opened plan's own volume table. The current plan still
+    // defaults to the org's real seat count, same as the calculator does
+    // everywhere else.
+    const viewPlanPricing = (p) => {
+      setPricingPlanKey(p.key);
+      setSeats(p.isCurrent ? null : String(p.minSeats));
+    };
+
     return (
       <Card>
         <button type="button" onClick={() => setView("manage")} className={BACK_BTN}>
@@ -796,11 +807,11 @@ export const AdminBilling = () => {
                 key={p.key}
                 role="button"
                 tabIndex={0}
-                onClick={() => setPricingPlanKey(p.key)}
+                onClick={() => viewPlanPricing(p)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    setPricingPlanKey(p.key);
+                    viewPlanPricing(p);
                   }
                 }}
                 className={classNames(
@@ -851,7 +862,7 @@ export const AdminBilling = () => {
                   <SecondaryButton
                     onClick={(e) => {
                       e.stopPropagation();
-                      setPricingPlanKey(p.key);
+                      viewPlanPricing(p);
                     }}
                   >
                     View Pricing →
@@ -1116,12 +1127,7 @@ export const AdminBilling = () => {
               </span>
             </div>
             <div className="mt-2.5 text-[13px] text-white/60">{currentPlan.renews}</div>
-            {currentPlan.payMethodLabel ? (
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#3BA88F]/40 bg-[#3BA88F]/[0.16] px-3 py-1.5 text-[12px] font-boldNunito text-[#CDE6D9]">
-                <span className="h-1.5 w-1.5 rounded-full bg-wellness-400" />
-                Billed monthly · {currentPlan.payMethodLabel}
-              </div>
-            ) : (
+            {currentPlan.payMethodLabel ? null : (
               <button
                 type="button"
                 onClick={completeSetup}
