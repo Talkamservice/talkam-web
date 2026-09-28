@@ -19,6 +19,7 @@ import {
   useReviewBookingMutation,
   useSaveSessionMoodMutation,
   useGetTherapistsQuery,
+  useGetTherapistProfileQuery,
   useGetTherapistSlotsQuery,
   useCreateBookingMutation,
   useInitiatePaymentMutation,
@@ -105,12 +106,110 @@ const slotRangeLabel = (startIso, endIso) => {
   return `${samePeriod ? startLabel.replace(/ (AM|PM)$/, "") : startLabel} – ${endLabel}`;
 };
 
-/** "2026-09-17" in the viewer's own local date — what the day-view slot
- *  picker asks the backend for, so it gets just today's slots (the backend
- *  already excludes anything already past). */
-const todayDateParam = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+/** "2026-09-17" — the calendar-day key used to bucket a multi-day slot scan
+ *  into day tabs (a therapist's recurring weekly availability can open up
+ *  slots on several upcoming days, not just today). */
+const dayKeyOf = (iso) => String(iso).replace(" ", "T").slice(0, 10);
+
+/** Buckets a flat, multi-day slot list (GET .../slots with no `date` param —
+ *  the backend's own 14-day forward scan, TherapistSlotService::
+ *  upcomingSlots()) into one group per day that actually has open slots,
+ *  ordered soonest first. A day with no availability just never appears —
+ *  there's nothing to page through or show as an empty tab. */
+const groupSlotsByDay = (slots) => {
+  const byDay = new Map();
+  for (const sl of slots) {
+    const value = sl?.starts_at ?? sl;
+    const day = dayKeyOf(value);
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day).push(sl);
+  }
+  return [...byDay.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([day, daySlots]) => ({ day, slots: daySlots }));
+};
+
+/** Horizontally-scrollable day-tab row — no visible scrollbar (`.no-scrollbar`,
+ *  src/index.css), edge arrows instead. Each arrow only renders while there's
+ *  actually more to scroll in that direction, so it never implies content
+ *  that isn't there; scroll position (not just content length) drives that,
+ *  so it stays right if the row is scrolled with a trackpad/swipe too. */
+const DayTabs = ({ dayGroups, activeDay, onPick }) => {
+  const railRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateArrows = () => {
+    const el = railRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+
+  useEffect(() => {
+    updateArrows();
+  }, [dayGroups]);
+
+  if (dayGroups.length <= 1) return null;
+
+  const nudge = (dir) => railRef.current?.scrollBy({ left: dir * 168, behavior: "smooth" });
+
+  return (
+    <div className="relative">
+      {canScrollLeft ? (
+        <button
+          type="button"
+          onClick={() => nudge(-1)}
+          aria-label="Scroll to earlier days"
+          className="absolute inset-y-0 left-0 z-10 flex w-9 cursor-pointer items-center justify-start bg-gradient-to-r from-white via-white/95 to-transparent"
+        >
+          <span className="flex h-6 w-6 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 shadow-[0_1px_4px_rgba(20,27,52,0.15)]">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </span>
+        </button>
+      ) : null}
+
+      <div
+        ref={railRef}
+        onScroll={updateArrows}
+        className="no-scrollbar flex gap-1.5 overflow-x-auto px-1 pb-0.5"
+      >
+        {dayGroups.map((g) => (
+          <button
+            key={g.day}
+            type="button"
+            onClick={() => onPick(g.day)}
+            aria-pressed={activeDay === g.day}
+            className={classNames(
+              "shrink-0 cursor-pointer whitespace-nowrap rounded-full border-[1.5px] px-3 py-1.5 text-[12px] font-boldNunito",
+              activeDay === g.day
+                ? "border-navy-800 bg-navy-800 text-white"
+                : "border-ink-200 bg-surface-page text-ink-600"
+            )}
+          >
+            {slotDayLabel(g.slots[0]?.starts_at ?? g.slots[0])}
+          </button>
+        ))}
+      </div>
+
+      {canScrollRight ? (
+        <button
+          type="button"
+          onClick={() => nudge(1)}
+          aria-label="Scroll to later days"
+          className="absolute inset-y-0 right-0 z-10 flex w-9 cursor-pointer items-center justify-end bg-gradient-to-l from-white via-white/95 to-transparent"
+        >
+          <span className="flex h-6 w-6 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 shadow-[0_1px_4px_rgba(20,27,52,0.15)]">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </span>
+        </button>
+      ) : null}
+    </div>
+  );
 };
 
 /**
@@ -255,26 +354,33 @@ const RedButton = ({ className, children, ...props }) => (
 const RescheduleModal = ({ close, showToast, session }) => {
   const [slot, setSlot] = useState(null);
   const [slotPage, setSlotPage] = useState(1);
+  const [selectedDay, setSelectedDay] = useState(null);
   const [reschedule, { isLoading }] = useRescheduleBookingMutation();
   const SLOTS_PER_PAGE = 6;
 
-  // Today only, matching the booking modal's "Choose a time" step — not a
-  // multi-day scan (that used to paginate into the dozens of pages once a
-  // therapist had a full day's worth of 20-minute slots).
+  // No `date` param — the backend's default is a 14-day forward scan
+  // (TherapistSlotService::upcomingSlots()) across the therapist's full
+  // recurring weekly availability, not just today.
   const { data: slotData, isLoading: slotsIsLoading, isFetching: slotsIsFetching } = useGetTherapistSlotsQuery(
-    { id: session?.therapist_id, date: todayDateParam() },
+    { id: session?.therapist_id },
     { skip: !session?.therapist_id }
   );
   const slotsLoading = slotsIsLoading || slotsIsFetching;
 
-  const slots = useMemo(() => slotData?.slots ?? slotData ?? [], [slotData]);
+  const allSlots = useMemo(() => slotData?.slots ?? slotData ?? [], [slotData]);
+  const dayGroups = useMemo(() => groupSlotsByDay(allSlots), [allSlots]);
+  const activeDay = dayGroups.find((g) => g.day === selectedDay)?.day ?? dayGroups[0]?.day ?? null;
+  const slots = dayGroups.find((g) => g.day === activeDay)?.slots ?? [];
   const slotPageCount = Math.max(1, Math.ceil(slots.length / SLOTS_PER_PAGE));
   const visibleSlots = slots.slice((slotPage - 1) * SLOTS_PER_PAGE, slotPage * SLOTS_PER_PAGE);
 
-  // A different session/therapist can have a shorter slot list than the page we were on.
+  // A different session/therapist, or switching day tabs, can have a
+  // shorter slot list than the page we were on — and a slot chosen on a
+  // now-abandoned day must not silently stay "selected".
   useEffect(() => {
     setSlotPage(1);
-  }, [session?.therapist_id]);
+    setSlot(null);
+  }, [session?.therapist_id, activeDay]);
 
   const confirm = async () => {
     if (!slot) return;
@@ -297,12 +403,15 @@ const RescheduleModal = ({ close, showToast, session }) => {
             Currently: {slotLabel(session?.starts_at)} with {session?.therapist_name}. Pick a
             new slot to propose below — your session stays as-is until they confirm it.
           </div>
+          {!slotsLoading ? (
+            <DayTabs dayGroups={dayGroups} activeDay={activeDay} onPick={setSelectedDay} />
+          ) : null}
           <div className="grid grid-cols-2 gap-2">
             {slotsLoading ? (
               [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[52px]" />)
-            ) : slots.length === 0 ? (
+            ) : dayGroups.length === 0 ? (
               <div className="col-span-2 rounded-[10px] bg-[#F8F9FC] px-3.5 py-3 text-[12px] leading-[1.6] text-ink-400">
-                No open slots left today. Try messaging your therapist directly.
+                No open slots in the next two weeks. Try messaging your therapist directly.
               </div>
             ) : (
               visibleSlots.map((s) => {
@@ -858,15 +967,20 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
   const [error, setError] = useState(null);
 
   const [selectedTherapistId, setSelectedTherapistId] = useState(null);
+  const [peekingTherapist, setPeekingTherapist] = useState(false);
   const [therapistSearch, setTherapistSearch] = useState("");
   const [visibleTherapistCount, setVisibleTherapistCount] = useState(5);
   const [slotPage, setSlotPage] = useState(1);
+  const [selectedDay, setSelectedDay] = useState(null);
   const { data: careTeam, isLoading: careTeamLoading } = useGetCareTeamQuery();
   const { data: directory, isLoading: directoryLoading } = useGetTherapistsQuery({ per_page: 20 });
   const [createBooking, { isLoading: isBooking }] = useCreateBookingMutation();
   const loadingCandidates = careTeamLoading || directoryLoading;
   const THERAPISTS_PER_PAGE = 5;
-  const SLOTS_PER_PAGE = 6;
+  // 3 columns × 3 rows — matches the wider Sheet (620px) below, so the
+  // reclaimed width actually shows more slots per page instead of just
+  // stretching a 2-column grid into empty space.
+  const SLOTS_PER_PAGE = 9;
 
   /* Whoever this member can actually book: their existing care-team
      therapist first (continuity of care), then everyone else the directory
@@ -909,6 +1023,9 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
 
   const suggested = candidates.find((c) => c.id === selectedTherapistId) ?? candidates[0] ?? null;
   const therapistId = suggested?.id;
+  const { data: peekProfile, isFetching: peekLoading } = useGetTherapistProfileQuery(therapistId, {
+    skip: !peekingTherapist || !therapistId,
+  });
 
   // Nothing to choose between with 0-1 candidates — land straight on step 2
   // rather than showing a "choose your therapist" screen with one option.
@@ -919,26 +1036,34 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
     }
   }, [candidates, selectedTherapistId]);
 
-  // Today only, not a multi-day scan — and only what's still bookable; the
-  // backend already drops anything already past rather than returning it.
+  // No `date` param — the backend's default is a 14-day forward scan
+  // (TherapistSlotService::upcomingSlots()) across the therapist's full
+  // recurring weekly availability, not just today; only what's still
+  // bookable, since the backend already drops anything already past.
   const { data: slotData, isLoading: slotsIsLoading, isFetching: slotsIsFetching } = useGetTherapistSlotsQuery(
-    { id: therapistId, date: todayDateParam() },
+    { id: therapistId },
     { skip: !therapistId }
   );
   // isLoading alone only covers the very first fetch for a given cache key
-  // (id+date) — switching therapists or any background refetch would skip
+  // (id) — switching therapists or any background refetch would skip
   // straight to "No open slots" for a beat before the real data lands.
   // isFetching covers every fetch, initial or not.
   const slotsLoading = slotsIsLoading || slotsIsFetching;
-  const slots = useMemo(() => slotData?.slots ?? slotData ?? [], [slotData]);
+  const allSlots = useMemo(() => slotData?.slots ?? slotData ?? [], [slotData]);
+  const dayGroups = useMemo(() => groupSlotsByDay(allSlots), [allSlots]);
+  const activeDay = dayGroups.find((g) => g.day === selectedDay)?.day ?? dayGroups[0]?.day ?? null;
+  const slots = dayGroups.find((g) => g.day === activeDay)?.slots ?? [];
   const chosen = slot ?? slots[0]?.starts_at ?? slots[0] ?? null;
   const slotPageCount = Math.max(1, Math.ceil(slots.length / SLOTS_PER_PAGE));
   const visibleSlots = slots.slice((slotPage - 1) * SLOTS_PER_PAGE, slotPage * SLOTS_PER_PAGE);
 
-  // A new therapist's slot list can be shorter than the page we were on.
+  // A new therapist, or switching day tabs, can have a shorter slot list
+  // than the page we were on — and a slot chosen on a now-abandoned day
+  // must not silently stay "selected" and get booked instead.
   useEffect(() => {
     setSlotPage(1);
-  }, [therapistId]);
+    setSlot(null);
+  }, [therapistId, activeDay]);
 
   const pickTherapist = (id) => {
     setSelectedTherapistId(id);
@@ -1109,8 +1234,9 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
   // Step 2 — choose a time + format.
   if (step === 2) {
     return (
+      <>
       <Scrim onClose={close}>
-        <Sheet width={460}>
+        <Sheet width={620}>
           <SheetHeader
             title="Choose a time"
             subtitle={`Step 2 of 3 — with ${suggested?.name ?? "your therapist"}`}
@@ -1118,23 +1244,68 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
             onClose={close}
           />
           <div className="flex flex-col gap-4 px-6 py-[22px]">
+            <button
+              type="button"
+              onClick={() => setPeekingTherapist(true)}
+              className="flex cursor-pointer items-start gap-3 rounded-[12px] border-[1.5px] border-ink-100 bg-surface-page px-3.5 py-3 text-left hover:border-navy-800"
+            >
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[10px] text-[14px] font-extraboldNunito text-white"
+                style={{ background: therapistSquareColour(suggested?.name ?? "") }}
+              >
+                {initialsOf(suggested?.name ?? "")}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="truncate text-[14px] font-extraboldNunito text-navy-800">
+                    {suggested?.name ?? "Your therapist"}
+                  </span>
+                  {suggested?.is_verified ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-wellness-50 px-2 py-[2px] text-[10px] font-boldNunito text-wellness-600">
+                      Verified by TalkAM
+                    </span>
+                  ) : null}
+                </div>
+                {therapistFocus(suggested) ? (
+                  <div className="truncate text-[12px] text-ink-500">{therapistFocus(suggested)}</div>
+                ) : null}
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-ink-500">
+                  {suggested?.reviews_count ? (
+                    <span className="font-boldNunito text-gold-600">
+                      {suggested.rating}★ <span className="font-normal text-ink-400">({suggested.reviews_count})</span>
+                    </span>
+                  ) : null}
+                  {suggested?.years_experience ? <span>{suggested.years_experience} yrs experience</span> : null}
+                  {suggested?.session_formats?.length ? (
+                    <span className="capitalize">{suggested.session_formats.join(" · ")}</span>
+                  ) : null}
+                  {suggested?.languages?.length ? <span>{suggested.languages.join(", ")}</span> : null}
+                </div>
+              </div>
+              <span className="shrink-0 self-center text-[11px] font-boldNunito text-brand-400">View profile ›</span>
+            </button>
+
             <p className="text-[13px] leading-[1.6] text-ink-500">
-              Today&apos;s available slots. All times are in WAT (West Africa Time).
+              Available slots. All times are in WAT (West Africa Time).
             </p>
 
+            {!slotsLoading ? (
+              <DayTabs dayGroups={dayGroups} activeDay={activeDay} onPick={setSelectedDay} />
+            ) : null}
+
             {slotsLoading ? (
-              <div className="grid grid-cols-2 gap-2">
-                {[0, 1, 2, 3].map((i) => (
+              <div className="grid grid-cols-3 gap-2">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
                   <Skeleton key={i} className="h-[52px]" />
                 ))}
               </div>
-            ) : slots.length === 0 ? (
+            ) : dayGroups.length === 0 ? (
               <div className="rounded-[10px] bg-surface-page px-3.5 py-3 text-[13px] text-ink-500">
-                No open slots right now — send a request instead below.
+                No open slots in the next two weeks — send a request instead below.
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {visibleSlots.map((sl) => {
                     const value = sl.starts_at ?? sl;
                     return (
@@ -1218,6 +1389,143 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
           </div>
         </Sheet>
       </Scrim>
+
+      {peekingTherapist ? (
+        <Scrim onClose={() => setPeekingTherapist(false)}>
+          <Sheet width={420}>
+            <SheetHeader title="Therapist Profile" onClose={() => setPeekingTherapist(false)} />
+            <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto px-6 py-[22px]">
+              {peekLoading ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-14 w-14 shrink-0 rounded-[12px]" />
+                    <div className="flex-1">
+                      <Skeleton className="mb-2 h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[12px] text-[16px] font-extraboldNunito text-white"
+                      style={{ background: therapistSquareColour(peekProfile?.name ?? suggested?.name ?? "") }}
+                    >
+                      {initialsOf(peekProfile?.name ?? suggested?.name ?? "")}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[16px] font-extraboldNunito text-navy-800">
+                          {peekProfile?.name ?? suggested?.name ?? "Your therapist"}
+                        </span>
+                        {(peekProfile ?? suggested)?.is_verified ? (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-wellness-50 px-2 py-[2px] text-[10px] font-boldNunito text-wellness-600">
+                            Verified by TalkAM
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="text-[12.5px] text-ink-500">{peekProfile?.credential_type ?? "—"}</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 rounded-[12px] bg-surface-page p-3 text-center">
+                    <div>
+                      <div className="text-[16px] font-extraboldNunito text-navy-800">
+                        {peekProfile?.reviews_count ? `${peekProfile.rating}★` : "N/A"}
+                      </div>
+                      <div className="text-[10.5px] text-ink-400">
+                        {peekProfile?.reviews_count ? `${peekProfile.reviews_count} reviews` : "avg rating"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[16px] font-extraboldNunito text-navy-800">
+                        {peekProfile?.completed_sessions ?? 0}
+                      </div>
+                      <div className="text-[10.5px] text-ink-400">completed sessions</div>
+                    </div>
+                    <div>
+                      <div className="text-[16px] font-extraboldNunito text-navy-800">
+                        {peekProfile?.years_experience ?? "N/A"}
+                      </div>
+                      <div className="text-[10.5px] text-ink-400">yrs experience</div>
+                    </div>
+                  </div>
+
+                  {peekProfile?.specialties?.length ? (
+                    <div>
+                      <div className="mb-2 text-[11px] font-extraboldNunito tracking-[0.04em] text-navy-800">
+                        FOCUS AREAS
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {peekProfile.specialties.map((s) => (
+                          <span key={s.id ?? s.name} className="rounded-full bg-brand-25 px-2.5 py-1 text-[11px] font-boldNunito text-brand-600">
+                            {s.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div>
+                    <div className="mb-2 text-[11px] font-extraboldNunito tracking-[0.04em] text-navy-800">
+                      ABOUT
+                    </div>
+                    <p className="text-[12.5px] leading-[1.6] text-ink-600">
+                      {peekProfile?.bio || "This therapist hasn't added a bio yet."}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-2 text-[12.5px] text-ink-600">
+                    <div className="flex items-center justify-between border-b border-ink-100 pb-2">
+                      <span className="text-ink-400">Session formats</span>
+                      <span className="font-boldNunito capitalize">
+                        {peekProfile?.session_formats?.length ? peekProfile.session_formats.join(" · ") : "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between border-b border-ink-100 pb-2">
+                      <span className="text-ink-400">Languages</span>
+                      <span className="font-boldNunito">
+                        {peekProfile?.languages?.length ? peekProfile.languages.join(", ") : "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-ink-400">Billed to your organisation</span>
+                      <span className="font-boldNunito text-wellness-600">Yes</span>
+                    </div>
+                  </div>
+
+                  {peekProfile?.reviews_count ? (
+                    <div>
+                      <div className="mb-2 text-[11px] font-extraboldNunito tracking-[0.04em] text-navy-800">
+                        RATINGS BREAKDOWN
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        {[5, 4, 3, 2, 1].map((star) => {
+                          const count = peekProfile.ratings_histogram?.[star] ?? 0;
+                          const pct = peekProfile.reviews_count ? Math.round((count / peekProfile.reviews_count) * 100) : 0;
+                          return (
+                            <div key={star} className="flex items-center gap-2.5">
+                              <span className="w-2.5 text-[10.5px] text-ink-400">{star}</span>
+                              <div className="h-1.5 flex-1 rounded-[3px] bg-ink-100">
+                                <div className="h-1.5 rounded-[3px] bg-gold-400" style={{ width: `${pct}%` }} />
+                              </div>
+                              <span className="w-6 text-right text-[10.5px] text-ink-400">{count}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
+                </>
+              )}
+            </div>
+          </Sheet>
+        </Scrim>
+      ) : null}
+      </>
     );
   }
 

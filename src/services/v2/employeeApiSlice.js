@@ -111,6 +111,11 @@ export const employeeApiSlice = apiSliceV2.injectEndpoints({
       transformResponse: (response) => response?.data,
     }),
 
+    getTherapistProfile: builder.query({
+      query: (id) => `/user/therapists/${id}`,
+      transformResponse: (response) => response?.data,
+    }),
+
     getTherapistSlots: builder.query({
       query: ({ id, ...params }) => ({ url: `/user/therapists/${id}/slots`, params }),
       transformResponse: (response) => response?.data,
@@ -280,6 +285,7 @@ export const {
   useSaveSessionMoodMutation,
   useGetCareTeamQuery,
   useGetTherapistsQuery,
+  useGetTherapistProfileQuery,
   useGetTherapistSlotsQuery,
   useCreateBookingMutation,
   useInitiatePaymentMutation,

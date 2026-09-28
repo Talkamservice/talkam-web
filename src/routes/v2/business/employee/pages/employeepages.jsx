@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import classNames from "classnames";
+import * as Icon from "react-feather";
 import { Card } from "../../../../../components/v2/dashboard/chrome";
 import { useEmployee } from "../employeelayout";
 import { V2 } from "../../../../../constants/v2routes";
@@ -50,6 +51,7 @@ import {
 import { apiErrorMessage } from "../../auth/authlayout";
 import { selectCurrentToken } from "../../../../../services/authSlice";
 import { useConversationChannel } from "../../../../../hooks/useConversationChannel";
+import { useNow } from "../../../../../hooks/useNow";
 
 /**
  * The seven employee dashboard screens.
@@ -183,6 +185,41 @@ const sessionRangeLabel = (iso, minutes = 50) => {
   const base = sessionDayLabel(iso).split(" · ")[0];
 
   return `${base} · ${fmt(start)} – ${fmt(end)} WAT`;
+};
+
+/** "Today · 2:41 PM" / "Sep 25 · 2:41 PM" — same day-aware convention as
+ *  sessionDayLabel, just without the "WAT" suffix (a chat timestamp reads
+ *  better compact than a booking time does). */
+const messageTimeLabel = (iso) => {
+  if (!iso) return "";
+  const date = new Date(iso.replace(" ", "T"));
+  const today = new Date();
+  const isToday = date.toDateString() === today.toDateString();
+  const day = isToday
+    ? "Today"
+    : date.toLocaleDateString("en-NG", { ...WAT, month: "short", day: "numeric" });
+  const time = date.toLocaleTimeString("en-NG", { ...WAT, hour: "numeric", minute: "2-digit" });
+
+  return `${day} · ${time}`;
+};
+
+/** True once `now` has actually reached the session's real join window —
+ *  the same `join_opens_at` SessionLifecycleService::join() itself enforces
+ *  server-side, not a guessed client-side window. */
+const canJoinSession = (session, now) => {
+  if (!session?.join_opens_at) return false;
+  return now >= new Date(session.join_opens_at.replace(" ", "T")).getTime();
+};
+
+/** "Available in 12 min" — shown on a disabled Join button before its real
+ *  join window opens. */
+const joinAvailabilityLabel = (session) => {
+  if (!session?.join_opens_at) return "";
+  const mins = Math.round((new Date(session.join_opens_at.replace(" ", "T")).getTime() - Date.now()) / 60000);
+  if (mins <= 0) return "";
+  if (mins < 60) return `Available in ${mins} min`;
+  const h = Math.floor(mins / 60);
+  return `Available in ${h}h ${mins % 60}m`;
 };
 
 const historyDateLabel = (iso) => {
@@ -361,11 +398,15 @@ export const EmployeeHome = () => {
   // `name` is the full name; the greeting uses just the first word of it.
   const firstName = (me?.name ?? "").split(" ")[0];
 
-  const homeMood = MOOD_BY_VALUE[today?.mood]?.key ?? null;
+  const todaysMood = MOOD_BY_VALUE[today?.mood] ?? null;
+  const homeMood = todaysMood?.key ?? null;
+  const checkedInToday = !!today?.checked_in;
 
+  const now = useNow();
   const next = bookings?.upcoming?.[0] ?? null;
   const typeLabel = SESSION_TYPE_META[next?.format]?.label ?? SESSION_TYPE_META.video.label;
   const lastCompleted = bookings?.past?.find((s) => s.status === "completed" && !s.rating) ?? null;
+  const nextIsJoinable = canJoinSession(next, now);
 
   /* Deck: a fortnight area chart. The API returns one point per day with null
      for missed days; nulls are dropped so the line stays continuous. */
@@ -438,16 +479,30 @@ export const EmployeeHome = () => {
         </span>
       </div>
 
-      {/* inline daily check-in */}
+      {/* inline daily check-in — one per calendar day (mood_checkins is
+          unique on user_id + checked_in_on), so once today's is logged the
+          picker is replaced rather than left clickable; it opens back up
+          on its own once the server's "today" rolls over. */}
       <Card>
         <div className="mb-3.5 flex items-center justify-between gap-3">
           <div>
             <CardTitle>How are you feeling today?</CardTitle>
-            <CardSub>A 5-second check-in — private to you</CardSub>
+            <CardSub>
+              {checkedInToday ? "Logged for today — see you tomorrow" : "A 5-second check-in — private to you"}
+            </CardSub>
           </div>
-          {homeMood ? <SavedPill>✓ Logged today</SavedPill> : null}
+          {checkedInToday ? <SavedPill>✓ Logged today</SavedPill> : null}
         </div>
-        <HomeMoodRow value={homeMood} onPick={pickMood} />
+        {checkedInToday ? (
+          <div className="flex items-center gap-3 rounded-[12px] border-[1.5px] border-[#EEF0F4] bg-[#F8F9FC] px-4 py-3.5">
+            <span className="text-[26px]">{todaysMood?.emoji}</span>
+            <span className="text-[13px] font-boldNunito text-ink-600">
+              You logged <span className="lowercase">{todaysMood?.label}</span> today. Come back tomorrow for your next check-in.
+            </span>
+          </div>
+        ) : (
+          <HomeMoodRow value={homeMood} onPick={pickMood} />
+        )}
       </Card>
 
       <div className="grid gap-4 xl:grid-cols-[1.3fr_1fr]">
@@ -508,9 +563,11 @@ export const EmployeeHome = () => {
               <button
                 type="button"
                 onClick={() => open("preSessionMood", next)}
-                className="flex-1 cursor-pointer rounded-[10px] bg-[#3BA88F] p-2.5 text-center text-[12px] font-extraboldNunito text-white"
+                disabled={!nextIsJoinable}
+                title={nextIsJoinable ? undefined : joinAvailabilityLabel(next)}
+                className="flex-1 cursor-pointer rounded-[10px] bg-[#3BA88F] p-2.5 text-center text-[12px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40"
               >
-                Join Room
+                {nextIsJoinable ? "Join Room" : joinAvailabilityLabel(next) || "Join Room"}
               </button>
             </div>
           </div>
@@ -788,11 +845,13 @@ export const EmployeeSessions = () => {
   const { data: summaryData } = useGetMoodSummaryQuery(14);
   const [startConversation, { isLoading: isOpeningChat }] = useStartConversationMutation();
 
+  const now = useNow();
   const next = bookings?.upcoming?.[0] ?? null;
   const past = bookings?.past ?? [];
   const s = bookings?.summary;
   const typeShort = SESSION_TYPE_META[next?.format]?.short ?? SESSION_TYPE_META.video.short;
   const therapist = careTeam?.therapist;
+  const nextIsJoinable = canJoinSession(next, now);
 
   const messageTherapist = async () => {
     if (!careTeam?.session_id) return;
@@ -868,9 +927,11 @@ export const EmployeeSessions = () => {
               <button
                 type="button"
                 onClick={() => open("preSessionMood", next)}
-                className="flex-1 cursor-pointer rounded-[11px] bg-[#3BA88F] p-3 text-center text-[13px] font-extraboldNunito text-white shadow-[0_6px_16px_rgba(59,168,143,0.35)]"
+                disabled={!nextIsJoinable}
+                title={nextIsJoinable ? undefined : joinAvailabilityLabel(next)}
+                className="flex-1 cursor-pointer rounded-[11px] bg-[#3BA88F] p-3 text-center text-[13px] font-extraboldNunito text-white shadow-[0_6px_16px_rgba(59,168,143,0.35)] disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40 disabled:shadow-none"
               >
-                Join Room →
+                {nextIsJoinable ? "Join Room →" : joinAvailabilityLabel(next) || "Join Room →"}
               </button>
               <button
                 type="button"
@@ -1525,7 +1586,7 @@ export const EmployeeMessages = () => {
         </span>
       </div>
 
-      <div className="flex flex-col overflow-hidden rounded-ds-lg border border-surface-line bg-white lg:h-[460px] lg:flex-row">
+      <div className="flex flex-col overflow-hidden rounded-ds-lg border border-surface-line bg-white lg:h-[75dvh] lg:flex-row">
         <div className="shrink-0 overflow-y-auto border-b border-ink-100 lg:w-[260px] lg:border-b-0 lg:border-r">
           {isLoading ? (
             <div className="flex flex-col gap-2 p-3.5">
@@ -1605,19 +1666,49 @@ export const EmployeeMessages = () => {
               </EmptyNote>
             ) : (
               <>
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={classNames(
-                      "max-w-[70%] px-3.5 py-2.5 text-[13px]",
-                      m.sender_id === me?.id
-                        ? "self-end rounded-[14px_14px_3px_14px] bg-[#017FC8] text-white"
-                        : "self-start rounded-[14px_14px_14px_3px] bg-[#F0F0F2] text-ink-800"
-                    )}
-                  >
-                    {m.message}
-                  </div>
-                ))}
+                {messages.map((m) => {
+                  const isOwn = m.sender_id === me?.id;
+                  const isFile = m.message_type === "File" && m.file_url;
+                  return (
+                    <div
+                      key={m.id}
+                      className={classNames(
+                        "flex max-w-[70%] flex-col gap-1",
+                        isOwn ? "self-end items-end" : "self-start items-start"
+                      )}
+                    >
+                      <div
+                        className={classNames(
+                          "px-3.5 py-2.5 text-[13px]",
+                          isOwn
+                            ? "rounded-[14px_14px_3px_14px] bg-[#017FC8] text-white"
+                            : "rounded-[14px_14px_14px_3px] bg-[#F0F0F2] text-ink-800"
+                        )}
+                      >
+                        {isFile ? (
+                          <>
+                            {m.message ? <div className="mb-1.5">{m.message}</div> : null}
+                            <a
+                              href={m.file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={classNames(
+                                "flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-[12.5px] font-boldNunito",
+                                isOwn ? "bg-white/15 text-white" : "bg-white text-[#017FC8]"
+                              )}
+                            >
+                              <Icon.FileText size={14} />
+                              {m.file_name ?? "View file"}
+                            </a>
+                          </>
+                        ) : (
+                          m.message
+                        )}
+                      </div>
+                      <span className="px-1 text-[10px] text-ink-400">{messageTimeLabel(m.created_at)}</span>
+                    </div>
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </>
             )}
@@ -1651,7 +1742,7 @@ export const EmployeeMessages = () => {
 export const EmployeeProfile = () => {
   const { open, showToast } = useEmployee();
 
-  const { data: me, refetch: refetchMe } = useGetMeV2Query();
+  const { data: me } = useGetMeV2Query();
   const { data: consentState } = useGetConsentsQuery();
   const { data: privacy } = useGetPrivacySettingsQuery();
   const [saveConsents, { isLoading: isSavingConsent }] = useSaveConsentsMutation();
@@ -1665,7 +1756,6 @@ export const EmployeeProfile = () => {
   
   // Initialize and update from server
   useEffect(() => {
-    console.log('Server name changed:', serverName);
     if (serverName) {
       setFullName(serverName);
     }
@@ -1687,12 +1777,9 @@ export const EmployeeProfile = () => {
           {}
         ),
       };
-      console.log('Saving consents:', payload);
-      const result = await saveConsents(payload).unwrap();
-      console.log('Consent save result:', result);
+      await saveConsents(payload).unwrap();
       showToast("Privacy settings updated");
     } catch (error) {
-      console.error('Error saving consents:', error);
       showToast("Couldn't update that just now — please try again");
     }
   };
@@ -1700,12 +1787,9 @@ export const EmployeeProfile = () => {
   const toggleTwoFa = async () => {
     if (twoFa) {
       try {
-        console.log('Disabling 2FA...');
-        const result = await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
-        console.log('2FA disable result:', result);
+        await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
         showToast("Two-factor authentication disabled");
       } catch (error) {
-        console.error('Error disabling 2FA:', error);
         showToast("Couldn't update that just now — please try again");
       }
       return;
@@ -1714,32 +1798,16 @@ export const EmployeeProfile = () => {
     open("twoFactorEnable", {
       email: me?.email,
       onConfirm: async (otp) => {
-        try {
-          console.log('Enabling 2FA with OTP...');
-          const result = await savePrivacy({ ...privacy, two_factor_enabled: true, otp }).unwrap();
-          console.log('2FA enable result:', result);
-          return result;
-        } catch (error) {
-          console.error('Error enabling 2FA:', error);
-          throw error;
-        }
+        return await savePrivacy({ ...privacy, two_factor_enabled: true, otp }).unwrap();
       },
     });
   };
 
   const saveProfile = async () => {
     try {
-      console.log('Saving profile:', { full_name: fullName });
-      const result = await updateProfile({ full_name: fullName }).unwrap();
-      console.log('Profile save result:', result);
-      
-      // Force refetch to ensure UI updates
-      const refetchResult = await refetchMe();
-      console.log('Refetch result:', refetchResult.data);
-      
+      await updateProfile({ name: fullName }).unwrap();
       showToast("Profile saved");
     } catch (error) {
-      console.error('Error saving profile:', error);
       showToast("Couldn't save your profile just now — please try again");
     }
   };
@@ -1760,10 +1828,7 @@ export const EmployeeProfile = () => {
             <input
               id="employee-full-name"
               value={fullName}
-              onChange={(e) => {
-                console.log('Input changed to:', e.target.value);
-                setFullName(e.target.value);
-              }}
+              onChange={(e) => setFullName(e.target.value)}
               className="flex h-[42px] w-full items-center rounded-[10px] border-[1.5px] border-ink-200 px-[13px] text-[13px] text-ink-800"
             />
           </div>
