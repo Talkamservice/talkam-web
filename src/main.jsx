@@ -1202,6 +1202,8 @@ const router = createBrowserRouter([
           { path: "businesses/:id", lazy: async () => { let { PlatformBusinessDetailPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformBusinessDetailPage }; } },
           { path: "sessions", lazy: async () => { let { PlatformSessionsPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformSessionsPage }; } },
           { path: "billing", lazy: async () => { let { PlatformBillingPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformBillingPage }; } },
+          { path: "custom-quote-requests", lazy: async () => { let { PlatformCustomQuoteRequestsPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformCustomQuoteRequestsPage }; } },
+          { path: "business-plans", lazy: async () => { let { PlatformBusinessPlansPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformBusinessPlansPage }; } },
           { path: "payouts", lazy: async () => { let { PlatformPayoutsPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformPayoutsPage }; } },
           { path: "community", lazy: async () => { let { PlatformCommunityPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformCommunityPage }; } },
           { path: "community/groups/:id", lazy: async () => { let { PlatformGroupDetailPage } = await import("./routes/v2/platform/pages/platformpages"); return { Component: PlatformGroupDetailPage }; } },

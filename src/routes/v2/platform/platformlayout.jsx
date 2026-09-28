@@ -60,6 +60,8 @@ const NAV_SECTIONS = [
     items: [
       { to: at("/payouts"), label: "Payout Management", icon: <Icon.DollarSign size={16} />, roles: ["Super Admin"] },
       { to: at("/billing"), label: "Billing & Invoices", icon: <Icon.FileText size={16} />, roles: ["Super Admin"] },
+      { to: at("/custom-quote-requests"), label: "Custom Pricing Requests", icon: <Icon.Tag size={16} />, roles: ["Super Admin"], countKey: "pending_custom_quotes", countTone: "gold" },
+      { to: at("/business-plans"), label: "Plans & Pricing", icon: <Icon.Layers size={16} />, roles: ["Super Admin"] },
       { to: at("/disputes"), label: "Payment Disputes", icon: <Icon.Clock size={16} />, roles: ["Super Admin", "Admin", "Support Staff"], countKey: "open_disputes", countTone: "gold" },
     ],
   },
@@ -104,6 +106,8 @@ export const PAGE_META = {
   deactivations: { title: "Deactivation Reqs", subtitle: "Account deactivation requests" },
   payouts: { title: "Payout Management", subtitle: "Therapist payouts" },
   billing: { title: "Billing & Invoices", subtitle: "Revenue & invoices" },
+  "custom-quote-requests": { title: "Custom Pricing Requests", subtitle: "Wellbeing Plus leads from business admins" },
+  "business-plans": { title: "Plans & Pricing", subtitle: "The plan catalogue business admins see on their own Billing page" },
   disputes: { title: "Payment Disputes", subtitle: "Open disputes queue" },
   sessions: { title: "All Sessions", subtitle: "Platform-wide session activity" },
   cms: { title: "Journal Articles", subtitle: "CMS" },

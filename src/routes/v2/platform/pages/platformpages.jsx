@@ -23,6 +23,11 @@ import { apiErrorMessage } from "../../business/auth/authlayout";
 import {
   useGetPlatformDashboardQuery,
   useGetPlatformGrowthQuery,
+  useGetPlatformGrowthAarrrQuery,
+  useGetPlatformGrowthFunnelQuery,
+  useGetPlatformGrowthCohortsQuery,
+  useGetPlatformGrowthSegmentsQuery,
+  useGetPlatformGrowthSegmentUsersQuery,
   useGetPlatformBusinessesQuery,
   useGetPlatformBusinessQuery,
   useCreatePlatformBusinessMutation,
@@ -40,6 +45,12 @@ import {
   useDeletePlatformBusinessMutation,
   useGetPlatformSessionsQuery,
   useGetPlatformBillingQuery,
+  useGetPlatformCustomQuoteRequestsQuery,
+  useMarkPlatformCustomQuoteRequestContactedMutation,
+  useGetPlatformBusinessPlansQuery,
+  useCreatePlatformBusinessPlanMutation,
+  useUpdatePlatformBusinessPlanMutation,
+  useDeletePlatformBusinessPlanMutation,
   useGetPlatformPayoutsQuery,
   useProcessPlatformPayoutMutation,
   useProcessAllPlatformPayoutsMutation,
@@ -208,24 +219,41 @@ export const PlatformDashboardPage = () => {
 
 /* ── 2. Growth ────────────────────────────────────────────────────────── */
 
-export const PlatformGrowthPage = () => {
-  const { data, isLoading } = useGetPlatformGrowthQuery("12w");
+const GROWTH_TABS = [
+  { key: "aarrr", label: "AARRR Overview" },
+  { key: "funnel", label: "Conversion Funnel" },
+  { key: "cohorts", label: "Cohort Retention" },
+  { key: "segments", label: "Segments" },
+];
 
-  if (isLoading) return <SkeletonPanel />;
+const GrowthNotTracked = ({ items }) => {
+  if (!items?.length) return null;
+  return (
+    <InfoStrip tone="gold" icon={<Icon.EyeOff size={15} className="mt-px shrink-0 text-[#7A5608]" />}>
+      Not tracked yet (needs event instrumentation this app doesn&apos;t have): {items.join(", ")}.
+    </InfoStrip>
+  );
+};
+GrowthNotTracked.propTypes = { items: PropTypes.arrayOf(PropTypes.string) };
+
+const GrowthOverviewTab = () => {
+  const { data, isLoading } = useGetPlatformGrowthQuery("12w");
+  const { data: aarrr, isLoading: aarrrLoading } = useGetPlatformGrowthAarrrQuery("12w");
+
+  if (isLoading || aarrrLoading) return <SkeletonPanel />;
 
   const maxSignups = Math.max(1, ...(data?.user_signups ?? []).map((w) => w.count));
 
   return (
     <div className="flex flex-col gap-5">
-      <JustLaunched>
-        A coarse funnel from real signup/session timestamps — not the full segment/cohort
-        engine from the design mockup (that needs an events pipeline that doesn&apos;t exist yet).
-      </JustLaunched>
-
       <KpiRow>
-        <KpiCard icon={<Icon.UserPlus size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={data?.funnel?.signed_up ?? 0} label="Signed up (window)" />
-        <KpiCard icon={<Icon.Calendar size={17} className="text-wellness-600" />} iconBg="bg-wellness-25" value={data?.funnel?.booked_first_session ?? 0} label="Booked a first session" />
+        <KpiCard icon={<Icon.UserPlus size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={aarrr?.acquisition?.value ?? 0} label="Acquisition — signed up (12w)" />
+        <KpiCard icon={<Icon.Zap size={17} className="text-wellness-600" />} iconBg="bg-wellness-25" value={`${aarrr?.activation?.rate_percent ?? 0}%`} label="Activation — onboarding completed" />
+        <KpiCard icon={<Icon.RefreshCw size={17} className="text-gold-600" />} iconBg="bg-gold-50" value={`${aarrr?.retention?.rate_percent ?? 0}%`} label="Retention — active in last 30d" />
+        <KpiCard icon={<Icon.DollarSign size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={money(aarrr?.revenue?.value)} label="Revenue — MRR" />
       </KpiRow>
+
+      <GrowthNotTracked items={aarrr?.not_tracked} />
 
       <PanelCard title="Weekly user signups">
         <div className="flex h-[160px] items-end gap-1.5 overflow-x-auto p-5">
@@ -243,6 +271,219 @@ export const PlatformGrowthPage = () => {
           ) : null}
         </div>
       </PanelCard>
+    </div>
+  );
+};
+
+const GrowthFunnelTab = () => {
+  const { data, isLoading } = useGetPlatformGrowthFunnelQuery("12w");
+
+  if (isLoading) return <SkeletonPanel />;
+
+  const stages = data?.stages ?? [];
+  const maxValue = Math.max(1, ...stages.map((s) => s.value));
+
+  return (
+    <div className="flex flex-col gap-5">
+      <GrowthNotTracked items={data?.not_tracked} />
+
+      <PanelCard title={`Signup → completed session (last ${data?.window_weeks ?? 12} weeks)`}>
+        <div className="flex flex-col gap-3 p-5">
+          {stages.map((s) => (
+            <div key={s.key} className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-[12.5px]">
+                <span className="font-boldNunito text-ink-700">{s.label}</span>
+                <span className="text-ink-500">{s.value.toLocaleString()} · {s.rate_percent}%</span>
+              </div>
+              <div className="h-3 w-full rounded-full bg-surface-page">
+                <div
+                  className="h-3 rounded-full bg-brand-400"
+                  style={{ width: `${Math.max(2, (s.value / maxValue) * 100)}%` }}
+                />
+              </div>
+            </div>
+          ))}
+          {stages.length === 0 ? <div className="text-center text-[12.5px] text-ink-400">No signups in this window yet.</div> : null}
+        </div>
+      </PanelCard>
+    </div>
+  );
+};
+
+const CohortRetentionTab = () => {
+  const { data, isLoading } = useGetPlatformGrowthCohortsQuery(8);
+
+  if (isLoading) return <SkeletonPanel />;
+
+  const cohorts = data?.cohorts ?? [];
+  const cellTone = (pct) => {
+    if (pct === null || pct === undefined) return "bg-surface-page text-ink-300";
+    if (pct >= 50) return "bg-wellness-400 text-white";
+    if (pct >= 25) return "bg-wellness-100 text-wellness-700";
+    if (pct > 0) return "bg-gold-50 text-gold-700";
+    return "bg-surface-page text-ink-400";
+  };
+
+  return (
+    <div className="flex flex-col gap-5">
+      <InfoStrip tone="blue" icon={<Icon.Info size={15} className="mt-px shrink-0 text-brand-400" />}>
+        &quot;Active&quot; = a session, mood check-in, post or comment in that week. A greyed cell means that week
+        hasn&apos;t happened yet for that cohort, not 0%.
+      </InfoStrip>
+
+      <PanelCard title="Weekly signup cohorts">
+        <div className="overflow-x-auto p-5">
+          <table className="w-full border-separate border-spacing-1 text-[12px]">
+            <thead>
+              <tr>
+                <th className="px-2 py-1.5 text-left font-boldNunito text-ink-500">Cohort</th>
+                <th className="px-2 py-1.5 text-left font-boldNunito text-ink-500">Size</th>
+                {Array.from({ length: 8 }).map((_, k) => (
+                  <th key={k} className="px-2 py-1.5 text-center font-boldNunito text-ink-500">W{k}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {cohorts.map((c) => (
+                <tr key={c.cohort_week}>
+                  <td className="whitespace-nowrap px-2 py-1.5 text-ink-700">{c.cohort_week}</td>
+                  <td className="px-2 py-1.5 text-ink-500">{c.size}</td>
+                  {c.retention_percent.map((pct, k) => (
+                    <td key={k} className={`rounded-[6px] px-2 py-1.5 text-center ${cellTone(pct)}`}>
+                      {pct === null || pct === undefined ? "—" : `${pct}%`}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {cohorts.length === 0 ? <div className="py-6 text-center text-[12.5px] text-ink-400">No cohorts in this window yet.</div> : null}
+        </div>
+      </PanelCard>
+    </div>
+  );
+};
+
+const SEGMENT_ICONS = {
+  power_users: <Icon.Zap size={17} className="text-gold-600" />,
+  at_risk: <Icon.AlertTriangle size={17} className="text-[#AC4242]" />,
+  new_activated: <Icon.Sunrise size={17} className="text-brand-600" />,
+  b2b_employees: <Icon.Briefcase size={17} className="text-navy-700" />,
+  therapy_ready: <Icon.Heart size={17} className="text-wellness-600" />,
+  community_only: <Icon.MessageSquare size={17} className="text-brand-600" />,
+};
+
+const SegmentUsersModal = ({ segmentKey, label, onClose }) => {
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useGetPlatformGrowthSegmentUsersQuery({ key: segmentKey, page }, { skip: !segmentKey });
+
+  const total = data?.total ?? 0;
+  const perPage = data?.per_page ?? 20;
+  const pages = Math.max(1, Math.ceil(total / perPage));
+
+  return (
+    <Modal open={!!segmentKey} onClose={onClose} title={label} subtitle={`${total} matching user${total === 1 ? "" : "s"}`} width="max-w-[560px]">
+      {isLoading ? (
+        <div className="flex flex-col gap-2 p-5">{Array.from({ length: 5 }).map((_, i) => <AdminSkeleton key={i} className="h-10 w-full" />)}</div>
+      ) : (
+        <>
+          <Table head={["Name", "Email", "Signed up"]}>
+            {(data?.data ?? []).map((u) => (
+              <Tr key={u.id}>
+                <Td first>{u.name}</Td>
+                <Td>{u.email}</Td>
+                <Td>{when(u.signed_up_at)}</Td>
+              </Tr>
+            ))}
+            {(data?.data ?? []).length === 0 ? <EmptyRow span={3}>No users in this segment.</EmptyRow> : null}
+          </Table>
+          {pages > 1 ? (
+            <div className="flex items-center justify-between px-5 py-3.5">
+              <span className="text-[12px] text-ink-400">Page {page} of {pages}</span>
+              <div className="flex gap-2">
+                <SecondaryButton onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>Prev</SecondaryButton>
+                <SecondaryButton onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page >= pages}>Next</SecondaryButton>
+              </div>
+            </div>
+          ) : null}
+        </>
+      )}
+    </Modal>
+  );
+};
+SegmentUsersModal.propTypes = { segmentKey: PropTypes.string, label: PropTypes.string, onClose: PropTypes.func };
+
+const SegmentsTab = () => {
+  const { data, isLoading } = useGetPlatformGrowthSegmentsQuery();
+  const [viewing, setViewing] = useState(null);
+
+  if (isLoading) return <KpiRow>{Array.from({ length: 6 }).map((_, i) => <AdminSkeleton key={i} className="h-36" />)}</KpiRow>;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <InfoStrip tone="blue" icon={<Icon.Info size={15} className="mt-px shrink-0 text-brand-400" />}>
+        Every segment is computed live from real rows — descriptions say exactly what qualifies. &quot;Export CSV&quot;
+        and a custom segment builder from the design mockup aren&apos;t built yet.
+      </InfoStrip>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {(data ?? []).map((s) => (
+          <Card key={s.key}>
+            <div className="flex items-start justify-between">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-surface-page">{SEGMENT_ICONS[s.key] ?? <Icon.Users size={17} className="text-ink-500" />}</div>
+              {s.mom_change_percent === null || s.mom_change_percent === undefined ? null : (
+                <Badge tone={s.mom_change_percent > 0 ? "green" : s.mom_change_percent < 0 ? "red" : "grey"}>
+                  {s.mom_change_percent > 0 ? "+" : ""}{s.mom_change_percent}% MoM
+                </Badge>
+              )}
+            </div>
+            <div className="mt-3 text-[26px] font-extraboldNunito text-navy-800">{s.count.toLocaleString()}</div>
+            <div className="mt-0.5 text-[13px] font-boldNunito text-ink-700">{s.label}</div>
+            <div className="mt-1.5 text-[12px] leading-snug text-ink-400">{s.description}</div>
+            <button
+              type="button"
+              onClick={() => setViewing(s)}
+              className="mt-4 cursor-pointer rounded-[10px] border border-surface-line px-3.5 py-2 text-[12.5px] font-boldNunito text-ink-600 hover:bg-surface-page"
+            >
+              View Users
+            </button>
+          </Card>
+        ))}
+      </div>
+
+      <SegmentUsersModal segmentKey={viewing?.key} label={viewing?.label} onClose={() => setViewing(null)} />
+    </div>
+  );
+};
+
+export const PlatformGrowthPage = () => {
+  const [tab, setTab] = useState("aarrr");
+
+  return (
+    <div className="flex flex-col gap-5">
+      <JustLaunched>
+        Built from real signup, session, mood check-in and community timestamps — not the design
+        mockup&apos;s full analytics suite. Each tab discloses what it can&apos;t compute yet rather than
+        estimating it.
+      </JustLaunched>
+
+      <div className="flex flex-wrap gap-2 border-b border-surface-line">
+        {GROWTH_TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setTab(t.key)}
+            className={`cursor-pointer border-b-2 px-3 py-2.5 text-[12.5px] font-boldNunito ${tab === t.key ? "border-brand-400 text-brand-600" : "border-transparent text-ink-400"}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "aarrr" ? <GrowthOverviewTab /> : null}
+      {tab === "funnel" ? <GrowthFunnelTab /> : null}
+      {tab === "cohorts" ? <CohortRetentionTab /> : null}
+      {tab === "segments" ? <SegmentsTab /> : null}
     </div>
   );
 };
@@ -929,7 +1170,7 @@ export const PlatformSessionsPage = () => {
     <div className="flex flex-col gap-5">
       <KpiRow>
         <KpiCard icon={<Icon.Calendar size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={overview.total_mtd ?? 0} label="Total Sessions MTD">
-          <div className="text-[11px] text-ink-400">{overview.date_range_label ?? "—"}</div>
+          <div className="text-[11px] text-ink-400">{overview.date_range_label ?? "N/A"}</div>
         </KpiCard>
         <KpiCard icon={<Icon.Radio size={17} className="text-wellness-600" />} iconBg="bg-wellness-25" value={overview.live_now ?? 0} label="Live Now">
           <div className="text-[11px] text-ink-400">Active session rooms</div>
@@ -937,7 +1178,7 @@ export const PlatformSessionsPage = () => {
         <KpiCard icon={<Icon.XCircle size={17} className="text-signal-error" />} iconBg="bg-surface-errorTint" value={overview.cancelled_mtd ?? 0} label="Cancelled">
           <div className="text-[11px] text-ink-400">{overview.cancellation_rate_percent ?? 0}% cancellation rate</div>
         </KpiCard>
-        <KpiCard icon={<Icon.Star size={17} className="text-gold-500" />} iconBg="bg-gold-50" value={overview.avg_rating ? `${overview.avg_rating}★` : "—"} label="Avg Rating">
+        <KpiCard icon={<Icon.Star size={17} className="text-gold-500" />} iconBg="bg-gold-50" value={overview.avg_rating != null ? `${overview.avg_rating}★` : "0★"} label="Avg Rating">
           <div className="text-[11px] text-ink-400">Across all completed sessions</div>
         </KpiCard>
       </KpiRow>
@@ -968,12 +1209,12 @@ export const PlatformSessionsPage = () => {
                 return (
                   <Tr key={s.id}>
                     <Td first className="!font-boldNunito !text-brand-600">{s.reference}</Td>
-                    <Td>{s.client ?? "—"}</Td>
-                    <Td>{s.therapist ?? "—"}</Td>
+                    <Td>{s.client ?? "N/A"}</Td>
+                    <Td>{s.therapist ?? "N/A"}</Td>
                     <Td><Badge tone={s.is_b2b ? "gold" : "purple"}>{s.is_b2b ? "B2B" : "Mobile"}</Badge></Td>
                     <Td>{sessionWhen(s.starts_at)}</Td>
                     <Td><Badge tone={meta.tone}>{meta.label}</Badge></Td>
-                    <Td>{s.rating ? s.rating.toFixed(1) : "—"}</Td>
+                    <Td>{s.rating != null ? s.rating.toFixed(1) : "0"}</Td>
                   </Tr>
                 );
               })
@@ -1023,6 +1264,378 @@ export const PlatformBillingPage = () => {
         </Table>
         <Pager page={data?.invoices?.current_page ?? 1} lastPage={data?.invoices?.last_page ?? 1} onChange={setPage} />
       </PanelCard>
+    </div>
+  );
+};
+
+/* ── 5b. Custom Pricing Requests ──────────────────────────────────────── */
+
+export const PlatformCustomQuoteRequestsPage = () => {
+  const { showToast } = usePlatform();
+  const [page, setPage] = useState(1);
+  const { data, isFetching } = useGetPlatformCustomQuoteRequestsQuery(page);
+  const [markContacted, { isLoading: isMarking }] = useMarkPlatformCustomQuoteRequestContactedMutation();
+  const [markingId, setMarkingId] = useState(null);
+  const overview = data?.overview;
+  const rows = data?.requests?.data ?? [];
+
+  const act = async (id) => {
+    setMarkingId(id);
+    try {
+      await markContacted(id).unwrap();
+      showToast("Marked as contacted");
+    } catch (err) {
+      showToast(apiErrorMessage(err, "That action didn't go through — please try again"));
+    } finally {
+      setMarkingId(null);
+    }
+  };
+
+  if (isFetching && !data) return <KpiRow>{Array.from({ length: 4 }).map((_, i) => <AdminSkeleton key={i} className="h-32" />)}</KpiRow>;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <KpiRow>
+        <KpiCard icon={<Icon.Tag size={17} className="text-gold-600" />} iconBg="bg-gold-50" value={overview?.pending ?? 0} label="Pending" />
+        <KpiCard icon={<Icon.CheckCircle size={17} className="text-wellness-600" />} iconBg="bg-wellness-25" value={overview?.contacted_this_month ?? 0} label="Contacted This Month" />
+        <KpiCard icon={<Icon.Users size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={overview?.total_requests ?? 0} label="Total Requests" />
+        <KpiCard icon={<Icon.TrendingUp size={17} className="text-navy-600" />} iconBg="bg-ink-100" value={(overview?.avg_team_size ?? 0).toLocaleString("en-NG")} label="Avg Team Size Requested" />
+      </KpiRow>
+
+      <PanelCard title="Wellbeing Plus leads">
+        <Table head={["Organization", "Seats Licensed", "Requested By", "Team Size", "Contact Email", "Status", "Requested", "Actions"]}>
+          {rows.length === 0 ? (
+            <EmptyRow span={8}>No custom pricing requests yet.</EmptyRow>
+          ) : (
+            rows.map((r) => (
+              <Tr key={r.id}>
+                <Td first>{r.organization?.name ?? "—"}</Td>
+                <Td>{r.organization ? `${r.organization.active_members}/${r.organization.seats_licensed || "—"}` : "—"}</Td>
+                <Td>{r.requested_by ?? "—"}</Td>
+                <Td>{r.team_size ? r.team_size.toLocaleString("en-NG") : "N/A"}</Td>
+                <Td>{r.email}</Td>
+                <Td><StatusBadge status={r.status} /></Td>
+                <Td>{when(r.created_at)}</Td>
+                <Td>
+                  {r.status === "contacted" ? (
+                    <span className="text-[11.5px] text-ink-400">Contacted {when(r.contacted_at)}</span>
+                  ) : (
+                    <SecondaryButton
+                      className="!px-2.5 !py-1 !text-[11px]"
+                      disabled={isMarking && markingId === r.id}
+                      onClick={() => act(r.id)}
+                    >
+                      Mark Contacted
+                    </SecondaryButton>
+                  )}
+                </Td>
+              </Tr>
+            ))
+          )}
+        </Table>
+        <Pager page={data?.requests?.current_page ?? 1} lastPage={data?.requests?.last_page ?? 1} onChange={setPage} />
+      </PanelCard>
+    </div>
+  );
+};
+
+/* ── 5b. Business Plans & Pricing ─────────────────────────────────────── */
+
+const nairaShort = (n) => "₦" + Number(n ?? 0).toLocaleString("en-NG");
+
+const emptyPlanForm = () => ({
+  id: null,
+  key: "",
+  name: "",
+  seat_range: "",
+  min_seats: "",
+  max_seats: "",
+  default_seats: "",
+  is_custom: false,
+  tiers: [{ min: "", max: "", price: "" }],
+  features: [""],
+});
+
+const planToForm = (p) => ({
+  id: p.id,
+  key: p.key,
+  name: p.name,
+  seat_range: p.seat_range,
+  min_seats: String(p.min_seats),
+  max_seats: p.max_seats === null ? "" : String(p.max_seats),
+  default_seats: String(p.default_seats),
+  is_custom: !!p.is_custom,
+  tiers: (p.tiers ?? []).map((t) => ({ min: String(t.min_seats), max: t.max_seats === null ? "" : String(t.max_seats), price: String(t.price) })),
+  features: (p.features ?? []).map((f) => f.label),
+});
+
+export const PlatformBusinessPlansPage = () => {
+  const { showToast } = usePlatform();
+  const { data: plans = [], isFetching } = useGetPlatformBusinessPlansQuery();
+  const [createPlan, { isLoading: isCreating }] = useCreatePlatformBusinessPlanMutation();
+  const [updatePlan, { isLoading: isUpdating }] = useUpdatePlatformBusinessPlanMutation();
+  const [deletePlan] = useDeletePlatformBusinessPlanMutation();
+
+  const [editing, setEditing] = useState(null); // form object, or null when modal closed
+  const [error, setError] = useState(null);
+  const [deleting, setDeleting] = useState(null); // plan being confirmed for delete
+
+  const openEdit = (plan) => {
+    setEditing(planToForm(plan));
+    setError(null);
+  };
+  const openCreate = () => {
+    setEditing(emptyPlanForm());
+    setError(null);
+  };
+  const close = () => setEditing(null);
+
+  const setField = (key, value) => setEditing((f) => ({ ...f, [key]: value }));
+
+  const setTier = (i, key, value) =>
+    setEditing((f) => ({ ...f, tiers: f.tiers.map((t, idx) => (idx === i ? { ...t, [key]: value } : t)) }));
+  const addTier = () => setEditing((f) => ({ ...f, tiers: [...f.tiers, { min: "", max: "", price: "" }] }));
+  const removeTier = (i) => setEditing((f) => ({ ...f, tiers: f.tiers.filter((_, idx) => idx !== i) }));
+
+  const setFeature = (i, value) =>
+    setEditing((f) => ({ ...f, features: f.features.map((feat, idx) => (idx === i ? value : feat)) }));
+  const addFeature = () => setEditing((f) => ({ ...f, features: [...f.features, ""] }));
+  const removeFeature = (i) => setEditing((f) => ({ ...f, features: f.features.filter((_, idx) => idx !== i) }));
+
+  const submit = async () => {
+    if (!editing.key.trim() || !editing.name.trim() || !editing.seat_range.trim() || editing.min_seats === "" || editing.default_seats === "") {
+      setError("Fill in key, name, seat range, min seats and default seats.");
+      return;
+    }
+    setError(null);
+
+    const body = {
+      key: editing.key.trim(),
+      name: editing.name.trim(),
+      seat_range: editing.seat_range.trim(),
+      min_seats: Number(editing.min_seats),
+      max_seats: editing.max_seats === "" ? null : Number(editing.max_seats),
+      default_seats: Number(editing.default_seats),
+      is_custom: editing.is_custom,
+      tiers: editing.tiers
+        .filter((t) => t.min !== "" && t.price !== "")
+        .map((t) => ({ min: Number(t.min), max: t.max === "" ? null : Number(t.max), price: Number(t.price) })),
+      features: editing.features.map((f) => f.trim()).filter(Boolean),
+    };
+
+    try {
+      if (editing.id) {
+        await updatePlan({ id: editing.id, ...body }).unwrap();
+        showToast("Plan updated");
+      } else {
+        await createPlan(body).unwrap();
+        showToast("Plan created");
+      }
+      close();
+    } catch (err) {
+      setError(apiErrorMessage(err, "Couldn't save that plan — please try again"));
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    try {
+      await deletePlan(deleting.id).unwrap();
+      showToast(`"${deleting.name}" deleted`);
+    } catch (err) {
+      showToast(apiErrorMessage(err, "Couldn't delete that plan — please try again"));
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  if (isFetching && plans.length === 0) {
+    return <div className="grid gap-4 lg:grid-cols-3">{[0, 1, 2].map((i) => <AdminSkeleton key={i} className="h-72" />)}</div>;
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <InfoStrip tone="blue">
+        This is the exact catalogue business admins see on their own Billing page — editing a plan here changes what every business on it sees and compares against immediately.
+      </InfoStrip>
+
+      <div className="flex justify-end">
+        <PrimaryButton onClick={openCreate}><Icon.Plus size={14} /> New Plan</PrimaryButton>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {plans.map((p) => (
+          <PanelCard key={p.id}>
+            <div className="flex flex-col gap-3 p-5">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="text-[15px] font-extraboldNunito text-navy-800">{p.name}</div>
+                  <div className="text-[11.5px] text-ink-400">{p.seat_range}</div>
+                </div>
+                {p.is_custom ? <Badge tone="purple">Custom</Badge> : null}
+              </div>
+
+              <div className="text-[20px] font-extraboldNunito text-navy-800">
+                {p.is_custom ? "Custom" : p.tiers?.[0] ? `From ${nairaShort(p.tiers[0].price)}/seat/mo` : "—"}
+              </div>
+
+              {p.tiers?.length ? (
+                <div className="flex flex-col gap-1 rounded-[10px] bg-surface-page p-3">
+                  {p.tiers.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between text-[12px] text-ink-600">
+                      <span>{t.min_seats}–{t.max_seats ?? "∞"} seats</span>
+                      <span className="font-boldNunito text-navy-800">{nairaShort(t.price)}/seat</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              <ul className="flex flex-col gap-1.5">
+                {p.features?.map((f) => (
+                  <li key={f.id} className="flex items-start gap-1.5 text-[12.5px] text-ink-600">
+                    <Icon.Check size={13} className="mt-0.5 shrink-0 text-wellness-600" /> {f.label}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-1 flex gap-2 border-t border-ink-100 pt-3">
+                <SecondaryButton className="flex-1 justify-center" onClick={() => openEdit(p)}>
+                  <Icon.Edit2 size={13} /> Edit
+                </SecondaryButton>
+                <SecondaryButton className="!text-signal-error" onClick={() => setDeleting(p)} aria-label={`Delete ${p.name}`}>
+                  <Icon.Trash2 size={13} />
+                </SecondaryButton>
+              </div>
+            </div>
+          </PanelCard>
+        ))}
+      </div>
+
+      <Modal open={!!editing} onClose={close} title={editing?.id ? "Edit Plan" : "New Plan"} width="max-w-[620px]">
+        {editing ? (
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Key</label>
+                <input
+                  value={editing.key}
+                  disabled={!!editing.id}
+                  onChange={(e) => setField("key", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                  placeholder="e.g. lite"
+                  className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] disabled:bg-surface-page disabled:text-ink-400"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Name</label>
+                <input
+                  value={editing.name}
+                  onChange={(e) => setField("name", e.target.value)}
+                  placeholder="e.g. Wellbeing Lite"
+                  className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Seat range (display text)</label>
+              <input
+                value={editing.seat_range}
+                onChange={(e) => setField("seat_range", e.target.value)}
+                placeholder="e.g. Up to 500 seats"
+                className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Min seats</label>
+                <input type="number" value={editing.min_seats} onChange={(e) => setField("min_seats", e.target.value)} className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Max seats</label>
+                <input type="number" value={editing.max_seats} onChange={(e) => setField("max_seats", e.target.value)} placeholder="blank = unbounded" className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Default seats</label>
+                <input type="number" value={editing.default_seats} onChange={(e) => setField("default_seats", e.target.value)} className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-[10px] border-[1.5px] border-ink-200 px-3.5 py-2.5">
+              <div>
+                <div className="text-[13px] font-boldNunito text-navy-800">Custom plan</div>
+                <div className="text-[11px] text-ink-400">No self-serve tiers — shows &ldquo;Custom&rdquo; instead of a rate.</div>
+              </div>
+              <Toggle on={editing.is_custom} label="Custom plan" onClick={() => setField("is_custom", !editing.is_custom)} />
+            </div>
+
+            {!editing.is_custom ? (
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-[13px] font-boldNunito text-navy-800">Volume tiers</label>
+                  <button type="button" onClick={addTier} className="cursor-pointer text-[12px] font-boldNunito text-brand-600">+ Add tier</button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {editing.tiers.map((t, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <input type="number" value={t.min} onChange={(e) => setTier(i, "min", e.target.value)} placeholder="Min" className="h-9 w-0 flex-1 rounded-[8px] border-[1.5px] border-ink-200 px-2.5 text-[12.5px]" />
+                      <span className="text-ink-400">–</span>
+                      <input type="number" value={t.max} onChange={(e) => setTier(i, "max", e.target.value)} placeholder="Max (blank = ∞)" className="h-9 w-0 flex-1 rounded-[8px] border-[1.5px] border-ink-200 px-2.5 text-[12.5px]" />
+                      <span className="text-ink-400">@ ₦</span>
+                      <input type="number" value={t.price} onChange={(e) => setTier(i, "price", e.target.value)} placeholder="Price/seat" className="h-9 w-0 flex-1 rounded-[8px] border-[1.5px] border-ink-200 px-2.5 text-[12.5px]" />
+                      <button type="button" onClick={() => removeTier(i)} aria-label="Remove tier" className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-ink-400 hover:bg-surface-errorTint hover:text-signal-error">
+                        <Icon.X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="text-[13px] font-boldNunito text-navy-800">Features</label>
+                <button type="button" onClick={addFeature} className="cursor-pointer text-[12px] font-boldNunito text-brand-600">+ Add feature</button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {editing.features.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input value={f} onChange={(e) => setFeature(i, e.target.value)} placeholder="e.g. Weekly reporting" className="h-9 flex-1 rounded-[8px] border-[1.5px] border-ink-200 px-2.5 text-[12.5px]" />
+                    <button type="button" onClick={() => removeFeature(i)} aria-label="Remove feature" className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-ink-400 hover:bg-surface-errorTint hover:text-signal-error">
+                      <Icon.X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {error ? <p className="text-caption text-signal-error">{error}</p> : null}
+
+            <div className="flex justify-end gap-2 border-t border-ink-100 pt-4">
+              <SecondaryButton onClick={close}>Cancel</SecondaryButton>
+              <PrimaryButton disabled={isCreating || isUpdating} onClick={submit}>
+                {isCreating || isUpdating ? "Saving…" : "Save"}
+              </PrimaryButton>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
+      <Modal open={!!deleting} onClose={() => setDeleting(null)} title={`Delete "${deleting?.name ?? ""}"?`} width="max-w-[420px]">
+        <p className="mb-5 text-[13px] leading-[1.7] text-ink-500">
+          Business admins currently in this plan&apos;s seat range will fall back to whichever plan (if any) covers their seat count once it&apos;s gone. This can&apos;t be undone.
+        </p>
+        <div className="flex justify-end gap-2">
+          <SecondaryButton onClick={() => setDeleting(null)}>Cancel</SecondaryButton>
+          <button
+            type="button"
+            onClick={confirmDelete}
+            className="cursor-pointer rounded-[10px] bg-signal-error px-4 py-[9px] text-[13px] font-boldNunito text-white hover:bg-surface-errorInk"
+          >
+            Delete
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -1249,6 +1862,183 @@ const ADMIN_ASSIGNABLE_GROUP_ROLES = ["Admin", "Community Manager", "Moderator",
 
 const MEMBER_STATUS_TONE = { Active: "green", Suspended: "gold" };
 
+/**
+ * Debounced user search + dropdown of matches — the same real
+ * /platform-admin/users search the "All Users" page itself uses, not a
+ * separate/fake lookup. Reused by the group "Add member" form (picks
+ * straight into its email field) and the Create Group modal (accumulates a
+ * list of members to add once the group actually exists) — this component
+ * only owns the search+dropdown UI, not what happens with a pick.
+ */
+const UserSearchInput = ({
+  value,
+  onChange,
+  onSelect,
+  onSelectMany,
+  excludeIds = [],
+  placeholder,
+  onKeyDown,
+  inline = false,
+  multi = false,
+  suggested = [],
+  suggestedLabel,
+}) => {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [checkedIds, setCheckedIds] = useState([]);
+  const isSearching = value.trim().length >= 2;
+
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(value.trim()), 300);
+    return () => clearTimeout(t);
+  }, [value]);
+
+  // A fresh search shouldn't carry over checks from whatever the previous
+  // query's (or the suggested list's) results happened to be.
+  useEffect(() => {
+    setCheckedIds([]);
+  }, [query, suggested]);
+
+  const { data, isFetching } = useGetPlatformUsersQuery({ search: query }, { skip: query.length < 2 || !open });
+  const excluded = new Set(excludeIds);
+  // Not typing anything yet → fall back to the category-interest suggestions
+  // (if any) instead of forcing the admin to already know a name to type.
+  const suggestions = isSearching
+    ? (data?.users?.data ?? []).filter((u) => !excluded.has(u.id)).slice(0, multi ? 20 : 6)
+    : suggested.filter((u) => !excluded.has(u.id));
+
+  const toggleChecked = (id) => setCheckedIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+
+  const commitChecked = () => {
+    const picked = suggestions.filter((u) => checkedIds.includes(u.id));
+    if (picked.length === 0) return;
+    onSelectMany(picked);
+    setCheckedIds([]);
+    onChange("");
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <input
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={onKeyDown}
+        placeholder={placeholder}
+        className="h-10 w-full rounded-[9px] border-[1.5px] border-ink-200 px-3.5 text-[13px] transition-colors focus:border-brand-400 focus:outline-none"
+      />
+      {open && (isSearching || suggestions.length > 0) ? (
+        <div
+          className={
+            "z-20 max-h-72 overflow-y-auto rounded-[10px] border border-surface-line bg-white py-1.5 " +
+            // Inline (pushes the rest of the form down, e.g. inside a Modal
+            // — Modal's own rounded-corner overflow-hidden would otherwise
+            // clip a floating dropdown) vs. floating over the page below
+            // the input (used on the page-level Members tab, which has
+            // room below it and looks better as an overlay there).
+            (inline ? "relative mt-1.5" : "absolute left-0 right-0 top-[calc(100%+4px)] shadow-[0_8px_24px_rgba(20,27,52,0.14)]")
+          }
+        >
+          {!isSearching && suggestedLabel ? (
+            <div className="px-3.5 pb-1 pt-0.5 text-[10.5px] font-boldNunito uppercase tracking-[0.04em] text-ink-400">
+              {suggestedLabel}
+            </div>
+          ) : null}
+          {isSearching && isFetching ? (
+            <div className="px-3.5 py-2.5 text-[12.5px] text-ink-400">Searching…</div>
+          ) : suggestions.length === 0 ? (
+            <div className="px-3.5 py-2.5 text-[12.5px] text-ink-400">No matching users.</div>
+          ) : multi ? (
+            <>
+              {suggestions.map((u) => {
+                const checked = checkedIds.includes(u.id);
+                return (
+                  <label
+                    key={u.id}
+                    onMouseDown={(e) => e.preventDefault()}
+                    className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2 hover:bg-surface-page"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleChecked(u.id)}
+                      className="h-4 w-4 shrink-0 cursor-pointer rounded border-ink-300 accent-brand-400"
+                    />
+                    <span
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10.5px] font-extraboldNunito text-white"
+                      style={{ background: avatarColor(u.id) }}
+                    >
+                      {initialsOfName(u.name)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[12.5px] font-boldNunito text-navy-800">{u.name || "—"}</span>
+                      <span className="block truncate text-[11px] text-ink-400">{u.email}</span>
+                    </span>
+                  </label>
+                );
+              })}
+              {checkedIds.length > 0 ? (
+                <div className="sticky bottom-0 border-t border-surface-line bg-white px-3.5 pt-1.5">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={commitChecked}
+                    className="mb-1.5 w-full cursor-pointer rounded-[8px] bg-brand-400 py-2 text-[12.5px] font-boldNunito text-white hover:bg-brand-600"
+                  >
+                    Add {checkedIds.length} selected
+                  </button>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            suggestions.map((u) => (
+              <button
+                key={u.id}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onSelect(u);
+                  setOpen(false);
+                }}
+                className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2 text-left hover:bg-surface-page"
+              >
+                <span
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10.5px] font-extraboldNunito text-white"
+                  style={{ background: avatarColor(u.id) }}
+                >
+                  {initialsOfName(u.name)}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[12.5px] font-boldNunito text-navy-800">{u.name || "—"}</span>
+                  <span className="block truncate text-[11px] text-ink-400">{u.email}</span>
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+UserSearchInput.propTypes = {
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onSelect: PropTypes.func,
+  onSelectMany: PropTypes.func,
+  excludeIds: PropTypes.arrayOf(PropTypes.number),
+  placeholder: PropTypes.string,
+  onKeyDown: PropTypes.func,
+  inline: PropTypes.bool,
+  multi: PropTypes.bool,
+  suggested: PropTypes.arrayOf(PropTypes.object),
+  suggestedLabel: PropTypes.string,
+};
+
 export const PlatformCommunityPage = () => {
   const { showToast } = usePlatform();
   const [allGroupsPage, setAllGroupsPage] = useState(1);
@@ -1264,12 +2054,27 @@ export const PlatformCommunityPage = () => {
   const [reactivateGroup] = useReactivatePlatformGroupMutation();
   const [deleteGroup] = useDeletePlatformGroupMutation();
   const [createGroup, { isLoading: creatingGroupSaving }] = useCreatePlatformGroupMutation();
+  const [addMemberToNewGroup] = useAddPlatformGroupMemberMutation();
 
   const [groupAction, setGroupAction] = useState(null); // { group, mode: "suspend" | "ban" | "delete" }
   const [actionReason, setActionReason] = useState("");
   const [suspendUntil, setSuspendUntil] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10));
   const [creatingGroup, setCreatingGroup] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: "", category_id: "", description: "", owner_email: "", group_access: "Opened" });
+  // Members picked before the group even exists yet — added one at a time
+  // via the real addMember endpoint right after creation succeeds, since
+  // createGroup itself only ever takes a single owner_email.
+  const [newMemberSearch, setNewMemberSearch] = useState("");
+  const [newGroupMembers, setNewGroupMembers] = useState([]); // [{id, name, email, role}]
+  // Real onboarding signal, not a guess: whoever picked this exact category
+  // as their own interest topic (user_interests.category_id — the same
+  // post_categories row the group's own category_id points at).
+  const { data: interestedUsersData } = useGetPlatformUsersQuery(
+    { interest_category_id: newGroup.category_id },
+    { skip: !creatingGroup || !newGroup.category_id }
+  );
+  const interestedUsers = interestedUsersData?.users?.data ?? [];
+  const selectedCategoryName = categories?.find((c) => String(c.id) === String(newGroup.category_id))?.name;
 
   const act = async (fn, okMsg) => {
     try {
@@ -1301,14 +2106,52 @@ export const PlatformCommunityPage = () => {
 
   const openCreateGroup = () => {
     setNewGroup({ name: "", category_id: categories?.[0]?.id ?? "", description: "", owner_email: "", group_access: "Opened" });
+    setNewMemberSearch("");
+    setNewGroupMembers([]);
     setCreatingGroup(true);
+  };
+
+  const pickNewGroupMembers = (users) => {
+    setNewGroupMembers((list) => {
+      const existingIds = new Set(list.map((p) => p.id));
+      const additions = users.filter((u) => !existingIds.has(u.id)).map((u) => ({ ...u, role: "Member" }));
+      return [...list, ...additions];
+    });
+    setNewMemberSearch("");
+  };
+
+  const removeNewGroupMember = (id) => {
+    setNewGroupMembers((list) => list.filter((p) => p.id !== id));
+  };
+
+  const setNewGroupMemberRole = (id, role) => {
+    setNewGroupMembers((list) => list.map((p) => (p.id === id ? { ...p, role } : p)));
   };
 
   const submitCreateGroup = async () => {
     if (!newGroup.name.trim() || !newGroup.category_id || !newGroup.owner_email.trim()) return;
     try {
-      await createGroup(newGroup).unwrap();
-      showToast("Group created");
+      const created = await createGroup(newGroup).unwrap();
+      const groupId = created?.data?.id;
+
+      // Best-effort: the group itself is already real and saved at this
+      // point, so one bad pick (e.g. a race where the owner_email user was
+      // already added by someone else) must not look like the whole
+      // creation failed.
+      let failed = 0;
+      for (const member of newGroupMembers) {
+        try {
+          await addMemberToNewGroup({ groupId, email: member.email, role: member.role }).unwrap();
+        } catch {
+          failed += 1;
+        }
+      }
+
+      showToast(
+        failed > 0
+          ? `Group created — ${failed} of ${newGroupMembers.length} member(s) couldn't be added`
+          : "Group created"
+      );
       setCreatingGroup(false);
     } catch (err) {
       showToast(apiErrorMessage(err, "That didn't go through — check the owner's email and try again"));
@@ -1453,7 +2296,7 @@ export const PlatformCommunityPage = () => {
         ) : null}
       </Modal>
 
-      <Modal open={creatingGroup} onClose={() => setCreatingGroup(false)} title="Create Group" subtitle="Official / curated group" width="max-w-[480px]">
+      <Modal open={creatingGroup} onClose={() => setCreatingGroup(false)} title="Create Group" subtitle="Official / curated group" width="max-w-[640px]">
         <div className="flex flex-col gap-4">
           <div>
             <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Group Name</label>
@@ -1507,10 +2350,59 @@ export const PlatformCommunityPage = () => {
               <option value="Closed">Closed — invite only</option>
             </select>
           </div>
+          <div>
+            <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Add Members (optional)</label>
+            <UserSearchInput
+              value={newMemberSearch}
+              onChange={setNewMemberSearch}
+              onSelectMany={pickNewGroupMembers}
+              excludeIds={newGroupMembers.map((p) => p.id)}
+              placeholder="Search name or email…"
+              inline
+              multi
+              suggested={interestedUsers}
+              suggestedLabel={selectedCategoryName ? `Picked "${selectedCategoryName}" during onboarding` : undefined}
+            />
+            {newGroupMembers.length > 0 ? (
+              <div className="mt-2 flex flex-col gap-1.5">
+                {newGroupMembers.map((p) => (
+                  <div key={p.id} className="flex items-center gap-2.5 rounded-[9px] border border-ink-100 bg-surface-page px-3 py-2">
+                    <span
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10.5px] font-extraboldNunito text-white"
+                      style={{ background: avatarColor(p.id) }}
+                    >
+                      {initialsOfName(p.name)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[12.5px] font-boldNunito text-navy-800">{p.name || "—"}</div>
+                      <div className="truncate text-[11px] text-ink-400">{p.email}</div>
+                    </div>
+                    <select
+                      value={p.role}
+                      onChange={(e) => setNewGroupMemberRole(p.id, e.target.value)}
+                      className="h-8 shrink-0 cursor-pointer rounded-[7px] border-[1.5px] border-ink-200 px-2 text-[11px]"
+                    >
+                      {ADMIN_ASSIGNABLE_GROUP_ROLES.map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => removeNewGroupMember(p.id)}
+                      aria-label={`Remove ${p.name || p.email}`}
+                      className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-[7px] text-ink-400 hover:bg-surface-errorTint hover:text-signal-error"
+                    >
+                      <Icon.X size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
           <div className="flex justify-end gap-2 border-t border-ink-100 pt-4">
             <SecondaryButton onClick={() => setCreatingGroup(false)}>Cancel</SecondaryButton>
             <PrimaryButton disabled={creatingGroupSaving || !newGroup.name.trim() || !newGroup.category_id || !newGroup.owner_email.trim()} onClick={submitCreateGroup}>
-              Create Group
+              {creatingGroupSaving ? "Creating…" : "Create Group"}
             </PrimaryButton>
           </div>
         </div>
@@ -1526,6 +2418,18 @@ const GROUP_DETAIL_TABS = [
   { key: "comment-reports", label: "Comment Reports" },
 ];
 
+// Matches the Create/Edit Group <select> options below (group_access is a
+// real, load-bearing enum stored as "Opened"/"Approval"/"Closed" — the
+// mobile app and web dashboard's own group screens both compare against
+// "Opened" literally, so the DB value can't just be renamed) — this is the
+// same friendly label, reused for the read-only Overview row instead of
+// printing the raw enum value straight through.
+const GROUP_ACCESS_LABELS = {
+  Opened: "Open — anyone can join",
+  Approval: "Approval — join requests reviewed",
+  Closed: "Closed — invite only",
+};
+
 const GroupOverviewTab = ({ group }) => (
   <div className="flex flex-col gap-4">
     <KpiRow>
@@ -1534,11 +2438,11 @@ const GroupOverviewTab = ({ group }) => (
       <KpiCard icon={<Icon.MessageSquare size={17} className="text-gold-600" />} iconBg="bg-gold-50" value={group.open_comment_report_count ?? 0} label="Open Comment Reports" />
     </KpiRow>
     <PanelCard title="Group details">
-      <div className="flex flex-col gap-1 p-1">
+      <div className="flex flex-col gap-1 p-5">
         <InfoRow label="Description">{group.description || "—"}</InfoRow>
         <InfoRow label="About">{group.about || "—"}</InfoRow>
         <InfoRow label="Category">{group.category?.name ?? "—"}</InfoRow>
-        <InfoRow label="Access">{group.group_access ?? "—"}</InfoRow>
+        <InfoRow label="Access">{GROUP_ACCESS_LABELS[group.group_access] ?? group.group_access ?? "—"}</InfoRow>
         <InfoRow label="Owner">{group.creator ? `${group.creator.first_name} ${group.creator.last_name ?? ""}`.trim() : "—"}</InfoRow>
         <InfoRow label="Owner Email">{group.creator?.email ?? "—"}</InfoRow>
         <InfoRow label="Created">{fmtDate(group.created_at)}</InfoRow>
@@ -1558,6 +2462,7 @@ const GroupMembersTab = ({ groupId, showToast }) => {
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [newMemberRole, setNewMemberRole] = useState("Member");
   const rows = data?.data ?? [];
+  const existingMemberIds = rows.map((m) => m.user?.id).filter(Boolean);
 
   const act = async (fn, okMsg) => {
     try {
@@ -1576,25 +2481,47 @@ const GroupMembersTab = ({ groupId, showToast }) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <PanelCard>
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="min-w-[200px] flex-1">
-            <label className="mb-1 block text-[11px] font-boldNunito text-navy-800">Add member by email</label>
-            <input
-              value={newMemberEmail}
-              onChange={(e) => setNewMemberEmail(e.target.value)}
-              placeholder="user@example.com"
-              className="h-9 w-full rounded-[8px] border-[1.5px] border-ink-200 px-3 text-[12.5px]"
-            />
+      {/* Plain card, not PanelCard — PanelCard's overflow-hidden (needed
+          elsewhere to clip a table's rounded corners) would clip the
+          search-suggestions dropdown below the input instead of letting it
+          float over the rest of the page. */}
+      <div className="rounded-ds-lg border border-surface-line bg-white shadow-[0_1px_4px_rgba(20,27,52,0.04)]">
+        <div className="flex items-start gap-3 p-5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-brand-25 text-brand-600">
+            <Icon.UserPlus size={16} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="mb-2">
+              <div className="text-[13px] font-extraboldNunito text-navy-800">Add member</div>
+              <div className="text-[11.5px] text-ink-400">Search by name or email — they must already have a TalkAM account.</div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="min-w-[220px] flex-1">
+                <UserSearchInput
+                  value={newMemberEmail}
+                  onChange={setNewMemberEmail}
+                  onSelect={(u) => setNewMemberEmail(u.email)}
+                  excludeIds={existingMemberIds}
+                  placeholder="Search name or email…"
+                  onKeyDown={(e) => e.key === "Enter" && submitAddMember()}
+                />
+              </div>
+              <select
+                value={newMemberRole}
+                onChange={(e) => setNewMemberRole(e.target.value)}
+                className="h-10 cursor-pointer rounded-[9px] border-[1.5px] border-ink-200 px-3 text-[12.5px]"
+              >
+                {ADMIN_ASSIGNABLE_GROUP_ROLES.map((r) => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+              <PrimaryButton disabled={addingMember || !newMemberEmail.trim()} onClick={submitAddMember}>
+                {addingMember ? "Adding…" : "Add"}
+              </PrimaryButton>
+            </div>
           </div>
-          <select value={newMemberRole} onChange={(e) => setNewMemberRole(e.target.value)} className="h-9 rounded-[8px] border-[1.5px] border-ink-200 px-2 text-[12px]">
-            {ADMIN_ASSIGNABLE_GROUP_ROLES.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-          <SecondaryButton disabled={addingMember || !newMemberEmail.trim()} onClick={submitAddMember}>Add</SecondaryButton>
         </div>
-      </PanelCard>
+      </div>
 
       {isFetching ? (
         <SkeletonPanel />
@@ -1604,38 +2531,55 @@ const GroupMembersTab = ({ groupId, showToast }) => {
             {rows.length === 0 ? (
               <EmptyRow span={5}>No members found.</EmptyRow>
             ) : (
-              rows.map((m) => (
-                <Tr key={m.id}>
-                  <Td first>{m.user ? `${m.user.first_name} ${m.user.last_name ?? ""}`.trim() : "—"}</Td>
-                  <Td>{m.user?.email ?? "—"}</Td>
-                  <Td>
-                    {m.role === "Owner" ? (
-                      <Badge tone="purple">Owner</Badge>
-                    ) : (
-                      <select
-                        value={m.role}
-                        onChange={(e) => act(() => updateRole({ memberId: m.id, role: e.target.value }), "Role updated")}
-                        className="h-8 rounded-[8px] border-[1.5px] border-ink-200 px-2 text-[11.5px]"
-                      >
-                        {ADMIN_ASSIGNABLE_GROUP_ROLES.map((r) => (
-                          <option key={r} value={r}>{r}</option>
-                        ))}
-                      </select>
-                    )}
-                  </Td>
-                  <Td><Badge tone={MEMBER_STATUS_TONE[m.status] ?? "grey"}>{m.status}</Badge></Td>
-                  <Td>
-                    {m.role !== "Owner" ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        <SecondaryButton className="!px-2.5 !py-1 !text-[11px]" onClick={() => act(() => suspendMember(m.id), m.status === "Suspended" ? "Member unsuspended" : "Member suspended")}>
-                          {m.status === "Suspended" ? "Unsuspend" : "Suspend"}
-                        </SecondaryButton>
-                        <SecondaryButton className="!px-2.5 !py-1 !text-[11px] !text-signal-error" onClick={() => act(() => removeMember(m.id), "Member removed")}>Remove</SecondaryButton>
+              rows.map((m) => {
+                const memberName = m.user ? `${m.user.first_name} ${m.user.last_name ?? ""}`.trim() : "—";
+                return (
+                  <Tr key={m.id}>
+                    <Td first>
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-extraboldNunito text-white"
+                          style={{ background: avatarColor(m.user?.id ?? m.id) }}
+                        >
+                          {initialsOfName(memberName)}
+                        </span>
+                        {memberName}
                       </div>
-                    ) : null}
-                  </Td>
-                </Tr>
-              ))
+                    </Td>
+                    <Td>{m.user?.email ?? "—"}</Td>
+                    <Td>
+                      {m.role === "Owner" ? (
+                        <Badge tone="purple">Owner</Badge>
+                      ) : (
+                        <select
+                          value={m.role}
+                          onChange={(e) => act(() => updateRole({ memberId: m.id, role: e.target.value }), "Role updated")}
+                          className="h-8 cursor-pointer rounded-[8px] border-[1.5px] border-ink-200 px-2 text-[11.5px]"
+                        >
+                          {ADMIN_ASSIGNABLE_GROUP_ROLES.map((r) => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      )}
+                    </Td>
+                    <Td><Badge tone={MEMBER_STATUS_TONE[m.status] ?? "grey"}>{m.status}</Badge></Td>
+                    <Td>
+                      {m.role !== "Owner" ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          <SecondaryButton className="!px-2.5 !py-1 !text-[11px]" onClick={() => act(() => suspendMember(m.id), m.status === "Suspended" ? "Member unsuspended" : "Member suspended")}>
+                            {m.status === "Suspended" ? "Unsuspend" : "Suspend"}
+                          </SecondaryButton>
+                          <SecondaryButton className="!px-2.5 !py-1 !text-[11px] !text-signal-error" onClick={() => act(() => removeMember(m.id), "Member removed")}>Remove</SecondaryButton>
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11.5px] text-ink-300">
+                          <Icon.Lock size={11} /> Protected
+                        </span>
+                      )}
+                    </Td>
+                  </Tr>
+                );
+              })
             )}
           </Table>
           <Pager page={data?.current_page ?? 1} lastPage={data?.last_page ?? 1} onChange={setPage} />
@@ -1976,29 +2920,132 @@ export const PlatformGroupDetailPage = () => {
 
 /* ── 8. CMS / Journal ─────────────────────────────────────────────────── */
 
-const emptyArticle = { title: "", category: "", excerpt: "", author: "", status: "draft" };
+const emptyArticle = {
+  title: "", category: "", excerpt: "", author: "",
+  author_role: "", author_initials: "", author_bio: "",
+  tone: "blue", read_time: "", display_date: "", status: "draft",
+};
+
+// The real `cover` column is a raw CSS gradient string, independently
+// stored from `tone` — every one of the 9 real seeded articles pairs a
+// tone with a matching gradient (checked live), so a new article gets the
+// same pairing auto-derived from `tone` rather than asking an admin to
+// hand-type CSS for a field they'd otherwise have no way to set sensibly.
+const TONE_GRADIENTS = {
+  blue: "linear-gradient(135deg,#017FC8,#0D2240)",
+  green: "linear-gradient(135deg,#3BA88F,#124034)",
+  gold: "linear-gradient(135deg,#DBB66E,#9A6E0A)",
+};
+
+const articleToEditForm = (a) => ({
+  title: a.title ?? "",
+  category: a.category ?? "",
+  excerpt: a.excerpt ?? "",
+  author: a.author ?? "",
+  author_role: a.author_role ?? "",
+  author_initials: a.author_initials ?? "",
+  author_bio: a.author_bio ?? "",
+  tone: a.tone ?? "blue",
+  read_time: a.read_time ?? "",
+  display_date: a.display_date ?? "",
+  status: a.status ?? "draft",
+});
+
+/** Renders one real content block from Article.body (json: [{type,text}] or
+ *  {type:"list",items:[...]})  — the actual structured editorial content
+ *  the 9 seeded articles carry (headings/quotes/lists/callouts), not just
+ *  flat paragraphs. Read-only: there's no editor for this shape here (see
+ *  the edit form's own note), so existing rich bodies are never at risk of
+ *  being flattened by a save. */
+const ArticleBodyBlock = ({ block }) => {
+  if (block.type === "h2") {
+    return <h3 className="mt-2 text-[15px] font-extraboldNunito text-navy-800">{block.text}</h3>;
+  }
+  if (block.type === "quote") {
+    return (
+      <blockquote className="border-l-[3px] border-brand-400 pl-3.5 text-[13.5px] italic leading-[1.7] text-ink-600">
+        {block.text}
+      </blockquote>
+    );
+  }
+  if (block.type === "list") {
+    return (
+      <ul className="list-disc space-y-1 pl-5 text-[13.5px] leading-[1.7] text-ink-600">
+        {(block.items ?? []).map((item, i) => <li key={i}>{item}</li>)}
+      </ul>
+    );
+  }
+  if (block.type === "callout") {
+    return (
+      <div className="rounded-[10px] bg-brand-25 px-3.5 py-3 text-[13px] font-semiboldNunito text-brand-600">
+        {block.text}
+      </div>
+    );
+  }
+  return <p className="text-[13.5px] leading-[1.7] text-ink-600">{block.text}</p>;
+};
+ArticleBodyBlock.propTypes = { block: PropTypes.object.isRequired };
 
 export const PlatformCmsPage = () => {
   const { showToast } = usePlatform();
   const [page, setPage] = useState(1);
   const { data, isFetching } = useGetPlatformArticlesQuery({ page });
   const [createArticle, { isLoading: isCreating }] = useCreatePlatformArticleMutation();
-  const [updateArticle] = useUpdatePlatformArticleMutation();
+  const [updateArticle, { isLoading: isUpdating }] = useUpdatePlatformArticleMutation();
   const [deleteArticle] = useDeletePlatformArticleMutation();
 
   const [form, setForm] = useState(emptyArticle);
-  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null); // null = creating, else editing this article's id
+  const [modalOpen, setModalOpen] = useState(false);
+  const [viewing, setViewing] = useState(null); // article shown in the read-only view modal
+  const [error, setError] = useState(null);
   const rows = data?.data ?? [];
 
+  const openCreate = () => {
+    setForm(emptyArticle);
+    setEditingId(null);
+    setError(null);
+    setModalOpen(true);
+  };
+
+  const openEdit = (article) => {
+    setForm(articleToEditForm(article));
+    setEditingId(article.id);
+    setError(null);
+    setModalOpen(true);
+    setViewing(null);
+  };
+
+  const closeForm = () => setModalOpen(false);
+
+  const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
   const submit = async () => {
-    if (!form.title.trim()) return;
+    if (!form.title.trim() || !form.category.trim() || !form.author.trim()) {
+      setError("Title, category and author are required.");
+      return;
+    }
+    setError(null);
+
     try {
-      await createArticle({ ...form, body: [{ type: "paragraph", text: form.excerpt || "" }] }).unwrap();
-      showToast("Article created");
-      setForm(emptyArticle);
-      setShowForm(false);
+      if (editingId) {
+        // Metadata only — body is deliberately left out of an edit's
+        // payload so an existing article's real, structured content
+        // (headings/quotes/lists/callouts) is never overwritten by this
+        // form, which has no editor for that shape.
+        await updateArticle({ id: editingId, ...form, cover: TONE_GRADIENTS[form.tone] ?? TONE_GRADIENTS.blue }).unwrap();
+        showToast("Article updated");
+      } else {
+        await createArticle({
+          ...form,
+          cover: TONE_GRADIENTS[form.tone] ?? TONE_GRADIENTS.blue,
+          body: form.excerpt ? [{ type: "p", text: form.excerpt }] : [],
+        }).unwrap();
+        showToast("Article created");
+      }
+      setModalOpen(false);
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't create that article"));
+      setError(apiErrorMessage(err, "Couldn't save that article — please try again"));
     }
   };
 
@@ -2015,6 +3062,7 @@ export const PlatformCmsPage = () => {
     try {
       await deleteArticle(id).unwrap();
       showToast("Article deleted");
+      if (viewing?.id === id) setViewing(null);
     } catch (err) {
       showToast(apiErrorMessage(err, "Couldn't delete that article"));
     }
@@ -2023,25 +3071,10 @@ export const PlatformCmsPage = () => {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex justify-end">
-        <PrimaryButton onClick={() => setShowForm((v) => !v)}>
+        <PrimaryButton onClick={openCreate}>
           <Icon.Plus size={14} /> New article
         </PrimaryButton>
       </div>
-
-      {showForm ? (
-        <Card>
-          <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <input placeholder="Title" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="h-10 rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px]" />
-            <input placeholder="Category" value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} className="h-10 rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px]" />
-            <input placeholder="Author" value={form.author} onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))} className="h-10 rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px]" />
-          </div>
-          <textarea placeholder="Excerpt / body" value={form.excerpt} onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))} className="mb-3 h-24 w-full resize-none rounded-[10px] border-[1.5px] border-ink-200 px-3 py-2 text-[13px]" />
-          <div className="flex justify-end gap-2">
-            <SecondaryButton onClick={() => setShowForm(false)}>Cancel</SecondaryButton>
-            <PrimaryButton onClick={submit} disabled={isCreating || !form.title.trim()}>{isCreating ? "Creating…" : "Create article"}</PrimaryButton>
-          </div>
-        </Card>
-      ) : null}
 
       {isFetching ? (
         <SkeletonPanel />
@@ -2053,12 +3086,18 @@ export const PlatformCmsPage = () => {
             ) : (
               rows.map((a) => (
                 <Tr key={a.id}>
-                  <Td first>{a.title}</Td>
-                  <Td>{a.category ?? "—"}</Td>
-                  <Td>{a.author ?? "—"}</Td>
+                  <Td first>
+                    <button type="button" onClick={() => setViewing(a)} className="cursor-pointer text-left font-boldNunito text-brand-600 hover:underline">
+                      {a.title}
+                    </button>
+                  </Td>
+                  <Td>{a.category ?? "N/A"}</Td>
+                  <Td>{a.author ?? "N/A"}</Td>
                   <Td><StatusBadge status={a.status} /></Td>
                   <Td>
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-wrap gap-1.5">
+                      <SecondaryButton className="!px-2.5 !py-1 !text-[11px]" onClick={() => setViewing(a)}>View</SecondaryButton>
+                      <SecondaryButton className="!px-2.5 !py-1 !text-[11px]" onClick={() => openEdit(a)}>Edit</SecondaryButton>
                       <SecondaryButton className="!px-2.5 !py-1 !text-[11px]" onClick={() => togglePublish(a)}>
                         {a.status === "published" ? "Unpublish" : "Publish"}
                       </SecondaryButton>
@@ -2072,6 +3111,148 @@ export const PlatformCmsPage = () => {
           <Pager page={data?.current_page ?? 1} lastPage={data?.last_page ?? 1} onChange={setPage} />
         </PanelCard>
       )}
+
+      {/* Create / edit — wide, since a real article carries a lot more than
+          title/category/author/excerpt (author role/bio, tone, read time,
+          display date, status). */}
+      <Modal open={modalOpen} onClose={closeForm} title={editingId ? "Edit Article" : "New Article"} width="max-w-[720px]">
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Title</label>
+              <input value={form.title} onChange={(e) => setField("title", e.target.value)} className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Category</label>
+              <input value={form.category} onChange={(e) => setField("category", e.target.value)} className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Author</label>
+              <input value={form.author} onChange={(e) => setField("author", e.target.value)} placeholder="e.g. Dr. Ngozi Eze" className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Author role</label>
+              <input value={form.author_role} onChange={(e) => setField("author_role", e.target.value)} placeholder="e.g. Clinical Psychologist" className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[100px_1fr] gap-3">
+            <div>
+              <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Initials</label>
+              <input value={form.author_initials} maxLength={3} onChange={(e) => setField("author_initials", e.target.value.toUpperCase())} placeholder="NE" className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] uppercase" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Author bio</label>
+              <input value={form.author_bio} onChange={(e) => setField("author_bio", e.target.value)} className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Tone</label>
+              <select value={form.tone} onChange={(e) => setField("tone", e.target.value)} className="h-11 w-full cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]">
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="gold">Gold</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Read time</label>
+              <input value={form.read_time} onChange={(e) => setField("read_time", e.target.value)} placeholder="e.g. 5 min read" className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Display date</label>
+              <input value={form.display_date} onChange={(e) => setField("display_date", e.target.value)} placeholder="e.g. Jul 12" className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]" />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Status</label>
+            <select value={form.status} onChange={(e) => setField("status", e.target.value)} className="h-11 w-full cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Excerpt</label>
+            <textarea value={form.excerpt} onChange={(e) => setField("excerpt", e.target.value)} placeholder="Short teaser shown on the journal list" className="h-20 w-full resize-none rounded-[10px] border-[1.5px] border-ink-200 px-3.5 py-2.5 text-[13px]" />
+            {editingId ? (
+              <div className="mt-1.5 text-[11px] text-ink-400">
+                The full body (headings, quotes, lists) isn&apos;t edited here — open &ldquo;View&rdquo; to read it as published.
+              </div>
+            ) : null}
+          </div>
+
+          {error ? <p className="text-caption text-signal-error">{error}</p> : null}
+
+          <div className="flex justify-end gap-2 border-t border-ink-100 pt-4">
+            <SecondaryButton onClick={closeForm}>Cancel</SecondaryButton>
+            <PrimaryButton onClick={submit} disabled={isCreating || isUpdating}>
+              {isCreating || isUpdating ? "Saving…" : editingId ? "Save changes" : "Create article"}
+            </PrimaryButton>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Journal view — the real content a business admin's own journal
+          reader would show, rendered from the article's actual structured
+          body blocks rather than just the title/category/author/status the
+          table itself has room for. */}
+      <Modal open={!!viewing} onClose={() => setViewing(null)} title={viewing?.title ?? "Article"} width="max-w-[720px]">
+        {viewing ? (
+          <div className="flex flex-col gap-4">
+            <div className="h-28 rounded-[12px]" style={{ background: viewing.cover || TONE_GRADIENTS[viewing.tone] || TONE_GRADIENTS.blue }} />
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone={{ blue: "blue", green: "green", gold: "gold" }[viewing.tone] ?? "grey"}>{viewing.tone ?? "N/A"}</Badge>
+              <Badge>{viewing.category ?? "N/A"}</Badge>
+              <StatusBadge status={viewing.status} />
+              <span className="text-[11.5px] text-ink-400">{viewing.read_time || "N/A"} · {viewing.display_date || "N/A"}</span>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-[10px] bg-surface-page p-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy-800 text-[12px] font-extraboldNunito text-white">
+                {viewing.author_initials || initialsOfName(viewing.author)}
+              </span>
+              <div className="min-w-0">
+                <div className="truncate text-[13px] font-boldNunito text-navy-800">{viewing.author || "N/A"}</div>
+                <div className="truncate text-[11.5px] text-ink-400">{viewing.author_role || "N/A"}</div>
+              </div>
+            </div>
+            {viewing.author_bio ? <p className="text-[12.5px] leading-[1.6] text-ink-500">{viewing.author_bio}</p> : null}
+
+            {viewing.excerpt ? (
+              <p className="border-l-[3px] border-ink-200 pl-3.5 text-[13.5px] font-semiboldNunito leading-[1.7] text-ink-700">
+                {viewing.excerpt}
+              </p>
+            ) : null}
+
+            <div className="flex flex-col gap-3">
+              {(viewing.body ?? []).length === 0 ? (
+                <div className="text-[12.5px] text-ink-400">No body content.</div>
+              ) : (
+                (viewing.body ?? []).map((block, i) => <ArticleBodyBlock key={i} block={block} />)
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 border-t border-ink-100 pt-3 text-[11.5px] text-ink-400">
+              <div>Slug: {viewing.slug || "N/A"}</div>
+              <div>Sort order: {viewing.sort_order ?? "N/A"}</div>
+              <div>Published: {viewing.published_at ? new Date(viewing.published_at).toLocaleString() : "N/A"}</div>
+              <div>Updated: {viewing.updated_at ? new Date(viewing.updated_at).toLocaleString() : "N/A"}</div>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-ink-100 pt-4">
+              <SecondaryButton onClick={() => setViewing(null)}>Close</SecondaryButton>
+              <PrimaryButton onClick={() => openEdit(viewing)}><Icon.Edit2 size={13} /> Edit</PrimaryButton>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 };

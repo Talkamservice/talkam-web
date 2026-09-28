@@ -38,22 +38,27 @@ export const platformAdminApiSlice = apiSliceV2.injectEndpoints({
     getPlatformUserSessions: builder.query({
       query: ({ id, page } = {}) => ({ url: `/platform-admin/users/${id}/sessions`, params: { page } }),
       transformResponse: (response) => response?.data,
+      providesTags: ["PlatformUsers"],
     }),
     getPlatformUserMood: builder.query({
       query: (id) => `/platform-admin/users/${id}/mood`,
       transformResponse: (response) => response?.data,
+      providesTags: ["PlatformUsers"],
     }),
     getPlatformUserCommunity: builder.query({
       query: (id) => `/platform-admin/users/${id}/community`,
       transformResponse: (response) => response?.data,
+      providesTags: ["PlatformUsers"],
     }),
     getPlatformUserActivity: builder.query({
       query: ({ id, page } = {}) => ({ url: `/platform-admin/users/${id}/activity`, params: { page } }),
       transformResponse: (response) => response?.data,
+      providesTags: ["PlatformUsers"],
     }),
     getPlatformUserJourney: builder.query({
       query: (id) => `/platform-admin/users/${id}/journey`,
       transformResponse: (response) => response?.data,
+      providesTags: ["PlatformUsers"],
     }),
     suspendPlatformUser: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/platform-admin/users/${id}/suspend`, method: "POST", body }),
@@ -87,7 +92,7 @@ export const platformAdminApiSlice = apiSliceV2.injectEndpoints({
     }),
     startReviewPlatformApplication: builder.mutation({
       query: (id) => ({ url: `/platform-admin/therapist-verification/${id}/start-review`, method: "POST" }),
-      invalidatesTags: ["PlatformTherapistVerification"],
+      invalidatesTags: ["PlatformTherapistVerification", "PlatformNavCounts"],
     }),
     approvePlatformApplication: builder.mutation({
       query: (id) => ({ url: `/platform-admin/therapist-verification/${id}/approve`, method: "POST" }),
@@ -113,23 +118,23 @@ export const platformAdminApiSlice = apiSliceV2.injectEndpoints({
     }),
     sendPlatformTherapistWarning: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/platform-admin/performance/${id}/warning`, method: "POST", body }),
-      invalidatesTags: ["PlatformPerformance"],
+      invalidatesTags: ["PlatformPerformance", "PlatformNavCounts"],
     }),
     holdPlatformTherapist: builder.mutation({
       query: (id) => ({ url: `/platform-admin/performance/${id}/hold`, method: "POST" }),
-      invalidatesTags: ["PlatformPerformance"],
+      invalidatesTags: ["PlatformPerformance", "PlatformNavCounts"],
     }),
     clearHoldPlatformTherapist: builder.mutation({
       query: (id) => ({ url: `/platform-admin/performance/${id}/clear-hold`, method: "POST" }),
-      invalidatesTags: ["PlatformPerformance"],
+      invalidatesTags: ["PlatformPerformance", "PlatformNavCounts"],
     }),
     reverifyPlatformTherapist: builder.mutation({
       query: (id) => ({ url: `/platform-admin/performance/${id}/reverify`, method: "POST" }),
-      invalidatesTags: ["PlatformPerformance"],
+      invalidatesTags: ["PlatformPerformance", "PlatformNavCounts"],
     }),
     terminatePlatformTherapist: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/platform-admin/performance/${id}/terminate`, method: "POST", body }),
-      invalidatesTags: ["PlatformPerformance"],
+      invalidatesTags: ["PlatformPerformance", "PlatformNavCounts"],
     }),
 
     getPlatformActivityLogs: builder.query({
@@ -140,6 +145,36 @@ export const platformAdminApiSlice = apiSliceV2.injectEndpoints({
 
     getPlatformGrowth: builder.query({
       query: (range = "12w") => ({ url: `/platform-admin/growth`, params: { range } }),
+      transformResponse: (response) => response?.data,
+      providesTags: ["PlatformGrowth"],
+    }),
+
+    getPlatformGrowthAarrr: builder.query({
+      query: (range = "12w") => ({ url: `/platform-admin/growth/aarrr`, params: { range } }),
+      transformResponse: (response) => response?.data,
+      providesTags: ["PlatformGrowth"],
+    }),
+
+    getPlatformGrowthFunnel: builder.query({
+      query: (range = "12w") => ({ url: `/platform-admin/growth/funnel`, params: { range } }),
+      transformResponse: (response) => response?.data,
+      providesTags: ["PlatformGrowth"],
+    }),
+
+    getPlatformGrowthCohorts: builder.query({
+      query: (weeks = 8) => ({ url: `/platform-admin/growth/cohorts`, params: { weeks } }),
+      transformResponse: (response) => response?.data,
+      providesTags: ["PlatformGrowth"],
+    }),
+
+    getPlatformGrowthSegments: builder.query({
+      query: () => `/platform-admin/growth/segments`,
+      transformResponse: (response) => response?.data,
+      providesTags: ["PlatformGrowth"],
+    }),
+
+    getPlatformGrowthSegmentUsers: builder.query({
+      query: ({ key, page = 1 }) => ({ url: `/platform-admin/growth/segments/${key}/users`, params: { page } }),
       transformResponse: (response) => response?.data,
       providesTags: ["PlatformGrowth"],
     }),
@@ -178,19 +213,24 @@ export const platformAdminApiSlice = apiSliceV2.injectEndpoints({
     getPlatformBusinessEmployees: builder.query({
       query: ({ id, page } = {}) => ({ url: `/platform-admin/businesses/${id}/employees`, params: { page } }),
       transformResponse: (response) => response?.data,
+      providesTags: ["PlatformBusinessEmployees"],
     }),
     getPlatformBusinessEmployeeDetail: builder.query({
       query: ({ id, memberId }) => `/platform-admin/businesses/${id}/employees/${memberId}`,
       transformResponse: (response) => response?.data,
+      providesTags: ["PlatformBusinessEmployees"],
     }),
     deactivatePlatformEmployee: builder.mutation({
       query: ({ id, memberId }) => ({ url: `/platform-admin/businesses/${id}/employees/${memberId}/deactivate`, method: "POST" }),
+      invalidatesTags: ["PlatformBusinessEmployees"],
     }),
     reactivatePlatformEmployee: builder.mutation({
       query: ({ id, memberId }) => ({ url: `/platform-admin/businesses/${id}/employees/${memberId}/reactivate`, method: "POST" }),
+      invalidatesTags: ["PlatformBusinessEmployees"],
     }),
     invitePlatformEmployee: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/platform-admin/businesses/${id}/employees/invite`, method: "POST", body }),
+      invalidatesTags: ["PlatformBusinessEmployees"],
     }),
     getPlatformBusinessTherapists: builder.query({
       query: ({ id, page } = {}) => ({ url: `/platform-admin/businesses/${id}/therapists`, params: { page } }),
@@ -215,6 +255,39 @@ export const platformAdminApiSlice = apiSliceV2.injectEndpoints({
       query: (page) => ({ url: `/platform-admin/billing`, params: { page } }),
       transformResponse: (response) => response?.data,
       providesTags: ["PlatformBilling"],
+    }),
+
+    getPlatformCustomQuoteRequests: builder.query({
+      query: (page) => ({ url: `/platform-admin/custom-quote-requests`, params: { page } }),
+      transformResponse: (response) => response?.data,
+      providesTags: ["PlatformCustomQuoteRequests"],
+    }),
+    markPlatformCustomQuoteRequestContacted: builder.mutation({
+      query: (id) => ({ url: `/platform-admin/custom-quote-requests/${id}/mark-contacted`, method: "POST" }),
+      invalidatesTags: ["PlatformCustomQuoteRequests", "PlatformNavCounts"],
+    }),
+
+    // The B2B plan catalogue (Wellbeing Lite/Core/Plus) — the exact same
+    // business_plans table a business admin's own Billing page reads
+    // (GET /business/billing's "catalogue"); this is the admin-editable side.
+    getPlatformBusinessPlans: builder.query({
+      query: () => `/platform-admin/business-plans`,
+      transformResponse: (response) => response?.data ?? [],
+      providesTags: ["PlatformBusinessPlans"],
+    }),
+    createPlatformBusinessPlan: builder.mutation({
+      query: (body) => ({ url: `/platform-admin/business-plans`, method: "POST", body }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["PlatformBusinessPlans"],
+    }),
+    updatePlatformBusinessPlan: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/platform-admin/business-plans/${id}`, method: "PUT", body }),
+      transformResponse: (response) => response?.data,
+      invalidatesTags: ["PlatformBusinessPlans"],
+    }),
+    deletePlatformBusinessPlan: builder.mutation({
+      query: (id) => ({ url: `/platform-admin/business-plans/${id}`, method: "DELETE" }),
+      invalidatesTags: ["PlatformBusinessPlans"],
     }),
 
     getPlatformPayouts: builder.query({
@@ -389,15 +462,15 @@ export const platformAdminApiSlice = apiSliceV2.injectEndpoints({
     }),
     resolvePlatformDispute: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/platform-admin/disputes/${id}/resolve`, method: "POST", body }),
-      invalidatesTags: ["PlatformDisputes"],
+      invalidatesTags: ["PlatformDisputes", "PlatformNavCounts"],
     }),
     startReviewPlatformDispute: builder.mutation({
       query: (id) => ({ url: `/platform-admin/disputes/${id}/start-review`, method: "POST" }),
-      invalidatesTags: ["PlatformDisputes"],
+      invalidatesTags: ["PlatformDisputes", "PlatformNavCounts"],
     }),
     escalatePlatformDispute: builder.mutation({
       query: (id) => ({ url: `/platform-admin/disputes/${id}/escalate`, method: "POST" }),
-      invalidatesTags: ["PlatformDisputes"],
+      invalidatesTags: ["PlatformDisputes", "PlatformNavCounts"],
     }),
 
     getPlatformFeedback: builder.query({
@@ -421,11 +494,11 @@ export const platformAdminApiSlice = apiSliceV2.injectEndpoints({
     }),
     approvePlatformDeactivation: builder.mutation({
       query: (id) => ({ url: `/platform-admin/deactivations/${id}/approve`, method: "POST" }),
-      invalidatesTags: ["PlatformDeactivations"],
+      invalidatesTags: ["PlatformDeactivations", "PlatformNavCounts"],
     }),
     rejectPlatformDeactivation: builder.mutation({
       query: (id) => ({ url: `/platform-admin/deactivations/${id}/reject`, method: "POST" }),
-      invalidatesTags: ["PlatformDeactivations"],
+      invalidatesTags: ["PlatformDeactivations", "PlatformNavCounts"],
     }),
 
     getPlatformRoles: builder.query({
@@ -501,6 +574,11 @@ export const {
   useTerminatePlatformTherapistMutation,
   useGetPlatformActivityLogsQuery,
   useGetPlatformGrowthQuery,
+  useGetPlatformGrowthAarrrQuery,
+  useGetPlatformGrowthFunnelQuery,
+  useGetPlatformGrowthCohortsQuery,
+  useGetPlatformGrowthSegmentsQuery,
+  useGetPlatformGrowthSegmentUsersQuery,
   useGetPlatformBusinessesQuery,
   useGetPlatformBusinessQuery,
   useCreatePlatformBusinessMutation,
@@ -518,6 +596,12 @@ export const {
   useGetPlatformBusinessActivityQuery,
   useGetPlatformSessionsQuery,
   useGetPlatformBillingQuery,
+  useGetPlatformCustomQuoteRequestsQuery,
+  useMarkPlatformCustomQuoteRequestContactedMutation,
+  useGetPlatformBusinessPlansQuery,
+  useCreatePlatformBusinessPlanMutation,
+  useUpdatePlatformBusinessPlanMutation,
+  useDeletePlatformBusinessPlanMutation,
   useGetPlatformPayoutsQuery,
   useProcessPlatformPayoutMutation,
   useProcessAllPlatformPayoutsMutation,
