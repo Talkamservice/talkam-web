@@ -4133,7 +4133,7 @@ export const PlatformUsersPage = () => {
             <button
               key={t.key}
               type="button"
-              onClick={() => setType(t.key)}
+              onClick={() => { setType(t.key); setPage(1); }}
               className={`cursor-pointer rounded-[10px] px-3.5 py-2 text-[12.5px] font-boldNunito ${type === t.key ? "bg-navy-800 text-white" : "border border-surface-line bg-white text-ink-600"}`}
             >
               {t.label} ({counts[t.key] ?? 0})
@@ -4142,7 +4142,7 @@ export const PlatformUsersPage = () => {
         </div>
         <input
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search users…"
           className="h-10 w-full max-w-[240px] rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
         />
