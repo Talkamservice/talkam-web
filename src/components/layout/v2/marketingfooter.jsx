@@ -63,7 +63,7 @@ const FullFooter = ({ journal }) => (
             className="mb-3.5 h-6 w-auto [filter:brightness(0)_invert(1)]"
           />
           <p className="text-[13px] leading-[1.7] text-white/45">
-            Community-first mental wellness — where honest conversation meets real
+            Community-first mental wellness, where honest conversation meets real
             care.
           </p>
         </div>

@@ -113,10 +113,10 @@ export const AdminTrust = () => {
         <div className="mb-1 text-body font-extraboldNunito text-navy-800">
           Anonymous reporting is always available
         </div>
-        <p className="text-caption leading-[1.6] text-ink-400">
+<p className="text-caption leading-[1.6] text-ink-400">
           Both employees and therapists can report a concern from any session or chat.
-          Reports route directly to TalkAM&apos;s moderation team — never to company
-          admins by default — unless it involves a policy the company itself sets (e.g.
+          Reports route directly to TalkAM's moderation team; never to company
+          admins by default, unless it involves a policy the company itself sets (e.g.
           code of conduct escalation).
         </p>
       </Card>
@@ -183,7 +183,7 @@ export const AdminSettings = () => {
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      showToast("That image is too large — please choose one under 5MB");
+      showToast("That image is too large. Please choose one under 5MB.");
       return;
     }
 
@@ -191,7 +191,7 @@ export const AdminSettings = () => {
     const img = new Image();
     img.onload = () => {
       if (img.naturalWidth < 256 || img.naturalHeight < 256) {
-        showToast("That image is too small — please choose one at least 256×256px");
+        showToast("That image is too small. Please choose one at least 256×256px.");
         URL.revokeObjectURL(objectUrl);
         return;
       }
@@ -241,7 +241,7 @@ export const AdminSettings = () => {
     try {
       await updateProfile(form).unwrap();
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't save that just now — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't save that just now. Please try again."));
       return;
     }
 
@@ -272,7 +272,7 @@ export const AdminSettings = () => {
       }).unwrap();
       showToast("Session policy saved");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't save that just now — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't save that just now. Please try again."));
     }
   };
 
@@ -285,7 +285,7 @@ export const AdminSettings = () => {
         await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
         showToast("Two-factor authentication disabled");
       } catch {
-        showToast("Couldn't update that just now — please try again");
+        showToast("Couldn't update that just now. Please try again.");
       }
       return;
     }
@@ -333,7 +333,7 @@ export const AdminSettings = () => {
             </div>
             <p className="mt-2 text-[10.5px] text-ink-400">
               {logoFile
-                ? "New image selected — click Save Changes to apply it."
+                ? "New image selected: click Save Changes to apply it."
                 : "Shown in the sidebar and used to personalize your organization's dashboard. PNG or JPG, at least 256×256px."}
             </p>
           </div>
@@ -403,7 +403,7 @@ export const AdminSettings = () => {
                   try {
                     await saveNotificationPref({ [p.key]: next }).unwrap();
                   } catch {
-                    showToast("Couldn't save that just now — please try again");
+                    showToast("Couldn't save that just now. Please try again.");
                   }
                 }}
               />
@@ -512,12 +512,12 @@ export const AdminSettings = () => {
             </div>
             <div className="mt-3 rounded-[10px] bg-brand-25 px-3.5 py-3 text-[11.5px] leading-[1.55] text-brand-600">
               Employees see their remaining allowance in-app. Anyone reaching the cap can
-              request more — you&apos;ll be notified to approve or top up.
+              request more; you&apos;ll be notified to approve or top up.
             </div>
           </>
         ) : (
           <div className="mt-3 rounded-[10px] bg-[#FFF5E8] px-3.5 py-3 text-[11.5px] leading-[1.55] text-gold-600">
-            No cap — any employee can book until the shared bundle runs out. Best paired
+            No cap: any employee can book until the shared bundle runs out. Best paired
             with the low-balance alert on Billing.
           </div>
         )}
@@ -569,7 +569,7 @@ export const AdminSettings = () => {
           Privacy &amp; Compliance
         </div>
         <div className="mb-3.5 text-caption text-ink-400">
-          Controls that protect employee anonymity — not editable below the NDPA floor
+          Controls that protect employee anonymity, not editable below the NDPA floor
         </div>
         <div className="flex items-center justify-between gap-4 border-b border-[#F5F5F5] py-3">
           <div>
@@ -659,7 +659,7 @@ export const AdminSettings = () => {
                 {orgCancelled
                   ? "This company's subscription has ended"
                   : cancelsAt
-                  ? `Access ends ${formatDangerZoneDate(cancelsAt)} — you can still reverse this`
+                  ? `Access ends ${formatDangerZoneDate(cancelsAt)}; you can still reverse this`
                   : "Access ends at the end of the current billing period"}
               </div>
             </div>
@@ -670,7 +670,7 @@ export const AdminSettings = () => {
                 onClick={() =>
                   open("confirm", {
                     title: "Resume subscription?",
-                    body: "This cancels the scheduled cancellation — billing and access continue as normal.",
+                    body: "This cancels the scheduled cancellation; billing and access continue as normal.",
                     confirmLabel: "Resume subscription",
                     toast: "Subscription cancellation reversed",
                     onConfirm: () => resumeSubscription().unwrap(),
@@ -773,7 +773,7 @@ export const AdminActivity = () => {
   return (
   <>
     <InfoStrip icon={<Icon.Clock size={15} className="shrink-0 text-brand-600" />}>
-      A record of administrative actions taken in your workspace — invites, billing
+      A record of administrative actions taken in your workspace: invites, billing
       changes, therapist and policy updates. Employee session content is never logged
       here.
     </InfoStrip>
@@ -855,7 +855,7 @@ export const AdminHelp = () => {
           Frequently asked questions
         </div>
         <div className="mb-3.5 text-caption text-ink-400">
-          Quick answers for admins — check here before starting a live chat.
+          Quick answers for admins: check here before starting a live chat.
         </div>
         <DsAccordion items={adminFaqs} marker="none" />
       </Card>
@@ -865,7 +865,7 @@ export const AdminHelp = () => {
           Knowledge base
         </div>
         <div className="mb-3.5 text-caption text-ink-400">
-          Full guides, walkthroughs, and troubleshooting — powered by our Informly help
+          Full guides, walkthroughs, and troubleshooting, powered by our Informly help
           center.
         </div>
         <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed border-[#C9CEDA] bg-[#FAFBFD] p-6 text-center">
@@ -920,7 +920,7 @@ export const AdminHelp = () => {
           Trust &amp; privacy, always
         </div>
         <p className="text-[11.5px] leading-[1.7] text-white/55">
-          No admin — including support staff — can view an employee&apos;s individual
+          No admin, including support staff, can view an employee&apos;s individual
           sessions, messages, or community posts. Every request is handled with that
           boundary in place.
         </p>

@@ -73,7 +73,7 @@ export const SignIn = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const o = useOnboarding();
-  usePageMeta("Sign in — TalkAM for Business");
+  usePageMeta("Sign in | TalkAM for Business");
 
   const [login, { isLoading }] = useLoginV2Mutation();
   const [form, setForm] = useState({ input: "", password: "" });
@@ -206,7 +206,7 @@ export const TwoFactor = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const o = useOnboarding();
-  usePageMeta("Enter your login code — TalkAM for Business");
+  usePageMeta("Enter your login code | TalkAM for Business");
 
   const [verifyTwoFactor, { isLoading }] = useVerifyTwoFactorMutation();
   const [requestOtp, { isLoading: isResending }] = useRequestOtpV2Mutation();
@@ -311,7 +311,7 @@ export const TwoFactor = () => {
 /* ── 13. FORGOT PASSWORD ───────────────────────────────────────────────── */
 export const ForgotPassword = () => {
   const navigate = useNavigate();
-  usePageMeta("Reset your password — TalkAM for Business");
+  usePageMeta("Reset your password | TalkAM for Business");
 
   const [forgotPassword, { isLoading }] = useForgotPasswordV2Mutation();
   const [email, setEmail] = useState("");
@@ -359,8 +359,8 @@ export const ForgotPassword = () => {
   return (
     <>
       <ScreenTitle>Reset your password</ScreenTitle>
-      <ScreenLead className="mb-6">
-        Enter your business email — we&apos;ll send a secure reset link.
+<ScreenLead className="mb-6">
+        Enter your business email; we'll send a secure reset link.
       </ScreenLead>
 
       <FormError>{error}</FormError>

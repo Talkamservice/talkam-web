@@ -26,7 +26,7 @@ export const LandingForBusiness = () => (
         </h2>
         <p className="mb-6 text-[15px] leading-[1.75] text-white/60">
           Give employees private access to therapy and community, and see
-          anonymised wellbeing trends — never individual data — from one clean
+          anonymised wellbeing trends, never individual data, from one clean
           dashboard.
         </p>
         <div className="mb-7 flex flex-col gap-3">

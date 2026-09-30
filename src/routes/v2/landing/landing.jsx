@@ -14,8 +14,8 @@ import { DownloadBanner, ForProfessionals, StatsBand } from "./sections/bands";
  */
 export const V2Landing = () => {
   usePageMeta(
-    "TalkAM — Your community and your therapist, in one app.",
-    "Talk freely, find your people, and book real licensed support — all from the TalkAM app, coming soon to iOS and Android."
+    "TalkAM: Your community and your therapist, in one app.",
+    "Talk freely, find your people, and book real licensed support, all from the TalkAM app, coming soon to iOS and Android."
   );
 
   return (

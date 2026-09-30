@@ -145,7 +145,7 @@ export const LandingHero = () => (
       </h1>
 
       <p className="mb-7 max-w-[480px] text-[15px] leading-[1.7] text-white/60 lg:text-[17px]">
-        Talk freely, find your people, and book real licensed support — all from
+        Talk freely, find your people, and book real licensed support, all from
         the TalkAM app, coming soon to iOS and Android.
       </p>
 

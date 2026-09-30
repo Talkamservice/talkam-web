@@ -28,8 +28,8 @@ import {
  */
 export const V2ForTherapists = () => {
   usePageMeta(
-    "For Therapists — TalkAM",
-    "Reach people who need support, set your own hours, and get paid reliably — with a verified badge that builds instant trust."
+    "For Therapists: TalkAM",
+    "Reach people who need support, set your own hours, and get paid reliably, with a verified badge that builds instant trust."
   );
 
   return (
@@ -69,8 +69,8 @@ export const V2ForTherapists = () => {
             </span>
           </h1>
           <p className="mb-8 max-w-[480px] text-[16px] leading-[1.65] text-white/60 lg:text-[18px]">
-            Reach people who need support, set your own hours, and get paid reliably
-            — with a verified badge that builds instant trust and a dashboard built
+            Reach people who need support, set your own hours, and get paid reliably,
+            with a verified badge that builds instant trust and a dashboard built
             for your day.
           </p>
           <div className="flex flex-wrap gap-3.5">
@@ -142,7 +142,7 @@ export const V2ForTherapists = () => {
             Everything you need to do great work.
           </h2>
           <p className="text-[16px] leading-[1.65] text-[#5B6577]">
-            A calm, focused workspace that handles the admin — so you can focus on
+            A calm, focused workspace that handles the admin, so you can focus on
             your clients.
           </p>
         </div>
@@ -178,7 +178,7 @@ export const V2ForTherapists = () => {
         </h2>
         <p className="mb-6 text-[15.5px] leading-[1.7] text-[#5B6577]">
           See who&apos;s next with a live countdown, accept new client requests, join
-          secure video rooms, and write session notes right after — nothing slips.
+          secure video rooms, and write session notes right after. Nothing slips.
         </p>
         <ShowcasePoints points={therapistSessionPoints} />
       </ShowcaseBand>
@@ -201,7 +201,7 @@ export const V2ForTherapists = () => {
         <div className="rounded-ds-md bg-brand-25 p-4 text-[13.5px] leading-[1.6] text-brand-600">
           <strong className="font-boldNunito">Joining through a company?</strong>{" "}
           Therapists onboarded by a business are paid directly by that organisation at
-          an agreed flat rate — no earnings module needed.
+          an agreed flat rate; no earnings module needed.
         </div>
       </ShowcaseBand>
 

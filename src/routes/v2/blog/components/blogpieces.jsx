@@ -147,7 +147,7 @@ export const NewsletterBand = () => {
             Wellbeing, in your inbox.
           </h2>
           <p className="text-[14.5px] leading-[1.65] text-[#3E4A52]">
-            One thoughtful email a week — new guides, tools, and community stories.
+            One thoughtful email a week: new guides, tools, and community stories.
             No noise, unsubscribe anytime.
           </p>
         </div>

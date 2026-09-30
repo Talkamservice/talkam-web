@@ -115,7 +115,7 @@ export const V2Pricing = () => {
           </svg>
           <p className="min-w-[260px] flex-1 text-[13.5px] leading-[1.6] text-brand-600">
             <strong className="font-boldNunito">Post-paid by default.</strong> Nothing
-            is charged at signup — your first invoice is generated only once your
+            is charged at signup, your first invoice is generated only once your
             first employee activates. Pay by bank transfer, or by card via
             Flutterwave for instant setup.
           </p>
@@ -174,11 +174,11 @@ export const V2Pricing = () => {
           <p className="mb-4 text-[14.5px] leading-[1.75] text-[#5B6577]">
             Your bill is the sum of three clean layers: employee seats and therapist
             access are billed per employee each month, while sessions are drawn from
-            a shared bundle at a flat ₦8,000 each — the same rate paid to every
+            a shared bundle at a flat ₦8,000 each, the same rate paid to every
             therapist on the network.
           </p>
           <p className="text-[14.5px] leading-[1.75] text-[#5B6577]">
-            The full breakdown is always visible on your Billing page — no per-seat
+            The full breakdown is always visible on your Billing page, no per-seat
             markups, no hidden per-session surcharges.
           </p>
         </div>

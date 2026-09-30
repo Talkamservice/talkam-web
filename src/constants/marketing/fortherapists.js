@@ -103,7 +103,7 @@ export const therapistSessions = [
 export const therapistSessionPoints = [
   {
     title: "Secure video, voice or chat",
-    body: "Sessions are never recorded — full confidentiality.",
+    body: "Sessions are never recorded, full confidentiality.",
   },
   {
     title: "Accept or decline requests",

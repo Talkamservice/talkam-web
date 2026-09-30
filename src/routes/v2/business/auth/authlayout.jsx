@@ -106,8 +106,8 @@ export const AuthLayout = () => {
       <div className="flex min-h-dvh flex-col bg-surface-page font-regularNunito leading-[normal]">
         {showSwitcher ? (
           <div className="flex flex-shrink-0 items-center gap-1.5 overflow-x-auto bg-navy-900 px-6 py-2.5">
-            <span className="mr-2.5 flex-shrink-0 whitespace-nowrap text-[10px] font-boldNunito tracking-[0.08em] text-white/30">
-              AUTH &amp; ONBOARDING —
+<span className="mr-2.5 flex-shrink-0 whitespace-nowrap text-[10px] font-boldNunito tracking-[0.08em] text-white/30">
+              AUTH & ONBOARDING
             </span>
             {AUTH_SCREENS.map((s) => (
               <Link

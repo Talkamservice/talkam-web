@@ -51,7 +51,7 @@ const PrivacySidebarStrip = ({ company }) => (
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
     </svg>
     <span className="text-[10.5px] leading-[1.4] text-[#6FCDB6]">
-      Private by default — {company} never sees this
+      Private by default: {company} never sees this
     </span>
   </div>
 );
@@ -201,7 +201,7 @@ export const EmployeeLayout = () => {
         ? `${upcomingCount} upcoming · ${pastCount} past session${pastCount === 1 ? "" : "s"}`
         : meta.subtitle;
 
-  usePageMeta(`${meta.title} — TalkAM`);
+  usePageMeta(`${meta.title} | TalkAM`);
 
   return (
     <DashboardShell

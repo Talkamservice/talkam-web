@@ -34,7 +34,7 @@ export const ForProfessionals = () => (
           Grow your practice with TalkAM.
         </h2>
         <p className="mb-5 text-[15px] leading-[1.7] text-[#3E4A52]">
-          Reach people who need support, set your own hours, and get paid weekly —
+          Reach people who need support, set your own hours, and get paid weekly,
           with a verified badge that builds instant trust.
         </p>
         <div className="flex flex-wrap gap-2.5">

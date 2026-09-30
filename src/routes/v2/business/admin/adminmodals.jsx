@@ -1129,7 +1129,7 @@ const EditEmployeeModal = ({ open, close, showToast, context }) => {
       showToast(`${context?.id ?? "Employee"} updated`);
       close();
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't update employee — please try again"));
+      setError(apiErrorMessage(err, "Couldn't update employee. Please try again."));
     }
   };
 
@@ -1225,7 +1225,7 @@ const DepartmentModal = ({ open, close, showToast, context }) => {
       }
       close();
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't save that department — please try again"));
+      setError(apiErrorMessage(err, "Couldn't save that department. Please try again."));
     }
   };
 
@@ -1275,7 +1275,7 @@ const ConfirmModal = ({ open, close, showToast, context }) => (
             showToast(context?.toast ?? "Done");
           } catch {
             close();
-            showToast("Couldn't complete that action — please try again");
+            showToast("Couldn't complete that action. Please try again.");
           }
         }}
         className="cursor-pointer rounded-[10px] bg-signal-error px-4 py-[9px] text-[13px] font-boldNunito text-white hover:bg-surface-errorInk"
@@ -1805,7 +1805,7 @@ const PlanCheckoutModal = ({ open, close, showToast, context }) => {
       close();
       showToast("Plan updated");
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't update your plan — please try again"));
+      setError(apiErrorMessage(err, "Couldn't update your plan. Please try again."));
     }
   };
 
@@ -1940,7 +1940,7 @@ const DeleteCompanyModal = ({ open, close, showToast, context }) => {
       close();
       showToast("Company account scheduled for deletion in 30 days");
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't schedule that just now — please try again"));
+      setError(apiErrorMessage(err, "Couldn't schedule that just now. Please try again."));
     }
   };
 

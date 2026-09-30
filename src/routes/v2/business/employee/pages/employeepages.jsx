@@ -1486,7 +1486,7 @@ export const EmployeeCommunity = () => {
                     <span className="text-[11px] text-ink-400">{t.posts} posts</span>
                   </div>
                   <div className="text-[13px] leading-[1.5] text-ink-600">&quot;{t.snippet}&quot;</div>
-                  <div className="text-[11px] text-ink-300">— anonymous · {t.time_ago}</div>
+                  <div className="text-[11px] text-ink-300">anonymous · {t.time_ago}</div>
                 </Card>
               );
             })}
@@ -1898,7 +1898,7 @@ export const EmployeeProfile = () => {
                 </div>
                 {locked ? (
                   <span
-                    aria-label={`${CONSENT_COPY[key].title} — required`}
+                    aria-label={`${CONSENT_COPY[key].title}, required`}
                     className="relative h-[22px] w-10 shrink-0 rounded-full bg-[#C4C8D4]"
                   >
                     <span className="absolute right-0.5 top-0.5 h-[18px] w-[18px] rounded-full bg-white" />

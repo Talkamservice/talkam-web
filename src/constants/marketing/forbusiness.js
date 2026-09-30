@@ -21,7 +21,7 @@ export const businessFeatures = [
     icon: "📊",
     bg: "bg-brand-25",
     title: "Anonymised analytics",
-    body: "Company-wide wellbeing trends and top themes — never a single individual identified.",
+    body: "Company-wide wellbeing trends and top themes, never a single individual identified.",
   },
   {
     icon: "🪑",
@@ -51,7 +51,7 @@ export const businessFeatures = [
     icon: "🤝",
     bg: "bg-brand-25",
     title: "Community + care",
-    body: "Anonymous community plus real 1:1 therapy — the whole spectrum of support.",
+    body: "Anonymous community plus real 1:1 therapy, the whole spectrum of support.",
   },
 ];
 
@@ -73,7 +73,7 @@ export const seatManagementPoints = [
     title: "Per-employee session caps",
     body: "Control monthly usage limits per seat.",
   },
-  { title: "Anonymised by default", body: "Identities are masked — always." },
+  { title: "Anonymised by default", body: "Identities are masked, always." },
 ];
 
 /** Billing dashboard preview. */

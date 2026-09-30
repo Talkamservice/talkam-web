@@ -99,7 +99,7 @@ export const V2BlogArticle = () => {
   }, [article]);
 
   usePageMeta(
-    article ? `${article.title} — The TalkAM Journal` : "Article not found — TalkAM",
+    article ? `${article.title} | The TalkAM Journal` : "Article not found | TalkAM",
     article?.excerpt
   );
 

@@ -121,7 +121,7 @@ const Directory = () => {
       );
       showToast("Export downloaded");
     } catch {
-      showToast("Couldn't export — please try again");
+      showToast("Couldn't export. Please try again.");
     }
   };
 
@@ -349,7 +349,7 @@ const Directory = () => {
                             setResent((p) => [...p, e.id]);
                             showToast(`Invite resent to ${e.email}`);
                           } catch {
-                            showToast("Couldn't resend that invite — please try again");
+                            showToast("Couldn't resend that invite. Please try again.");
                           }
                         }}
                         className={classNames(
@@ -392,7 +392,7 @@ const Directory = () => {
                           setNudged((p) => [...p, e.id]);
                           showToast(`${e.id} reactivated`);
                         } catch {
-                          showToast("No free seats — increase your seat count first");
+                          showToast("No free seats. Increase your seat count first.");
                         }
                       }}
                       className={classNames(

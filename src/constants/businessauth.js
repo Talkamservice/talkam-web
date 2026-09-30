@@ -16,37 +16,37 @@ export const authBrandContent = {
   signup: {
     eyebrow: "FOR EMPLOYERS",
     title: "Give your team real mental health support.",
-    body: "Enrol employees anonymously, track engagement in aggregate, and pay one clean monthly invoice — no clinical detail ever reaches HR.",
+    body: "Enrol employees anonymously, track engagement in aggregate, and pay one clean monthly invoice, no clinical detail ever reaches HR.",
     points: ["Verified Nigerian therapists only", "NDPA 2023 compliant by design", "No individual employee data, ever"],
   },
   domain: {
     eyebrow: "FOR EMPLOYERS",
     title: "Verifying your company keeps everyone safe.",
-    body: "Domain confirmation stops anyone from claiming a company they don't control — a requirement before any employee can be invited.",
+    body: "Domain confirmation stops anyone from claiming a company they don't control, a requirement before any employee can be invited.",
     points: ["One-time domain check", "15-minute code expiry", "Company admins only"],
   },
   seats: {
     eyebrow: "FOR EMPLOYERS",
     title: "Pricing locks in the moment you choose seats.",
-    body: "Nothing downstream — plan pricing, therapist bench setup — is calculated until your seat count is set.",
+    body: "Nothing downstream, plan pricing, therapist bench setup is calculated until your seat count is set.",
     points: ["Volume discounts apply automatically", "Change your seat count anytime", "No charge until employees activate"],
   },
   plan: {
     eyebrow: "FOR EMPLOYERS",
     title: "Fair pricing, explained plainly.",
-    body: "Your rate is the volume-tier price for your seat count — a flat facilitation fee, billed monthly. Turn on TalkAM's therapist network and you only pay for the sessions your team actually uses.",
+    body: "Your rate is the volume-tier price for your seat count, a flat facilitation fee, billed monthly. Turn on TalkAM's therapist network and you only pay for the sessions your team actually uses.",
     points: ["Unlimited community access", "Subsidised therapy sessions", "Monthly anonymised reporting"],
   },
   therapistBench: {
     eyebrow: "FOR EMPLOYERS",
     title: "Shape your therapist bench.",
-    body: "Tell us which specialties matter most to your team — we prioritise onboarding matching verified therapists first.",
-    points: ["Individual employees can still book anyone", "Fully optional — skip anytime", "Refine anytime from Therapist Network"],
+    body: "Tell us which specialties matter most to your team, we prioritise onboarding matching verified therapists first.",
+    points: ["Individual employees can still book anyone", "Fully optional, skip anytime", "Refine anytime from Therapist Network"],
   },
   invite: {
     eyebrow: "ONBOARDING",
     title: "Two roles, two very different flows.",
-    body: "Employees head straight into topic-of-interest onboarding. Therapists complete a short bio & specialties step, then can start seeing your team right away — no TalkAM review required.",
+    body: "Employees head straight into topic-of-interest onboarding. Therapists complete a short bio & specialties step, then can start seeing your team right away, no TalkAM review required.",
     points: ["CSV bulk upload supported", "Role assigned per invite", "Resend or revoke anytime"],
   },
   inviteSent: {
@@ -58,7 +58,7 @@ export const authBrandContent = {
   landing: {
     eyebrow: "INVITED MEMBER",
     title: "Private by default.",
-    body: "Whatever you do on TalkAM — posts, sessions, mood check-ins — your employer only ever sees anonymised, aggregate numbers.",
+    body: "Whatever you do on TalkAM: posts, sessions, mood check-ins, your employer only ever sees anonymised, aggregate numbers.",
     points: ["Your employer cannot see your activity", "Your community username stays private", "You can leave the program anytime"],
   },
   consent: {
@@ -70,19 +70,19 @@ export const authBrandContent = {
   topics: {
     eyebrow: "PERSONALISE",
     title: "Same categories as the mobile community.",
-    body: "This just shapes what you see first — you can browse or post in any topic regardless.",
+    body: "This just shapes what you see first, you can browse or post in any topic regardless.",
     points: ["Anxiety · Depression · Relationships", "Work Stress · Grief · General Support", "Editable anytime from Profile"],
   },
   specialties: {
     eyebrow: "LAST STEP",
     title: "Clients find you by these.",
-    body: "Your bio and specialties show on your public profile — the same fields the mobile app uses. You can update either anytime.",
+    body: "Your bio and specialties show on your public profile, the same fields the mobile app uses. You can update either anytime.",
     points: ["Shown on your public profile", "Matches you with the right clients", "Editable anytime from your dashboard"],
   },
   assessment: {
     eyebrow: "PRIVATE & CONFIDENTIAL",
     title: "Matched to the right therapist, faster.",
-    body: "Your answers stay private — only anonymised, company-wide patterns (after at least 5 responses) ever reach HR, and only to help them prioritise which specialists to bring on.",
+    body: "Your answers stay private, only anonymised, company-wide patterns (after at least 5 responses) ever reach HR, and only to help them prioritise which specialists to bring on.",
     points: ["Never shared individually, ever", "Refine your matches anytime", "Takes about 2 minutes"],
   },
   complete: {
@@ -94,13 +94,13 @@ export const authBrandContent = {
   signin: {
     eyebrow: "WELCOME BACK",
     title: "One dashboard, three roles.",
-    body: "Admins, employees and therapists all sign in here — each lands on a completely different home.",
+    body: "Admins, employees and therapists all sign in here, each lands on a completely different home.",
     points: ["Business email required", "No OAuth on web dashboard", "2FA available in Settings"],
   },
   twofa: {
     eyebrow: "WELCOME BACK",
     title: "One dashboard, three roles.",
-    body: "Admins, employees and therapists all sign in here — each lands on a completely different home.",
+    body: "Admins, employees and therapists all sign in here, each lands on a completely different home.",
     points: ["Business email required", "No OAuth on web dashboard", "2FA available in Settings"],
   },
   forgot: {

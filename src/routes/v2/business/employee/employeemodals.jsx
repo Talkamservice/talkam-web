@@ -842,9 +842,9 @@ const FeedbackModal = ({ close, showToast, session }) => {
       }
 
       close();
-      showToast("Thanks — your feedback helps");
+      showToast("Thanks. Your feedback helps.");
     } catch {
-      showToast("Couldn't submit that just now — please try again");
+      showToast("Couldn't submit that just now. Please try again.");
     }
   };
 
@@ -855,7 +855,7 @@ const FeedbackModal = ({ close, showToast, session }) => {
         <div className="p-6">
         <div className="mb-[18px] text-[12px] text-ink-400">
           {session?.therapist_name ? `With ${session.therapist_name} · ` : ""}
-          {session?.starts_at ? `${slotLabel(session.starts_at).split(" · ")[0]} — ` : ""}
+          {session?.starts_at ? `${slotLabel(session.starts_at).split(" · ")[0]}: ` : ""}
           private, only visible to you and TalkAM
         </div>
         <div className="mb-[18px] flex justify-center gap-2">

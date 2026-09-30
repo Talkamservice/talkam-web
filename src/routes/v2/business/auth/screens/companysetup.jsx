@@ -44,7 +44,7 @@ export const CompanySignup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const o = useOnboarding();
-  usePageMeta("Create your company account — TalkAM for Business");
+  usePageMeta("Create your company account | TalkAM for Business");
 
   const [registerCompany, { isLoading }] = useRegisterCompanyMutation();
   const { data: industries = [] } = useGetIndustriesQuery();
@@ -97,7 +97,7 @@ export const CompanySignup = () => {
       <StepEyebrow>STEP 1 OF 3 · COMPANY DETAILS</StepEyebrow>
       <ScreenTitle>Create your company account</ScreenTitle>
       <ScreenLead className="mb-7">
-        No OAuth, no personal accounts — sign up with your verified business email
+        No OAuth, no personal accounts; sign up with your verified business email
         only.
       </ScreenLead>
 
@@ -116,7 +116,7 @@ export const CompanySignup = () => {
         <Field
           label="Work email"
           labelTone="brand"
-          hint="Must be a company domain — free email providers (Gmail, Yahoo) aren't accepted."
+          hint="Must be a company domain; free email providers (Gmail, Yahoo) aren't accepted."
         >
           <input
             type="email"
@@ -188,7 +188,7 @@ export const CompanySignup = () => {
 export const DomainVerify = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Confirm your business email — TalkAM for Business");
+  usePageMeta("Confirm your business email | TalkAM for Business");
 
   const { data: org } = useGetOrganizationQuery();
   const [verifyDomain, { isLoading }] = useVerifyDomainMutation();
@@ -275,7 +275,7 @@ export const DomainVerify = () => {
 export const ChooseSeats = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Choose your seats — TalkAM for Business");
+  usePageMeta("Choose your seats | TalkAM for Business");
 
   const { data: pricing } = useGetPricingConfigQuery();
   const { data: org } = useGetOrganizationQuery();
@@ -345,7 +345,7 @@ export const ChooseSeats = () => {
       <StepEyebrow>STEP 3 OF 4 · SEATS</StepEyebrow>
       <ScreenTitle>How many employees will you onboard?</ScreenTitle>
       <ScreenLead className="mb-6">
-        Your per-seat price is set the moment you choose a seat count — nothing else
+        Your per-seat price is set the moment you choose a seat count; nothing else
         in setup is priced until this is locked in.
       </ScreenLead>
 
@@ -431,7 +431,7 @@ export const ChooseSeats = () => {
               </span>
             </div>
             <p className="text-caption leading-[1.55] text-ink-500">
-              Free to enable — your employees can book TalkAM-verified therapists. You
+              Free to enable; your employees can book TalkAM-verified therapists. You
               only pay for the sessions they actually use.
             </p>
           </div>
@@ -539,7 +539,7 @@ export const ChooseSeats = () => {
                         Custom amount
                       </div>
                       <p className="text-[11px] text-ink-400">
-                        A specific number instead of a block — priced at {naira(customRate)}
+                        A specific number instead of a block, priced at {naira(customRate)}
                         /session.
                       </p>
                     </div>
@@ -582,7 +582,7 @@ export const ChooseSeats = () => {
                 </div>
                 <p className="text-[11.5px] leading-[1.55] text-ink-500">
                   No bundle to buy now. Sessions are billed at {naira(customRate)} each,
-                  totalled on your monthly invoice — you only pay for what your team
+                  totalled on your monthly invoice; you only pay for what your team
                   actually uses.
                 </p>
               </div>
@@ -680,7 +680,7 @@ export const ChooseSeats = () => {
 export const PlanBilling = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Your plan & billing — TalkAM for Business");
+  usePageMeta("Your plan & billing | TalkAM for Business");
 
   const { data: pricing } = useGetPricingConfigQuery();
   const { data: org } = useGetOrganizationQuery();
@@ -715,7 +715,7 @@ export const PlanBilling = () => {
     customizations: {
       title: "TalkAM for Business",
       description: savingCard
-        ? "Save your card — a small refundable hold verifies it (not charged)"
+        ? "Save your card: a small refundable hold verifies it (not charged)"
         : "Session bundle — charged now so sessions are ready immediately",
     },
     meta: { ...(checkout?.meta ?? {}) },
@@ -782,7 +782,7 @@ export const PlanBilling = () => {
   // Bank-transfer copy (web §11) — only shown when dedicated accounts are live.
   // Prepay activates on payment (never on trust).
   const transferNote = prepay
-    ? "No card? Set up your company's own dedicated account (a quick verification) from your billing dashboard, then transfer your first bill there — your session bundle activates automatically once it lands. Nothing is charged today."
+    ? "No card? Set up your company's own dedicated account (a quick verification) from your billing dashboard, then transfer your first bill there; your session bundle activates automatically once it lands. Nothing is charged today."
     : "No card? Set up your company's own dedicated account from your billing dashboard; your monthly invoices reconcile against it automatically. Nothing is charged today.";
 
   // Card is the only rail until dedicated bank transfer (§11) is enabled — never
@@ -889,7 +889,7 @@ export const PlanBilling = () => {
           <ScreenLead className="mb-6 max-w-[400px]">
             {success
               ? savedCard
-                ? "Your card is verified and saved. Your seats bill to it at each month-end — nothing was charged today."
+                ? "Your card is verified and saved. Your seats bill to it at each month-end; nothing was charged today."
                 : "Your first month is paid and your session bundle is active, so your team can start booking right away."
               : savedCard
                 ? "Your card wasn't saved, so billing isn't set up yet. Try again, or skip and add it later from your dashboard."
@@ -925,7 +925,7 @@ export const PlanBilling = () => {
                 onClick={() => proceed(false)}
                 className="w-full cursor-pointer text-center text-caption text-ink-400"
               >
-                Skip billing setup for now — I&apos;ll add this later from the dashboard
+Skip billing setup for now; I&apos;ll add this later from the dashboard
               </button>
             </>
           )}
@@ -939,7 +939,7 @@ export const PlanBilling = () => {
       <StepEyebrow>STEP 4 OF 4 · PLAN &amp; BILLING</StepEyebrow>
       <ScreenTitle>Your plan, priced fairly</ScreenTitle>
       <ScreenLead className="mb-5">
-        One plan in Phase 1 — built to be simple to approve and easy to explain to
+        One plan in Phase 1, built to be simple to approve and easy to explain to
         your board.
       </ScreenLead>
 
@@ -1041,7 +1041,7 @@ export const PlanBilling = () => {
             )}
           </div>
           <p className="text-[11px] leading-[1.6] text-ink-400">
-            Your seat price is the {naira(seatRate)} volume-tier rate for {seats} seats —
+            Your seat price is the {naira(seatRate)} volume-tier rate for {seats} seats:
             the facilitation fee for connecting your team with therapists. No hidden
             multipliers.
           </p>
@@ -1055,7 +1055,7 @@ export const PlanBilling = () => {
         </div>
         <p className="mb-3.5 text-caption text-ink-400">
           {!vaEnabled
-            ? "Pay by card to set up instantly — or skip below and add billing later."
+            ? "Pay by card to set up instantly; or skip below and add billing later."
             : prepay
               ? "Most teams pay by invoice. Smaller teams can pay by card for instant setup."
               : "Your seats are billed monthly; pay-as-you-go sessions are settled each month-end — by net-terms invoice or auto-charged to a card."}
@@ -1106,14 +1106,14 @@ export const PlanBilling = () => {
                 </div>
                 <p className="text-[11px] leading-[1.5] text-ink-500">
                   You&apos;ll be taken to Flutterwave&apos;s secure checkout to enter your
-                  card — TalkAM never sees or stores your card details.
+                  card; TalkAM never sees or stores your card details.
                 </p>
               </div>
             </div>
             <p className="text-[11px] leading-[1.6] text-ink-400">
               {prepay
                 ? "Your first month — seats plus the session bundle — is charged now via Flutterwave, so sessions are ready immediately. From next month, seats are billed to the same card. Best for smaller teams who'd rather not wait on an invoice."
-                : "Your seats are billed monthly to this card — a fixed charge for your licensed capacity — and the sessions your team uses are added at each month-end. You only pay for the sessions actually used. We verify your card now with a small refundable hold; nothing is charged today."}
+                : "Your seats are billed monthly to this card: a fixed charge for your licensed capacity, and the sessions your team uses are added at each month-end. You only pay for the sessions actually used. We verify your card now with a small refundable hold; nothing is charged today."}
             </p>
           </>
         )}
@@ -1149,7 +1149,7 @@ export const PlanBilling = () => {
         onClick={() => proceed(false)}
         className="w-full cursor-pointer text-center text-caption text-ink-400"
       >
-        Skip billing setup for now — I&apos;ll add this later from the dashboard
+        Skip billing setup for now; I&apos;ll add this later from the dashboard
       </button>
     </>
   );

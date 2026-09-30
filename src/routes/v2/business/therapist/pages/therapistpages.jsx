@@ -550,7 +550,7 @@ export const TherapistHome = () => {
             <>
               <div className="text-[15px] tracking-[2px] text-gold-400">{"★".repeat(review.stars)}{"☆".repeat(5 - review.stars)}</div>
               <div className="text-[14px] italic leading-[1.6] text-[#3E4A52]">&quot;{review.text}&quot;</div>
-              <div className="text-[11.5px] font-semiboldNunito text-ink-400">— Anonymous client · {review.when}</div>
+              <div className="text-[11.5px] font-semiboldNunito text-ink-400">Anonymous client · {review.when}</div>
             </>
           ) : (
             <EmptyNote>No reviews yet — they appear here once clients rate their sessions.</EmptyNote>
