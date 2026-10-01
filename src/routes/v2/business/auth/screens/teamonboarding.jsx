@@ -46,7 +46,7 @@ const INVITE_INPUT =
 export const TherapistBench = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Preview your therapist bench — TalkAM for Business");
+  usePageMeta("Preview your therapist bench · TalkAM for Business");
 
   const { data: org, isLoading } = useGetOrganizationQuery();
   const [saveBench, { isLoading: isSaving }] = useSaveBenchMutation();
@@ -79,14 +79,14 @@ export const TherapistBench = () => {
 
       {!isLoading && seats <= 0 ? (
         <div className="mb-5 rounded-ds-md bg-surface-errorTint px-4 py-3.5 text-[12.5px] leading-[1.6] text-surface-errorInk">
-          Choose your seat count first — therapist matching is scaled to your team size
+          Choose your seat count first; therapist matching is scaled to your team size
           and can&apos;t be set up before that.
         </div>
       ) : null}
 
       <ScreenLead className="mb-5">
         Based on {seats} seats, tell us which specialties to prioritise in your bench.
-        Individual employees are still matched to any verified therapist — this just
+        Individual employees are still matched to any verified therapist; this just
         shapes who we onboard first for your company.
       </ScreenLead>
 
@@ -132,7 +132,7 @@ export const TherapistBench = () => {
 export const TeamInvite = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Invite employees & therapists — TalkAM for Business");
+  usePageMeta("Invite employees & therapists · TalkAM for Business");
 
   const fileInput = useRef(null);
   const [importRoster, { isLoading: isImporting }] = useImportRosterMutation();
@@ -199,7 +199,7 @@ export const TeamInvite = () => {
 
       if (parsed?.invalid_count) {
         setError(
-          `${parsed.invalid_count} row${parsed.invalid_count > 1 ? "s were" : " was"} skipped — check the email and role columns.`
+          `${parsed.invalid_count} row${parsed.invalid_count > 1 ? "s were" : " was"} skipped; check the email and role columns.`
         );
       }
     } catch (err) {
@@ -485,8 +485,7 @@ export const TeamInvite = () => {
         <p className="text-[11.5px] leading-[1.6] text-[#5A3990]">
           Tag their invite as <strong className="font-boldNunito">Therapist</strong> to
           bring your own provider onto TalkAM alongside your team. They complete the
-          same quick verification, and you&apos;ll choose how they&apos;re billed —
-          through TalkAM or settled directly with you — from My Therapists.
+          same quick verification, and you&apos;ll choose how they&apos;re billed (through TalkAM or settled directly with you) from My Therapists.
         </p>
       </div>
 
@@ -500,7 +499,7 @@ export const TeamInvite = () => {
         onClick={() => navigate(V2.admin, { replace: true })}
         className="mt-3.5 w-full cursor-pointer text-center text-caption text-ink-400"
       >
-        Skip for now — go to dashboard
+        Skip for now: go to dashboard
       </button>
     </>
   );
@@ -510,7 +509,7 @@ export const TeamInvite = () => {
 export const InvitesSent = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Invites sent — TalkAM for Business");
+  usePageMeta("Invites sent · TalkAM for Business");
 
   const sent = o.invitesSent;
   const invitations = sent?.invitations ?? [];
@@ -535,7 +534,7 @@ export const InvitesSent = () => {
       <ScreenTitle>Invites sent</ScreenTitle>
       <ScreenLead className="mb-6 !leading-[1.7]">
         {total} invite email{total === 1 ? " is" : "s are"} on their way. Each includes a
-        unique link{breakdown ? ` — ${breakdown}` : ""}. Track status anytime from
+        unique link{breakdown ? `, ${breakdown}` : ""}. Track status anytime from
         Employees.
       </ScreenLead>
       <AuthButton tone="brand" onClick={() => navigate(V2.admin, { replace: true })}>
@@ -551,7 +550,7 @@ export const InviteLanding = () => {
   const dispatch = useDispatch();
   const o = useOnboarding();
   const [searchParams] = useSearchParams();
-  usePageMeta("Complete your registration — TalkAM");
+  usePageMeta("Complete your registration · TalkAM");
 
   const token = searchParams.get("token") ?? "";
   const { data: invite, isLoading, isError, error: loadError } = useGetInvitationQuery(token, {

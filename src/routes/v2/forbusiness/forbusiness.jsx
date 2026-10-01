@@ -27,8 +27,8 @@ import {
 
 export const V2ForBusiness = () => {
   usePageMeta(
-    "For Business — TalkAM",
-    "Give employees private access to therapy, community and self-care tools — and see anonymised wellbeing trends from one clean dashboard."
+    "For Business · TalkAM",
+    "Give employees private access to therapy, community and self-care tools, and see anonymised wellbeing trends from one clean dashboard."
   );
 
   return (
@@ -65,8 +65,8 @@ export const V2ForBusiness = () => {
             </span>
           </h1>
           <p className="mb-8 max-w-[480px] text-[16px] leading-[1.65] text-white/60 lg:text-[18px]">
-            Give employees private access to therapy, community and self-care tools
-            — and see anonymised wellbeing trends from one clean dashboard. Never
+            Give employees private access to therapy, community and self-care tools,
+            and see anonymised wellbeing trends from one clean dashboard. Never
             individual data.
           </p>
           <div className="flex flex-wrap gap-3.5">
@@ -151,7 +151,7 @@ export const V2ForBusiness = () => {
             Care that scales, insight that respects privacy.
           </h2>
           <p className="text-[16px] leading-[1.65] text-[#5B6577]">
-            Everything HR needs to run a modern wellbeing benefit — without ever
+            Everything HR needs to run a modern wellbeing benefit, without ever
             crossing the line into individual employee data.
           </p>
         </div>
@@ -187,7 +187,7 @@ export const V2ForBusiness = () => {
         </h2>
         <p className="mb-6 text-[15.5px] leading-[1.7] text-[#5B6577]">
           Upload a roster or add people one by one. Every employee shows as an
-          anonymised ID — you see status and usage, never who said what.
+          anonymised ID: you see status and usage, never who said what.
         </p>
         <ShowcasePoints points={seatManagementPoints} />
       </ShowcaseBand>
@@ -209,7 +209,7 @@ export const V2ForBusiness = () => {
           </h2>
           <p className="text-[16px] leading-[1.7] text-white/65 lg:text-[17px]">
             Mood check-ins, sessions, messages and community activity are private to
-            the employee. HR only ever sees company-wide, anonymised totals — and
+            the employee. HR only ever sees company-wide, anonymised totals, and
             only above a minimum cohort size. It&apos;s wellbeing insight without
             surveillance.
           </p>

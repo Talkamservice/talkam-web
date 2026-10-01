@@ -102,7 +102,7 @@ export const PAGE_META = {
   users: { title: "All Users", subtitle: "Every user account on TalkAM" },
   businesses: { title: "Businesses & Orgs", subtitle: "Every organization on TalkAM" },
   "therapist-verification": { title: "Therapist Verification", subtitle: "Applications awaiting review" },
-  performance: { title: "Performance Watch", subtitle: "Flagged therapists — rating & no-show rate" },
+  performance: { title: "Performance Watch", subtitle: "Flagged therapists: rating & no-show rate" },
   deactivations: { title: "Deactivation Reqs", subtitle: "Account deactivation requests" },
   payouts: { title: "Payout Management", subtitle: "Therapist payouts" },
   billing: { title: "Billing & Invoices", subtitle: "Revenue & invoices" },
@@ -169,7 +169,7 @@ export const PlatformLayout = () => {
 
   const segment = pathname.replace(V2.platform, "").replace(/^\//, "").split("/")[0] ?? "";
   const meta = PAGE_META[segment] ?? PAGE_META[""];
-  usePageMeta(`${meta.title} — TalkAM Platform Admin`);
+  usePageMeta(`${meta.title} · TalkAM Platform Admin`);
 
   const sections = NAV_SECTIONS.map((section) => ({
     label: section.label,

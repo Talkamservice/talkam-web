@@ -186,7 +186,7 @@ const InviteModal = ({ open, close, showToast }) => {
 
       <InfoStrip tone="purple" className="mb-4">
         Invite email states: &quot;Your employer has given you access to TalkAM. Everything
-        you do is private — your employer cannot see your activity.&quot;
+        you do is private: your employer cannot see your activity.&quot;
       </InfoStrip>
 
       {error ? (
@@ -310,7 +310,7 @@ const CsvUploadModal = ({ open, close, showToast }) => {
           </div>
           {invalidCount ? (
             <InfoStrip tone="gold" className="mb-4">
-              {invalidCount} row{invalidCount > 1 ? "s were" : " was"} skipped — check the email
+              {invalidCount} row{invalidCount > 1 ? "s were" : " was"} skipped: check the email
               and role columns.
             </InfoStrip>
           ) : null}
@@ -400,7 +400,7 @@ const RoiModal = ({ open, close, context }) => {
     <p className="text-[11.5px] leading-[1.6] text-ink-400">
       Sessions × days avoided × daily value gives the gross productivity figure;
       subtracting the program cost gives net ROI. All inputs are company-wide
-      aggregates — no individual employee data is used.
+      aggregates: no individual employee data is used.
     </p>
   </Modal>
   );
@@ -484,7 +484,7 @@ const TopUpModal = ({ open, close, showToast }) => {
       const payload = await topUp({ sessions: selected.sessions }).unwrap();
       setCheckout(payload);
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't start payment — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't start payment. Please try again"));
     }
   };
 
@@ -580,7 +580,7 @@ const TopUpModal = ({ open, close, showToast }) => {
       </div>
 
       <InfoStrip className="mb-4">
-        You&apos;ll complete payment now — sessions are added to your bundle once it
+        You&apos;ll complete payment now; sessions are added to your bundle once it
         clears, and never expire after that.
       </InfoStrip>
 
@@ -622,7 +622,7 @@ const CardSetupModal = ({ open, close, showToast }) => {
     },
     customizations: {
       title: "TalkAM for Business",
-      description: "Save your card — a small refundable hold verifies it (not charged)",
+      description: "Save your card: a small refundable hold verifies it (not charged)",
     },
     meta: { ...(checkout?.meta ?? {}) },
   };
@@ -663,7 +663,7 @@ const CardSetupModal = ({ open, close, showToast }) => {
       const payload = await cardSetup().unwrap();
       setCheckout(payload);
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't start card verification — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't start card verification. Please try again"));
     }
   };
 
@@ -695,7 +695,7 @@ const CardSetupModal = ({ open, close, showToast }) => {
             </svg>
           </div>
           <p className="text-[14px] leading-[1.6] text-ink-600">
-            Your card is verified and on file — your plan is now active.
+            Your card is verified and on file; your plan is now active.
           </p>
         </div>
         <PrimaryButton className="w-full" onClick={handleClose}>
@@ -731,7 +731,7 @@ const CardSetupModal = ({ open, close, showToast }) => {
   return (
     <Modal open={open} onClose={close} title="Finish setting up billing" subtitle="Verify your card to activate your plan">
       <InfoStrip className="mb-4">
-        We place a small refundable hold to verify your card — you&apos;re never charged, and
+        We place a small refundable hold to verify your card; you&apos;re never charged, and
         it&apos;s refunded automatically. Your plan activates as soon as it clears.
       </InfoStrip>
       <div className="flex justify-end gap-2">
@@ -803,7 +803,7 @@ const AddSeatsModal = ({ open, close, showToast }) => {
 
       {newPrice !== oldPrice ? (
         <InfoStrip tone="gold" className="mb-4">
-          This crosses a volume tier — your per-seat rate drops from {naira(oldPrice)} to{" "}
+          This crosses a volume tier: your per-seat rate drops from {naira(oldPrice)} to{" "}
           {naira(newPrice)}.
         </InfoStrip>
       ) : null}
@@ -1026,14 +1026,14 @@ const EmployeeModal = ({ open, close, context }) => {
               </div>
               <EngagementChart months={months} />
               <div className="mt-3 text-[10.5px] text-ink-400">
-                Sessions used per month — the only usage metric visible to admins
+                Sessions used per month: the only usage metric visible to admins
               </div>
             </div>
           ) : null}
 
           <InfoStrip tone="purple" icon={<Icon.Shield size={14} className="mt-0.5 shrink-0" />}>
             That&apos;s everything visible to you. Session content, mood check-ins, chat
-            messages and community activity are never shared with {companyName} — only
+            messages and community activity are never shared with {companyName}: only
             these anonymised usage totals.
           </InfoStrip>
 
@@ -1129,7 +1129,7 @@ const EditEmployeeModal = ({ open, close, showToast, context }) => {
       showToast(`${context?.id ?? "Employee"} updated`);
       close();
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't update employee — please try again"));
+      setError(apiErrorMessage(err, "Couldn't update employee. Please try again."));
     }
   };
 
@@ -1166,7 +1166,7 @@ const EditEmployeeModal = ({ open, close, showToast, context }) => {
             onChange={(e) => pickDepartment(e.target.value)}
             className="h-[42px] cursor-pointer rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px] text-ink-800"
           >
-            <option value="">— No department —</option>
+            <option value="">No department</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
@@ -1225,7 +1225,7 @@ const DepartmentModal = ({ open, close, showToast, context }) => {
       }
       close();
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't save that department — please try again"));
+      setError(apiErrorMessage(err, "Couldn't save that department. Please try again."));
     }
   };
 
@@ -1275,7 +1275,7 @@ const ConfirmModal = ({ open, close, showToast, context }) => (
             showToast(context?.toast ?? "Done");
           } catch {
             close();
-            showToast("Couldn't complete that action — please try again");
+            showToast("Couldn't complete that action. Please try again.");
           }
         }}
         className="cursor-pointer rounded-[10px] bg-signal-error px-4 py-[9px] text-[13px] font-boldNunito text-white hover:bg-surface-errorInk"
@@ -1537,7 +1537,7 @@ const TherapistModal = ({ open, close, context }) => {
   const bio =
     t.bio ??
     (verified
-      ? "Verified through TalkAM's credentialing process. Full clinical credentials and indemnity status are held on TalkAM's internal review tool — not shown here, to protect therapist privacy."
+      ? "Verified through TalkAM's credentialing process. Full clinical credentials and indemnity status are held on TalkAM's internal review tool, not shown here to protect therapist privacy."
       : "Brought into your network by your organisation. Not yet verified through TalkAM's own credentialing process.");
   const billLabel = t.bill_label ?? (isOwn ? "Billed to your organisation" : "TalkAM-billed");
   const providerBadge = isOwn ? "bg-wellness-50 text-wellness-600" : "bg-brand-25 text-brand-600";
@@ -1805,7 +1805,7 @@ const PlanCheckoutModal = ({ open, close, showToast, context }) => {
       close();
       showToast("Plan updated");
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't update your plan — please try again"));
+      setError(apiErrorMessage(err, "Couldn't update your plan. Please try again."));
     }
   };
 
@@ -1940,7 +1940,7 @@ const DeleteCompanyModal = ({ open, close, showToast, context }) => {
       close();
       showToast("Company account scheduled for deletion in 30 days");
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't schedule that just now — please try again"));
+      setError(apiErrorMessage(err, "Couldn't schedule that just now. Please try again."));
     }
   };
 
@@ -1948,7 +1948,7 @@ const DeleteCompanyModal = ({ open, close, showToast, context }) => {
     <Modal open={open} onClose={close} title="Delete company account" width="max-w-[460px]">
       <p className="mb-4 text-[13px] leading-[1.7] text-ink-500">
         This schedules <strong className="font-boldNunito text-navy-800">{companyName}</strong>{" "}
-        for deletion. Employees keep normal access during a 30-day grace period — after that,
+        for deletion. Employees keep normal access during a 30-day grace period; after that,
         every membership is deactivated and the account is permanently removed. You can cancel
         this any time before then.
       </p>

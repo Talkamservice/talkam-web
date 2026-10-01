@@ -80,7 +80,7 @@ export const AdminReports = () => {
       await downloadCsv(`/business/reports/${key}/download`, token, `talkam-${key}.csv`);
       showToast(`${title} download started`);
     } catch {
-      showToast("Couldn't generate that report — please try again");
+      showToast("Couldn't generate that report. Please try again.");
     }
   };
 
@@ -171,7 +171,7 @@ export const AdminReports = () => {
         </div>
         <p className="mb-4 text-caption leading-[1.5] text-ink-400">
           Total sessions booked company-wide, month over month, since your first employee
-          activated. Anonymised — no individual breakdown.
+          activated. Anonymised: no individual breakdown.
         </p>
         {isLoading ? (
           <AdminSkeleton className="h-[120px]" />
@@ -358,10 +358,10 @@ function BankTransferCard({ va }) {
           </div>
           <div className="text-caption text-white/75">{va.bank_name}</div>
           <div className="my-4 h-px bg-white/[0.14]" />
-          <div className="flex items-start gap-2.5 text-[12.5px] leading-[1.55] text-white/80">
+<div className="flex items-start gap-2.5 text-[12.5px] leading-[1.55] text-white/80">
             <Icon.Check size={15} className="mt-0.5 shrink-0 text-wellness-400" />
             <span>
-              Transfer your invoice total here from any bank — it’s matched to your open
+              Transfer your invoice total here from any bank: it's matched to your open
               invoices and settled automatically, usually within minutes.
             </span>
           </div>
@@ -387,9 +387,9 @@ function BankTransferCard({ va }) {
     <PanelCard title="Bank transfer" subtitle="Get an account that reconciles itself">
       {!expanded ? (
         <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-xl text-[13.5px] leading-[1.6] text-ink-500">
-            Get your company’s own dedicated account number so every transfer is matched to
-            your invoices and settled automatically — no reference to quote, no “mark as paid”.
+<p className="max-w-xl text-[13.5px] leading-[1.6] text-ink-500">
+            Get your company's own dedicated account number so every transfer is matched to
+            your invoices and settled automatically: no reference to quote, no "mark as paid".
           </p>
           <button
             type="button"
@@ -445,7 +445,7 @@ function BankTransferCard({ va }) {
               className="h-12 w-full rounded-ds-md border-[1.5px] border-brand-400 px-4 text-body font-boldNunito tracking-[0.1em] text-navy-800 shadow-focus-brand"
             />
             <p className="mt-1.5 text-[11px] text-ink-400">
-              Belongs to a director / authorized signatory — a company itself has no BVN.
+              Belongs to a director / authorized signatory: a company itself has no BVN.
             </p>
           </div>
 
@@ -476,7 +476,7 @@ function BankTransferCard({ va }) {
               <strong className="font-boldNunito text-ink-500">
                 TalkAM never stores your BVN/NIN
               </strong>{" "}
-              — we keep only the last 4 digits and your consent date.
+              We keep only the last 4 digits and your consent date.
             </span>
           </div>
 
@@ -606,7 +606,7 @@ export const AdminBilling = () => {
 
         {/* 1 · seats → live cost */}
         <div className="mb-1 text-body font-extraboldNunito text-navy-800">
-          Set your seats — see what it costs
+          Set your seats: see what it costs
         </div>
         <p className="mb-4 text-[12.5px] text-ink-400">
           Everything here follows one number: how many employee seats you pay for.
@@ -641,9 +641,9 @@ export const AdminBilling = () => {
                 +
               </button>
             </div>
-            <p className="mt-3.5 text-caption text-ink-500">
-              You pay for the seats you license — billed monthly in advance. Raise
-              capacity any time and you’re charged for the increase.
+<p className="mt-3.5 text-caption text-ink-500">
+              You pay for the seats you license, billed monthly in advance. Raise
+              capacity any time and you're charged for the increase.
             </p>
           </div>
           <div className="flex flex-col justify-center bg-[linear-gradient(135deg,#141B34,#1A2E5A)] p-5 text-white lg:p-6">
@@ -654,7 +654,7 @@ export const AdminBilling = () => {
               <>
                 <div className="mt-2 text-h3 font-extraboldNunito">Custom pricing</div>
                 <p className="mt-1 text-[12.5px] text-white/60">
-                  2,000+ seats — our enterprise team builds a plan around you.
+                  2,000+ seats: our enterprise team builds a plan around you.
                 </p>
                 <button
                   type="button"
@@ -705,7 +705,7 @@ export const AdminBilling = () => {
           Per-seat rate by team size
         </div>
         <p className="mb-3.5 text-[12.5px] text-ink-400">
-          Your rate drops automatically the moment you cross a band — nothing to switch.
+          Your rate drops automatically the moment you cross a band; nothing to switch.
         </p>
         <div className="mb-8 flex flex-col gap-1.5">
           {seatTiers.map((t) => {
@@ -738,8 +738,8 @@ export const AdminBilling = () => {
         <div className="mb-1 text-body font-extraboldNunito text-navy-800">
           What your plan includes
         </div>
-        <p className="mb-3.5 text-[12.5px] text-ink-400">
-          Your plan follows your size — it isn’t a separate price. Bigger teams unlock more.
+<p className="mb-3.5 text-[12.5px] text-ink-400">
+          Your plan follows your size; it isn't a separate price. Bigger teams unlock more.
         </p>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-ds-md border border-surface-line p-5">
           <div className="mr-2">
@@ -790,11 +790,11 @@ export const AdminBilling = () => {
           Manage plan &amp; seats
         </button>
         <div className="mb-1 text-body font-extraboldNunito text-navy-800">
-          {(PLANS[openPlanKey] ?? PLANS.lite)?.name ?? "Your plan"} is your active plan today —
+          {(PLANS[openPlanKey] ?? PLANS.lite)?.name ?? "Your plan"} is your active plan today:
           select any plan below to see its per-seat pricing
         </div>
         <p className="mb-5 text-[12.5px] text-ink-400">
-          Every plan bills at your seat-band rate — plans differ only by features, and follow
+          Every plan bills at your seat-band rate: plans differ only by features, and follow
           your team size. Nothing to buy here.
         </p>
         <div className="mb-6 grid gap-3.5 lg:grid-cols-3">
@@ -880,7 +880,7 @@ export const AdminBilling = () => {
               {openPlan.name} volume pricing
             </div>
             <p className="mb-3 text-[12px] text-ink-400">
-              Your per-seat rate is based on total licensed seats — it applies automatically the
+              Your per-seat rate is based on total licensed seats; it applies automatically the
               moment you cross a tier.
             </p>
             <div className="flex flex-col overflow-hidden rounded-ds-md border border-surface-line">
@@ -989,7 +989,7 @@ export const AdminBilling = () => {
                 Request custom pricing for {openPlan.name}
               </div>
               <p className="mb-3 text-[12px] text-ink-400">
-                For 2,000+ seats, multi-country rollouts, or a dedicated account manager — our
+                For 2,000+ seats, multi-country rollouts, or a dedicated account manager: our
                 enterprise team builds a plan around your organisation.
               </p>
               <div className="grid gap-3.5 lg:grid-cols-2">
@@ -1047,7 +1047,7 @@ export const AdminBilling = () => {
                     }).unwrap();
                     setQuoteSent(true);
                   } catch (err) {
-                    showToast(apiErrorMessage(err, "Couldn't send that — please try again"));
+                    showToast(apiErrorMessage(err, "Couldn't send that. Please try again."));
                   }
                 }}
                 className="mt-4 cursor-pointer rounded-[10px] bg-navy-800 px-5 py-3 text-[13.5px] font-extraboldNunito text-white disabled:cursor-not-allowed disabled:opacity-60"
@@ -1078,7 +1078,7 @@ export const AdminBilling = () => {
             </button>
           }
         >
-          <strong className="font-boldNunito">Session bundle running low</strong> —{" "}
+          <strong className="font-boldNunito">Session bundle running low</strong>:
           {sessionsRemaining} sessions left. Top up to avoid disruption.
         </InfoStrip>
       ) : null}
@@ -1134,7 +1134,7 @@ export const AdminBilling = () => {
                 className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/[0.16] px-3 py-1.5 text-[12px] font-boldNunito text-[#E8D3A3]"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-gold-400" />
-                Billing not set up yet — finish setup →
+                Billing not set up yet: finish setup →
               </button>
             )}
           </div>
@@ -1291,7 +1291,7 @@ export const AdminBilling = () => {
         {historyTab === "invoices" ? (
           invoices.length === 0 ? (
             <div className="py-8 text-center text-caption text-ink-400">
-              No invoices yet — your first one is issued once your first employee activates.
+              No invoices yet: your first one is issued once your first employee activates.
             </div>
           ) : (
             <>
@@ -1326,7 +1326,7 @@ export const AdminBilling = () => {
                                 await markInvoicePaid(inv.id).unwrap();
                                 showToast(`${inv.id} marked paid`);
                               } catch (err) {
-                                showToast(apiErrorMessage(err, "Couldn't mark that invoice paid — please try again"));
+                                showToast(apiErrorMessage(err, "Couldn't mark that invoice paid. Please try again."));
                               }
                             }}
                             className="cursor-pointer rounded-[7px] bg-brand-400 px-2.5 py-1.5 text-[11px] font-boldNunito text-white disabled:cursor-not-allowed disabled:opacity-60"
@@ -1344,7 +1344,7 @@ export const AdminBilling = () => {
           )
         ) : topUps.length === 0 ? (
           <div className="py-8 text-center text-caption text-ink-400">
-            No top-ups yet — sessions you buy from the Session Bundle Usage card above will show
+            No top-ups yet: sessions you buy from the Session Bundle Usage card above will show
             up here.
           </div>
         ) : (

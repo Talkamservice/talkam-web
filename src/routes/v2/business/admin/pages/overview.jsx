@@ -82,7 +82,7 @@ export const AdminOverview = () => {
       await downloadCsv("/business/reports/usage/download", token, "talkam-usage.csv");
       showToast("Usage report download started");
     } catch {
-      showToast("Couldn't generate that report — please try again");
+      showToast("Couldn't generate that report. Please try again.");
     }
   };
 
@@ -315,7 +315,7 @@ export const AdminOverview = () => {
 
         {!isLoading && (data?.departments ?? []).length === 0 ? (
           <div className="px-5 py-4 text-[12px] leading-[1.6] text-ink-400">
-            No departments yet — assign departments when you invite people and they will
+            No departments yet: assign departments when you invite people and they will
             appear here.
           </div>
         ) : null}

@@ -110,9 +110,9 @@ export const SESSION_FORMAT_LABEL = { video: "Video", voice: "Voice", chat: "Cha
 export const onboardingChecklist = {
   title: "Getting started: how your account works",
   subtitle:
-    "A quick rundown for therapists employed by a business — what TalkAM handles, and what your employer does.",
+    "A quick rundown for therapists employed by a business: what TalkAM handles, and what your employer does.",
   items: [
-    { key: "rate", tone: "true", title: "You're salaried by your employer", sub: "As a business-employed therapist, you're paid directly by your employer — not per session by TalkAM. Your pay is arranged with them." },
+    { key: "rate", tone: "true", title: "You're salaried by your employer", sub: "As a business-employed therapist, you're paid directly by your employer, not per session by TalkAM. Your pay is arranged with them." },
     { key: "bundle", tone: "true", title: "No per-session payouts from TalkAM", sub: "Sessions you deliver here don't generate TalkAM payouts or draw from a session bundle. That's why the Earnings module isn't shown for your account." },
     { key: "payout", tone: "true", title: "TalkAM is your practice tool, not your payer", sub: "Use TalkAM to manage availability, sessions, client messages and your profile. Compensation questions go to your employer's HR team." },
     { key: "consumer", tone: "note", title: "You serve your employer's team", sub: "Your bookings come from employees on your employer's plan. You're not listed in the open consumer network unless they enable it." },

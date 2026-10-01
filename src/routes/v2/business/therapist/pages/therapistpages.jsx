@@ -161,7 +161,7 @@ const PendingRescheduleBanner = ({ session, showToast, dark = true }) => {
           dark ? "border-white/[0.16] bg-white/10 text-white/70" : "border-ink-200 bg-ink-50 text-ink-500"
         )}
       >
-        Reschedule requested — waiting on them to confirm {sessionWhen(pr.new_starts_at)}.
+        Reschedule requested: waiting on them to confirm {sessionWhen(pr.new_starts_at)}.
       </div>
     );
   }
@@ -171,7 +171,7 @@ const PendingRescheduleBanner = ({ session, showToast, dark = true }) => {
       await respond({ id: pr.id, action }).unwrap();
       showToast(action === "accept" ? "Reschedule confirmed" : "Reschedule declined");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't respond to that — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't respond to that. Please try again"));
     }
   };
 
@@ -242,7 +242,7 @@ export const TherapistHome = () => {
       const conversation = await startConversation(next.id).unwrap();
       navigate(`${V2.therapist}/messages`, { state: { conversationId: conversation.id } });
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't open that conversation — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't open that conversation. Please try again"));
     }
   };
 
@@ -550,10 +550,10 @@ export const TherapistHome = () => {
             <>
               <div className="text-[15px] tracking-[2px] text-gold-400">{"★".repeat(review.stars)}{"☆".repeat(5 - review.stars)}</div>
               <div className="text-[14px] italic leading-[1.6] text-[#3E4A52]">&quot;{review.text}&quot;</div>
-              <div className="text-[11.5px] font-semiboldNunito text-ink-400">— Anonymous client · {review.when}</div>
+              <div className="text-[11.5px] font-semiboldNunito text-ink-400">Anonymous client · {review.when}</div>
             </>
           ) : (
-            <EmptyNote>No reviews yet — they appear here once clients rate their sessions.</EmptyNote>
+            <EmptyNote>No reviews yet. They appear here once clients rate their sessions.</EmptyNote>
           )}
         </Card>
         {home?.self_care ? (
@@ -626,7 +626,7 @@ const PastSessionRow = ({ session, showToast }) => {
       showToast(status === "draft" ? "Draft saved" : "Session notes saved");
       setEditing(false);
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't save that note — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't save that note. Please try again"));
     }
   };
 
@@ -760,11 +760,11 @@ export const TherapistSessions = () => {
       await acknowledge(s.id).unwrap();
       showToast(
         s.coverage === "consumer"
-          ? "Acknowledged — it'll move to Upcoming once payment is confirmed"
+          ? "Acknowledged: it'll move to Upcoming once payment is confirmed"
           : "Session confirmed"
       );
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't accept that — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't accept that. Please try again"));
     }
   };
 
@@ -773,7 +773,7 @@ export const TherapistSessions = () => {
       await decline(id).unwrap();
       showToast("Request declined");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't decline that — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't decline that. Please try again"));
     }
   };
 
@@ -782,7 +782,7 @@ export const TherapistSessions = () => {
       await declineLead(id).unwrap();
       showToast("Request declined");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't decline that — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't decline that. Please try again"));
     }
   };
 
@@ -851,7 +851,7 @@ export const TherapistSessions = () => {
                 <div className="text-[13px] font-boldNunito text-navy-800">{clientRef(s)}</div>
                 <div className="flex items-center gap-1.5 text-[11px] text-wellness-600">
                   <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-wellness-400" />
-                  Live now — {sessionWhen(s.starts_at)}
+                  Live now: {sessionWhen(s.starts_at)}
                 </div>
               </div>
               <Badge tone="blue">{SESSION_FORMAT_LABEL[s.format] ?? s.format}</Badge>
@@ -986,7 +986,7 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose,
   if (!open) return null;
 
   return (
-    <Modal open={open} onClose={onClose} title={`Add a slot — ${dayLabel}`} width="max-w-[420px]">
+    <Modal open={open} onClose={onClose} title={`Add a slot: ${dayLabel}`} width="max-w-[420px]">
       <div className="mb-1 flex gap-3">
         <div className="flex-1">
           <label className="mb-[5px] block text-[11px] font-boldNunito text-ink-400" htmlFor="slot-start">
@@ -1028,7 +1028,7 @@ const AddSlotModal = ({ open, dayLabel, existingSlots, sessionDuration, onClose,
         </div>
       </div>
       <div className="mb-4 text-[11px] text-ink-400">
-        Your sessions are {sessionDuration} minutes — clients can book every {sessionDuration} minutes inside
+        Your sessions are {sessionDuration} minutes; clients can book every {sessionDuration} minutes inside
         whatever window you set here, so a window that isn&apos;t a clean multiple of that wastes the leftover
         minutes.
       </div>
@@ -1092,7 +1092,7 @@ export const TherapistAvailability = () => {
       await saveAvailability(payload).unwrap();
       showToast("Availability saved");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't save your availability — check the times and try again"));
+      showToast(apiErrorMessage(err, "Couldn't save your availability. Check the times and try again"));
     }
   };
 
@@ -1104,7 +1104,7 @@ export const TherapistAvailability = () => {
         </svg>
         <span className="text-[12px] leading-[1.5] text-brand-600">
           Slots are shown to clients in WAT. Editing availability never cancels a confirmed
-          booking — your existing sessions keep their times.
+          booking; your existing sessions keep their times.
         </span>
       </div>
 
@@ -1112,7 +1112,7 @@ export const TherapistAvailability = () => {
         <div className="flex items-center gap-3 rounded-[12px] border-[1.5px] border-gold-500 bg-gold-400 px-4 py-3.5 shadow-[0_2px_10px_rgba(184,134,26,0.25)]">
           <Icon.AlertTriangle size={18} className="shrink-0 text-navy-800" strokeWidth={2.5} />
           <span className="flex-1 text-[13px] font-boldNunito leading-[1.5] text-navy-800">
-            You have unsaved changes — click &quot;Save availability&quot; below to apply them.
+            You have unsaved changes. Click &quot;Save availability&quot; below to apply them.
           </span>
         </div>
       ) : null}
@@ -1318,7 +1318,7 @@ export const TherapistAnalytics = () => {
 
       <Card>
         <div className="mb-[3px] text-body font-extraboldNunito text-navy-800">When you&apos;re busiest</div>
-        <div className="mb-[18px] text-[11px] text-ink-400">Booking load by day — use it to plan your open slots</div>
+        <div className="mb-[18px] text-[11px] text-ink-400">Booking load by day: use it to plan your open slots</div>
         <div className="flex h-[90px] items-end gap-3">
           {busiest.map((s) => (
             <div key={s.day} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
@@ -1392,7 +1392,7 @@ export const TherapistEarnings = () => {
         action={<SecondaryButton onClick={() => open("allPayouts", payouts)}>View all</SecondaryButton>}
       >
         {payouts.length === 0 ? (
-          <div className="p-5"><EmptyNote>No payouts yet — your first one lands the Friday after your first completed session.</EmptyNote></div>
+          <div className="p-5"><EmptyNote>No payouts yet. Your first one lands the Friday after your first completed session.</EmptyNote></div>
         ) : (
           payouts.slice(0, 3).map((p) => (
             <div key={p.date ?? p.id} className="flex items-center justify-between gap-4 border-b border-[#F5F5F5] px-5 py-3.5 last:border-b-0">
@@ -1626,7 +1626,7 @@ export const TherapistProfile = () => {
       }).unwrap();
       showToast("Profile saved");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't save your profile — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't save your profile. Please try again"));
     }
   };
 
@@ -1728,7 +1728,7 @@ export const TherapistProfile = () => {
               value={profile.languages}
               onChange={field("languages")}
             />
-            <div className="mt-1 text-[10.5px] text-ink-400">Comma-separated — shown to clients on your profile.</div>
+            <div className="mt-1 text-[10.5px] text-ink-400">Comma-separated; shown to clients on your profile.</div>
           </div>
           <div className="flex gap-3">
             <div className="flex-1">
@@ -1787,7 +1787,7 @@ export const TherapistProfile = () => {
                   await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
                   showToast("Two-factor authentication disabled");
                 } catch (err) {
-                  showToast(apiErrorMessage(err, "Couldn't update that just now — please try again"));
+                  showToast(apiErrorMessage(err, "Couldn't update that just now. Please try again"));
                 }
                 return;
               }
@@ -1823,7 +1823,7 @@ export const TherapistProfile = () => {
                     try {
                       await saveNotifPrefs({ [n.prefKey]: !on }).unwrap();
                     } catch (err) {
-                      showToast(apiErrorMessage(err, "Couldn't update that just now — please try again"));
+                      showToast(apiErrorMessage(err, "Couldn't update that just now. Please try again"));
                     }
                   } : undefined}
                   className={!supported ? "cursor-not-allowed opacity-40" : undefined}
@@ -1855,13 +1855,13 @@ export const TherapistProfile = () => {
               try {
                 if (isDeactivated) {
                   await reactivateProfile().unwrap();
-                  showToast("Profile reactivated — you're visible in client search again");
+                  showToast("Profile reactivated: you're visible in client search again");
                 } else {
                   await deactivateProfile().unwrap();
-                  showToast("Profile deactivated — you're hidden from client search");
+                  showToast("Profile deactivated: you're hidden from client search");
                 }
               } catch (err) {
-                showToast(apiErrorMessage(err, "Couldn't update your profile just now — please try again"));
+                showToast(apiErrorMessage(err, "Couldn't update your profile just now. Please try again"));
               }
             }}
             className="cursor-pointer rounded-[10px] border border-[#FFCDD2] bg-surface-page p-[11px] text-[13px] font-boldNunito text-[#8B2E2E] disabled:cursor-not-allowed disabled:opacity-60"
@@ -1892,9 +1892,9 @@ export const TherapistHelp = () => {
     <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr] xl:items-start">
       <Card>
         <div className="mb-1 text-body font-extraboldNunito text-navy-800">Frequently asked questions</div>
-        <div className="mb-3.5 text-caption text-ink-400">Payouts, rates, requests and privacy — the things therapists ask us most.</div>
+        <div className="mb-3.5 text-caption text-ink-400">Payouts, rates, requests and privacy: the things therapists ask us most.</div>
         {faqs.length === 0 ? (
-          <EmptyNote>No FAQs published yet — use the contact options and we&apos;ll help directly.</EmptyNote>
+          <EmptyNote>No FAQs published yet. Use the contact options and we&apos;ll help directly.</EmptyNote>
         ) : (
           <DsAccordion items={faqs} marker="none" />
         )}

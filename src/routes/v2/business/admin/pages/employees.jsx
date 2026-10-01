@@ -121,7 +121,7 @@ const Directory = () => {
       );
       showToast("Export downloaded");
     } catch {
-      showToast("Couldn't export — please try again");
+      showToast("Couldn't export. Please try again.");
     }
   };
 
@@ -141,7 +141,7 @@ const Directory = () => {
             Bulk invite via CSV
           </span>
           <span className="block text-caption text-brand-600">
-            Drop a .csv here or click to browse — columns: employee_id, email, department
+            Drop a .csv here or click to browse (columns: employee_id, email, department)
           </span>
         </span>
         <span className="hidden shrink-0 rounded-[9px] bg-brand-400 px-4 py-2 text-[13px] font-boldNunito text-white sm:block">
@@ -256,7 +256,7 @@ const Directory = () => {
         <strong className="font-boldNunito">What you can see:</strong> who holds a seat,
         their department, invite status, and session <em>counts</em>.{" "}
         <strong className="font-boldNunito">What you can never see:</strong> session
-        content, chat messages, therapist notes, or community activity — even in
+        content, chat messages, therapist notes, or community activity, even in
         aggregate below 5 users.
       </InfoStrip>
 
@@ -349,7 +349,7 @@ const Directory = () => {
                             setResent((p) => [...p, e.id]);
                             showToast(`Invite resent to ${e.email}`);
                           } catch {
-                            showToast("Couldn't resend that invite — please try again");
+                            showToast("Couldn't resend that invite. Please try again.");
                           }
                         }}
                         className={classNames(
@@ -392,7 +392,7 @@ const Directory = () => {
                           setNudged((p) => [...p, e.id]);
                           showToast(`${e.id} reactivated`);
                         } catch {
-                          showToast("No free seats — increase your seat count first");
+                          showToast("No free seats. Increase your seat count first.");
                         }
                       }}
                       className={classNames(
@@ -539,7 +539,7 @@ const Departments = () => {
                     open("confirm", {
                       title: `Delete "${d.name}"?`,
                       body: d.people_count > 0
-                        ? `${d.people_count} ${d.people_count === 1 ? "person" : "people"} currently in this department will show as "— No department —" instead. This can't be undone.`
+                        ? `${d.people_count} ${d.people_count === 1 ? "person" : "people"} currently in this department will show as "No department" instead. This can't be undone.`
                         : "This can't be undone.",
                       confirmLabel: "Delete",
                       toast: `"${d.name}" deleted`,
@@ -584,7 +584,7 @@ const Reminders = () => {
           Automated Reminders
         </div>
         <div className="mb-3.5 text-caption text-ink-400">
-          TalkAM sends these on your behalf — employees see them as in-app notifications
+          TalkAM sends these on your behalf: employees see them as in-app notifications
         </div>
         <div className="flex flex-col">
           <div className="flex items-center justify-between gap-4 border-b border-[#F5F5F5] py-3">
@@ -634,7 +634,7 @@ const Reminders = () => {
       */}
       <PanelCard
         title="Sessions by Department"
-        subtitle="Whether sessions happened — never who attended or what happened in them"
+        subtitle="Whether sessions happened, never who attended or what happened in them"
       >
         <Table head={["DEPARTMENT", "PEOPLE", "SESSIONS THIS MONTH", "STATUS"]}>
           {(overview?.departments ?? []).map((row) => (
@@ -655,7 +655,7 @@ const Reminders = () => {
 
         {!isLoading && (overview?.departments ?? []).length === 0 ? (
           <div className="px-5 py-4 text-[12px] leading-[1.6] text-ink-400">
-            No departments yet — assign departments when you invite people.
+            No departments yet. Assign departments when you invite people.
           </div>
         ) : null}
 

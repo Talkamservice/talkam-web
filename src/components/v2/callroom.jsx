@@ -194,7 +194,7 @@ const CallRoom = ({ bookingId, format, counterpartName, isTherapist, showToast, 
       }).unwrap();
       showToast?.(status === "draft" ? "Draft saved" : "Session notes saved");
     } catch (err) {
-      showToast?.(apiErrorMessage(err, "Couldn't save that note — please try again"));
+      showToast?.(apiErrorMessage(err, "Couldn't save that note. Please try again"));
     }
   };
 
@@ -594,7 +594,7 @@ const CallRoom = ({ bookingId, format, counterpartName, isTherapist, showToast, 
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
             <div>
               <div className="text-[14px] font-boldNunito text-white">Session notes</div>
-              <div className="text-[11px] text-white/40">Private to you — never shared with the employer</div>
+              <div className="text-[11px] text-white/40">Private to you: never shared with the employer</div>
             </div>
             <button
               type="button"

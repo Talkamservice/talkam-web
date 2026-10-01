@@ -70,7 +70,7 @@ const CONSENT_ORDER = [
 export const Consent = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Your data, your choice — TalkAM");
+  usePageMeta("Your data, your choice · TalkAM");
 
   const { data: state, isLoading } = useGetConsentsQuery();
   const { data: me } = useGetMeV2Query();
@@ -113,7 +113,7 @@ export const Consent = () => {
       <StepEyebrow>BEFORE YOU CONTINUE</StepEyebrow>
       <ScreenTitle>Your data, your choice</ScreenTitle>
       <ScreenLead className="mb-5">
-        NDPA 2023 requires explicit, granular consent. Nothing here is pre-selected —
+        NDPA 2023 requires explicit, granular consent. Nothing here is pre-selected;
         choose each independently. Change these anytime in Privacy Settings.
       </ScreenLead>
 
@@ -202,7 +202,7 @@ export const Consent = () => {
 export const TopicsOfInterest = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("What's on your mind lately? — TalkAM");
+  usePageMeta("What's on your mind lately? · TalkAM");
 
   const { data: topics = [], isLoading } = useGetOnboardingTopicsQuery();
   const [saveTopics, { isLoading: isSaving }] = useSaveOnboardingTopicsMutation();
@@ -227,8 +227,8 @@ export const TopicsOfInterest = () => {
     <>
       <StepEyebrow>LAST STEP</StepEyebrow>
       <ScreenTitle>What&apos;s on your mind lately?</ScreenTitle>
-      <ScreenLead className="mb-6">
-        Pick a few topics — same categories as the mobile community. We&apos;ll tailor
+<ScreenLead className="mb-6">
+        Pick a few topics from the same categories as the mobile community. We'll tailor
         your feed and suggested therapists. You can change this anytime.
       </ScreenLead>
 
@@ -271,7 +271,7 @@ export const TopicsOfInterest = () => {
  */
 export const TherapistSpecialties = () => {
   const navigate = useNavigate();
-  usePageMeta("Specialties — TalkAM");
+  usePageMeta("Specialties · TalkAM");
 
   const { data: topics = [], isLoading } = useGetInterestTopicsQuery();
   const [saveSpecialties, { isLoading: isSaving }] = useSaveTherapistSpecialtiesMutation();
@@ -349,7 +349,7 @@ export const TherapistSpecialties = () => {
 export const SelfCheck = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("A quick self check-in — TalkAM");
+  usePageMeta("A quick self check-in · TalkAM");
 
   const { data: me } = useGetMeV2Query();
   const role = me?.business?.role ?? o.landingRole;
@@ -401,7 +401,7 @@ export const SelfCheck = () => {
       <ScreenTitle>A quick self check-in</ScreenTitle>
       <ScreenLead className="mb-5">
         This helps us privately suggest the right kind of therapist for you first.
-        Answer honestly — only you ever see these individual answers.
+        Answer honestly. Only you ever see these individual answers.
       </ScreenLead>
 
       <InfoNote
@@ -469,7 +469,7 @@ export const SelfCheck = () => {
 export const OnboardingComplete = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("You're all set — TalkAM");
+  usePageMeta("You're all set · TalkAM");
 
   const { data: me, isLoading: isLoadingMe } = useGetMeV2Query();
   const { data: selfCheck } = useGetSelfCheckQuery(undefined, {
@@ -510,7 +510,7 @@ export const OnboardingComplete = () => {
       <ScreenLead className="mb-6 !leading-[1.7]">
         Your account is active.{" "}
         {isTherapist
-          ? "Your bio and specialties are saved, and your dashboard is ready — you can already accept sessions from your employer's team. Complete TalkAM verification anytime in the mobile app if you'd also like to appear in the public therapist directory."
+          ? "Your bio and specialties are saved, and your dashboard is ready; you can already accept sessions from your employer's team. Complete TalkAM verification anytime in the mobile app if you'd also like to appear in the public therapist directory."
           : `Your consent choices are recorded and your interests are saved.${primary ? ` Based on your check-in, we'll suggest therapists specialising in ${primary} first.` : ""} Head to your dashboard to book.`}
       </ScreenLead>
 

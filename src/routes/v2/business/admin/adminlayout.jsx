@@ -177,7 +177,7 @@ export const AdminLayout = () => {
           ? `${(therapistData?.therapists ?? []).filter((t) => t.is_verified).length} verified therapists serving your team`
           : meta.subtitle;
 
-  usePageMeta(`${meta.title} — TalkAM for Business`);
+  usePageMeta(`${meta.title} · TalkAM for Business`);
 
   return (
     <DashboardShell

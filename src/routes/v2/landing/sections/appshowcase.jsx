@@ -244,7 +244,7 @@ export const AppShowcase = () => (
         Everything, in your pocket.
       </h2>
       <p className="mx-auto mb-7 max-w-[560px] text-center text-[15px] leading-[1.6] text-ink-500">
-        From community conversations to booking a licensed therapist — the whole
+        From community conversations to booking a licensed therapist, the whole
         experience lives in one beautifully simple app.
       </p>
 

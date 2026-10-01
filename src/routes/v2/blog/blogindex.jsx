@@ -24,8 +24,8 @@ import {
  */
 export const V2BlogIndex = () => {
   usePageMeta(
-    "The TalkAM Journal — Stories & science for a healthier mind",
-    "Practical guides, honest conversations, and research-backed tools — from the therapists and community that make up TalkAM."
+    "The TalkAM Journal: Stories & science for a healthier mind",
+    "Practical guides, honest conversations, and research-backed tools, from the therapists and community that make up TalkAM."
   );
 
   const [category, setCategory] = useState("all");
@@ -85,7 +85,7 @@ export const V2BlogIndex = () => {
           .
         </h1>
         <p className="mb-8 max-w-[560px] text-[15px] leading-[1.7] text-white/60 lg:text-[17px]">
-          Practical guides, honest conversations, and research-backed tools — from
+          Practical guides, honest conversations, and research-backed tools, from
           the therapists and community that make up TalkAM.
         </p>
 
