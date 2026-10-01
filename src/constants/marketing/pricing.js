@@ -20,7 +20,7 @@ const PRICING_TIER_COPY = [
     unit: "/employee/mo",
     badge: "PER EMPLOYEE",
     highlight: false,
-    body: "One seat per employee, unlocks the TalkAM app, anonymous community, mood tracking and self-guided tools.",
+    body: "One seat per employee unlocks the TalkAM app, anonymous community, mood tracking and self-guided tools.",
     note: "Billed monthly after activation, NGN. Only active seats are charged.",
   },
   {
@@ -40,7 +40,7 @@ const PRICING_TIER_COPY = [
     unit: "/session",
     badge: "FLAT RATE",
     highlight: false,
-    body: "A shared, pre-purchased pool of sessions drawn down as employees book, a flat rate, company-wide.",
+    body: "A shared, pre-purchased pool of sessions drawn down as employees book at a flat rate company-wide.",
     note: "Reserved on your invoice; top up anytime. The same flat rate is paid to every therapist.",
   },
 ];
@@ -88,7 +88,7 @@ export const pricingIncluded = [
   },
   {
     title: "Anonymised company reports",
-    body: "Aggregate wellness trends for your team, never individual employee data.",
+    body: "Aggregate wellness trends for your team, with individual employee data always kept private.",
   },
   {
     title: "NDPA-compliant consent flows",
@@ -111,15 +111,15 @@ export const pricingFaqs = [
   },
   {
     q: "Are session tokens per employee or shared?",
-    a: "Shared. The Session Bundle is a company-wide pool, any employee draws from it when they book, until it runs out. You can then top up, and set an optional per-employee cap from Settings to keep usage balanced.",
+    a: "Shared. The Session Bundle is a company-wide pool; any employee draws from it when they book, until it runs out. You can then top up, and set an optional per-employee cap from Settings to keep usage balanced.",
   },
   {
     q: "When am I first charged?",
-    a: "Never at signup. TalkAM is post-paid by default, your first invoice is generated only once your first employee activates their account. You settle by bank transfer, or pay by card via Flutterwave for instant setup.",
+    a: "Never at signup. TalkAM is post-paid by default: your first invoice is generated only once your first employee activates their account. You settle by bank transfer, or pay by card via Flutterwave for instant setup.",
   },
   {
     q: "What is the therapist paid per session?",
-    a: "A flat ₦8,000 per B2B session, set by TalkAM and identical for every therapist on the network. It is drawn from your session bundle, there are no per-therapist markups or negotiated rates.",
+    a: "A flat ₦8,000 per B2B session, set by TalkAM and identical for every therapist on the network. It is drawn from your session bundle; there are no per-therapist markups or negotiated rates.",
   },
   {
     q: "Can we bring our own therapist?",
@@ -127,6 +127,6 @@ export const pricingFaqs = [
   },
   {
     q: "Do unused sessions or seats roll over?",
-    a: "Seats are billed monthly by active count, so unused seats simply aren't charged. Session bundles are pre-purchased and remain available until drawn down, top up whenever the pool runs low.",
+    a: "Seats are billed monthly by active count, so unused seats simply aren't charged. Session bundles are pre-purchased and remain available until drawn down; top up whenever the pool runs low.",
   },
 ];

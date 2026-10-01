@@ -15,7 +15,7 @@ export const employeePageMeta = {
   sessions: { title: "My Sessions" },
   checkins: {
     title: "Check-ins & Mood",
-    subtitle: "Private trend summary — full history on mobile",
+    subtitle: "Private trend summary: full history on mobile",
   },
   community: { title: "Community", subtitle: "Anonymous · trending this week" },
   messages: { title: "Messages", subtitle: "Encrypted · therapist chat" },
@@ -63,12 +63,12 @@ export const moodEmojiForAverage = (average) => {
 
 /** Deck: `MOOD_MESSAGES`. */
 export const MOOD_MESSAGES = {
-  great: "That's wonderful to hear — keep doing what's working for you! 🌟",
+  great: "That's wonderful to hear! Keep doing what's working for you! 🌟",
   good: "Glad you're doing well. Small steady days add up.",
   okay: "Okay days are still valid days. Be gentle with yourself.",
   low: "Sorry you're having a tough time. Consider reaching out to your therapist or a trusted friend today.",
   rough:
-    "That sounds really hard. You don't have to carry it alone — your therapist and TalkAM's support line are here anytime.",
+    "That sounds really hard. You don't have to carry it alone; your therapist and TalkAM's support line are here anytime.",
 };
 
 /**

@@ -279,7 +279,7 @@ const PendingRescheduleBanner = ({ session, showToast }) => {
   if (isMine) {
     return (
       <div className="relative z-[1] mb-4 rounded-[10px] border border-white/[0.16] bg-white/10 px-3.5 py-3 text-[12px] text-white/70">
-        Reschedule requested — waiting on them to confirm {sessionDayLabel(pr.new_starts_at)}.
+        Reschedule requested: waiting on them to confirm {sessionDayLabel(pr.new_starts_at)}.
       </div>
     );
   }
@@ -289,7 +289,7 @@ const PendingRescheduleBanner = ({ session, showToast }) => {
       await respond({ id: pr.id, action }).unwrap();
       showToast(action === "accept" ? "Reschedule confirmed" : "Reschedule declined");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't respond to that — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't respond to that. Please try again"));
     }
   };
 
@@ -449,9 +449,9 @@ export const EmployeeHome = () => {
 
     try {
       await saveCheckin({ mood: mood.value }).unwrap();
-      showToast("Check-in logged — thanks for showing up for yourself");
+      showToast("Check-in logged: thanks for showing up for yourself");
     } catch {
-      showToast("Couldn't save that just now — please try again");
+      showToast("Couldn't save that just now. Please try again");
     }
   };
 
@@ -465,7 +465,7 @@ export const EmployeeHome = () => {
           </span>
         </div>
         <div className="text-[13px] text-ink-400">
-          Here&apos;s your space today — take a moment for yourself.
+          Here&apos;s your space today. Take a moment for yourself.
         </div>
       </div>
 
@@ -474,7 +474,7 @@ export const EmployeeHome = () => {
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
         </svg>
         <span className="text-[12px] leading-[1.5] text-[#5A3990]">
-          Everything you do on TalkAM — sessions, mood check-ins, chats, community posts —
+          Everything you do on TalkAM (sessions, mood check-ins, chats, community posts)
           stays private. {company} only ever sees anonymised, company-wide totals.
         </span>
       </div>
@@ -488,7 +488,7 @@ export const EmployeeHome = () => {
           <div>
             <CardTitle>How are you feeling today?</CardTitle>
             <CardSub>
-              {checkedInToday ? "Logged for today — see you tomorrow" : "A 5-second check-in — private to you"}
+              {checkedInToday ? "Logged for today: see you tomorrow" : "A 5-second check-in: private to you"}
             </CardSub>
           </div>
           {checkedInToday ? <SavedPill>✓ Logged today</SavedPill> : null}
@@ -585,7 +585,7 @@ export const EmployeeHome = () => {
               No upcoming session
             </div>
             <div className="max-w-[320px] text-[12px] leading-[1.6] text-ink-400">
-              Book a session whenever you&apos;re ready — your benefit covers it.
+              Book a session whenever you&apos;re ready; your benefit covers it.
             </div>
             <button
               type="button"
@@ -664,7 +664,7 @@ export const EmployeeHome = () => {
             stroke="#AC4242"
             path="M22 12h-4l-3 9L9 3l-3 9H2"
             title="Daily check-in"
-            note={homeMood ? "Logged today — add detail" : "How are you feeling today?"}
+            note={homeMood ? "Logged today: add detail" : "How are you feeling today?"}
           />
         </Link>
         <Link to={`${V2.employee}/community`}>
@@ -716,7 +716,7 @@ export const EmployeeHome = () => {
             <div>
               <CardTitle>Your wellbeing this fortnight</CardTitle>
               <CardSub>
-                {summary?.month_delta_percent > 0 ? "Trending up" : "Private to you"} — private to you
+                {summary?.month_delta_percent > 0 ? "Trending up" : "Private to you"} · private to you
               </CardSub>
             </div>
             <Link
@@ -859,7 +859,7 @@ export const EmployeeSessions = () => {
       const conversation = await startConversation(careTeam.session_id).unwrap();
       navigate(`${V2.employee}/messages`, { state: { conversationId: conversation.id } });
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't open that conversation — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't open that conversation. Please try again"));
     }
   };
 
@@ -963,7 +963,7 @@ export const EmployeeSessions = () => {
               No upcoming session
             </div>
             <div className="max-w-[320px] text-[12px] leading-[1.6] text-ink-400">
-              Book a session whenever you&apos;re ready — your benefit covers it.
+              Book a session whenever you&apos;re ready; your benefit covers it.
             </div>
             <button
               type="button"
@@ -1081,7 +1081,7 @@ export const EmployeeSessions = () => {
           </div>
         ) : past.length === 0 ? (
           <div className="p-5">
-            <EmptyNote>No past sessions yet — your history will build up here.</EmptyNote>
+            <EmptyNote>No past sessions yet. Your history will build up here.</EmptyNote>
           </div>
         ) : (
           past.map((s) => (
@@ -1100,7 +1100,7 @@ export const EmployeeSessions = () => {
                 <div className="text-[11px] text-ink-400">{pastSessionLabel(s)}</div>
               </div>
               {s.client_pre_mood && s.client_post_mood ? (
-                <span className="mr-0.5 text-[15px]" title="Private — only visible to you">
+                <span className="mr-0.5 text-[15px]" title="Private: only visible to you">
                   {MOOD_BY_VALUE[s.client_pre_mood]?.emoji}→{MOOD_BY_VALUE[s.client_post_mood]?.emoji}
                 </span>
               ) : null}
@@ -1208,9 +1208,9 @@ export const EmployeeCheckins = () => {
 
     try {
       await saveCheckin({ mood: value, factors, note: note.trim() || undefined }).unwrap();
-      showToast("Check-in saved — private to you");
+      showToast("Check-in saved: private to you");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't save that just now — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't save that just now. Please try again"));
     }
   };
 
@@ -1228,7 +1228,7 @@ export const EmployeeCheckins = () => {
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <CardTitle>How are you feeling today?</CardTitle>
-            <CardSub>A quick daily check-in — takes 5 seconds, seen only by you</CardSub>
+            <CardSub>A quick daily check-in taking 5 seconds, seen only by you</CardSub>
           </div>
           {savedToday ? <SavedPill>✓ Saved today</SavedPill> : null}
         </div>
@@ -1277,7 +1277,7 @@ export const EmployeeCheckins = () => {
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value.slice(0, CHECKIN_NOTE_MAX_LENGTH))}
-                placeholder="Add a short note (optional) — seen only by you"
+                placeholder="Add a short note (optional), seen only by you"
                 rows={3}
                 className="w-full resize-none rounded-[10px] border-[1.5px] border-surface-line px-3.5 py-2.5 text-[12.5px] leading-[1.6] text-ink-800 placeholder:text-ink-400"
               />
@@ -1417,7 +1417,7 @@ export const EmployeeCheckins = () => {
                 <Skeleton className="h-12" />
               </div>
             ) : recent.length === 0 ? (
-              <EmptyNote>Nothing logged yet — your first check-in will show up here.</EmptyNote>
+              <EmptyNote>Nothing logged yet. Your first check-in will show up here.</EmptyNote>
             ) : (
               recent.map((c) => (
                 <div
@@ -1462,7 +1462,7 @@ export const EmployeeCommunity = () => {
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
         <span className="text-[12px] leading-[1.5] text-brand-600">
-          Posting and replying happen in the mobile app under your anonymous username —
+          Posting and replying happen in the mobile app under your anonymous username,
           never linked to your work account.
         </span>
       </div>
@@ -1494,7 +1494,7 @@ export const EmployeeCommunity = () => {
 
       {!isLoading && topics.length === 0 ? (
         <EmptyNote>
-          Nothing trending this week yet. The community is most active in the mobile app —
+          Nothing trending this week yet. The community is most active in the mobile app,
           and nothing there is ever linked to {company}.
         </EmptyNote>
       ) : null}
@@ -1582,7 +1582,7 @@ export const EmployeeMessages = () => {
         </svg>
         <span className="text-[12px] leading-[1.5] text-[#5A3990]">
           End-to-end encrypted. {company} can see that messages were sent (daily/weekly
-          totals only) — never who, when in detail, or what.
+          totals only), never who, when in detail, or what.
         </span>
       </div>
 
@@ -1595,7 +1595,7 @@ export const EmployeeMessages = () => {
             </div>
           ) : threads.length === 0 ? (
             <div className="p-3.5">
-              <EmptyNote>No conversations yet — message your therapist after a session.</EmptyNote>
+              <EmptyNote>No conversations yet. Message your therapist after a session.</EmptyNote>
             </div>
           ) : (
             threads.map((t) => (
@@ -1780,7 +1780,7 @@ export const EmployeeProfile = () => {
       await saveConsents(payload).unwrap();
       showToast("Privacy settings updated");
     } catch (error) {
-      showToast("Couldn't update that just now — please try again");
+      showToast("Couldn't update that just now. Please try again");
     }
   };
 
@@ -1790,7 +1790,7 @@ export const EmployeeProfile = () => {
         await savePrivacy({ ...privacy, two_factor_enabled: false }).unwrap();
         showToast("Two-factor authentication disabled");
       } catch (error) {
-        showToast("Couldn't update that just now — please try again");
+        showToast("Couldn't update that just now. Please try again");
       }
       return;
     }
@@ -1808,7 +1808,7 @@ export const EmployeeProfile = () => {
       await updateProfile({ name: fullName }).unwrap();
       showToast("Profile saved");
     } catch (error) {
-      showToast("Couldn't save your profile just now — please try again");
+      showToast("Couldn't save your profile just now. Please try again");
     }
   };
 
@@ -1873,7 +1873,7 @@ export const EmployeeProfile = () => {
         <div className="mb-1 text-body font-extraboldNunito text-navy-800">
           Privacy Settings
         </div>
-        <CardSub className="mb-3.5">Your NDPA consent choices — change anytime</CardSub>
+        <CardSub className="mb-3.5">Your NDPA consent choices (change anytime)</CardSub>
         <div className="flex flex-col">
           {CONSENT_ORDER.map((key, i) => {
             const state = consentState?.[key];
@@ -1971,7 +1971,7 @@ export const EmployeeProfile = () => {
               <path d="M20 6 9 17l-5-5" />
             </svg>
             <span className="text-[11px] leading-[1.55] text-wellness-600">
-              2FA is on — a 6-digit code is emailed to you each time you sign in.
+              2FA is on: a 6-digit code is emailed to you each time you sign in.
             </span>
           </div>
         ) : null}
@@ -1993,7 +1993,7 @@ export const EmployeeProfile = () => {
       {/* Danger Zone */}
       <Card className="!border-[#FFCDD2]">
         <div className="mb-1 text-body font-extraboldNunito text-[#8B2E2E]">Danger Zone</div>
-        <CardSub className="mb-3.5">Permanent — cannot be undone</CardSub>
+        <CardSub className="mb-3.5">Permanent: cannot be undone</CardSub>
         <button
           type="button"
           onClick={() => open("deleteAccount")}
@@ -2030,7 +2030,7 @@ export const EmployeeHelp = () => {
               Frequently asked questions
             </div>
             <div className="mb-3.5 text-[12px] text-ink-400">
-              Quick answers before you reach out — most things are covered here.
+              Quick answers before you reach out; most things are covered here.
             </div>
             <div className="flex flex-col gap-2">
               {isLoading ? (
@@ -2041,8 +2041,8 @@ export const EmployeeHelp = () => {
                 </>
               ) : faqs.length === 0 ? (
                 <EmptyNote>
-                  No FAQs published yet — use the contact options on the right and we&apos;ll
-                  help directly.
+                  No FAQs published yet. Use the contact options on the right and we&apos;ll
+              help directly.
                 </EmptyNote>
               ) : (
                 faqs.map((f) => (
@@ -2067,7 +2067,7 @@ export const EmployeeHelp = () => {
               Knowledge base
             </div>
             <div className="mb-3.5 text-[12px] text-ink-400">
-              Guides and walkthroughs — powered by our Informly help center.
+              Guides and walkthroughs, powered by our Informly help center.
             </div>
             <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed border-[#C9CEDA] bg-[#FAFBFD] p-6 text-center">
               <span className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-[#EEF4FC]">
@@ -2128,7 +2128,7 @@ export const EmployeeHelp = () => {
               Private by default
             </div>
             <div className="text-[11.5px] leading-[1.7] text-[#3E5C54]">
-              Support requests you send here are never visible to {company} — only TalkAM
+              Support requests you send here are never visible to {company}: only TalkAM
               staff can see them, same as your sessions and messages.
             </div>
           </Card>
@@ -2138,7 +2138,7 @@ export const EmployeeHelp = () => {
       {/* Deck: fixed Informly launcher */}
       <button
         type="button"
-        title="Informly widget launcher — replace with real embed"
+        title="Informly widget launcher (replace with real embed)"
         aria-label="Open live chat"
         className="fixed bottom-7 right-7 z-[200] flex h-[52px] w-[52px] cursor-pointer items-center justify-center rounded-full bg-[#017FC8] shadow-[0_10px_28px_rgba(1,127,200,0.4)]"
       >

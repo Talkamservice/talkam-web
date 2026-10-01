@@ -82,7 +82,7 @@ export const authBrandContent = {
   assessment: {
     eyebrow: "PRIVATE & CONFIDENTIAL",
     title: "Matched to the right therapist, faster.",
-    body: "Your answers stay private, only anonymised, company-wide patterns (after at least 5 responses) ever reach HR, and only to help them prioritise which specialists to bring on.",
+    body: "Your answers stay private: only anonymised, company-wide patterns (after at least 5 responses) ever reach HR, and only to help them prioritise which specialists to bring on.",
     points: ["Never shared individually, ever", "Refine your matches anytime", "Takes about 2 minutes"],
   },
   complete: {
@@ -94,13 +94,13 @@ export const authBrandContent = {
   signin: {
     eyebrow: "WELCOME BACK",
     title: "One dashboard, three roles.",
-    body: "Admins, employees and therapists all sign in here, each lands on a completely different home.",
+    body: "Admins, employees and therapists all sign in here, and each lands on a completely different home.",
     points: ["Business email required", "No OAuth on web dashboard", "2FA available in Settings"],
   },
   twofa: {
     eyebrow: "WELCOME BACK",
     title: "One dashboard, three roles.",
-    body: "Admins, employees and therapists all sign in here, each lands on a completely different home.",
+    body: "Admins, employees and therapists all sign in here, and each lands on a completely different home.",
     points: ["Business email required", "No OAuth on web dashboard", "2FA available in Settings"],
   },
   forgot: {

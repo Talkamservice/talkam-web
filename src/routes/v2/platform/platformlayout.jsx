@@ -169,7 +169,7 @@ export const PlatformLayout = () => {
 
   const segment = pathname.replace(V2.platform, "").replace(/^\//, "").split("/")[0] ?? "";
   const meta = PAGE_META[segment] ?? PAGE_META[""];
-  usePageMeta(`${meta.title} | TalkAM Platform Admin`);
+  usePageMeta(`${meta.title} · TalkAM Platform Admin`);
 
   const sections = NAV_SECTIONS.map((section) => ({
     label: section.label,

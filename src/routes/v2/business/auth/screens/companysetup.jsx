@@ -44,7 +44,7 @@ export const CompanySignup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const o = useOnboarding();
-  usePageMeta("Create your company account | TalkAM for Business");
+  usePageMeta("Create your company account · TalkAM for Business");
 
   const [registerCompany, { isLoading }] = useRegisterCompanyMutation();
   const { data: industries = [] } = useGetIndustriesQuery();
@@ -188,7 +188,7 @@ export const CompanySignup = () => {
 export const DomainVerify = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Confirm your business email | TalkAM for Business");
+  usePageMeta("Confirm your business email · TalkAM for Business");
 
   const { data: org } = useGetOrganizationQuery();
   const [verifyDomain, { isLoading }] = useVerifyDomainMutation();
@@ -275,7 +275,7 @@ export const DomainVerify = () => {
 export const ChooseSeats = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Choose your seats | TalkAM for Business");
+  usePageMeta("Choose your seats · TalkAM for Business");
 
   const { data: pricing } = useGetPricingConfigQuery();
   const { data: org } = useGetOrganizationQuery();
@@ -650,7 +650,7 @@ export const ChooseSeats = () => {
               </div>
               <p className="pt-0.5 text-[10.5px] leading-[1.45] text-white/40">
                 Seats{usesNetwork ? " + network access" : ""} + bundle. Charged now if you pay by
-                card, or on your first invoice (net terms) if you pay by transfer — you choose on
+                card, or on your first invoice (net terms) if you pay by transfer; you choose on
                 the next step.
               </p>
             </>
@@ -680,7 +680,7 @@ export const ChooseSeats = () => {
 export const PlanBilling = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Your plan & billing | TalkAM for Business");
+  usePageMeta("Your plan & billing · TalkAM for Business");
 
   const { data: pricing } = useGetPricingConfigQuery();
   const { data: org } = useGetOrganizationQuery();
@@ -716,7 +716,7 @@ export const PlanBilling = () => {
       title: "TalkAM for Business",
       description: savingCard
         ? "Save your card: a small refundable hold verifies it (not charged)"
-        : "Session bundle — charged now so sessions are ready immediately",
+        : "Session bundle: charged now so sessions are ready immediately",
     },
     meta: { ...(checkout?.meta ?? {}) },
   };
@@ -1058,7 +1058,7 @@ Skip billing setup for now; I&apos;ll add this later from the dashboard
             ? "Pay by card to set up instantly; or skip below and add billing later."
             : prepay
               ? "Most teams pay by invoice. Smaller teams can pay by card for instant setup."
-              : "Your seats are billed monthly; pay-as-you-go sessions are settled each month-end — by net-terms invoice or auto-charged to a card."}
+              : "Your seats are billed monthly; pay-as-you-go sessions are settled each month-end, by net-terms invoice or auto-charged to a card."}
         </p>
 
         {/* Bank transfer (dedicated account) is only offered when §11 is enabled;
@@ -1112,7 +1112,7 @@ Skip billing setup for now; I&apos;ll add this later from the dashboard
             </div>
             <p className="text-[11px] leading-[1.6] text-ink-400">
               {prepay
-                ? "Your first month — seats plus the session bundle — is charged now via Flutterwave, so sessions are ready immediately. From next month, seats are billed to the same card. Best for smaller teams who'd rather not wait on an invoice."
+                ? "Your first month (seats plus the session bundle) is charged now via Flutterwave, so sessions are ready immediately. From next month, seats are billed to the same card. Best for smaller teams who'd rather not wait on an invoice."
                 : "Your seats are billed monthly to this card: a fixed charge for your licensed capacity, and the sessions your team uses are added at each month-end. You only pay for the sessions actually used. We verify your card now with a small refundable hold; nothing is charged today."}
             </p>
           </>
@@ -1123,7 +1123,7 @@ Skip billing setup for now; I&apos;ll add this later from the dashboard
 
       {cardUnavailable ? (
         <p className="mb-2.5 rounded-ds-md bg-[#FEF2F2] px-3.5 py-2.5 text-[12px] leading-[1.5] text-[#B42318]">
-          Card payments aren&apos;t available yet — choose Invoice / bank transfer,
+          Card payments aren&apos;t available yet: choose Invoice / bank transfer,
           or skip and add billing later from the dashboard.
         </p>
       ) : null}

@@ -388,9 +388,9 @@ const RescheduleModal = ({ close, showToast, session }) => {
     try {
       await reschedule({ id: session.id, new_starts_at: slot, reason: "client_request" }).unwrap();
       close();
-      showToast(`Reschedule requested — ${session?.therapist_name ?? "your therapist"} needs to confirm it`);
+      showToast(`Reschedule requested: ${session?.therapist_name ?? "your therapist"} needs to confirm it`);
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't reschedule just now — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't reschedule just now. Please try again"));
     }
   };
 
@@ -401,7 +401,7 @@ const RescheduleModal = ({ close, showToast, session }) => {
         <div className="flex flex-col gap-3.5 px-6 py-[22px]">
           <div className="text-[12px] leading-[1.6] text-ink-500">
             Currently: {slotLabel(session?.starts_at)} with {session?.therapist_name}. Pick a
-            new slot to propose below — your session stays as-is until they confirm it.
+            new slot to propose below; your session stays as-is until they confirm it.
           </div>
           {!slotsLoading ? (
             <DayTabs dayGroups={dayGroups} activeDay={activeDay} onPick={setSelectedDay} />
@@ -462,7 +462,7 @@ const RescheduleModal = ({ close, showToast, session }) => {
             </div>
           ) : null}
           <div className="rounded-[10px] bg-[#FBF5E8] px-3 py-2.5 text-[11.5px] leading-[1.6] text-[#9A6E0A]">
-            Rescheduling more than 24h before your session is free — it just needs your
+            Rescheduling more than 24h before your session is free; it just needs your
             therapist to confirm the new time.
           </div>
           <NavyButton onClick={confirm} disabled={!slot || isLoading}>
@@ -543,7 +543,7 @@ const CancelModal = ({ close, open, session }) => {
       const res = await cancelBooking({ id: session.id, reason: label }).unwrap();
       setResult(res?.data ?? res ?? {});
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't cancel just now — please try again"));
+      setError(apiErrorMessage(err, "Couldn't cancel just now. Please try again"));
     }
   };
 
@@ -704,7 +704,7 @@ const PaySessionRequestModal = ({ close, showToast, context: request }) => {
       const payload = await initiatePayment({ id: request.session_id }).unwrap();
       setCheckout(payload);
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't start payment — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't start payment. Please try again"));
     }
   };
 
@@ -793,7 +793,7 @@ const DeclineSessionRequestModal = ({ close, showToast, context: request }) => {
       close();
       showToast("Request declined");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't decline that — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't decline that. Please try again"));
     }
   };
 
@@ -881,10 +881,10 @@ const FeedbackModal = ({ close, showToast, session }) => {
           <SmallMoodRow value={postMood} onPick={setPostMood} />
         </div>
         <div className="mb-3.5 rounded-[10px] bg-[#F8F9FC] px-[13px] py-2.5 text-[11.5px] leading-[1.6] text-ink-600">
-          {postMood ? MOOD_MESSAGES[postMood] : "Pick how you feel now — this is just for you."}
+          {postMood ? MOOD_MESSAGES[postMood] : "Pick how you feel now: this is just for you."}
         </div>
         <textarea
-          placeholder="Optional — what went well, or what could improve?"
+          placeholder="Optional: what went well, or what could improve?"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           className="mb-4 h-[70px] w-full resize-none rounded-[12px] border-[1.5px] border-ink-200 px-3.5 py-3 text-[13px] text-ink-800"
@@ -934,8 +934,7 @@ const PreSessionMoodModal = ({ close, open, session }) => {
           Before you join…
         </div>
         <div className="mb-[18px] text-[12px] text-ink-400">
-          How are you feeling right now? This helps track your progress over time —
-          private, never shared with {company}.
+          How are you feeling right now? This helps track your progress over time, private and never shared with {company}.
         </div>
         <div className="mb-4">
           <SmallMoodRow value={mood} onPick={setMood} />
@@ -1087,7 +1086,7 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
       }).unwrap();
       setSessionType(type);
       close();
-      showToast(`Booked for ${slotLabel(chosen)} — ${suggested?.name ?? "your therapist"} will confirm shortly`);
+      showToast(`Booked for ${slotLabel(chosen)}: ${suggested?.name ?? "your therapist"} will confirm shortly`);
     } catch (err) {
       // 400 covers two distinct backend failures the controller maps to the
       // same status: the per-employee cap guard, and "therapist not found"
@@ -1098,7 +1097,7 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
         open("capReached");
         return;
       }
-      setError(apiErrorMessage(err, "Couldn't book that slot — it may have just been taken"));
+      setError(apiErrorMessage(err, "Couldn't book that slot: it may have just been taken"));
     }
   };
 
@@ -1114,7 +1113,7 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
     return (
       <Scrim onClose={close}>
         <Sheet width={480}>
-          <SheetHeader title="Book a session" subtitle="Step 1 of 3 — Choose your therapist" onClose={close} />
+          <SheetHeader title="Book a session" subtitle="Step 1 of 3: Choose your therapist" onClose={close} />
           <div className="flex flex-col gap-4 px-6 py-[22px]">
             {loadingCandidates ? (
               <>
@@ -1239,7 +1238,7 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
         <Sheet width={620}>
           <SheetHeader
             title="Choose a time"
-            subtitle={`Step 2 of 3 — with ${suggested?.name ?? "your therapist"}`}
+            subtitle={`Step 2 of 3: with ${suggested?.name ?? "your therapist"}`}
             onBack={candidates.length > 1 ? () => setStep(1) : undefined}
             onClose={close}
           />
@@ -1301,7 +1300,7 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
               </div>
             ) : dayGroups.length === 0 ? (
               <div className="rounded-[10px] bg-surface-page px-3.5 py-3 text-[13px] text-ink-500">
-                No open slots in the next two weeks — send a request instead below.
+                No open slots in the next two weeks. Send a request instead below.
               </div>
             ) : (
               <>
@@ -1535,7 +1534,7 @@ const BookingModal = ({ close, open, showToast, sessionType, setSessionType }) =
       <Sheet width={440}>
         <SheetHeader
           title="Confirm your booking"
-          subtitle="Step 3 of 3 — Review & confirm"
+          subtitle="Step 3 of 3: Review & confirm"
           onBack={() => setStep(2)}
           onClose={close}
         />
@@ -1599,7 +1598,7 @@ const CapReachedModal = ({ close, showToast }) => {
       setRequested(true);
       showToast("Request sent to your admin · confirmation emailed");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't send that just now — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't send that just now. Please try again"));
     }
   };
 
@@ -1638,7 +1637,7 @@ const CapReachedModal = ({ close, showToast }) => {
               </svg>
               <div className="text-[12px] leading-[1.6] text-wellness-600">
                 <b>Your admin has been notified.</b> We&apos;ve emailed a confirmation to
-                your inbox — you&apos;ll get a notification here as soon as more sessions
+                your inbox; you&apos;ll get a notification here as soon as more sessions
                 are added to the pool.
               </div>
             </div>
@@ -1654,7 +1653,7 @@ const CapReachedModal = ({ close, showToast }) => {
           <div className="px-[26px] pb-[26px]">
             <div className="mb-3.5 rounded-[12px] bg-[#EEF4FC] px-3.5 py-3 text-[11.5px] leading-[1.6] text-brand-600">
               Notifying your admin sends them a top-up request. We&apos;ll email you a copy
-              and let you know the moment more sessions are added — your allowance also
+              and let you know the moment more sessions are added; your allowance also
               resets automatically next billing month.
             </div>
             <div className="flex gap-2.5">
@@ -1711,9 +1710,9 @@ const ReportModal = ({ close, showToast, session }) => {
         description: detail || label,
       }).unwrap();
       close();
-      showToast("Report submitted — our team will follow up");
+      showToast("Report submitted: our team will follow up");
     } catch {
-      showToast("Couldn't submit that report — please try again");
+      showToast("Couldn't submit that report. Please try again");
     }
   };
 
@@ -1724,7 +1723,7 @@ const ReportModal = ({ close, showToast, session }) => {
           Report a concern
         </div>
         <div className="mb-4 text-[12px] text-ink-400">
-          Goes directly to TalkAM&apos;s Trust &amp; Safety team — never to your employer
+          Goes directly to TalkAM&apos;s Trust &amp; Safety team, never to your employer
         </div>
         <div className="mb-4 flex flex-col gap-2">
           {reportReasons.map((r) => (
@@ -1781,7 +1780,7 @@ const DeleteAccountModal = ({ close, showToast }) => {
       dispatch(logOut());
       navigate(V2.businessLogin, { replace: true });
     } catch {
-      showToast?.("Couldn't delete your account just now — please contact support");
+      showToast?.("Couldn't delete your account just now. Please contact support");
     }
   };
 

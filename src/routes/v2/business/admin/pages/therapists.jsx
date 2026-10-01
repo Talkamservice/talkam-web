@@ -101,7 +101,7 @@ export const AdminTherapistNetwork = () => {
           </Badge>
         </div>
         <p className="mb-4 text-caption leading-[1.5] text-ink-400">
-          From employees&apos; private onboarding self-check-ins — never individual
+          From employees&apos; private onboarding self-check-ins, never individual
           answers, only company-wide patterns once at least 5 people respond. Use this
           to prioritise which specialties to onboard next.
         </p>
@@ -244,7 +244,7 @@ export const AdminTherapistNetwork = () => {
                           await addToNetwork(t.id).unwrap();
                           showToast(`${t.name} added to your network`);
                         } catch (err) {
-                          showToast(apiErrorMessage(err, "Couldn't add that therapist — please try again"));
+                          showToast(apiErrorMessage(err, "Couldn't add that therapist. Please try again"));
                         }
                       }}
                       className="flex-1 cursor-pointer rounded-[9px] bg-brand-400 py-2 text-center text-caption font-boldNunito text-white hover:bg-brand-600 disabled:opacity-60"
@@ -298,7 +298,7 @@ export const AdminMyTherapists = () => {
   return (
     <>
       <InfoStrip icon={<InfoIcon />}>
-        Therapists currently active in your organisation — both your own providers and
+        Therapists currently active in your organisation: both your own providers and
         TalkAM-verified therapists. Each B2B session draws down from your session bundle
         at ₦8,000/session; self-billed providers you settle directly.
       </InfoStrip>

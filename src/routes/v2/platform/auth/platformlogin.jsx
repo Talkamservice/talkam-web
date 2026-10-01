@@ -27,7 +27,7 @@ import { useLoginV2Mutation, useVerifyTwoFactorMutation } from "../../../../serv
 export const PlatformLogin = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  usePageMeta("Platform Admin sign in | TalkAM");
+  usePageMeta("Platform Admin sign in · TalkAM");
 
   const [login, { isLoading }] = useLoginV2Mutation();
   const [verifyTwoFactor, { isLoading: isVerifying }] = useVerifyTwoFactorMutation();

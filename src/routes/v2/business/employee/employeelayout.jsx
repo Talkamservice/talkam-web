@@ -201,7 +201,7 @@ export const EmployeeLayout = () => {
         ? `${upcomingCount} upcoming · ${pastCount} past session${pastCount === 1 ? "" : "s"}`
         : meta.subtitle;
 
-  usePageMeta(`${meta.title} | TalkAM`);
+  usePageMeta(`${meta.title} · TalkAM`);
 
   return (
     <DashboardShell

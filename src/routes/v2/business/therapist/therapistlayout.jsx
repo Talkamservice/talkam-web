@@ -248,7 +248,7 @@ export const TherapistLayout = () => {
         ? `${upcoming} upcoming`
         : meta.subtitle;
 
-  usePageMeta(`${meta.title} — TalkAM for Therapists`);
+  usePageMeta(`${meta.title} · TalkAM for Therapists`);
 
   return (
     <DashboardShell
@@ -316,12 +316,12 @@ const NotesModal = ({ open, close, showToast, context }) => {
       close();
       showToast(status === "draft" ? "Draft saved" : "Session notes saved");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't save that note — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't save that note. Please try again"));
     }
   };
 
   return (
-    <Modal open={open} onClose={close} title="Session notes" subtitle="Private to you — never shared with the employer">
+    <Modal open={open} onClose={close} title="Session notes" subtitle="Private to you: never shared with the employer">
       <InfoStrip tone="purple" className="mb-4">
         Sessions are never recorded. These written notes are the only record, and they
         stay with you.
@@ -384,9 +384,9 @@ const RescheduleReqModal = ({ open, close, showToast, context }) => {
     try {
       await requestReschedule({ id: session.id, new_starts_at: slot, reason }).unwrap();
       close();
-      showToast("Reschedule requested — the client will be asked to confirm");
+      showToast("Reschedule requested: the client will be asked to confirm");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't request a reschedule — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't request a reschedule. Please try again"));
     }
   };
 
@@ -464,9 +464,9 @@ const ProposeTimeModal = ({ open, close, showToast, context }) => {
     try {
       await proposeTime({ id: lead.id, starts_at: slot }).unwrap();
       close();
-      showToast("Proposal sent — the client will be notified");
+      showToast("Proposal sent: the client will be notified");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't send that proposal — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't send that proposal. Please try again"));
     }
   };
 
@@ -474,7 +474,7 @@ const ProposeTimeModal = ({ open, close, showToast, context }) => {
     <Modal open={open} onClose={close} title="Propose new time" width="max-w-[520px]">
       <p className="mb-4 text-[13px] leading-[1.7] text-ink-500">
         Client will be notified and asked to confirm the new time. Sending a proposal creates
-        the session on hold — it moves to Upcoming once they pay.
+        the session on hold; it moves to Upcoming once they pay.
       </p>
       <div className="mb-4 grid grid-cols-2 gap-2">
         {slots.length === 0 ? (
@@ -527,7 +527,7 @@ const JoinConfirmModal = ({ open, close, context, openCall }) => (
       </div>
     </div>
     <InfoStrip tone="purple" className="mb-4">
-      This room is never recorded — no audio, video or transcript is stored.
+      This room is never recorded: no audio, video or transcript is stored.
     </InfoStrip>
     <div className="flex justify-end gap-2">
       <SecondaryButton onClick={close}>Not yet</SecondaryButton>
@@ -601,7 +601,7 @@ const TwoFactorEnableModal = ({ open, close, showToast, context }) => {
     requestOtp({ type: "login", email })
       .unwrap()
       .then(() => setSent(true))
-      .catch((err) => setError(apiErrorMessage(err, "Couldn't send a code — try Resend")));
+      .catch((err) => setError(apiErrorMessage(err, "Couldn't send a code. Try Resend")));
   }, [open, email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resend = async () => {
@@ -684,9 +684,9 @@ const ReportClientModal = ({ close, showToast }) => {
         context: detail || undefined,
       }).unwrap();
       close();
-      showToast("Report submitted — Trust & Safety will follow up");
+      showToast("Report submitted: Trust & Safety will follow up");
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't submit that report — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't submit that report. Please try again"));
     }
   };
 
@@ -762,7 +762,7 @@ const DeleteAccountModal = ({ close, showToast }) => {
       dispatch(logOut());
       navigate(V2.businessLogin, { replace: true });
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't delete your account just now — please contact support"));
+      showToast(apiErrorMessage(err, "Couldn't delete your account just now. Please contact support"));
     }
   };
 

@@ -17,7 +17,7 @@ import { useGetLegalDocumentQuery } from "../../../services/v2/legalApiSlice";
 const LegalPage = ({ slug, title, footerLinks, metaDescription }) => {
   const { data: doc } = useGetLegalDocumentQuery(slug);
 
-  usePageMeta(`${doc?.title ?? title} | TalkAM`, metaDescription);
+  usePageMeta(`${doc?.title ?? title} · TalkAM`, metaDescription);
 
   // Hold the page until the document resolves rather than flash an empty shell.
   if (!doc) return null;
@@ -102,7 +102,7 @@ export const V2PrivacyPolicy = () => (
       { label: "Terms of Use", to: V2.terms },
       { label: "Business Login", to: V2.businessLogin },
     ]}
-    metaDescription="How TalkAM collects, uses and protects your data, NDPA 2023 compliant, with a hard wall between employer and individual employee data."
+    metaDescription="How TalkAM collects, uses and protects your data: NDPA 2023 compliant, with a hard wall between employer and individual employee data."
   />
 );
 

@@ -194,7 +194,7 @@ const CallRoom = ({ bookingId, format, counterpartName, isTherapist, showToast, 
       }).unwrap();
       showToast?.(status === "draft" ? "Draft saved" : "Session notes saved");
     } catch (err) {
-      showToast?.(apiErrorMessage(err, "Couldn't save that note — please try again"));
+      showToast?.(apiErrorMessage(err, "Couldn't save that note. Please try again"));
     }
   };
 

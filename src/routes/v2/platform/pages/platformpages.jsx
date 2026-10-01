@@ -136,7 +136,7 @@ const when = (iso) => (iso ? new Date(iso).toLocaleString("en-NG", { dateStyle: 
  *  (disputes, settings) — real, just empty until it's used. */
 const JustLaunched = ({ children }) => (
   <InfoStrip tone="blue" icon={<Icon.Info size={15} className="mt-px shrink-0 text-brand-400" />}>
-    {children ?? "Just launched — data will build up here as it happens. This is real, not sample data."}
+    {children ?? "Just launched: data will build up here as it happens. This is real, not sample data."}
   </InfoStrip>
 );
 
@@ -320,7 +320,7 @@ const PendingVerificationsPanel = () => {
   const doApprove = async (id) => {
     try {
       await approve(id).unwrap();
-      showToast("Application approved — therapist role granted");
+      showToast("Application approved: therapist role granted");
     } catch (err) {
       showToast(apiErrorMessage(err, "Couldn't approve that application"));
     }
@@ -374,7 +374,7 @@ const RecentActivityPanel = ({ items }) => (
           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
           <div>
             <div className="text-[12.5px] text-ink-700">
-              <span className="font-boldNunito text-navy-800">{a.actor_name ?? "System"}</span> — {a.description ?? a.title}
+              <span className="font-boldNunito text-navy-800">{a.actor_name ?? "System"}</span>: {a.description ?? a.title}
             </div>
             <div className="text-[11px] text-ink-400">{ago(a.created_at)}</div>
           </div>
@@ -482,10 +482,10 @@ const GrowthOverviewTab = () => {
   return (
     <div className="flex flex-col gap-5">
       <KpiRow>
-        <KpiCard icon={<Icon.UserPlus size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={aarrr?.acquisition?.value ?? 0} label="Acquisition — signed up (12w)" />
-        <KpiCard icon={<Icon.Zap size={17} className="text-wellness-600" />} iconBg="bg-wellness-25" value={`${aarrr?.activation?.rate_percent ?? 0}%`} label="Activation — onboarding completed" />
-        <KpiCard icon={<Icon.RefreshCw size={17} className="text-gold-600" />} iconBg="bg-gold-50" value={`${aarrr?.retention?.rate_percent ?? 0}%`} label="Retention — active in last 30d" />
-        <KpiCard icon={<Icon.DollarSign size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={money(aarrr?.revenue?.value)} label="Revenue — MRR" />
+        <KpiCard icon={<Icon.UserPlus size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={aarrr?.acquisition?.value ?? 0} label="Acquisition: signed up (12w)" />
+        <KpiCard icon={<Icon.Zap size={17} className="text-wellness-600" />} iconBg="bg-wellness-25" value={`${aarrr?.activation?.rate_percent ?? 0}%`} label="Activation: onboarding completed" />
+        <KpiCard icon={<Icon.RefreshCw size={17} className="text-gold-600" />} iconBg="bg-gold-50" value={`${aarrr?.retention?.rate_percent ?? 0}%`} label="Retention: active in last 30d" />
+        <KpiCard icon={<Icon.DollarSign size={17} className="text-brand-600" />} iconBg="bg-brand-25" value={money(aarrr?.revenue?.value)} label="Revenue: MRR" />
       </KpiRow>
 
       <GrowthNotTracked items={aarrr?.not_tracked} />
@@ -657,7 +657,7 @@ const SegmentsTab = () => {
   return (
     <div className="flex flex-col gap-5">
       <InfoStrip tone="blue" icon={<Icon.Info size={15} className="mt-px shrink-0 text-brand-400" />}>
-        Every segment is computed live from real rows — descriptions say exactly what qualifies. &quot;Export CSV&quot;
+        Every segment is computed live from real rows; descriptions say exactly what qualifies. &quot;Export CSV&quot;
         and a custom segment builder from the design mockup aren&apos;t built yet.
       </InfoStrip>
 
@@ -697,7 +697,7 @@ export const PlatformGrowthPage = () => {
   return (
     <div className="flex flex-col gap-5">
       <JustLaunched>
-        Built from real signup, session, mood check-in and community timestamps — not the design
+        Built from real signup, session, mood check-in and community timestamps, not the design
         mockup&apos;s full analytics suite. Each tab discloses what it can&apos;t compute yet rather than
         estimating it.
       </JustLaunched>
@@ -821,7 +821,7 @@ export const PlatformBusinessesPage = () => {
             <input placeholder="Admin last name" value={form.last_name} onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))} className="h-10 rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px]" />
           </div>
           <p className="mb-3 text-[11.5px] text-ink-400">
-            Creates the organisation and its first admin account, same as the self-serve signup — that admin gets a verification email next.
+            Creates the organisation and its first admin account, same as the self-serve signup; that admin gets a verification email next.
           </p>
           <div className="flex justify-end gap-2">
             <SecondaryButton onClick={() => setShowForm(false)}>Cancel</SecondaryButton>
@@ -1346,7 +1346,7 @@ const OrgActivityTab = ({ id }) => {
     <PanelCard>
       {rows.length === 0 ? (
         <div className="p-8 text-center text-[12.5px] text-ink-400">
-          No activity logged for this organisation yet — actions taken from this page (suspend, reactivate) will start appearing here.
+          No activity logged for this organisation yet; actions taken from this page (suspend, reactivate) will start appearing here.
         </div>
       ) : (
         <>
@@ -1520,7 +1520,7 @@ export const PlatformCustomQuoteRequestsPage = () => {
       await markContacted(id).unwrap();
       showToast("Marked as contacted");
     } catch (err) {
-      showToast(apiErrorMessage(err, "That action didn't go through — please try again"));
+      showToast(apiErrorMessage(err, "That action didn't go through. Please try again"));
     } finally {
       setMarkingId(null);
     }
@@ -1668,7 +1668,7 @@ export const PlatformBusinessPlansPage = () => {
       }
       close();
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't save that plan — please try again"));
+      setError(apiErrorMessage(err, "Couldn't save that plan. Please try again"));
     }
   };
 
@@ -1678,7 +1678,7 @@ export const PlatformBusinessPlansPage = () => {
       await deletePlan(deleting.id).unwrap();
       showToast(`"${deleting.name}" deleted`);
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't delete that plan — please try again"));
+      showToast(apiErrorMessage(err, "Couldn't delete that plan. Please try again"));
     } finally {
       setDeleting(null);
     }
@@ -1691,7 +1691,7 @@ export const PlatformBusinessPlansPage = () => {
   return (
     <div className="flex flex-col gap-5">
       <InfoStrip tone="blue">
-        This is the exact catalogue business admins see on their own Billing page — editing a plan here changes what every business on it sees and compares against immediately.
+        This is the exact catalogue business admins see on their own Billing page; editing a plan here changes what every business on it sees and compares against immediately.
       </InfoStrip>
 
       <div className="flex justify-end">
@@ -1799,7 +1799,7 @@ export const PlatformBusinessPlansPage = () => {
             <div className="flex items-center justify-between rounded-[10px] border-[1.5px] border-ink-200 px-3.5 py-2.5">
               <div>
                 <div className="text-[13px] font-boldNunito text-navy-800">Custom plan</div>
-                <div className="text-[11px] text-ink-400">No self-serve tiers — shows &ldquo;Custom&rdquo; instead of a rate.</div>
+                <div className="text-[11px] text-ink-400">No self-serve tiers: shows &ldquo;Custom&rdquo; instead of a rate.</div>
               </div>
               <Toggle on={editing.is_custom} label="Custom plan" onClick={() => setField("is_custom", !editing.is_custom)} />
             </div>
@@ -1908,7 +1908,7 @@ export const PlatformPayoutsPage = () => {
   useEffect(() => {
     if (watchingRun && lastRun?.status === "completed") {
       setWatchingRun(false);
-      showToast(`Batch complete — ${lastRun.processed} payout${lastRun.processed === 1 ? "" : "s"} initiated${lastRun.failed ? `, ${lastRun.failed} failed` : ""}`);
+      showToast(`Batch complete: ${lastRun.processed} payout${lastRun.processed === 1 ? "" : "s"} initiated${lastRun.failed ? `, ${lastRun.failed} failed` : ""}`);
       refetch();
     }
   }, [watchingRun, lastRun, showToast, refetch]);
@@ -1933,7 +1933,7 @@ export const PlatformPayoutsPage = () => {
   const doProcessAll = async () => {
     try {
       await processAll().unwrap();
-      showToast("Payout run queued — processing in the background");
+      showToast("Payout run queued: processing in the background");
       setConfirmingAll(false);
       setWatchingRun(true);
     } catch (err) {
@@ -2069,7 +2069,7 @@ export const PlatformPayoutsPage = () => {
       <Modal open={confirmingAll} onClose={() => setConfirmingAll(false)} title="Process all pending payouts?" width="max-w-[440px]">
         <p className="mb-4 text-[13px] leading-[1.6] text-ink-500">
           This initiates a real Flutterwave transfer (sandbox) for every therapist with a positive balance and a bank
-          account on file — {money(overview.pending_total)} across {overview.pending_therapist_count ?? 0} therapist{overview.pending_therapist_count === 1 ? "" : "s"}. This cannot be undone from here.
+          account on file: {money(overview.pending_total)} across {overview.pending_therapist_count ?? 0} therapist{overview.pending_therapist_count === 1 ? "" : "s"}. This cannot be undone from here.
         </p>
         <div className="flex justify-end gap-2">
           <SecondaryButton onClick={() => setConfirmingAll(false)}>Cancel</SecondaryButton>
@@ -2313,7 +2313,7 @@ export const PlatformCommunityPage = () => {
       await fn().unwrap();
       showToast(okMsg);
     } catch (err) {
-      showToast(apiErrorMessage(err, "That action didn't go through — please try again"));
+      showToast(apiErrorMessage(err, "That action didn't go through. Please try again"));
     }
   };
 
@@ -2381,12 +2381,12 @@ export const PlatformCommunityPage = () => {
 
       showToast(
         failed > 0
-          ? `Group created — ${failed} of ${newGroupMembers.length} member(s) couldn't be added`
+          ? `Group created: ${failed} of ${newGroupMembers.length} member(s) couldn't be added`
           : "Group created"
       );
       setCreatingGroup(false);
     } catch (err) {
-      showToast(apiErrorMessage(err, "That didn't go through — check the owner's email and try again"));
+      showToast(apiErrorMessage(err, "That didn't go through. Check the owner's email and try again"));
     }
   };
 
@@ -2566,7 +2566,7 @@ export const PlatformCommunityPage = () => {
             <input
               value={newGroup.owner_email}
               onChange={(e) => setNewGroup((g) => ({ ...g, owner_email: e.target.value }))}
-              placeholder="A real TalkAM user's email — becomes group Owner"
+              placeholder="A real TalkAM user's email (becomes group Owner)"
               className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
             />
           </div>
@@ -2577,9 +2577,9 @@ export const PlatformCommunityPage = () => {
               onChange={(e) => setNewGroup((g) => ({ ...g, group_access: e.target.value }))}
               className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]"
             >
-              <option value="Opened">Open — anyone can join</option>
-              <option value="Approval">Approval — join requests reviewed</option>
-              <option value="Closed">Closed — invite only</option>
+              <option value="Opened">Open: anyone can join</option>
+              <option value="Approval">Approval: join requests reviewed</option>
+              <option value="Closed">Closed: invite only</option>
             </select>
           </div>
           <div>
@@ -2657,9 +2657,9 @@ const GROUP_DETAIL_TABS = [
 // same friendly label, reused for the read-only Overview row instead of
 // printing the raw enum value straight through.
 const GROUP_ACCESS_LABELS = {
-  Opened: "Open — anyone can join",
-  Approval: "Approval — join requests reviewed",
-  Closed: "Closed — invite only",
+  Opened: "Open: anyone can join",
+  Approval: "Approval: join requests reviewed",
+  Closed: "Closed: invite only",
 };
 
 const GroupOverviewTab = ({ group }) => (
@@ -2701,7 +2701,7 @@ const GroupMembersTab = ({ groupId, showToast }) => {
       await fn().unwrap();
       showToast(okMsg);
     } catch (err) {
-      showToast(apiErrorMessage(err, "That action didn't go through — please try again"));
+      showToast(apiErrorMessage(err, "That action didn't go through. Please try again"));
     }
   };
 
@@ -2725,7 +2725,7 @@ const GroupMembersTab = ({ groupId, showToast }) => {
           <div className="min-w-0 flex-1">
             <div className="mb-2">
               <div className="text-[13px] font-extraboldNunito text-navy-800">Add member</div>
-              <div className="text-[11.5px] text-ink-400">Search by name or email — they must already have a TalkAM account.</div>
+              <div className="text-[11.5px] text-ink-400">Search by name or email: they must already have a TalkAM account.</div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <div className="min-w-[220px] flex-1">
@@ -2833,7 +2833,7 @@ const GroupReportsTab = ({ groupId, showToast }) => {
       await fn().unwrap();
       showToast(okMsg);
     } catch (err) {
-      showToast(apiErrorMessage(err, "That action didn't go through — please try again"));
+      showToast(apiErrorMessage(err, "That action didn't go through. Please try again"));
     }
   };
 
@@ -2877,7 +2877,7 @@ const GroupCommentReportsTab = ({ groupId, showToast }) => {
       await fn().unwrap();
       showToast(okMsg);
     } catch (err) {
-      showToast(apiErrorMessage(err, "That action didn't go through — please try again"));
+      showToast(apiErrorMessage(err, "That action didn't go through. Please try again"));
     }
   };
 
@@ -2949,7 +2949,7 @@ export const PlatformGroupDetailPage = () => {
       await fn().unwrap();
       showToast(okMsg);
     } catch (err) {
-      showToast(apiErrorMessage(err, "That action didn't go through — please try again"));
+      showToast(apiErrorMessage(err, "That action didn't go through. Please try again"));
     }
   };
 
@@ -2966,7 +2966,7 @@ export const PlatformGroupDetailPage = () => {
         navigate(`${V2.platform}/community`);
         return;
       } catch (err) {
-        showToast(apiErrorMessage(err, "That didn't go through — please try again"));
+        showToast(apiErrorMessage(err, "That didn't go through. Please try again"));
       }
     }
     setGroupAction(null);
@@ -3135,9 +3135,9 @@ export const PlatformGroupDetailPage = () => {
           <div>
             <label className="mb-1.5 block text-[13px] font-boldNunito text-navy-800">Access</label>
             <select value={editForm.group_access} onChange={(e) => setEditForm((f) => ({ ...f, group_access: e.target.value }))} className="h-11 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3.5 text-[13px]">
-              <option value="Opened">Open — anyone can join</option>
-              <option value="Approval">Approval — join requests reviewed</option>
-              <option value="Closed">Closed — invite only</option>
+              <option value="Opened">Open: anyone can join</option>
+              <option value="Approval">Approval: join requests reviewed</option>
+              <option value="Closed">Closed: invite only</option>
             </select>
           </div>
           <div className="flex justify-end gap-2 border-t border-ink-100 pt-4">
@@ -3277,7 +3277,7 @@ export const PlatformCmsPage = () => {
       }
       setModalOpen(false);
     } catch (err) {
-      setError(apiErrorMessage(err, "Couldn't save that article — please try again"));
+      setError(apiErrorMessage(err, "Couldn't save that article. Please try again"));
     }
   };
 
@@ -3414,7 +3414,7 @@ export const PlatformCmsPage = () => {
             <textarea value={form.excerpt} onChange={(e) => setField("excerpt", e.target.value)} placeholder="Short teaser shown on the journal list" className="h-20 w-full resize-none rounded-[10px] border-[1.5px] border-ink-200 px-3.5 py-2.5 text-[13px]" />
             {editingId ? (
               <div className="mt-1.5 text-[11px] text-ink-400">
-                The full body (headings, quotes, lists) isn&apos;t edited here — open &ldquo;View&rdquo; to read it as published.
+                The full body (headings, quotes, lists) isn&apos;t edited here; open &ldquo;View&rdquo; to read it as published.
               </div>
             ) : null}
           </div>
@@ -3504,11 +3504,11 @@ const REPORTER_TYPE_LABEL = { therapists: "Therapist", employees: "B2B Employee"
  *  (PlatformDisputeService only has Resolved/Dismissed) — the richer
  *  label just gives the admin a starting point for the notes below. */
 const RESOLUTION_OUTCOMES = [
-  { key: "refund", label: "Resolved in favour of complainant — refund initiated", status: "Resolved" },
-  { key: "credit", label: "Resolved in favour of complainant — session credit issued", status: "Resolved" },
-  { key: "no_action", label: "Resolved in favour of other party — no action needed", status: "Resolved" },
-  { key: "insufficient", label: "Dismissed — insufficient evidence", status: "Dismissed" },
-  { key: "duplicate", label: "Dismissed — duplicate report", status: "Dismissed" },
+  { key: "refund", label: "Resolved in favour of complainant: refund initiated", status: "Resolved" },
+  { key: "credit", label: "Resolved in favour of complainant: session credit issued", status: "Resolved" },
+  { key: "no_action", label: "Resolved in favour of other party: no action needed", status: "Resolved" },
+  { key: "insufficient", label: "Dismissed: insufficient evidence", status: "Dismissed" },
+  { key: "duplicate", label: "Dismissed: duplicate report", status: "Dismissed" },
 ];
 
 export const PlatformDisputesPage = () => {
@@ -3830,7 +3830,7 @@ export const PlatformRolesPage = () => {
       showToast("Role assigned");
       setForm({ user_id: "", role: PLATFORM_ROLES[1] });
     } catch (err) {
-      showToast(apiErrorMessage(err, "Couldn't assign that role — check the user ID"));
+      showToast(apiErrorMessage(err, "Couldn't assign that role: check the user ID"));
     }
   };
 
@@ -3985,7 +3985,7 @@ LegalEditor.propTypes = { slug: PropTypes.string.isRequired, title: PropTypes.st
 export const PlatformLegalPage = () => (
   <div className="flex flex-col gap-5">
     <InfoStrip tone="gold" icon={<Icon.AlertTriangle size={15} className="mt-px shrink-0 text-gold-600" />}>
-      Saving creates a new version — the live public document updates immediately.
+      Saving creates a new version; the live public document updates immediately.
     </InfoStrip>
     <LegalEditor slug="privacy" title="Privacy Policy" />
     <LegalEditor slug="terms" title="Terms & Conditions" />
@@ -4014,7 +4014,7 @@ export const PlatformSettingsPage = () => {
   return (
     <div className="flex flex-col gap-5">
       <JustLaunched>
-        Only the settings with a real switch behind them are here — the design mockup&apos;s
+        Only the settings with a real switch behind them are here; the design mockup&apos;s
         broader settings surface isn&apos;t backed by anything yet.
       </JustLaunched>
 
@@ -4670,7 +4670,7 @@ const UserOverviewTab = ({ user, onStrike, onBan, onViewAll }) => {
 
         <Card>
           <div className="mb-4 flex items-center justify-between">
-            <span className="text-[15px] font-extraboldNunito text-navy-800">Mood Trend — Last {user.mood?.window_days ?? 30} days</span>
+            <span className="text-[15px] font-extraboldNunito text-navy-800">Mood Trend: Last {user.mood?.window_days ?? 30} days</span>
             {trendLabel ? (
               <Badge tone={trendLabel === "Improving" ? "green" : trendLabel === "Declining" ? "red" : "grey"}>{trendLabel}</Badge>
             ) : null}
@@ -4859,7 +4859,7 @@ const UserMoodTab = ({ id }) => {
         <KpiCard icon={<Icon.Calendar size={17} className="text-wellness-600" />} iconBg="bg-wellness-25" value={data?.days_logged ?? 0} label={`Days logged (${data?.window_days ?? 0}d window)`} />
       </KpiRow>
 
-      <PanelCard title={`Mood trend — last ${data?.window_days ?? 0} days`}>
+      <PanelCard title={`Mood trend: last ${data?.window_days ?? 0} days`}>
         {hasData ? (
           <div className="flex h-[120px] items-end gap-1 overflow-x-auto p-5">
             {series.map((d) => (
@@ -5205,7 +5205,7 @@ export const PlatformTherapistVerificationPage = () => {
                   ) : null}
                   {["submitted", "in_review"].includes(app.status) ? (
                     <>
-                      <button type="button" onClick={() => act(() => approve(app.id).unwrap(), "Application approved — therapist role granted")} className="cursor-pointer rounded-[10px] bg-wellness-25 px-3.5 py-2 text-[12.5px] font-boldNunito text-wellness-600 hover:bg-wellness-50">
+                      <button type="button" onClick={() => act(() => approve(app.id).unwrap(), "Application approved: therapist role granted")} className="cursor-pointer rounded-[10px] bg-wellness-25 px-3.5 py-2 text-[12.5px] font-boldNunito text-wellness-600 hover:bg-wellness-50">
                         ✓ Approve
                       </button>
                       <button type="button" onClick={() => setRejectingId(app.id)} className="cursor-pointer rounded-[10px] bg-surface-errorTint px-3.5 py-2 text-[12.5px] font-boldNunito text-surface-errorInk hover:bg-[#FFD9D9]">
@@ -5368,7 +5368,7 @@ export const PlatformPerformancePage = () => {
       {isFetching ? (
         <SkeletonPanel />
       ) : rows.length === 0 ? (
-        <PanelCard><div className="p-8 text-center text-[12.5px] text-ink-400">{flaggedOnly ? "No flagged therapists — everyone's within range." : "No therapist data yet."}</div></PanelCard>
+        <PanelCard><div className="p-8 text-center text-[12.5px] text-ink-400">{flaggedOnly ? "No flagged therapists; everyone is within range." : "No therapist data yet."}</div></PanelCard>
       ) : (
         <div className="flex flex-col gap-4">
           {rows.map((th) => (
@@ -5441,23 +5441,23 @@ export const PlatformPerformancePage = () => {
         {thresholdForm ? (
           <div className="flex flex-col gap-3">
             <div>
-              <label className="mb-1 block text-[11px] font-boldNunito text-ink-400">Yellow flag — avg rating below</label>
+              <label className="mb-1 block text-[11px] font-boldNunito text-ink-400">Yellow flag: avg rating below</label>
               <input type="number" step="0.1" value={thresholdForm.performance_yellow_rating} onChange={(e) => setThresholdForm((f) => ({ ...f, performance_yellow_rating: e.target.value }))} className="h-10 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px]" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-boldNunito text-ink-400">Yellow flag — minimum sessions</label>
+              <label className="mb-1 block text-[11px] font-boldNunito text-ink-400">Yellow flag: minimum sessions</label>
               <input type="number" value={thresholdForm.performance_yellow_min_sessions} onChange={(e) => setThresholdForm((f) => ({ ...f, performance_yellow_min_sessions: e.target.value }))} className="h-10 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px]" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-boldNunito text-ink-400">Red flag — avg rating below</label>
+              <label className="mb-1 block text-[11px] font-boldNunito text-ink-400">Red flag: avg rating below</label>
               <input type="number" step="0.1" value={thresholdForm.performance_red_rating} onChange={(e) => setThresholdForm((f) => ({ ...f, performance_red_rating: e.target.value }))} className="h-10 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px]" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-boldNunito text-ink-400">Red flag — minimum sessions</label>
+              <label className="mb-1 block text-[11px] font-boldNunito text-ink-400">Red flag: minimum sessions</label>
               <input type="number" value={thresholdForm.performance_red_min_sessions} onChange={(e) => setThresholdForm((f) => ({ ...f, performance_red_min_sessions: e.target.value }))} className="h-10 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px]" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-boldNunito text-ink-400">Auto-suspend — open disputes within 30 days</label>
+              <label className="mb-1 block text-[11px] font-boldNunito text-ink-400">Auto-suspend: open disputes within 30 days</label>
               <input type="number" value={thresholdForm.performance_dispute_auto_suspend} onChange={(e) => setThresholdForm((f) => ({ ...f, performance_dispute_auto_suspend: e.target.value }))} className="h-10 w-full rounded-[10px] border-[1.5px] border-ink-200 px-3 text-[13px]" />
             </div>
             <div className="mt-2 flex justify-end gap-2">

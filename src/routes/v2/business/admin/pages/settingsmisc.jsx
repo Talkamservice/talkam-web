@@ -930,7 +930,7 @@ export const AdminHelp = () => {
     {/* Deck: fixed Informly launcher */}
     <button
       type="button"
-      title="Informly widget launcher — replace with real embed"
+      title="Informly widget launcher (replace with real embed)"
       aria-label="Open live chat"
       className="fixed bottom-7 right-7 z-[200] flex h-[52px] w-[52px] cursor-pointer items-center justify-center rounded-full bg-[#017FC8] shadow-[0_10px_28px_rgba(1,127,200,0.4)]"
     >

@@ -46,7 +46,7 @@ const INVITE_INPUT =
 export const TherapistBench = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Preview your therapist bench | TalkAM for Business");
+  usePageMeta("Preview your therapist bench · TalkAM for Business");
 
   const { data: org, isLoading } = useGetOrganizationQuery();
   const [saveBench, { isLoading: isSaving }] = useSaveBenchMutation();
@@ -132,7 +132,7 @@ export const TherapistBench = () => {
 export const TeamInvite = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Invite employees & therapists | TalkAM for Business");
+  usePageMeta("Invite employees & therapists · TalkAM for Business");
 
   const fileInput = useRef(null);
   const [importRoster, { isLoading: isImporting }] = useImportRosterMutation();
@@ -485,8 +485,7 @@ export const TeamInvite = () => {
         <p className="text-[11.5px] leading-[1.6] text-[#5A3990]">
           Tag their invite as <strong className="font-boldNunito">Therapist</strong> to
           bring your own provider onto TalkAM alongside your team. They complete the
-          same quick verification, and you&apos;ll choose how they&apos;re billed —
-          through TalkAM or settled directly with you — from My Therapists.
+          same quick verification, and you&apos;ll choose how they&apos;re billed (through TalkAM or settled directly with you) from My Therapists.
         </p>
       </div>
 
@@ -500,7 +499,7 @@ export const TeamInvite = () => {
         onClick={() => navigate(V2.admin, { replace: true })}
         className="mt-3.5 w-full cursor-pointer text-center text-caption text-ink-400"
       >
-        Skip for now — go to dashboard
+        Skip for now: go to dashboard
       </button>
     </>
   );
@@ -510,7 +509,7 @@ export const TeamInvite = () => {
 export const InvitesSent = () => {
   const navigate = useNavigate();
   const o = useOnboarding();
-  usePageMeta("Invites sent | TalkAM for Business");
+  usePageMeta("Invites sent · TalkAM for Business");
 
   const sent = o.invitesSent;
   const invitations = sent?.invitations ?? [];
@@ -551,7 +550,7 @@ export const InviteLanding = () => {
   const dispatch = useDispatch();
   const o = useOnboarding();
   const [searchParams] = useSearchParams();
-  usePageMeta("Complete your registration | TalkAM");
+  usePageMeta("Complete your registration · TalkAM");
 
   const token = searchParams.get("token") ?? "";
   const { data: invite, isLoading, isError, error: loadError } = useGetInvitationQuery(token, {

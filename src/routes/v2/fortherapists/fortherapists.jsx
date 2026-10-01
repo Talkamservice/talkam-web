@@ -28,7 +28,7 @@ import {
  */
 export const V2ForTherapists = () => {
   usePageMeta(
-    "For Therapists: TalkAM",
+    "For Therapists · TalkAM",
     "Reach people who need support, set your own hours, and get paid reliably, with a verified badge that builds instant trust."
   );
 

@@ -56,7 +56,7 @@ const TierCard = ({ tier }) => (
 
 export const V2Pricing = () => {
   usePageMeta(
-    "Pricing — TalkAM for Business",
+    "Pricing · TalkAM for Business",
     "Three clear layers, billed after your team activates. No upfront charge, no hidden per-session surprises."
   );
 
@@ -115,7 +115,7 @@ export const V2Pricing = () => {
           </svg>
           <p className="min-w-[260px] flex-1 text-[13.5px] leading-[1.6] text-brand-600">
             <strong className="font-boldNunito">Post-paid by default.</strong> Nothing
-            is charged at signup, your first invoice is generated only once your
+            is charged at signup. Your first invoice is generated only once your
             first employee activates. Pay by bank transfer, or by card via
             Flutterwave for instant setup.
           </p>
@@ -178,7 +178,7 @@ export const V2Pricing = () => {
             therapist on the network.
           </p>
           <p className="text-[14.5px] leading-[1.75] text-[#5B6577]">
-            The full breakdown is always visible on your Billing page, no per-seat
+            The full breakdown is always visible on your Billing page, with no per-seat
             markups, no hidden per-session surcharges.
           </p>
         </div>

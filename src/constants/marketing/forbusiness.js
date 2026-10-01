@@ -21,7 +21,7 @@ export const businessFeatures = [
     icon: "📊",
     bg: "bg-brand-25",
     title: "Anonymised analytics",
-    body: "Company-wide wellbeing trends and top themes, never a single individual identified.",
+    body: "Company-wide wellbeing trends and top themes, keeping every individual identity completely anonymous.",
   },
   {
     icon: "🪑",
@@ -51,7 +51,7 @@ export const businessFeatures = [
     icon: "🤝",
     bg: "bg-brand-25",
     title: "Community + care",
-    body: "Anonymous community plus real 1:1 therapy, the whole spectrum of support.",
+    body: "Anonymous community plus real 1:1 therapy: the whole spectrum of support.",
   },
 ];
 

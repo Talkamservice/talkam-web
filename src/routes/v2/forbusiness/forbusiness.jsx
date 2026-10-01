@@ -27,7 +27,7 @@ import {
 
 export const V2ForBusiness = () => {
   usePageMeta(
-    "For Business: TalkAM",
+    "For Business · TalkAM",
     "Give employees private access to therapy, community and self-care tools, and see anonymised wellbeing trends from one clean dashboard."
   );
 
